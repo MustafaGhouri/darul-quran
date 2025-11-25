@@ -6,27 +6,36 @@ const LineCharts = () => {
                 id: "basic-line"
             },
             xaxis: {
-                categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998]
+                categories: [1991, 1992, 1993, 1994]
             }
         },
-      colors: ["#95C4BE"], 
+        colors: ["#95C4BE"],
         series: [
             {
                 name: "series-1",
-                data: [30, 40, 45, 50, 49, 60, 70, 91]
+                data: [30, 40, 45, 20]
             }
         ]
     };
     return (
         <div className="app ">
             <div className="row">
-                <div className="mixed-chart">
+                <div className="max-sm:hidden mixed-chart">
                     <Chart
                         options={data.options}
                         series={data.series}
                         type="area"
-                        
-                        width="500"
+
+                        width="400"
+                    />
+                </div>
+                <div className="sm:hidden mixed-chart">
+                    <Chart
+                        options={data.options}
+                        series={data.series}
+                        type="area"
+
+                        width="300"
                     />
                 </div>
             </div>
