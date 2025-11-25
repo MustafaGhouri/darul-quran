@@ -68,7 +68,7 @@ const AdminDashboard = () => {
         </Button>
       </div>
 
-      <div className='py-4 gap-5 flex overflow-x-hidden'>
+      <div className='py-4 gap-5 grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 oversflow-x-hidden'>
         <div className='bg-white space-y-4 rounded-lg p-4'>
           <h1 className='font-semibold text-[#333333]'>Total Enrollments</h1>
           <div className='flex items-center justify-between'>
