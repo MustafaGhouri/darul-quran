@@ -1,5 +1,4 @@
 import { Button, Input } from "@heroui/react";
-import Sidebar from "../../components/dashboard-components/sidebar";
 
 
 const Login = () => {
@@ -9,7 +8,6 @@ const Login = () => {
 
     return (
         <main className='flex flex-col lg:flex-row w-full min-h-screen'>
-            <Sidebar/>
             <div className='lg:h-screen w-full lg:max-w-[400px] xl:max-w-[500px] p-6 lg:p-8 flex flex-col items-center justify-between bg-linear-to-bl from-[#06574C] via-[#06574C] to-[#D4C4B0] relative overflow-hidden max-lg:hidden'>
 
 

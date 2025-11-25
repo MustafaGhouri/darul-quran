@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { HeroUIProvider } from '@heroui/react'
 import AdminLayout from './components/layouts/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import Home from './pages/Home'
 
 function App() {
 
@@ -24,13 +25,21 @@ function App() {
                 </ProtectedRoute>
               }
             />
+             <Route
+              path="/"
+              element={
+                <ProtectedRoute publicOnly isAuthenticated={false} redirect="/dashboard">
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
           </Route>
 
           {/* ---------- Main Layout (WITH HEADER/FOOTER) ---------- */}
           <Route element={<AdminLayout />}>
 
             <Route
-              path="/dashboard"
+              path="/admin/dashboard"
               element={
                 <ProtectedRoute isAuthenticated={true}>
                   <AdminDashboard />
