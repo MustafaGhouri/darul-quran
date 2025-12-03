@@ -18,10 +18,31 @@ const BarChart = () => {
 
   const options = {
     chart: {
-      type: "bar",
-      height: 380,
+    type: "bar",
+    height: 380,
+  },
+  plotOptions: {
+    bar: {
+      borderRadius: 4,
+      horizontal: false,
+      columnWidth: '55%',
+      endingShape: 'rounded',
+      fill: {
+        type: 'gradient',
+        gradient: {
+          shade: 'light',
+          type: "vertical",
+          shadeIntensity: 0.5,
+          gradientToColors: ['#95C4BE'],
+          inverseColors: false,
+          opacityFrom: 0.8,
+          opacityTo: 0.9,
+          stops: [0, 100]
+        }
+      }
     },
-    
+  },
+  colors: ["#95C4BE"],
     tooltip: {
       x: {
         formatter: (val) =>

@@ -227,9 +227,7 @@ const Analytics = () => {
           </div>
         </div>
         <div className="col-span-6 bg-white p-3 rounded-lg">
-          <div className=" my-4">
-            <h1 className="text-xl font-bold">Revenue Analytics</h1>
-          </div>
+          
           <PieChart />
         </div>
       </div>
