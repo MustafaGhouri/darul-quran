@@ -22,6 +22,7 @@ import {
   ExternalLink,
   Eye,
   ListFilterIcon,
+  ListFilterPlusIcon,
   Plus,
   SquarePen,
   Trash2,
@@ -31,6 +32,8 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence } from "motion/react";
+import * as motion from "motion/react-client";
 
 const UserManagement = () => {
   const [events, setEvents] = useState([
@@ -363,6 +366,7 @@ const UserManagement = () => {
     { key: "50", label: "50" },
   ];
 
+  const [selectedTab, setSelectedTab] = useState("");
   const router = useNavigate();
   return (
     <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5 ">
@@ -398,7 +402,7 @@ const UserManagement = () => {
             radius="sm"
             className="md:min-w-[120px]"
             defaultSelectedKeys={["all"]}
-            selectorIcon={<ListFilterIcon />}
+            selectorIcon={<ListFilterPlusIcon />}
             placeholder="Select Filter"
           >
             {filters.map((filter) => (
@@ -434,71 +438,82 @@ const UserManagement = () => {
                 </div>
               }
             >
-              {/* <h1>Students</h1> */}
-              <Table
-                //    isHeaderSticky
-                selectionMode="multiple"
-                aria-label="Pending approvals table"
-                removeWrapper
-                classNames={{
-                  base: "bg-white rounded-lg ",
-                  th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
-                  td: "py-3",
-                  tr: "border-b border-default-200",
-                }}
-              >
-                <TableHeader>
-                  {header.map((item) => (
-                    <TableColumn key={item.key}>{item.label}</TableColumn>
-                  ))}
-                </TableHeader>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={selectedTab ? selectedTab.label : "empty"}
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -10, opacity: 0 }}
+                  transition={{ duration: 0.6, ease: "easeInOut" }}
+                >
+                  <Table
+                    //    isHeaderSticky
+                    selectionMode="multiple"
+                    aria-label="Pending approvals table"
+                    removeWrapper
+                    classNames={{
+                      base: "bg-white rounded-lg ",
+                      th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+                      td: "py-3",
+                      tr: "border-b border-default-200",
+                    }}
+                  >
+                    <TableHeader>
+                      {header.map((item) => (
+                        <TableColumn key={item.key}>{item.label}</TableColumn>
+                      ))}
+                    </TableHeader>
 
-                <TableBody>
-                  {classes.map((classItem) => (
-                    <TableRow key={classItem.id}>
-                      <TableCell className="px-4">
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {classItem.name}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            {classItem.email}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button className="text-sm p-2 rounded-md bg-[#FBF4EC] text-[#D28E3D]">
-                          {classItem.roles}
-                        </Button>
-                      </TableCell>
-                      <TableCell>{classItem.date}</TableCell>
-                      <TableCell>
-                        <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
-                          {classItem.status}
-                        </Button>
-                      </TableCell>
-                      <TableCell>{classItem.last_active}</TableCell>
-                      <TableCell className="flex gap-2">
-                        <Button
-                          variant="bordered"
-                          radius="sm"
-                          className="border-[#06574C]"
-                          startContent={<SquarePen size={18} color="#06574C" />}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          radius="sm"
-                          className="bg-[#06574C] text-white"
-                          startContent={<Trash2 size={18} color="white" />}
-                        >
-                          Delete
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                    <TableBody>
+                      {classes.map((classItem) => (
+                        <TableRow key={classItem.id}>
+                          <TableCell className="px-4">
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {classItem.name}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-0.5">
+                                {classItem.email}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button className="text-sm p-2 rounded-md bg-[#FBF4EC] text-[#D28E3D]">
+                              {classItem.roles}
+                            </Button>
+                          </TableCell>
+                          <TableCell>{classItem.date}</TableCell>
+                          <TableCell>
+                            <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
+                              {classItem.status}
+                            </Button>
+                          </TableCell>
+                          <TableCell>{classItem.last_active}</TableCell>
+                          <TableCell className="flex gap-2">
+                            <Button
+                              variant="bordered"
+                              radius="sm"
+                              className="border-[#06574C]"
+                              startContent={
+                                <SquarePen size={18} color="#06574C" />
+                              }
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              radius="sm"
+                              className="bg-[#06574C] text-white"
+                              startContent={<Trash2 size={18} color="white" />}
+                            >
+                              Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </motion.div>
+              </AnimatePresence>
             </Tab>
             <Tab
               key="Teachers"
@@ -514,70 +529,82 @@ const UserManagement = () => {
                 </div>
               }
             >
-              <Table
-                //    isHeaderSticky
-                selectionMode="multiple"
-                aria-label="Pending approvals table"
-                removeWrapper
-                classNames={{
-                  base: "bg-white rounded-lg ",
-                  th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
-                  td: "py-3",
-                  tr: "border-b border-default-200",
-                }}
-              >
-                <TableHeader>
-                  {header.map((item) => (
-                    <TableColumn key={item.key}>{item.label}</TableColumn>
-                  ))}
-                </TableHeader>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={selectedTab ? selectedTab.label : "empty"}
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -10, opacity: 0 }}
+                 transition={{ duration: 0.6, ease: "easeInOut" }}
+                >
+                  <Table
+                    //    isHeaderSticky
+                    selectionMode="multiple"
+                    aria-label="Pending approvals table"
+                    removeWrapper
+                    classNames={{
+                      base: "bg-white rounded-lg ",
+                      th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+                      td: "py-3",
+                      tr: "border-b border-default-200",
+                    }}
+                  >
+                    <TableHeader>
+                      {header.map((item) => (
+                        <TableColumn key={item.key}>{item.label}</TableColumn>
+                      ))}
+                    </TableHeader>
 
-                <TableBody>
-                  {Teachers.map((classItem) => (
-                    <TableRow key={classItem.id}>
-                      <TableCell className="px-4">
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {classItem.name}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            {classItem.email}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button className="text-sm p-2 rounded-md bg-[#FBF4EC] text-[#D28E3D]">
-                          {classItem.roles}
-                        </Button>
-                      </TableCell>
-                      <TableCell>{classItem.date}</TableCell>
-                      <TableCell>
-                        <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
-                          {classItem.status}
-                        </Button>
-                      </TableCell>
-                      <TableCell>{classItem.last_active}</TableCell>
-                      <TableCell className="flex gap-2">
-                        <Button
-                          variant="bordered"
-                          radius="sm"
-                          className="border-[#06574C]"
-                          startContent={<SquarePen size={18} color="#06574C" />}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          radius="sm"
-                          className="bg-[#06574C] text-white"
-                          startContent={<Trash2 size={18} color="white" />}
-                        >
-                          Delete
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                    <TableBody>
+                      {Teachers.map((classItem) => (
+                        <TableRow key={classItem.id}>
+                          <TableCell className="px-4">
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {classItem.name}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-0.5">
+                                {classItem.email}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button className="text-sm p-2 rounded-md bg-[#FBF4EC] text-[#D28E3D]">
+                              {classItem.roles}
+                            </Button>
+                          </TableCell>
+                          <TableCell>{classItem.date}</TableCell>
+                          <TableCell>
+                            <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
+                              {classItem.status}
+                            </Button>
+                          </TableCell>
+                          <TableCell>{classItem.last_active}</TableCell>
+                          <TableCell className="flex gap-2">
+                            <Button
+                              variant="bordered"
+                              radius="sm"
+                              className="border-[#06574C]"
+                              startContent={
+                                <SquarePen size={18} color="#06574C" />
+                              }
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              radius="sm"
+                              className="bg-[#06574C] text-white"
+                              startContent={<Trash2 size={18} color="white" />}
+                            >
+                              Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </motion.div>
+              </AnimatePresence>
             </Tab>
             <Tab
               key="Supports_Staff"
@@ -593,70 +620,82 @@ const UserManagement = () => {
                 </div>
               }
             >
-              <Table
-                //    isHeaderSticky
-                selectionMode="multiple"
-                aria-label="Pending approvals table"
-                removeWrapper
-                classNames={{
-                  base: "bg-white rounded-lg ",
-                  th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
-                  td: "py-3",
-                  tr: "border-b border-default-200",
-                }}
-              >
-                <TableHeader>
-                  {header.map((item) => (
-                    <TableColumn key={item.key}>{item.label}</TableColumn>
-                  ))}
-                </TableHeader>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={selectedTab ? selectedTab.label : "empty"}
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -10, opacity: 0 }}
+                  transition={{ duration: 0.6, ease: "easeInOut" }}
+                >
+                  <Table
+                    //    isHeaderSticky
+                    selectionMode="multiple"
+                    aria-label="Pending approvals table"
+                    removeWrapper
+                    classNames={{
+                      base: "bg-white rounded-lg ",
+                      th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+                      td: "py-3",
+                      tr: "border-b border-default-200",
+                    }}
+                  >
+                    <TableHeader>
+                      {header.map((item) => (
+                        <TableColumn key={item.key}>{item.label}</TableColumn>
+                      ))}
+                    </TableHeader>
 
-                <TableBody>
-                  {classes.map((classItem) => (
-                    <TableRow key={classItem.id}>
-                      <TableCell className="px-4">
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {classItem.name}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            {classItem.email}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button className="text-sm p-2 rounded-md bg-[#FBF4EC] text-[#D28E3D]">
-                          {classItem.roles}
-                        </Button>
-                      </TableCell>
-                      <TableCell>{classItem.date}</TableCell>
-                      <TableCell>
-                        <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
-                          {classItem.status}
-                        </Button>
-                      </TableCell>
-                      <TableCell>{classItem.last_active}</TableCell>
-                      <TableCell className="flex gap-2">
-                        <Button
-                          variant="bordered"
-                          radius="sm"
-                          className="border-[#06574C]"
-                          startContent={<SquarePen size={18} color="#06574C" />}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          radius="sm"
-                          className="bg-[#06574C] text-white"
-                          startContent={<Trash2 size={18} color="white" />}
-                        >
-                          Delete
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                    <TableBody>
+                      {classes.map((classItem) => (
+                        <TableRow key={classItem.id}>
+                          <TableCell className="px-4">
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {classItem.name}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-0.5">
+                                {classItem.email}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Button className="text-sm p-2 rounded-md bg-[#FBF4EC] text-[#D28E3D]">
+                              {classItem.roles}
+                            </Button>
+                          </TableCell>
+                          <TableCell>{classItem.date}</TableCell>
+                          <TableCell>
+                            <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
+                              {classItem.status}
+                            </Button>
+                          </TableCell>
+                          <TableCell>{classItem.last_active}</TableCell>
+                          <TableCell className="flex gap-2">
+                            <Button
+                              variant="bordered"
+                              radius="sm"
+                              className="border-[#06574C]"
+                              startContent={
+                                <SquarePen size={18} color="#06574C" />
+                              }
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              radius="sm"
+                              className="bg-[#06574C] text-white"
+                              startContent={<Trash2 size={18} color="white" />}
+                            >
+                              Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </motion.div>
+              </AnimatePresence>
             </Tab>
           </Tabs>
         </div>

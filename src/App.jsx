@@ -18,6 +18,7 @@ import Announcements from "./pages/admin/announcements";
 import PaymentsRefunds from "./pages/admin/payment-refund";
 import SupportTickets from "./pages/admin/support-ticket";
 import Analytics from "./pages/admin/analytics";
+import CourseBuilder from "./pages/admin/course-management/course-builder";
 
 function App() {
   return (
@@ -72,7 +73,9 @@ function App() {
             />
             <Route
               path="/admin/courses-management/builder"
-              element={<ProtectedRoute isAuthenticated={true}></ProtectedRoute>}
+              element={<ProtectedRoute isAuthenticated={true}>
+                <CourseBuilder/>
+              </ProtectedRoute>}
             />
             <Route
               path="/admin/courses-management/live-sessions"

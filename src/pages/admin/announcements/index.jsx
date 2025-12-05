@@ -23,9 +23,6 @@ import {
   PlusIcon,
   Trash2,
 } from "lucide-react";
-import CourseForm from "../../../components/dashboard-components/forms/CourseForm";
-import { color, time } from "framer-motion";
-import { s } from "framer-motion/client";
 
 const Announcements = () => {
   const classes = [

@@ -1,6 +1,6 @@
 import { Button, Link, Select, SelectItem } from '@heroui/react'
 import { DashHeading } from '../../../components/dashboard-components/DashHeading'
-import { Edit, ExternalLink, ListFilterIcon, Plus, Trash2 } from 'lucide-react';
+import { Edit, ExternalLink, ListFilterIcon, Plus, Trash2, Video } from 'lucide-react';
 import { useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -39,6 +39,7 @@ const LiveSession = () => {
     const filters = [
         { key: "all", label: "Filter" },
     ];
+        const [selectedTab, setSelectedTab] = useState(tabs[0])
 
     return (
         <div className='bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5'>
@@ -90,11 +91,7 @@ const LiveSession = () => {
                 {sessions.map((i, _) => (<div className='bg-white max-sm:flex-col gap-3 p-4 rounded-lg flex items-center justify-between'>
                     <div className='flex gap-3 ustify-center items-center'>
                         <div className="rounded-full p-4 bg-[#95C4BE]/20">
-                            <img
-                                src={"/icons/camera.png"}
-                                alt={'camera'}
-                                className="w-9 h-9 "
-                            />
+                            <Video size={30} color="#06574C" />
                         </div>
                         <div>
                             <h3 className='text-lg font-semibold sm:text-2xl text-[#06574C]'>{i.title}</h3>

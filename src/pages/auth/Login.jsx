@@ -23,8 +23,8 @@ const Login = () => {
             </div>
 
             <div className='flex-1 flex flex-col items-start justify-center bg-[#E9E0D6] !ml-0 px-6 sm:px-12 md:px-16 lg:px-24 py-8 lg:py-0 m-0 lg:m-6 lg:rounded-r-lg '>
-                <div className='w-full max-w-2xl mx-auto lg:mx-0'>
-                    <h1 className='text-2xl sm:text-3xl lg:text-4xl xl:text-[40px] text-[#3F3F44] leading-tight mb-6 lg:mb-8'>
+                <div className='w-full max-w-xl mx-auto lg:mx-16'>
+                    <h1 className='text-2xl sm:text-3xl lg:text-4xl xl:text-[40px] text-[#3F3F44] leading-tight mb-6 lg:mb-8 font-medium'>
                         Hi, <strong>Welcome</strong> <br />
                         Ready to begin your <span className='text-[#95C4BE]'>classes</span> for today
                     </h1>

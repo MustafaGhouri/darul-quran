@@ -82,7 +82,7 @@ export default function AdminLayout() {
                                         aria-label="Notifications"
                                     >
                                         <Bell color="#406C65" size={20} />
-                                        <span className="pointer-events-none absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#637381] text-white text-[10px] font-semibold leading-none ring-2 ring-white z-10">
+                                        <span className="pointer-events-none absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#ebd4c9] text-[#406C65] text-[10px] font-semibold leading-none ring-2 ring-white z-10">
                                             3
                                         </span>
                                     </button>
