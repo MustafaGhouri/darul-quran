@@ -98,7 +98,7 @@ export default function AdminLayout() {
                                             <Chip
                                                 size="sm"
                                                 variant="flat"
-                                                className="bg-[#637381] text-white font-bold"
+                                                className="bg-[#ebd4c9] text-[#406C65] font-bold"
                                             >
                                                 3  {/* {unreadNotifications.length} */}
                                             </Chip>
@@ -146,7 +146,7 @@ export default function AdminLayout() {
                             >
                                 <Search color="#406C65" size={20} />
                             </button>
-                            <Input endContent={<Search color="#9A9A9A" />} type="search" className="max-w-md max-sm:hidden" placeholder="Search here..." />
+                            <Input endContent={<Search color="#9A9A9A" />} type="search" className="max-w-lg max-sm:hidden min-w-sm" placeholder="Search here..." />
                         </div>
                     </header>
                     <Outlet />

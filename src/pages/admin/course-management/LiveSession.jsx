@@ -39,7 +39,6 @@ const LiveSession = () => {
     const filters = [
         { key: "all", label: "Filter" },
     ];
-        const [selectedTab, setSelectedTab] = useState(tabs[0])
 
     return (
         <div className='bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5'>
@@ -50,8 +49,7 @@ const LiveSession = () => {
             <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
                 <div className="flex  items-center gap-2">
                     <Select
-                        isRequired
-                        className="md:min-w-[120px]"
+                        className="md:min-w-[180px]"
                         radius="sm"
                         defaultSelectedKeys={["all"]}
                         placeholder="Select an status"
@@ -61,12 +59,11 @@ const LiveSession = () => {
                         ))}
                     </Select>
                     <Select
-                        isRequired
                         radius="sm"
-                        className="md:min-w-[120px]"
+                        className="md:min-w-[180px]"
                         defaultSelectedKeys={["all"]}
                         selectorIcon={<ListFilterIcon />}
-                        placeholder="Select an animal"
+                        placeholder="Filter"
                     >
                         {filters.map((filter) => (
                             <SelectItem key={filter.key}>{filter.label}</SelectItem>

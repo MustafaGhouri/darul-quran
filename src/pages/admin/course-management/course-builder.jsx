@@ -172,7 +172,9 @@ const CourseBuilder = () => {
                       <FileDropzone />
                     </div>
                   </div>
-                  <div className="bg-white rounded-lg p-3 shadow-xl mt-3"></div>
+                  <div className="bg-white rounded-lg p-3 shadow-xl mt-3">
+                    
+                  </div>
                 </div>
               </div>
             </Form>

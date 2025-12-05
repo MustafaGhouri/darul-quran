@@ -68,7 +68,9 @@ const CreateCourse = ({ initialData = {} }) => {
                 <ModalContent>
                     {(onClose) => (
                         <>
-                            <ModalHeader className="flex flex-col gap-1">Create Course</ModalHeader>
+                            <ModalHeader className="flex flex-col gap-1">
+                                <h1 className="text-2xl font-bold">{initialData?.id ? "Edit Course" : "Create Course"}</h1>
+                            </ModalHeader>
                             <ModalBody>
                                 <Form action={(formData) => handleSubmit(formData)}>
                                     <div className="flex w-full flex-wrap md:flex-nowrap mb-6 md:mb-0 gap-4">
@@ -173,7 +175,7 @@ const CreateCourse = ({ initialData = {} }) => {
                                             Save Draft
                                         </Button>
                                         <Button type={'submit'} startContent={<Plus color="white" size={15} />} className="bg-[#06574C] text-white rounded-sm py-4 px-3 sm:px-8">
-                                            Create Course
+                                            {initialData?.id ? "Update Course" : "Create Course"}
                                         </Button>
                                     </div>
                                 </Form>

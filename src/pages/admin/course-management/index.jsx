@@ -167,7 +167,6 @@ const CourseManagement = () => {
       <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
         <div className="flex  items-center gap-2">
           <Select
-            isRequired
             className="md:min-w-[120px]"
             radius="sm"
             defaultSelectedKeys={["all"]}
@@ -178,7 +177,6 @@ const CourseManagement = () => {
             ))}
           </Select>
           <Select
-            isRequired
             className="md:min-w-[120px]"
             radius="sm"
             defaultSelectedKeys={["all"]}
@@ -208,20 +206,20 @@ const CourseManagement = () => {
           removeWrapper
           classNames={{
             base: "bg-white rounded-lg ",
-            th: "font-bold p-4 text-sm text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+            th: "font-bold p-4 text-sm text-[#333333] capitalize tracking-widest bg-[#EBD4C936] cursor-default",
             td: "py-3",
             tr: "border-b border-default-200 last:border-b-0 hover:bg-[#EBD4C936] text-nowrap cursor-pointer overflow-hidden",
           }}
         >
           <TableHeader>
-            <TableColumn className="bg-[#EBD4C9]/30">Course</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Category</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Teacher</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Price</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Enrolled</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Status</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Reviews</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Actions</TableColumn>
+            <TableColumn >Course</TableColumn>
+            <TableColumn >Category</TableColumn>
+            <TableColumn >Teacher</TableColumn>
+            <TableColumn >Price</TableColumn>
+            <TableColumn >Enrolled</TableColumn>
+            <TableColumn >Status</TableColumn>
+            <TableColumn >Reviews</TableColumn>
+            <TableColumn >Actions</TableColumn>
           </TableHeader>
 
           <TableBody>
@@ -286,7 +284,6 @@ const CourseManagement = () => {
         <div className="flex text-sm items-center gap-1">
           <span>Showing</span>
           <Select
-            isRequired
             radius="sm"
             className="w-[70px]"
             defaultSelectedKeys={["10"]}
