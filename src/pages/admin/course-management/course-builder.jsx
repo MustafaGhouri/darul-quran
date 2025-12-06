@@ -11,6 +11,7 @@ import {
   SelectItem,
   Textarea,
   Button,
+  Switch,
 } from "@heroui/react";
 import FileDropzone from "../../../components/dashboard-components/dropzone";
 import { title } from "framer-motion/client";
@@ -36,7 +37,12 @@ const CourseBuilder = () => {
     { key: "Advance_React", label: "Advance React" },
     { key: "Advance_Python", label: "Advance Python" },
   ];
-  const Difficulty = [
+  const Duration = [
+    { key: "Lifetime_Access", label: "Lifetime Access" },
+    { key: "One_Month", label: "One Month", },
+    { key: "Yearly", label: "Yearly" },
+  ];
+  const Difficulty  = [
     { key: "Beginner", label: "Beginner" },
     { key: "Advanced", label: "Advanced" },
     { key: "Expert", label: "Expert" },
@@ -53,6 +59,12 @@ const CourseBuilder = () => {
     {title:"PDFs:", count :"10" , icone:<File size={20} color="#06574C" />},
     {title:"Quizzes", count :"20" , icone:<Lightbulb size={20} color="#06574C" /> },
     {title:"Assignments", count :"15" , icone:<ScrollText size={20} color="#06574C" /> },
+  ]
+
+  const accessDuration =[
+    { key: "108_days", label: "108 Days", },
+    { key: "Lifetime_Access", label: "Lifetime Access" },
+    { key: "360_days", label: "360 Days" },
   ]
 
   return (
@@ -279,69 +291,84 @@ const CourseBuilder = () => {
                         <h1 className="text-[#06574C] font-medium text-lg">Course Type</h1>
                         <h1 className="text-[#06574C] font-medium text-sm">Choose between paid or free course</h1>
                       </div>
+                      <div>
+                        <Switch defaultSelected aria-label="Automatic updates" />
+                      </div>
                     </div>
                     <div className="flex gap-3 items-center pt-4">
-                      <Select
+                      <Input
                         size="lg"
                         variant="bordered"
-                        label="Category"
+                        label="Course Price"
                         labelPlacement="outside"
-                        placeholder="Select category"
+                        placeholder="$  9.99"
                         className="w-full"
-                      >
-                        {category.map((item) => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.label}
-                          </SelectItem>
-                        ))}
-                      </Select>
+                      />
                       <Select
                         size="lg"
                         variant="bordered"
-                        label="Difficulty Level"
+                        label="Access Duration"
                         labelPlacement="outside"
                         placeholder="Select Difficulty Level"
                         className="w-full"
                       >
-                        {Difficulty.map((item) => (
+                        {Duration.map((item) => (
                           <SelectItem key={item.id} value={item.id}>
                             {item.label}
                           </SelectItem>
                         ))}
                       </Select>
                     </div>
-                    <div className="py-4">
-                      <Textarea
+
+                        <h1 className="pt-4 text-xl text-[#333333] font-bold">Access Settings</h1>
+
+                    <div className="flex gap-3 items-center py-4">
+                      <Select
                         size="lg"
                         variant="bordered"
-                        label="Description"
+                        label="Access Duration"
                         labelPlacement="outside"
-                        placeholder="Enter course description"
+                        placeholder="Select Access Duration"
+                        className="w-full"
+                      >
+                        {accessDuration.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                      <Input
+                        size="lg"
+                        variant="bordered"
+                        label="Preview Lessons "
+                        labelPlacement="outside"
+                        placeholder="Select Preview Lessons "
+                        className="w-full"
+                        type="number"
                       />
                     </div>
                     <Input
                       size="lg"
                       variant="bordered"
-                      label="Course Price ($)"
+                      label="Enrollment Limit"
                       labelPlacement="outside"
-                      placeholder="$  0.00"
+                      placeholder="0"
                       className="w-full"
+                      type="number"
                     />
-                    <div className="py-4">
-                      <Select
-                        size="lg"
+                    <span className="text-xs text-[#06574C]">Leave empty for unlimited enrollments</span>
+                    <div className="my-3 text-xl font-bold">Publish Status</div>
+                    <div className="p-3 bg-[#EBD4C982] rounded-lg flex justify-between items-center">
+                      <div>
+                        <h1 className="text-[#333333] font-bold text-lg">Current Status: Draft</h1>
+                        <h1 className="text-[#666666] font-medium text-sm">Your course is not visible to students yet</h1>
+                      </div>
+                      <div>
+                        <Button
                         variant="bordered"
-                        label="Category"
-                        labelPlacement="outside"
-                        placeholder="Select category"
-                        className="w-full"
-                      >
-                        {category.map((item) => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.label}
-                          </SelectItem>
-                        ))}
-                      </Select>
+                        className="border-[#06574C] text-[#06574C]"
+                        >Change To Public</Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -351,8 +378,7 @@ const CourseBuilder = () => {
                   <Button size="lg" startContent={<FolderDot color="#06574C" size={16}/>} variant="bordered" className="border-[#06574C] text-[#06574C]" type="submit">Save Draft</Button> 
                 </div>
                 <div className="flex gap-3">
-                  <Button size="lg" startContent={<Rocket color="white" size={16}/>} className="bg-[#B1A7A7] text-white w-60" type="submit">Publish Course</Button>
-                  <Button size="lg" className="bg-[#06574C] text-white w-35" type="submit">Next Step</Button>
+                  <Button size="lg" startContent={<Rocket color="white" size={16}/>} className="bg-[#06574C] text-white w-60" type="submit">Publish Course</Button>
                 </div> 
               </div>
             </Form>
