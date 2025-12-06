@@ -21,6 +21,7 @@ import Analytics from "./pages/admin/analytics";
 import CourseBuilder from "./pages/admin/course-management/course-builder";
 import HelpSupport from "./pages/admin/help";
 import Review from "./pages/admin/help/review";
+import Faqs from "./pages/admin/help/faqs";
 
 function App() {
   return (
@@ -172,6 +173,14 @@ function App() {
               element={
                 <ProtectedRoute isAuthenticated={true}>
                   <Review />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/help/faqs"
+              element={
+                <ProtectedRoute isAuthenticated={true}>
+                  <Faqs />
                 </ProtectedRoute>
               }
             />
