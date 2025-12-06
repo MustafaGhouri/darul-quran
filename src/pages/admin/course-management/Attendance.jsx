@@ -317,7 +317,7 @@ const Attendance = () => {
         ))}
       </div>
     </div>
-    <SharedLayoutAnimation />
+    
     </div>
   );
 };
