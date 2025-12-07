@@ -331,7 +331,7 @@ export default function HelpMessages() {
         </div>
 
         <div className=" border-t border-gray-200 px-4 py-3 shrink-0">
-          <div className="flex items-center gap-2">
+          <div className="flex bg-white p-3 rounded-xl items-center gap-2">
             <button className="p-2 text-gray-500 hover:text-gray-700 shrink-0">
               <FiPaperclip size={20} />
             </button>
@@ -344,7 +344,7 @@ export default function HelpMessages() {
             />
             <button className="px-4 py-2 bg-teal-700 text-white text-xs font-medium rounded-md hover:bg-teal-800 flex items-center gap-2 shrink-0">
               Send
-              <FiSend size={14} />
+              <FiSend className='rotate-45' size={14} />
             </button>
           </div>
         </div>
