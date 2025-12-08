@@ -223,12 +223,11 @@ const Scheduling = () => {
                         ))}
                     </Select> */}
                     <Select
-                        isRequired
                         radius="sm"
                         className="md:min-w-[120px]"
                         defaultSelectedKeys={["all"]}
                         selectorIcon={<ListFilterIcon />}
-                        placeholder="Select an animal"
+                        placeholder="Filter"
                     >
                         {filters.map((filter) => (
                             <SelectItem key={filter.key}>{filter.label}</SelectItem>
@@ -312,11 +311,10 @@ const Scheduling = () => {
                         Showing
                     </span>
                     <Select
-                        isRequired
                         radius="sm"
                         className="w-[70px]"
                         defaultSelectedKeys={['10']}
-                        placeholder="Select an animal"
+                        placeholder="1"
                     >
                         {limits.map((limit) => (
                             <SelectItem key={limit.key}>{limit.label}</SelectItem>

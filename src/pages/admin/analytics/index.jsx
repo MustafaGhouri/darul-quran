@@ -402,11 +402,10 @@ const Analytics = () => {
               <div className="flex text-sm items-center gap-1">
                 <span>Showing</span>
                 <Select
-                  isRequired
                   radius="sm"
                   className="w-[70px]"
                   defaultSelectedKeys={["10"]}
-                  placeholder="Select an animal"
+                  placeholder="1"
                 >
                   {limits.map((limit) => (
                     <SelectItem key={limit.key}>{limit.label}</SelectItem>

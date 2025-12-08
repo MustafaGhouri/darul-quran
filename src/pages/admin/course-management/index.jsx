@@ -287,7 +287,7 @@ const CourseManagement = () => {
             radius="sm"
             className="w-[70px]"
             defaultSelectedKeys={["10"]}
-            placeholder="Select an animal"
+            placeholder="1"
           >
             {limits.map((limit) => (
               <SelectItem key={limit.key}>{limit.label}</SelectItem>
