@@ -17,8 +17,8 @@ export default function ChatInterface({
         if (isTeacherAndStudent) {
             const messagesByChatId = mockMessages.filter(i => i.chat_id === chat?.id);
             setMessages(messagesByChatId)
-            console.log(messagesByChatId,chat?.id);
-            
+            console.log(messagesByChatId, chat?.id);
+
         } else {
             const messagesByUserId = mockMessages.filter(i => i.user_id === user?.id);
             setMessages(messagesByUserId)
@@ -27,37 +27,79 @@ export default function ChatInterface({
     return (
         <div className="flex flex-col flex-1 h-screen bg-[#95c4be48]">
             <div className=" border-b border-gray-300 px-4 py-3 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-3">
-                    <div
-                        className={
-                            " w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-sm font-bold "
-                        }
-                        style={{
-                            backgroundColor: 'student' === 'student' ? "#FBF4EC" : "#8bc0b956",
-                            color: 'student' === 'student' ? '#D28E3D' : '#06574C'
-                        }}
-                    >
-                        {'student' === 'teacher' ?
-                            <img src="/icons/teacher_icon.png" alt="teacher" />
-                            :
-                            <img src="/icons/student_icon.png" alt="student" />
-                        }
-                    </div>
-                    <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-bold text-sm text-gray-800">{'X-AE-A-13b'}</h3>
-                        <span
+                {user?.id ?
+                    <div className="flex items-center gap-3">
+                        <div
                             className={
-                                "text-xs capitalize font-medium px-2 py-1 rounded-md"
+                                " w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-sm font-bold "
                             }
                             style={{
                                 backgroundColor: 'student' === 'student' ? "#FBF4EC" : "#8bc0b956",
                                 color: 'student' === 'student' ? '#D28E3D' : '#06574C'
                             }}
                         >
-                            {'student'}
-                        </span>
+                            {user?.role === 'teacher' ?
+                                <img src="/icons/teacher_icon.png" alt="teacher" />
+                                :
+                                <img src="/icons/student_icon.png" alt="student" />
+                            }
+                        </div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-bold text-sm text-gray-800">{user?.name}</h3>
+                            <span
+                                className={
+                                    "text-xs capitalize font-medium px-2 py-1 rounded-md"
+                                }
+                                style={{
+                                    backgroundColor: user?.role === 'student' ? "#FBF4EC" : "#8bc0b956",
+                                    color: user?.role === 'student' ? '#D28E3D' : '#06574C'
+                                }}
+                            >
+                                {user?.role}
+                            </span>
+                        </div>
+                    </div> :
+                    <div className="flex items-center gap-3">
+                        <div
+                            className={
+                                " w-11 bg-blue-50 h-11 rounded-full flex items-center justify-center shrink-0 text-sm font-bold "
+                            }
+                        >
+
+                            <img src="/icons/group-user.png" alt="group user" />
+                        </div>
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold text-sm text-gray-800">{chat?.student_name}</h3>
+                                <span
+                                    className={
+                                        "text-xs capitalize font-medium px-2 py-1 rounded-md"
+                                    }
+                                    style={{
+                                        backgroundColor: "#FBF4EC",
+                                        color: '#D28E3D'
+                                    }}
+                                >
+                                    {'Student'}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold text-sm text-gray-800">{chat?.teacher_name}</h3>
+                                <span
+                                    className={
+                                        "text-xs capitalize font-medium px-2 py-1 rounded-md"
+                                    }
+                                    style={{
+                                        backgroundColor: "#8bc0b956",
+                                        color: '#06574C'
+                                    }}
+                                >
+                                    {'Teacher'}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                }
                 <div className="flex items-center gap-2">
                     <button className="px-3 py-1.5 bg-teal-700 text-white text-xs font-medium rounded-md hover:bg-teal-800">
                         View Profile

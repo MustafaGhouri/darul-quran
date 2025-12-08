@@ -185,61 +185,9 @@ export const mockUser = [
 ];
 
 export const messages = [
+    
     {
         id: 51,
-        sender: 'student',
-        text: "Hello my dear Sir, I'm here to deliver the design requirement document for our next project.",
-         user_id: 1,
-        chat_id: 1,
-        time: '10:25 AM',
-    },
-    {
-        id: 52,
-        sender: 'student',
-        text: "",
-       user_id: 1,
-        chat_id: 1,
-        time: '10:26 AM',
-        hasAttachment: true,
-        attachment: {
-            name: 'Design__project__2025.docx',
-            size: '2.5gb • docx'
-        }
-    },
-    {
-        id: 53,
-        sender: 'teacher',
-        user_id: 1,
-        chat_id: 1,
-        text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris',
-        time: '11:29 AM'
-    },
-    {
-        id: 54,
-        sender: 'student',
-        user_id: 1,
-        chat_id: 1,
-        text: 'Do eiusmod truly dream of electric cheeps?',
-        time: '12:41 AM'
-    },
-    {
-        id: 55,
-        sender: 'teacher',
-        user_id: 1,
-        chat_id: 1,
-        text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exer',
-        time: '11:29 AM'
-    },
-    {
-        id: 56,
-        sender: 'student',
-        user_id: 1,
-        chat_id: 1,
-        text: "Hello my dear Sir, I'm here to deliver the design requirement document for our next project.",
-        time: '11:29 AM'
-    },
-    {
-        id: 57,
         sender: 'teacher',
         text: "",
         time: '12:26 AM',
@@ -250,14 +198,6 @@ export const messages = [
             name: 'Design__project__2025.docx',
             size: '2.5gb • docx'
         }
-    },
-    {
-        id: 58,
-        user_id: 1,
-        chat_id: 1,
-        sender: 'teacher',
-        text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris',
-        time: '11:29 AM'
     },
     {
         id: 0,
