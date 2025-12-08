@@ -25,6 +25,7 @@ const Analytics = lazy(() => import("./pages/admin/analytics"));
 const CourseBuilder = lazy(() => import("./pages/admin/course-management/course-builder"));
 
 const HelpMessages = lazy(() => import("./pages/admin/help"));
+const TeacherAndStudentChat = lazy(() => import("./pages/admin/help/TeacherAndStudent"));
 const Review = lazy(() => import("./pages/admin/help/review"));
 const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 
@@ -197,7 +198,7 @@ function App() {
               path="/admin/help/chat"
               element={
                 <ProtectedRoute isAuthenticated={true}>
-                  <HelpMessages />
+                  <TeacherAndStudentChat />
                 </ProtectedRoute>
               }
             />

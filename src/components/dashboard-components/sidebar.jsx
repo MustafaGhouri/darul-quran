@@ -116,7 +116,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
       if (sideBarRef.current && !sideBarRef.current.contains(event.target)) {
         handleCloseMobile();
       }
-      console.log('asas');
       
     };
 
