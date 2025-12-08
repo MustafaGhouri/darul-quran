@@ -241,7 +241,7 @@ const UserManagement = () => {
       desc: "Advanced JavaScript Course",
       last_active: "2 hourse ago",
       email: "john.davis@email.com",
-      roles: "Students",
+      roles: "Support Staff",
       status: "Active",
       date: "2025-11-27",
     },
@@ -251,7 +251,7 @@ const UserManagement = () => {
       desc: "Advanced JavaScript Course",
       last_active: "2 hourse ago",
       email: "john.davis@email.com",
-      roles: "Students",
+      roles: "Support Staff",
       status: "Active",
       date: "2025-11-26",
     },
@@ -261,7 +261,7 @@ const UserManagement = () => {
       desc: "Advanced JavaScript Course",
       last_active: "2 hourse ago",
       email: "john.davis@email.com",
-      roles: "Students",
+      roles: "Support Staff",
       status: "Active",
       date: "2025-11-17",
     },
@@ -271,7 +271,7 @@ const UserManagement = () => {
       desc: "Advanced JavaScript Course",
       last_active: "2 hourse ago",
       email: "john.davis@email.com",
-      roles: "Students",
+      roles: "Support Staff",
       status: "Active",
       date: "2025-11-16",
     },
@@ -281,7 +281,7 @@ const UserManagement = () => {
       desc: "Advanced JavaScript Course",
       last_active: "2 hourse ago",
       email: "john.davis@email.com",
-      roles: "Students",
+      roles: "Support Staff",
       status: "Active",
       date: "2025-11-15",
     },
@@ -291,7 +291,7 @@ const UserManagement = () => {
       desc: "Advanced JavaScript Course",
       last_active: "2 hourse ago",
       email: "john.davis@email.com",
-      roles: "Students",
+      roles: "Support Staff",
       status: "Active",
       date: "2025-11-12",
     },
@@ -301,7 +301,7 @@ const UserManagement = () => {
       desc: "Advanced JavaScript Course",
       last_active: "2 hourse ago",
       email: "john.davis@email.com",
-      roles: "Students",
+      roles: "Support Staff",
       status: "Active",
       date: "2025-11-03",
     },
@@ -311,7 +311,7 @@ const UserManagement = () => {
       desc: "Advanced JavaScript Course",
       last_active: "2 hourse ago",
       email: "john.davis@email.com",
-      roles: "Students",
+      roles: "Support Staff",
       status: "Active",
       date: "2025-11-29",
     },
@@ -340,7 +340,7 @@ const UserManagement = () => {
   const statuses = [
     { key: "all", label: "All Status" },
     { key: "Active", label: "Active" },
-    { key: "Active", label: "Active" },
+    { key: "inactive", label: "Inactive" },
   ];
   const roles = [
     { key: "all", label: "All Roles" },
@@ -410,6 +410,16 @@ const UserManagement = () => {
             ))}
           </Select>
         </div>
+        <div className=" flex gap-3">
+          <Button
+            variant="bordered"
+            radius="sm"
+            startContent={<Plus color="#06574C" size={15} />}
+            className="border-[#06574C] text-[#06574C] py-4 px-3 sm:px-8"
+            //   onPress={()=>{router.push("/admin/user-management/add-user")}}
+          >
+            Export
+          </Button>
         <Link href="/admin/user-management/add-user">
           <Button
             radius="sm"
@@ -420,6 +430,7 @@ const UserManagement = () => {
             Add User
           </Button>
         </Link>
+        </div>
       </div>
       <div>
         <div className=" ">
@@ -647,7 +658,7 @@ const UserManagement = () => {
                     </TableHeader>
 
                     <TableBody>
-                      {classes.map((classItem) => (
+                      {Supports_Staff.map((classItem) => (
                         <TableRow key={classItem.id}>
                           <TableCell className="px-4">
                             <div>

@@ -44,7 +44,7 @@ const ApexChart = () => {
           ]
         }
       },
-      colors: ['#06574C'], // Main line color
+      colors: ['#06574C'],
       xaxis: {
         type: 'datetime',
         categories: [

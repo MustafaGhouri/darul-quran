@@ -57,10 +57,10 @@ const CreateCourse = ({ initialData = {} }) => {
     return (
         <>
             {initialData?.id ?
-                <Button  onPress={handleOpen} radius="sm" size="sm" variant="bordered" className="border-[#06574C]" startContent={<Edit  size={18} color="#06574C" />}>
+                <Button  onPress={handleOpen} radius="md" size="md" variant="bordered" className="border-[#06574C]" startContent={<Edit  size={18} color="#06574C" />}>
                     Edit
                 </Button> :
-                <Button onPress={handleOpen} radius="sm" size="sm" startContent={<Plus color="white" size={15} />} className="bg-[#06574C] text-white py-4 px-3 sm:px-8">
+                <Button onPress={handleOpen} radius="md" size="md" startContent={<Plus color="white" size={15} />} className="bg-[#06574C] text-white py-4 px-3 sm:px-8">
                     Create Course
                 </Button>
             }
@@ -92,6 +92,7 @@ const CreateCourse = ({ initialData = {} }) => {
                                             radius="sm"
                                             label="Category"
                                             name="category"
+                                            variant='bordered'
                                             defaultSelectedKeys={[initialData.category]}
                                             defaultValue="all"
                                             labelPlacement="outside"
@@ -120,21 +121,26 @@ const CreateCourse = ({ initialData = {} }) => {
                                             }
                                             type="number"
                                         />
+                                        <div className='w-full'>
                                         <Input
                                             label="Enrollment Limit"
                                             name="enrollment_limit"
                                             labelPlacement="outside"
-                                            placeholder="0.00"
+                                            placeholder="0"
                                             variant="bordered"
                                             radius="sm"
                                             defaultValue={initialData.enrollment_limit}
                                             isRequired
                                             errorMessage={'Enrollment Limit is required'}
-                                            endContent={
-                                                <img src="/icons/updown-arrow.png" className="h-4" alt="updown-arrow" />
-                                            }
-                                            type="numeric"
+                                                // endContent={
+                                                //     <img src="/icons/updown-arrow.png" className="h-4" alt="updown-arrow" />
+                                                // }
+                                            type="number"
                                         />
+                                        <span className='text-xs text-[#06574C]'>
+                                            Leave empty for unlimited enrollments
+                                        </span>
+                                        </div>
                                     </div>
                                     <div className="flex w-full flex-wrap md:flex-nowrap mb-6 md:mb-0 gap-4">
                                         <Select
@@ -142,6 +148,7 @@ const CreateCourse = ({ initialData = {} }) => {
                                             radius="sm"
                                             label="Teacher"
                                             name="teacher"
+                                            variant='bordered'
                                             labelPlacement="outside"
                                             defaultSelectedKeys={[initialData.teacher]}
                                             placeholder="Select teacher"
@@ -154,6 +161,8 @@ const CreateCourse = ({ initialData = {} }) => {
                                             radius="sm"
                                             labelPlacement="outside"
                                             label="Date"
+                                            variant='bordered'
+                                            showMonthAndYearPickers
                                             onChange={handleCalendarChange}
                                             name="date"
                                             defaultValue={initialData?.date?parseDate(initialData?.date):undefined}
@@ -165,6 +174,7 @@ const CreateCourse = ({ initialData = {} }) => {
                                             label="Course Description"
                                             labelPlacement="outside"
                                             radius="sm"
+                                            variant='bordered'
                                             name='desc'
                                             defaultValue={initialData.desc}
                                             rows={4}
@@ -172,10 +182,10 @@ const CreateCourse = ({ initialData = {} }) => {
                                         />
                                     </div>
                                     <div className="flex items-center w-full my-4 justify-end gap-2">
-                                        <Button startContent={<SaveIcon color="#06574C" />} variant="bordered" className="border-[#06574C] rounded-sm " onPress={onClose}>
+                                        <Button startContent={<SaveIcon color="#06574C" />} variant="bordered" className="border-[#06574C] rounded-lg " onPress={onClose}>
                                             Save Draft
                                         </Button>
-                                        <Button type={'submit'} startContent={<Plus color="white" size={15} />} className="bg-[#06574C] text-white rounded-sm py-4 px-3 sm:px-8">
+                                        <Button type={'submit'} startContent={<Plus color="white" size={15} />} className="bg-[#06574C] text-white rounded-lg py-4 px-3 sm:px-8">
                                             {initialData?.id ? "Update Course" : "Create Course"}
                                         </Button>
                                     </div>

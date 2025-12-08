@@ -89,7 +89,6 @@ const UsersDetails = () => {
       title: "Attendance Rate",
       desc: "75%",
       icon: <ChartNoAxesColumn size={22} color="#06574C" />,
-      
     },
   ];
 
@@ -208,60 +207,60 @@ const UsersDetails = () => {
     { key: "Action", label: "Action" },
   ];
 
-  const PaymentTable =[
+  const PaymentTable = [
     {
-        id: 1,
-        transaction_id: "#TXN-8472",
-        course_name: "React Hooks Deep Dive",
-        course_desc: "Advanced JavaScript Course",
-        attendance_rate: 75,
-        email: "john.davis@email.com",
-        amount: "$149.99",
-        status: "Completed",
-        payment_method: "•••• 4532",
-        time: "Today, 2:00 PM", 
-        action: "Download",
+      id: 1,
+      transaction_id: "#TXN-8472",
+      course_name: "React Hooks Deep Dive",
+      course_desc: "Advanced JavaScript Course",
+      attendance_rate: 75,
+      email: "john.davis@email.com",
+      amount: "$149.99",
+      status: "Completed",
+      payment_method: "•••• 4532",
+      time: "Today, 2:00 PM",
+      action: "Download",
     },
     {
-        id: 2,
-        transaction_id: "#TXN-8472",
-        course_name: "React Hooks Deep Dive",
-        course_desc: "Advanced JavaScript Course",
-        attendance_rate: 75,
-        email: "john.davis@email.com",
-        amount: "$149.99",
-        status: "Completed",
-        payment_method: "•••• 4532",
-        time: "Today, 2:00 PM", 
-        action: "Download",
+      id: 2,
+      transaction_id: "#TXN-8472",
+      course_name: "React Hooks Deep Dive",
+      course_desc: "Advanced JavaScript Course",
+      attendance_rate: 75,
+      email: "john.davis@email.com",
+      amount: "$149.99",
+      status: "Completed",
+      payment_method: "•••• 4532",
+      time: "Today, 2:00 PM",
+      action: "Download",
     },
     {
-        id: 3,
-        transaction_id: "#TXN-8472",
-        course_name: "React Hooks Deep Dive",
-        course_desc: "Advanced JavaScript Course",
-        attendance_rate: 75,
-        email: "john.davis@email.com",
-        amount: "$149.99",
-        status: "Completed",
-        payment_method: "•••• 4532",
-        time: "Today, 2:00 PM", 
-        action: "Download",
+      id: 3,
+      transaction_id: "#TXN-8472",
+      course_name: "React Hooks Deep Dive",
+      course_desc: "Advanced JavaScript Course",
+      attendance_rate: 75,
+      email: "john.davis@email.com",
+      amount: "$149.99",
+      status: "Completed",
+      payment_method: "•••• 4532",
+      time: "Today, 2:00 PM",
+      action: "Download",
     },
     {
-        id: 4,
-        transaction_id: "#TXN-8472",
-        course_name: "React Hooks Deep Dive",
-        course_desc: "Advanced JavaScript Course",
-        attendance_rate: 75,
-        email: "john.davis@email.com",
-        amount: "$149.99",
-        status: "Completed",
-        payment_method: "•••• 4532",
-        time: "Today, 2:00 PM", 
-        action: "Download",
+      id: 4,
+      transaction_id: "#TXN-8472",
+      course_name: "React Hooks Deep Dive",
+      course_desc: "Advanced JavaScript Course",
+      attendance_rate: 75,
+      email: "john.davis@email.com",
+      amount: "$149.99",
+      status: "Completed",
+      payment_method: "•••• 4532",
+      time: "Today, 2:00 PM",
+      action: "Download",
     },
-  ]
+  ];
 
   const handleRoleChange = (e) => {
     setSelectedRole(e.target.value);
@@ -276,36 +275,42 @@ const UsersDetails = () => {
         }
       />
       <div className="bg-white rounded-lg p-6">
-        <div className="flex gap-4 items-center my-3">
-          <h1 className="text-3xl font-bold">Jhon Davis</h1>
-          <Button size="sm" className="bg-[#95C4BE33] text-[#06574C] text-xs">
-            Active
-          </Button>
-        </div>
         <div className="flex justify-between items-center">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex gap-1 text-[#666666] font-semibold">
-              <Calendar size={20} color="#666666" />
-              <span>Joined</span> : <h1>Jan 15, 2023</h1>
+          <div>
+            <div className="flex gap-4 items-center mb-3">
+              <h1 className="text-3xl font-bold">Jhon Davis</h1>
+              <Button
+                size="sm"
+                className="bg-[#95C4BE33] text-[#06574C] text-xs"
+              >
+                Active
+              </Button>
             </div>
-            <div className="flex gap-1 text-[#666666] font-semibold">
-              <Clock size={20} color="#666666" />
-              <span>Last Active</span> : <h1>2 hours ago</h1>
-            </div>
-            <div className="flex gap-1 text-[#666666] font-semibold">
-              <Album size={20} color="#666666" />
-              <span>5</span>
-              <h1>Courses Enrolled</h1>
-            </div>
-            <div className="flex gap-1 text-[#666666] font-semibold">
-              <ChartNoAxesColumn size={20} color="#666666" />
-              <span>78%</span>
-              <h1>Avg Progress</h1>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex gap-1 text-[#666666] font-semibold">
+                <Calendar size={20} color="#666666" />
+                <span>Joined</span> : <h1>Jan 15, 2023</h1>
+              </div>
+              <div className="flex gap-1 text-[#666666] font-semibold">
+                <Clock size={20} color="#666666" />
+                <span>Last Active</span> : <h1>2 hours ago</h1>
+              </div>
+              <div className="flex gap-1 text-[#666666] font-semibold">
+                <Album size={20} color="#666666" />
+                <span>5</span>
+                <h1>Courses Enrolled</h1>
+              </div>
+              <div className="flex gap-1 text-[#666666] font-semibold">
+                <ChartNoAxesColumn size={20} color="#666666" />
+                <span>78%</span>
+                <h1>Avg Progress</h1>
+              </div>
             </div>
           </div>
-          <div>
+          <div className="self-center">
             <Button
               size="lg"
+              radius="sm"
               startContent={<Ban color="#E8505B" />}
               className="bg-[#FFEAEC] text-[#E8505B] text-md"
             >
@@ -319,12 +324,12 @@ const UsersDetails = () => {
         <div className="grid col-span-4 bg-white rounded-lg px-4 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold">Personal Details</h1>
-            <SquarePen size={20} />
+            <SquarePen size={22}  color="#06574C"/>
           </div>
           {personalDetails.map((item) => (
             <div className="my-2">
-              <h1 className="text-sm text-[#333333]">{item.title}</h1>
-              <h1 className="text-md text-[#333333] font-medium">
+              <h1 className="text-md text-[#333333]">{item.title}</h1>
+              <h1 className="text-lg text-[#333333] font-medium">
                 {item.desc}
               </h1>
             </div>
@@ -333,11 +338,13 @@ const UsersDetails = () => {
         <div className="grid col-span-4 bg-white rounded-lg px-4 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold">Quick Statistics</h1>
-            <SquarePen size={20} />
+            {/* <SquarePen size={20} /> */}
           </div>
           {quickStats.map((item) => (
             <div
-              className={`my-2 flex gap-2 ${item?.bg  ? `bg-[${item.bg}]` : "bg-[#EBD4C982]"} items-center p-2 rounded-lg`}
+              className={`my-2 flex gap-2 ${
+                item?.bg ? `bg-[${item.bg}]` : "bg-[#EBD4C982]"
+              } items-center p-2 rounded-lg`}
             >
               <div className="h-12 w-12 rounded-full bg-white shadow-[5px_6px_16.2px_0px_#0000001C] items-center flex justify-center">
                 {item.icon}
@@ -352,14 +359,18 @@ const UsersDetails = () => {
         <div className="grid col-span-4 bg-white rounded-lg px-4 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold">Recent Activity</h1>
-            <SquarePen size={20} />
+            {/* <SquarePen size={20} /> */}
           </div>
           {recentactivity.map((item) => (
             <div className="my-2 flex gap-2 items-start">
-              <div className={`h-2 w-2 rounded-full ${item?.bg  ? `bg-[${item.bg}]` : "bg-[#EBD4C982]"} mt-2`} />
+              <div
+                className={`h-2 w-2 rounded-full ${
+                  item?.bg ? `bg-[${item.bg}]` : "bg-[#EBD4C982]"
+                } mt-2`}
+              />
               <div>
                 <h1>{item.title}</h1>
-                <h1>{item.desc}</h1>
+                <h1 className="text-sm text-[#666666]">{item.desc}</h1>
               </div>
             </div>
           ))}
@@ -370,11 +381,12 @@ const UsersDetails = () => {
         <div className="flex flex-row justify-between items-center ">
           <h1 className="text-xl font-bold ">Enrolled Courses</h1>
           <Button
-            size="lg"
-            className="bg-[#06574C] text-white"
+            radius="sm"
+            // size="lg"
+            className="bg-[#06574C] text-white py-7 "
             startContent={<Plus size={20} />}
           >
-            Enrolled Courses
+            Enrolled Course
           </Button>
         </div>
         <div className="mt-3">
@@ -384,9 +396,9 @@ const UsersDetails = () => {
             removeWrapper
             classNames={{
               base: "bg-white rounded-lg ",
-              th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+              th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
               td: "py-3",
-              tr: "border-b border-default-200",
+              tr: "border-b border-default-200 cursor-pointer ",
             }}
           >
             <TableHeader>
@@ -408,23 +420,31 @@ const UsersDetails = () => {
                       </div>
                     </div>
                   </TableCell>
-                    <TableCell>
-                    <Progress
+                  <TableCell>
+                    <div className="flex flex-row items-center gap-2">
+                      <Progress
                       classNames={{ indicator: "bg-[#95C4BE]" }}
-                      showValueLabel
+                      // showValueLabel
                       size="sm"
                       value={classItem.attendance_rate}
                     />
+                      <h1 className="font-semibold text-sm">{classItem.attendance_rate}%</h1>
+                    </div>
                   </TableCell>
                   <TableCell className="felx flex-col">
-                    <h1 className="font-semibold text-sm">{classItem.category}</h1>
-                    <h1 className="text-xs">{classItem.email}</h1>
+                    <h1 className="font-semibold text-sm">
+                      {classItem.category}
+                    </h1>
+                    <h1 className="text-xs text-[#9A9A9A]">{classItem.email}</h1>
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" className="bg-[#95C4BE33] text-[#06574C] w-30">
-                        {classItem.status}
+                    <Button
+                      size="sm"
+                      className="bg-[#95C4BE33] text-[#06574C] w-30"
+                    >
+                      {classItem.status}
                     </Button>
-                    </TableCell>
+                  </TableCell>
                   <TableCell>{classItem.time}</TableCell>
                   <TableCell>
                     <Button
@@ -447,20 +467,22 @@ const UsersDetails = () => {
           <h1 className="text-xl font-bold ">Payment History</h1>
           <div className="flex gap-3 items-center">
             <Button
-            variant="bordered"
-            size="lg"
-            className="border-[#06574C] text-[#06574C]"
-            endContent={<ListFilter  size={16} />}
-          >
-            Filter
-          </Button>
-          <Button
-            size="lg"
-            className="bg-[#06574C] text-white"
-            startContent={<Upload  size={20} />}
-          >
-            Export
-          </Button>
+              variant="bordered"
+              size="lg"
+              radius="sm"
+              className="border-[#06574C] text-[#06574C]"
+              endContent={<ListFilter size={16} />}
+            >
+              Filter
+            </Button>
+            <Button
+              size="lg"
+              radius="sm"
+              className="bg-[#06574C] text-white"
+              startContent={<Upload size={20} />}
+            >
+              Export
+            </Button>
           </div>
         </div>
         <div className="mt-3">
@@ -470,7 +492,7 @@ const UsersDetails = () => {
             removeWrapper
             classNames={{
               base: "bg-white rounded-lg ",
-              th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936] border-t border-default-200",
+              th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936] border-t border-default-200",
               td: "py-3",
               tr: "border-b border-default-200",
             }}
@@ -491,29 +513,37 @@ const UsersDetails = () => {
                       </div>
                     </div>
                   </TableCell>
-                    <TableCell>
-                    <h1 className="font-semibold text-sm">{classItem.course_name}</h1>
-                    <h1 className="text-xs">{classItem.course_desc}</h1>
+                  <TableCell>
+                    <h1 className="font-semibold text-sm">
+                      {classItem.course_name}
+                    </h1>
+                    <h1 className="text-xs text-[#9A9A9A]">{classItem.course_desc}</h1>
                   </TableCell>
                   <TableCell className="felx flex-col">
-                    <h1 className="font-semibold text-sm">{classItem.amount}</h1>
+                    <h1 className="font-semibold text-sm">
+                      {classItem.amount}
+                    </h1>
                   </TableCell>
                   <TableCell>
-                    <Button size="sm" className="bg-[#95C4BE33] text-[#06574C] w-30">
-                        {classItem.status}
+                    <Button
+                      size="sm"
+                      className="bg-[#95C4BE33] text-[#06574C] w-30"
+                    >
+                      {classItem.status}
                     </Button>
-                    </TableCell>
-                    <TableCell >
-                       <div className="flex gap-1 items-center">
-                        <img src="/icons/Visa.svg" alt="" /> 
-                        {classItem.payment_method}</div> 
-                    </TableCell>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 items-center">
+                      <img src="/icons/Visa.svg" alt="" />
+                      {classItem.payment_method}
+                    </div>
+                  </TableCell>
                   <TableCell>{classItem.time}</TableCell>
                   <TableCell>
                     <Button
                       radius="sm"
                       className="bg-[#06574C] text-white"
-                      startContent={<Download  size={18} color="white" />}
+                      startContent={<Download size={18} color="white" />}
                     >
                       {classItem.action}
                     </Button>
@@ -521,17 +551,18 @@ const UsersDetails = () => {
                 </TableRow>
               ))}
             </TableBody>
-            
           </Table>
           <div className="flex justify-between items-center mt-2 px-1">
-                <div className="text-[#333333] text-sm">
-                    <span>Total Revenue:</span>
-                    <span className="font-semibold">$899.93</span>
-                </div>
-                <div>
-                    <span className="text-sm text-[#06574C] font-bold">View all Transaction</span>
-                </div>
+            <div className="text-[#333333] text-sm">
+              <span>Total Revenue:</span>
+              <span className="font-semibold">$899.93</span>
             </div>
+            <div>
+              <span className="text-sm text-[#06574C] font-bold">
+                View all Transaction
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

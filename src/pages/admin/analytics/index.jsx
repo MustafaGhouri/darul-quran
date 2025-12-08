@@ -313,10 +313,10 @@ const Analytics = () => {
             <div className="flex gap-3 items-center">
               <Select
                 radius="sm"
-                className="w-50"
+                className="w-60 !border-[#06574C]"
                 variant="bordered"
                 // defaultSelectedKeys={["all"]}
-                placeholder="Select Filtered Date"
+                placeholder="Filter"
               >
                 {statuses.map((items) => (
                   <SelectItem key={items.key}>{items.label}</SelectItem>

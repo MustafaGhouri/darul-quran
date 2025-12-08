@@ -200,86 +200,100 @@ const CourseManagement = () => {
         </div>
         <CourseForm />
       </div>
-      <div className="max-sm:hsidden overflow-hidden">
-        <Table
-          aria-label="Pending approvals table"
-          removeWrapper
-          classNames={{
-            base: "bg-white rounded-lg ",
-            th: "font-bold p-4 text-sm text-[#333333] capitalize tracking-widest bg-[#EBD4C936] cursor-default",
-            td: "py-3",
-            tr: "border-b border-default-200 last:border-b-0 hover:bg-[#EBD4C936] text-nowrap cursor-pointer overflow-hidden",
-          }}
-        >
-          <TableHeader>
-            <TableColumn >Course</TableColumn>
-            <TableColumn >Category</TableColumn>
-            <TableColumn >Teacher</TableColumn>
-            <TableColumn >Price</TableColumn>
-            <TableColumn >Enrolled</TableColumn>
-            <TableColumn >Status</TableColumn>
-            <TableColumn >Reviews</TableColumn>
-            <TableColumn >Actions</TableColumn>
-          </TableHeader>
+      <div className="max-sm:hidden">
+        <div className="overflow-x-auto no-scrollbar bg-white rounded-lg">
+          <Table
+            aria-label="Pending approvals table"
+            removeWrapper
+            classNames={{
+              base: "table-fixed w-full bg-white rounded-lg",
+              th: "font-bold p-4 text-sm text-[#333333] capitalize tracking-widest bg-[#EBD4C936] cursor-default",
+              td: "py-3 align-center",
+              tr: "border-b border-default-200 last:border-b-0 hover:bg-[#EBD4C936]",
+            }}
+          >
+            <TableHeader>
+              <TableColumn className="w-1/4">Course</TableColumn>
+              <TableColumn className="w-1/6 text-center">Category</TableColumn>
+              <TableColumn className="w-1/6">Teacher</TableColumn>
+              <TableColumn className="w-1/12 text-center">Price</TableColumn>
+              <TableColumn className="w-1/12 text-center">Enrolled</TableColumn>
+              <TableColumn className="w-1/12 text-center">Status</TableColumn>
+              <TableColumn className="w-1/6">Reviews</TableColumn>
+              <TableColumn className="w-24">Actions</TableColumn>
+            </TableHeader>
 
-          <TableBody>
-            {classes.map((classItem) => (
-              <TableRow key={classItem.id}>
-                <TableCell>
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      {classItem.name}
+            <TableBody>
+              {classes.map((classItem) => (
+                <TableRow key={classItem.id}>
+                  <TableCell>
+                    <div className="min-w-0">
+                      <div className="font-medium text-gray-900 truncate">
+                        {classItem.name}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5 whitespace-normal max-w-[220px]">
+                        {classItem.desc}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      {classItem.desc}
+                  </TableCell>
+
+                  <TableCell>
+                    <p className="p-2 w-full text-center text-xs rounded-md text-[#06574C] bg-[#95C4BE]/20">
+                      {classItem.category}
+                    </p>
+                  </TableCell>
+
+                  <TableCell>
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">
+                        {classItem.teacher}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5 truncate max-w-[150px]">
+                        {classItem.email}
+                      </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <p className="p-2 w-full text-center text-xs rounded-md text-[#06574C] bg-[#95C4BE]/20">
-                    {classItem.category}
-                  </p>
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{classItem.teacher}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      {classItem.email}
+                  </TableCell>
+
+                  <TableCell className="text-center">
+                    <span className="font-medium">${classItem.price}</span>
+                  </TableCell>
+
+                  <TableCell className="text-center">
+                    <span className="font-medium">{classItem.enrolled}</span>
+                  </TableCell>
+
+                  <TableCell className="text-center">
+                    <p className="p-2 w-full text-xs text-center rounded-md text-[#06574C] bg-[#95C4BE]/20">
+                      {classItem.status}
+                    </p>
+                  </TableCell>
+
+                  <TableCell>
+                    <div className="min-w-0 flex items-center">
+                      <span className="font-medium truncate max-w-[220px] block">
+                        {classItem.reviews}
+                      </span>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="font-medium">${classItem.price}</span>
-                </TableCell>
-                <TableCell>
-                  <span className="font-medium">{classItem.enrolled}</span>
-                </TableCell>
-                <TableCell>
-                  <p className="p-2 w-full text-xs text-center rounded-md text-[#06574C] bg-[#95C4BE]/20">
-                    {classItem.status}
-                  </p>
-                </TableCell>
-                <TableCell>
-                  <span className="font-medium truncate max-w-56">
-                    {classItem.reviews}
-                  </span>
-                </TableCell>
-                <TableCell className="flex items-center gap-2">
-                  <CourseForm initialData={classItem} />
-                  <Button
-                    radius="sm"
-                    size="sm"
-                    className="bg-[#06574C] text-white"
-                    startContent={<Trash2 color="white" />}
-                  >
-                    Delete
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  </TableCell>
+
+                  <TableCell className="flex items-center gap-2 justify-end">
+                    <CourseForm initialData={classItem} />
+                    <Button
+                      radius="sm"
+                      size="md"
+                      className="bg-[#06574C] text-white"
+                      startContent={<Trash2 color="white" />}
+                    >
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
+
       <div className="flex items-center p-4 gap-2 justify-between">
         <div className="flex text-sm items-center gap-1">
           <span>Showing</span>

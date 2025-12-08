@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { AnimatePresence, motion } from 'framer-motion'
 import { Button, Chip, Input, Popover, PopoverContent, PopoverTrigger, Spinner } from "@heroui/react";
 import { Bell, MenuIcon, Plus, Search, SidebarClose, SidebarOpen } from "lucide-react";
+import { TbBell } from "react-icons/tb";
 
 export default function AdminLayout() {
     const { pathname } = useLocation()
@@ -94,11 +95,11 @@ export default function AdminLayout() {
                                 <PopoverTrigger >
                                     <button
                                         type="button"
-                                        className="relative inline-flex items-center justify-center p-3 bg-white rounded-full shadow-sm hover:shadow-md"
+                                        className="relative inline-flex items-center justify-center p-3 border-[#CBD5E1] border-[1px] bg-white rounded-full shadow-sm hover:shadow-md"
                                         aria-label="Notifications"
                                     >
-                                        <Bell color="#406C65" size={20} />
-                                        <span className="pointer-events-none absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#ebd4c9] text-[#406C65] text-[10px] font-semibold leading-none ring-2 ring-white z-10">
+                                        <TbBell size={20} />
+                                        <span className="pointer-events-none absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#06574C] text-white text-[10px] font-semibold leading-none ring-2 ring-white z-10">
                                             3
                                         </span>
                                     </button>
@@ -114,7 +115,7 @@ export default function AdminLayout() {
                                             <Chip
                                                 size="sm"
                                                 variant="flat"
-                                                className="bg-[#ebd4c9] text-[#406C65] font-bold"
+                                                className="font-bold bg-[#06574C] text-white"
                                             >
                                                 3  {/* {unreadNotifications.length} */}
                                             </Chip>

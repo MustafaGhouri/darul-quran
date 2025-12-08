@@ -213,7 +213,7 @@ const Attendance = () => {
         <Button
           radius="sm"
           startContent={<Download color="white" size={15} />}
-          className="bg-[#06574C] text-white py-4 px-3 sm:px-8"
+          className="bg-[#06574C] text-white py-6 px-3 sm:px-4"
         >
           Export
         </Button>
@@ -225,7 +225,7 @@ const Attendance = () => {
         removeWrapper
         classNames={{
           base: "bg-white rounded-lg ",
-          th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+          th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
           td: "py-3",
           tr: "border-b border-default-200",
         }}

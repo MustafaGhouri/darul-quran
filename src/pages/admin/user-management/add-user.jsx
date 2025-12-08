@@ -41,6 +41,9 @@ const Adduser = () => {
     setSelectedRole(e.target.value);
   };
 
+  
+  const [isSelected, setIsSelected] = useState(true);
+
   return (
     <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5 pb-3">
       <DashHeading
@@ -112,7 +115,10 @@ const Adduser = () => {
           </div>
           <div className="w-full p-3 bg-[#95C4BE33] rounded-lg mt-3 flex items-center justify-between">
             <span className="text-[#06574C] text-sm">Status</span>
-            <Switch defaultSelected aria-label="Automatic updates" />
+            <div className="flex items-center gap-3">
+              <p className="text-md text-[#06574C]">{isSelected ? "Active" : "Inactive"}</p>
+            <Switch color="success" defaultSelected aria-label="Automatic updates" isSelected={isSelected} onValueChange={setIsSelected} />
+            </div>
           </div>
         </Form>
       </div>
@@ -144,13 +150,14 @@ const Adduser = () => {
 
       <div className="flex items-center justify-end mt-4 gap-4">
         <Button
+        radius="sm"
           className="w-40 border-[#06574C] text-[#06574C]"
           variant="bordered"
         >
           Cancel
         </Button>
         <Link to="/admin/user-management/users-details">
-        <Button className="w-50 bg-[#06574C]" variant="solid" color="primary">
+        <Button  radius="sm" className="w-50 bg-[#06574C]" variant="solid" color="primary">
           Create User
         </Button>
         </Link>

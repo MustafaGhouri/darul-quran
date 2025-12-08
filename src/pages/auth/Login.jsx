@@ -14,19 +14,19 @@ const Login = () => {
 
                 <img src="/icons/logo.png" alt="Darul Quran" className=' w-56 h-56' />
 
-                <div className='space-y-4 lg:space-y-6 text-white text-center lg:text-left'>
+                {/* <div className='space-y-4 lg:space-y-6 text-white text-center lg:text-left'>
                     <p className='text-sm lg:text-base'>Join 10,000+ other teachers & Students Here</p>
                     <img src="/icons/teachers.png" alt="teachers" className='h-12' />
                     <h1 className='text-2xl lg:text-3xl font-semibold'>Don't Forget to Check Your Statistics</h1>
                     <p className='text-sm lg:text-base leading-relaxed'>Keep an eye on your teaching insights to improve student learning experiences.</p>
-                </div>
+                </div> */}
             </div>
 
             <div className='flex-1 flex flex-col items-start justify-center bg-[#E9E0D6] !ml-0 px-6 sm:px-12 md:px-16 lg:px-24 py-8 lg:py-0 m-0 lg:m-6 lg:rounded-r-lg '>
                 <div className='w-full max-w-xl mx-auto lg:mx-16'>
-                    <h1 className='text-2xl sm:text-3xl lg:text-4xl xl:text-[40px] text-[#3F3F44] leading-tight mb-6 lg:mb-8 font-medium'>
-                        Hi, <strong>Welcome</strong> <br />
-                        Ready to begin your <span className='text-[#95C4BE]'>classes</span> for today
+                    <h1 className='text-2xl sm:text-3xl lg:text-4xl xl:text-[35px] text-[#3F3F44] leading-tight mb-6 lg:mb-8 font-medium'>
+                        Assalamu 'alaykum, <strong>Welcome</strong> <br />
+                        to  <span className='text-[#95C4BE]'>Darul Qur'an</span> an Leicester - a space to grow, reflect and connect
                     </h1>
 
                     <form onSubmit={handleSubmit} className='w-full space-y-5 lg:space-y-6'>
