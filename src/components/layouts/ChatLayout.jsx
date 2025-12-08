@@ -6,7 +6,14 @@ import { Spinner } from "@heroui/react";
 import { SidebarClose, SidebarOpen } from "lucide-react";
 
 export default function ChatLayout() {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+   const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+        const saved = localStorage.getItem("sidebarOpen");
+        return saved ? saved === "true" : true; 
+    });
+
+    useEffect(() => {
+        localStorage.setItem("sidebarOpen", isSidebarOpen);
+    }, [isSidebarOpen]);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {
@@ -14,7 +21,7 @@ export default function ChatLayout() {
             setIsMobile(true)
         } else {
             setIsMobile(false);
-            setIsSidebarOpen(true)
+            // setIsSidebarOpen(true)
         }
     }, [isMobile, window.innerWidth])
     return (
@@ -54,14 +61,14 @@ export default function ChatLayout() {
                         }`}
                 >
                     <button
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            type="button"
-                            className="absolute top-0 cursor-pointer max-sm:hidden inline-flex items-center justify-center p-2 bg-white rounded-full shadow-sm hover:shadow-md"
-                            aria-label="Sidebar Button"
-                            title={isSidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}
-                        >
-                            {isSidebarOpen ? <SidebarClose size={14} /> : <SidebarOpen size={14} />}
-                        </button>
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        type="button"
+                        className="absolute z-30 top-0 cursor-pointer inline-flex items-center justify-center p-2 bg-white rounded-full shadow-sm hover:shadow-md"
+                        aria-label="Sidebar Button"
+                        title={isSidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}
+                    >
+                        {isSidebarOpen ? <SidebarClose size={14} /> : <SidebarOpen size={14} />}
+                    </button>
                     <Suspense fallback={
                         <div className="h-screen flex items-center justify-center">
                             <Spinner size="lg" label="Loading..." labelColor="success" color="success" />

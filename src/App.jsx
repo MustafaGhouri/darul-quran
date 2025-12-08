@@ -197,7 +197,7 @@ function App() {
               path="/admin/help/chat"
               element={
                 <ProtectedRoute isAuthenticated={true}>
-                  'jbjhgjh'
+                  <HelpMessages />
                 </ProtectedRoute>
               }
             />

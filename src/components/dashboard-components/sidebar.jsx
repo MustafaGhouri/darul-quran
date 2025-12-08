@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowBigDown, BookIcon, CalendarIcon, ChartBarIcon, ChevronDown, DollarSignIcon, FileQuestionIcon, HomeIcon, MegaphoneIcon, TicketIcon, UsersIcon } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -7,6 +7,7 @@ import { Link, useLocation } from 'react-router-dom';
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const [expandedItems, setExpandedItems] = useState([0, 6]);
   const location = useLocation()
+  const sideBarRef = useRef(null);
   const menuItems = [
     {
       name: 'Dashboard',
@@ -83,6 +84,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     );
     setIsSidebarOpen(true);
   };
+  const handleCloseMobile = () => {
+    if (window.innerWidth <= 1024) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   useEffect(() => {
     const handleEsc = (e) => e.key === "Escape" && setIsSidebarOpen(false);
@@ -105,9 +111,22 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
       window.removeEventListener("touchend", end);
     };
   }, []);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sideBarRef.current && !sideBarRef.current.contains(event.target)) {
+        handleCloseMobile();
+      }
+      console.log('asas');
+      
+    };
 
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   return (
-    <div className="w-full h-full bg-[#1a5850] text-white flex flex-col">
+    <div ref={sideBarRef} className="w-full z-5 h-full bg-[#1a5850] text-white flex flex-col">
 
       <div className="p-3 sm:p-6 sm: mx-auto border-b border-white/10 cursor-pointer" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
         {isSidebarOpen ? <img src="/icons/logo.png" onClick={() => setIsSidebarOpen(!isSidebarOpen)} alt="Darul Quran" className=' w-36 h-36' />
@@ -115,7 +134,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
             <img src="/icons/logo-icon.png" onClick={() => setIsSidebarOpen(!isSidebarOpen)} alt="Darul Quran" className=' w-8 h-8' />
           )}
       </div>
-
       <div className="flex-1 overflow-y-auto no-scrollbar py-4">
         <ul className="space-y-1 mx-2">
           {menuItems.map((item, idx) => {
@@ -128,9 +146,10 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                 <Link
                   to={item.link}
                   onClick={() => {
-                    if (item.children&&!expandedItems.includes(idx)) {
+                    if (item.children && !expandedItems.includes(idx)) {
                       toggleExpand(idx);
                     }
+                    handleCloseMobile();
                   }}
                   className={`
                   relative flex items-center rounded-md justify-between px-6 py-3 cursor-pointer transition-all
@@ -147,9 +166,9 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                       {item.badge}
                     </span>
                   )}
-                <AnimatePresence>
-                  
-                 {isActiveParent&&   <motion.span
+                  <AnimatePresence>
+
+                    {isActiveParent && <motion.span
                       layoutId="active-rail"
                       className="absolute left-0  top-0 h-full w-full bg-[#d9ebe8] rounded-md"
                       initial={{ opacity: 0 }}
@@ -161,8 +180,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                         damping: 28,
                       }}
                     />}
-                  
-                </AnimatePresence>
+
+                  </AnimatePresence>
                 </Link>
                 <AnimatePresence>
                   {item.children && expandedItems.includes(idx) && (

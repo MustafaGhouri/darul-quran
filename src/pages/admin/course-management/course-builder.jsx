@@ -144,7 +144,7 @@ const CourseBuilder = () => {
             >
               <Form action={() => handleSubmit()} className="w-full py-4">
                 <div className="grid grid-cols-12 gap-2 w-full">
-                  <div className="bg-white rounded-lg p-4 col-span-8 shadow-xl">
+                  <div className="bg-white rounded-lg p-4 col-span-12 sm:col-span-8 shadow-xl">
                     <div>
                       <h1 className="text-xl font-medium text-[#333333]">Course Details</h1>
                     </div>
@@ -158,7 +158,7 @@ const CourseBuilder = () => {
                         className="w-full"
                       />
 
-                      <div className="flex gap-3 items-center pt-4">
+                      <div className="flex max-sm:flex-wrap gap-3 items-center pt-4">
                         <Select
                           size="lg"
                           variant="bordered"
@@ -223,7 +223,7 @@ const CourseBuilder = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="col-span-4">
+                  <div className="col-span-12 sm:col-span-4">
                     <div className="bg-white rounded-lg p-3 shadow-xl">
                       <h1 className="text-xl font-medium text-[#333333]">Course Details</h1>
                       <div className="py-6">
@@ -245,15 +245,22 @@ const CourseBuilder = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-between items-center w-full ">
-                  <div>
-                    <Button size="lg" startContent={<FolderDot color="#06574C" size={16} />} variant="bordered" className="border-[#06574C] text-[#06574C]" type="submit">Save Draft</Button>
-                  </div>
-                  <div className="flex gap-3">
-                    <Button size="lg" startContent={<Rocket color="white" size={16} />} className="bg-[#B1A7A7] text-white w-60" type="submit">Publish Course</Button>
+                <div className="flex gap-3 flex-wrap justify-center sm:justify-between items-center w-full ">
+                  <Button
+                    size="lg" startContent={<FolderDot color="#06574C" size={16} />}
+                    variant="bordered"
+                    className="border-[#06574C] w-78  sm:w-40 text-[#06574C]"
+                    type="submit">Save Draft</Button>
+                  <div className="flex flex-wrap gap-3">
                     <Button
                       size="lg"
-                      className="bg-[#06574C] text-white w-35"
+                      startContent={<Rocket color="white" size={16} />}
+                      className="bg-[#B1A7A7] w-full text-white sm:w-60" type="submit">
+                      Publish Course
+                    </Button>
+                    <Button
+                      size="lg"
+                      className="bg-[#06574C] w-full text-white sm:w-35"
                       type="submit"
                     >
                       Next Step
@@ -315,27 +322,25 @@ const CourseBuilder = () => {
                   <h1 className="text-[#06574C] font-medium text-sm">Control when students can access each lesson. Content will be released automatically based on their enrollment date. This helps create a structured learning experience and prevents overwhelming students with too much content at once.</h1>
                 </div>
               </div>
-              <div className="flex pb-6 justify-between items-center w-full ">
-                <div>
-                  <Button
-                    size="lg"
-                    startContent={<FolderDot color="#06574C" size={16} />}
-                    variant="bordered"
-                    className="border-[#06574C] text-[#06574C]"
-                    onPress={() => handleSubmit('info')}
-                  >Previous Step</Button>
-                </div>
-                <div className="flex gap-3">
+              <div className="flex gap-3 flex-wrap justify-center sm:justify-between items-center w-full ">
+                <Button
+                  size="lg"
+                  startContent={<FolderDot color="#06574C" size={16} />}
+                  variant="bordered"
+                  className="border-[#06574C] w-78 sm:w-40 text-[#06574C]"
+                  onPress={() => handleSubmit('info')}
+                >Previous Step</Button>
+                <div className="flex flex-wrap gap-3">
                   <Button
                     size="lg"
                     startContent={<Rocket color="white" size={16} />}
-                    className="bg-[#B1A7A7] text-white w-60"
+                    className="bg-[#B1A7A7] w-full text-white sm:w-60"
                     type="submit"
                   >Publish Course
                   </Button>
                   <Button
                     size="lg"
-                    className="bg-[#06574C] text-white w-35"
+                    className="bg-[#06574C] w-full text-white sm:w-35"
                     // type="submit"
                     onPress={() => handleSubmit('pricing')}
 
@@ -466,7 +471,7 @@ const CourseBuilder = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-between items-center w-full ">
+                <div className="flex flex-wrap gap-3 justify-center sm:justify-between items-center w-full ">
                   <div>
                     <Button size="lg" startContent={<FolderDot color="#06574C" size={16} />} variant="bordered" className="border-[#06574C] text-[#06574C]" type="submit">Save Draft</Button>
                   </div>

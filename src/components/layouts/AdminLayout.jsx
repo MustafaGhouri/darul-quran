@@ -6,21 +6,32 @@ import { Button, Chip, Input, Popover, PopoverContent, PopoverTrigger, Spinner }
 import { Bell, ChevronRight, MenuIcon, Plus, Search, SidebarClose, SidebarOpen } from "lucide-react";
 
 export default function AdminLayout() {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+        const saved = localStorage.getItem("sidebarOpen");
+        return saved ? saved === "true" : true;
+    });
+    const [searchOpen, setSearchOpen] = useState(false);
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        localStorage.setItem("sidebarOpen", isSidebarOpen);
+    }, [isSidebarOpen]);
     useEffect(() => {
         if (window.innerWidth < 645) {
             setIsMobile(true)
         } else {
             setIsMobile(false);
-            setIsSidebarOpen(true)
+            // setIsSidebarOpen(true)
         }
-    }, [isMobile, window.innerWidth])
+    }, [isMobile, window.innerWidth]);
+
+    const toggleSearchBar = () => setSearchOpen(prev => !prev);
+
     return (
         <>
             <main className="flex h-screen w-screen overflow-hidden bg-gray-50">
-
 
                 <AnimatePresence>
                     {isMobileMenuOpen && (
@@ -138,15 +149,34 @@ export default function AdminLayout() {
                                     </div>
                                 </PopoverContent>
                             </Popover>
-                            <button
-                                // onClick={() => dispatch(getAllNotifications())}
-                                type="button"
-                                className="relative sm:hidden inline-flex items-center justify-center p-3 bg-white rounded-full shadow-sm hover:shadow-md"
-                                aria-label="Notifications"
-                            >
-                                <Search color="#406C65" size={20} />
-                            </button>
-                            <Input endContent={<Search color="#9A9A9A" />} type="search" className="max-w-lg max-sm:hidden min-w-sm" placeholder="Search here..." />
+                            <div className="relative flex items-center gap-2">
+
+                                <input
+                                    type="search"
+                                    placeholder="Search here..."
+                                    className={`
+                                      absolsute left-0 sm:hidden h-10 px-3 rounded-full border border-gray-300 shadow-sm
+                                      transition-all duration-300 ease-in-out bg-white
+                                      ${searchOpen ? "w-[70%]  opacity-100" : "w-0 absolute opacity-0 px-0"}
+                                    `}
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchOpen(prev => !prev)}
+                                    className="relative sm:hidden inline-flex items-center justify-center p-3 bg-white rounded-full shadow-sm hover:shadow-md"
+                                    aria-label="Search"
+                                >
+                                    <Search color="#406C65" size={20} />
+                                </button>
+                                <Input
+                                    endContent={<Search color="#9A9A9A" />}
+                                    type="search"
+                                    className="max-w-lg max-sm:hidden min-w-sm"
+                                    placeholder="Search here..."
+                                />
+                            </div>
+
                         </div>
                     </header>
                     <Suspense fallback={
