@@ -187,13 +187,13 @@ const Announcements = () => {
       </div>
       <div className="max-sm:hidden overflow-hidden">
         <Table
-        removeWrapper
-                    classNames={{
-                      base: "bg-white rounded-lg ",
-                      th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
-                      td: "py-3 ",
-                      tr: "border-b border-default-200 ",
-                    }}
+          removeWrapper
+          classNames={{
+            base: "bg-white rounded-lg ",
+            th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+            td: "py-3 ",
+            tr: "border-b border-default-200 ",
+          }}
         >
           <TableHeader>
             <TableColumn className="bg-[#EBD4C9]/30">Title</TableColumn>
