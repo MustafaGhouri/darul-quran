@@ -8,7 +8,7 @@ const Login = () => {
 
   return (
     <main className="flex flex-col lg:flex-row w-full min-h-screen">
-      <div className="lg:h-screen w-full lg:max-w-[400px] xl:max-w-[400px] p-6 lg:p-8 flex flex-col items-center justify-between bg-[#06574C]  relative overflow-hidden max-lg:hidden lg:rounded-r-lg">
+      <div className="lg:h-screen w-full lg:max-w-[400px] xl:max-w-[400px] p-6 lg:p-8 flex flex-col items-center justify-between bg-[#06574C]  relative ovexrflow-hidden max-lg:hidden lg:rounded-r-lg">
         {/* <img src="/icons/login-line.png" alt="Darul Quran" className='  absolute top-1/7 left-1/8 -translate-x-1/2 -translate-y-1/2' /> */}
         <img
           src="/icons/logo.png"
@@ -25,14 +25,14 @@ const Login = () => {
                     <p className='text-sm lg:text-base leading-relaxed'>Keep an eye on your teaching insights to improve student learning experiences.</p>
                 </div> */}
       </div>
-      <img
-        src="/icons/darul-quran-black-logo.png"
-        alt="Darul Quran"
-        className=" w-45 h-45 top-1/8 left-1/2 -translate-x-1/2 -translate-y-1/2 absolute md:hidden"
-      />
-      <div className="flex-1 flex flex-col items-start justify-center bg-[#E9E0D6] !ml-0 px-6 sm:px-12 md:px-16 lg:px-24 py-8 lg:py-0 m-0 lg:m-6 lg:rounded-r-lg ">
+      <div className="flex-1 flex flex-col max-sm:items-center items-start justify-center bg-[#E9E0D6] !ml-0 px-6 sm:px-12 md:px-16 lg:px-24 py-8 lg:py-0 m-0 lg:m-6 lg:rounded-r-lg ">
+          <img
+            src="/icons/darul-quran-black-logo.png"
+            alt="Darul Quran"
+            className=" w-45 h-45 md:hidden"
+          />
         <div className="w-full max-w-xl mx-auto lg:mx-16">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[35px] text-[#3F3F44] leading-tight mb-6 lg:mb-8 font-medium">
+          <h1 className="text-xl sm:text-3xl lg:text-4xl xl:text-[35px] text-[#3F3F44] leading-tight mb-6 lg:mb-8 font-medium">
             Assalamu 'alaykum, <br />
             <strong>Welcome</strong>
             {""} to{" "}
