@@ -174,8 +174,16 @@ const SupportTickets = () => {
           Clear All
         </Button>
       </div>
-      <div className="max-sm:hidden overflow-hidden">
-        <Table>
+      <div className=" overflow-hidden">
+        <Table
+        removeWrapper
+          classNames={{
+            base: "w-full bg-white rounded-lg overflow-x-scroll w-full no-scrollbar",
+            th: "font-bold p-4 text-md  text-[#333333] capitalize tracking-widest  bg-[#EBD4C936]",
+            td: "py-3 items-center whitespace-nowrap",
+            tr: "border-b border-default-200 ",
+          }}
+        >
           <TableHeader>
             {supportheader.map((item) => (
                 <TableColumn key={item.key}>{item.label}</TableColumn>

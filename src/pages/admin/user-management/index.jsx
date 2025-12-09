@@ -462,12 +462,12 @@ const UserManagement = () => {
                     selectionMode="multiple"
                     aria-label="Pending approvals table"
                     removeWrapper
-                    classNames={{
-                      base: "bg-white rounded-lg ",
-                      th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
-                      td: "py-3",
-                      tr: "border-b border-default-200",
-                    }}
+          classNames={{
+            base: "w-full bg-white rounded-lg overflow-x-scroll w-full no-scrollbar",
+            th: "font-bold p-4 text-md  text-[#333333] capitalize tracking-widest  bg-[#EBD4C936]",
+            td: "py-3 items-center whitespace-nowrap",
+            tr: "border-b border-default-200 ",
+          }}
                   >
                     <TableHeader>
                       {header.map((item) => (
@@ -553,12 +553,12 @@ const UserManagement = () => {
                     selectionMode="multiple"
                     aria-label="Pending approvals table"
                     removeWrapper
-                    classNames={{
-                      base: "bg-white rounded-lg ",
-                      th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
-                      td: "py-3",
-                      tr: "border-b border-default-200",
-                    }}
+          classNames={{
+            base: "w-full bg-white rounded-lg overflow-x-scroll w-full no-scrollbar",
+            th: "font-bold p-4 text-md  text-[#333333] capitalize tracking-widest  bg-[#EBD4C936]",
+            td: "py-3 items-center whitespace-nowrap",
+            tr: "border-b border-default-200 ",
+          }}
                   >
                     <TableHeader>
                       {header.map((item) => (
@@ -644,12 +644,12 @@ const UserManagement = () => {
                     selectionMode="multiple"
                     aria-label="Pending approvals table"
                     removeWrapper
-                    classNames={{
-                      base: "bg-white rounded-lg ",
-                      th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
-                      td: "py-3",
-                      tr: "border-b border-default-200",
-                    }}
+          classNames={{
+            base: "w-full bg-white rounded-lg overflow-x-scroll w-full no-scrollbar",
+            th: "font-bold p-4 text-md  text-[#333333] capitalize tracking-widest  bg-[#EBD4C936]",
+            td: "py-3 items-center whitespace-nowrap",
+            tr: "border-b border-default-200 ",
+          }}
                   >
                     <TableHeader>
                       {header.map((item) => (
@@ -711,7 +711,7 @@ const UserManagement = () => {
           </Tabs>
         </div>
       </div>
-      <div className="flex flex-row w-full justify-between items-center mb-3">
+      <div className="flex flex-col gap-6  md:flex-row  w-full md:justify-between md:items-center mb-3">
         <div className="flex text-sm items-center gap-1">
           <span>Showing</span>
           <Select
