@@ -224,9 +224,9 @@ const Attendance = () => {
         aria-label="Pending approvals table"
         removeWrapper
         classNames={{
-          base: "bg-white rounded-lg ",
+          base: "bg-white rounded-lg overflow-x-scroll w-full no-scrollbar",
           th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
-          td: "py-3",
+          td: "py-3 items-center whitespace-nowrap",
           tr: "border-b border-default-200",
         }}
       >

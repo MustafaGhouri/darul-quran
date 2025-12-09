@@ -198,6 +198,7 @@ const PaymentsRefunds = () => {
               variant="bordered"
               color="success"
               size="lg"
+              radius="sm"
               className=" text-[#06574C] w-30 !border-[#06574C]"
               // classNames={{}}
               // endContent={<ListFilter size={16} />}
@@ -208,6 +209,7 @@ const PaymentsRefunds = () => {
               ))}
             </Select>
             <Button
+              radius="sm"
               size="lg"
               className="bg-[#06574C] text-white"
               startContent={<Upload size={20} />}
@@ -329,6 +331,7 @@ const PaymentsRefunds = () => {
               Filter
             </Button> */}
             <Select
+              radius="sm"
               variant="bordered"
               color="success"
               size="lg"
@@ -342,6 +345,7 @@ const PaymentsRefunds = () => {
               ))}
             </Select>
             <Button
+              radius="sm"
               size="lg"
               className="bg-[#06574C] text-white"
               startContent={<Upload size={20} />}
@@ -443,12 +447,11 @@ const PaymentsRefunds = () => {
           <h1 className="text-xl font-bold ">Refund History</h1>
           <div className="flex gap-3 items-center">
             <Select
+              radius="sm"
               variant="bordered"
               color="success"
               size="lg"
               className=" text-[#06574C] w-30"
-              // classNames={{}}
-              // endContent={<ListFilter size={16} />}
               placeholder="Filter"
             >
               {filters.map((item) => (
@@ -456,6 +459,7 @@ const PaymentsRefunds = () => {
               ))}
             </Select>
             <Button
+              radius="sm"
               size="lg"
               className="bg-[#06574C] text-white"
               startContent={<Upload size={20} />}

@@ -200,7 +200,7 @@ const CourseManagement = () => {
         </div>
         <CourseForm />
       </div>
-      <div className="max-sm:hidden">
+      <div className="">
         <div className="overflow-x-auto no-scrollbar bg-white rounded-lg">
           <Table
             aria-label="Pending approvals table"
