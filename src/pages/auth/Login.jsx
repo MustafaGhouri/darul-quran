@@ -12,10 +12,10 @@ const Login = () => {
             <div className='lg:h-screen w-full lg:max-w-[400px] xl:max-w-[400px] p-6 lg:p-8 flex flex-col items-center justify-between bg-[#06574C]  relative overflow-hidden max-lg:hidden lg:rounded-r-lg'>
 
 
-                <img src="/icons/login-line.png" alt="Darul Quran" className='  absolute top-1/7 left-1/8 -translate-x-1/2 -translate-y-1/2' />
+                {/* <img src="/icons/login-line.png" alt="Darul Quran" className='  absolute top-1/7 left-1/8 -translate-x-1/2 -translate-y-1/2' /> */}
                 <img src="/icons/logo.png" alt="Darul Quran" className=' w-56 h-56 top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 absolute' />
-                <img src="/icons/side-shadow.png" alt="Darul Quran" className=' h-full  left-0 bottom-0 absolute' />
-                <img src="/icons/bottom-shadow.png" alt="Darul Quran" className=' h-100  left-0 bottom-0 absolute' />
+                {/* <img src="/icons/side-shadow.png" alt="Darul Quran" className=' h-full  left-0 bottom-0 absolute' />
+                <img src="/icons/bottom-shadow.png" alt="Darul Quran" className=' h-100  left-0 bottom-0 absolute' /> */}
 
                 {/* <div className='space-y-4 lg:space-y-6 text-white text-center lg:text-left'>
                     <p className='text-sm lg:text-base'>Join 10,000+ other teachers & Students Here</p>
@@ -28,8 +28,8 @@ const Login = () => {
             <div className='flex-1 flex flex-col items-start justify-center bg-[#E9E0D6] !ml-0 px-6 sm:px-12 md:px-16 lg:px-24 py-8 lg:py-0 m-0 lg:m-6 lg:rounded-r-lg '>
                 <div className='w-full max-w-xl mx-auto lg:mx-16'>
                     <h1 className='text-2xl sm:text-3xl lg:text-4xl xl:text-[35px] text-[#3F3F44] leading-tight mb-6 lg:mb-8 font-medium'>
-                        Assalamu 'alaykum, <strong>Welcome</strong> <br />
-                        to  <span className='text-[#95C4BE]'>Darul Qur'an</span> an Leicester - a space to grow, reflect and connect
+                        Assalamu 'alaykum, <br /><strong>Welcome...</strong> <br />
+                        to  <span className='text-[#95C4BE]'>Darul Qur'an Leicester </span>  - a space to grow, reflect and connect
                     </h1>
 
                     <form onSubmit={handleSubmit} className='w-full space-y-5 lg:space-y-6'>
