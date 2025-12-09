@@ -28,7 +28,7 @@
  */
 const AnalyticsCards = ({ data = [] }) => {
     return (
-        <div className="py-4 gap-5 flex overflow-x-auto sm:grid sm:grid-cols-3">
+        <div className="py-4 gap-5  overflow-x-auto grid sm:grid-cols-3">
             {data.map((item, index) => (
                 <div
                     key={index}

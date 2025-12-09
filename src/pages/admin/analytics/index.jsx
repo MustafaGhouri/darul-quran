@@ -175,7 +175,7 @@ const Analytics = () => {
       <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
         <div className="flex  items-center gap-2">
           <Select
-            className="md:min-w-[150px]"
+            className="min-w-[130px]"
             radius="sm"
             defaultSelectedKeys={["all"]}
             placeholder="Select status"
@@ -186,7 +186,7 @@ const Analytics = () => {
           </Select>
           <Select
             radius="sm"
-            className="md:min-w-[120px]"
+            className="min-w-[120px]"
             defaultSelectedKeys={["all"]}
             selectorIcon={<ListFilterIcon />}
             placeholder="Filter"
@@ -205,9 +205,9 @@ const Analytics = () => {
         </Button>
       </div>
       <AnalyticsCards data={cardsData} />
-      <div className="grid grid-cols-12 gap-3 my-3">
-        <div className="col-span-6 bg-white p-3 rounded-lg">
-          <div className="flex justify-between items-center mb-4">
+      <div className="grid grid-cols-12 gap-3 my-3 px-3 md:px-0">
+        <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
+          <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center mb-4">
             <h1 className="text-xl font-bold">Revenue Analytics</h1>
             <Select
               radius="sm"
@@ -223,8 +223,8 @@ const Analytics = () => {
           </div>
           <ApexChart />
         </div>
-        <div className="col-span-6 bg-white p-3 rounded-lg">
-          <div className="flex justify-between items-center mb-4">
+        <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
+          <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center mb-4">
             <h1 className="text-xl font-bold">Enrollment Trends</h1>
             <Select
               radius="sm"
@@ -240,8 +240,8 @@ const Analytics = () => {
           </div>
           <BarChart />
         </div>
-        <div className="col-span-6 bg-white px-3 py-5 rounded-lg">
-          <div className="flex justify-between items-center">
+        <div className="col-span-12 md:col-span-6 bg-white px-3 py-5 rounded-lg">
+          <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center">
             <h1 className="text-xl font-bold">Course Performance Analytics</h1>
             <Select
               radius="sm"
@@ -302,11 +302,11 @@ const Analytics = () => {
             </div>
           </div>
         </div>
-        <div className="col-span-6 bg-white p-3 rounded-lg">
+        <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
           <PieChart />
         </div>
         <div className="col-span-12 bg-white px-3 py-6 rounded-lg">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
             <div>
               <h1 className="text-xl font-bold">User Activity Logs</h1>
             </div>
@@ -342,9 +342,9 @@ const Analytics = () => {
               aria-label="Pending approvals table"
               removeWrapper
               classNames={{
-                base: "bg-white rounded-lg ",
+                base: "bg-white rounded-lg overflow-x-scroll no-scrollbar",
                 th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936] border-t border-default-200",
-                td: "py-3",
+                td: "py-3 items-center whitespace-nowrap",
                 tr: "border-b border-default-200",
               }}
             >
