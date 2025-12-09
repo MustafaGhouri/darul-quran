@@ -49,7 +49,7 @@ const LiveSession = () => {
             <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
                 <div className="flex  items-center gap-2">
                     <Select
-                        className="md:min-w-[180px]"
+                        className="min-w-[180px]"
                         radius="sm"
                         defaultSelectedKeys={["all"]}
                         placeholder="Select an status"
@@ -60,7 +60,7 @@ const LiveSession = () => {
                     </Select>
                     <Select
                         radius="sm"
-                        className="md:min-w-[180px]"
+                        className="min-w-[180px]"
                         defaultSelectedKeys={["all"]}
                         selectorIcon={<ListFilterIcon />}
                         placeholder="Filter"

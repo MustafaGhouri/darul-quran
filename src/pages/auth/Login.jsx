@@ -12,7 +12,8 @@ const Login = () => {
             <div className='lg:h-screen w-full lg:max-w-[400px] xl:max-w-[400px] p-6 lg:p-8 flex flex-col items-center justify-between bg-linear-to-bl from-[#06574C] via-[#06574C] to-[#D4C4B0] relative overflow-hidden max-lg:hidden lg:rounded-r-lg'>
 
 
-                <img src="/icons/logo.png" alt="Darul Quran" className=' w-56 h-56' />
+                <img src="/icons/login-line.png" alt="Darul Quran" className='  absolute top-1/7 left-1/8 -translate-x-1/2 -translate-y-1/2' />
+                <img src="/icons/logo.png" alt="Darul Quran" className=' w-56 h-56 top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 absolute' />
 
                 {/* <div className='space-y-4 lg:space-y-6 text-white text-center lg:text-left'>
                     <p className='text-sm lg:text-base'>Join 10,000+ other teachers & Students Here</p>
