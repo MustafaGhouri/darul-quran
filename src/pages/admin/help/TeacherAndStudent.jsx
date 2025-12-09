@@ -15,7 +15,7 @@ export default function TeacherAndStudentChat() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-white">
-      <div className="hidden md:flex md:flex-col md:w-80 xl:w-96 border-r border-gray-200 h-screen overflow-hidden">
+      <div className="flex flex-col md:w-80 xl:w-96 border-r border-gray-200 h-screen overflow-hidden">
         <div className="shrink-0 border-b border-gray-100 px-4 py-6 sm:px-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -110,9 +110,9 @@ export default function TeacherAndStudentChat() {
       </div>
 
       {selectedChat?.id ?
-        <ChatInterface isTeacherAndStudent chat={selectedChat} showInput={false} />
+        <ChatInterface isTeacherAndStudent chat={selectedChat} setSelectedData={setSelectedChat} showInput={false} />
         :
-        <div className="flex flex-col flex-1 justify-center items-center h-screen bg-[#95c4be48]">
+        <div className="flex max-md:hidden flex-col flex-1 justify-center items-center h-screen bg-[#95c4be48]">
           <p className="text-gray-500 text-lg font-semibold">
             👋 Select a chat from the sidebar to view the conversation.
           </p>

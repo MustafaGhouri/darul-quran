@@ -91,7 +91,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   };
 
   useEffect(() => {
-    const handleEsc = (e) => e.key === "Escape" && setIsSidebarOpen(false);
+    const handleEsc = (e) => e.key === "Escape" && setIsSidebarOpen(!isSidebarOpen);
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, []);
