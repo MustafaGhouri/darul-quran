@@ -57,14 +57,14 @@ const CreateCourse = ({ initialData = {} }) => {
     return (
         <>
             {initialData?.id ?
-                <Button  onPress={handleOpen} radius="md" size="md" variant="bordered" className="border-[#06574C]" startContent={<Edit  size={18} color="#06574C" />}>
+                <Button  onPress={handleOpen} radius="md" size="md" variant="bordered" className="border-[#06574C] max-sm:w-full" startContent={<Edit  size={18} color="#06574C" />}>
                     Edit
                 </Button> :
-                <Button onPress={handleOpen} radius="md" size="md" startContent={<Plus color="white" size={15} />} className="bg-[#06574C] text-white py-4 px-3 sm:px-8">
+                <Button onPress={handleOpen} radius="md" size="md" startContent={<Plus color="white" size={15} />} className="bg-[#06574C] max-sm:w-full text-white py-4 px-3 sm:px-8">
                     Create Course
                 </Button>
             }
-            <Modal scrollBehavior="inside" className="rounded-sm" isOpen={isOpen} size={'4xl'} onClose={onClose} backdrop={"blur"}>
+            <Modal scrollBehavior="inside" className="rounded-sm top-1/12 absolute" isOpen={isOpen} size={'4xl'} onClose={onClose} backdrop={"blur"} >
                 <ModalContent>
                     {(onClose) => (
                         <>
@@ -181,7 +181,7 @@ const CreateCourse = ({ initialData = {} }) => {
                                             placeholder="Brief description of the course"
                                         />
                                     </div>
-                                    <div className="flex items-center w-full my-4 justify-end gap-2">
+                                    <div className="flex items-center w-full my-4 justify-center md:justify-end gap-2">
                                         <Button startContent={<SaveIcon color="#06574C" />} variant="bordered" className="border-[#06574C] rounded-lg " onPress={onClose}>
                                             Save Draft
                                         </Button>

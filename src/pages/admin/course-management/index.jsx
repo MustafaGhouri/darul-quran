@@ -165,7 +165,7 @@ const CourseManagement = () => {
     <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
       <DashHeading desc={"Manage and monitor course catalog"} />
       <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
-        <div className="flex  items-center gap-2">
+        <div className="flex max-md:flex-wrap items-center gap-2">
           <Select
             className=" min-w-[120px]"
             radius="sm"
@@ -294,7 +294,7 @@ const CourseManagement = () => {
         </div>
       </div>
 
-      <div className="flex items-center p-4 gap-2 justify-between">
+      <div className="flex flex-wrap items-center p-4 gap-2 justify-between overflow-hidden">
         <div className="flex text-sm items-center gap-1">
           <span>Showing</span>
           <Select
