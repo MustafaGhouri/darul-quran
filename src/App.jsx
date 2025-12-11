@@ -205,9 +205,10 @@ function App() {
           </Route>
           {/* <Route element={<ChatLayout />}>
           </Route> */}
+          {/* teachers routes -------------*/}
           <Route element={<TeachersLayout />}>
             <Route
-            path="/teachers/"
+            path="/teacher/dashboard"
             element={
               <ProtectedRoute isAuthenticated={true}>
                 <TeachersDashboard />
