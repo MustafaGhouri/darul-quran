@@ -87,6 +87,14 @@ const Login = () => {
             >
               Login as teacher
             </Button>
+            <Button
+              type="submit"
+              as={Link}
+              to="/student/dashboard"
+              className="w-full text-center text-white rounded-md py-3 bg-[#06574C]"
+            >
+              Login as student
+            </Button>
             </div>
             {/* </Link> */}
             <div className="text-center text-sm lg:text-base mb-4 text-[#3F3F44]">
