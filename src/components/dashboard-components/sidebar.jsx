@@ -73,18 +73,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
       ]
     },
     { name: 'Student Attendance', icon: <CalendarIcon />, link: '/teacher/student-attendance' },
-    { name: 'Class Scheduling', icon: <MegaphoneIcon />, link: '/teacher/announcements', badge: 3 },
+    { name: 'Class Scheduling', icon: <MegaphoneIcon />, link: '/teacher/class-scheduling', badge: 3 },
     { name: 'Chat Center', icon: <TicketIcon />, link: '/teacher/chat' },
-    // {
-    //   name: 'Help and Support',
-    //   icon: <FileQuestionIcon />,
-    //   link: '/teacher/help/messages',
-    //   children: [
-    //     { name: 'Message Center', link: '/teacher/help/messages' },
-    //     { name: 'Student Chat', link: '/teacher/help/chat' },
-    //     { name: 'FAQs', link: '/teacher/help/faqs' }
-    //   ]
-    // }
   ];
 
   const guestMenu = [

@@ -12,6 +12,8 @@ import TeachersDashboard from "./pages/teacher/TeachersDashboard";
 import MyCourses from "./pages/teacher/my-courses";
 import UploadMaterial from "./pages/teacher/my-courses/uploadmaterial";
 import StudentAttendance from "./pages/teacher/student-attendance";
+import ClassSheduling from "./pages/teacher/class-sheduling";
+import SheduleClass from "./pages/teacher/class-sheduling/shedule-class";
 
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const Home = lazy(() => import("./pages/Home"));
@@ -241,6 +243,22 @@ function App() {
             element={
               <ProtectedRoute isAuthenticated={true}>
                 <StudentAttendance />
+              </ProtectedRoute>
+            }
+          />
+            <Route
+            path="/teacher/class-scheduling"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <ClassSheduling />
+              </ProtectedRoute>
+            }
+          />
+            <Route
+            path="/teacher/class-scheduling/sheduled-class"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <SheduleClass />
               </ProtectedRoute>
             }
           />
