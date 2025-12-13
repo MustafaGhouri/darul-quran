@@ -360,8 +360,3 @@ const CustomCheckbox = (props) => {
   );
 };
 
-const CheckIcon = () => (
-  <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor">
-    <polyline points="20 6 9 17 4 12" fill="none" strokeWidth="3" />
-  </svg>
-);

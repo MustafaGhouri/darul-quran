@@ -84,7 +84,16 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     { name: 'My Learning Journey', icon: <FaChalkboardTeacher />, link: '/student/my-learning' },
     { name: 'Class Scheduling', icon: <Video />, link: '/student/class-scheduling' },
     { name: 'Browse Courses', icon: <Video />, link: '/student/browse-courses' },
-    { name: 'Help', icon: <FileQuestionIcon />, link: '/help' }
+    {
+      name: 'Help and Support',
+      icon: <FileQuestionIcon />,
+      children: [
+        { name: 'Chat Center', link: '/student/help/messages' },
+        { name: 'Payments & Invoices', link: '/student/payments' },
+        // { name: 'Reviews', link: '/admin/help/reviews' },
+        // { name: 'FAQs', link: '/admin/help/faqs' }
+      ]
+    }
   ];
 
   // Decide which menu to show based on role

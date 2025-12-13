@@ -18,6 +18,7 @@ import StudentDashboard from "./pages/student/StudentDashboard";
 import MyLearning from "./pages/student/my-learning-joureny";
 import StudentClassSheduling from "./pages/student/class-sheduling";
 import BrowseCourses from "./pages/student/browse-courses";
+import PaymentsInvoices from "./pages/student/payments-invoices";
 
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const Home = lazy(() => import("./pages/Home"));
@@ -303,6 +304,22 @@ function App() {
             element={
               <ProtectedRoute isAuthenticated={true}>
                 <BrowseCourses />
+              </ProtectedRoute>
+            }
+          />
+            <Route
+            path="/student/help/messages"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <HelpMessages />
+              </ProtectedRoute>
+            }
+          />
+            <Route
+            path="/student/payments"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <PaymentsInvoices />
               </ProtectedRoute>
             }
           />
