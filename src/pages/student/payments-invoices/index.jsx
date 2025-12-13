@@ -255,9 +255,7 @@ const PaymentsInvoices = () => {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    {classItem.date}
-                  </TableCell>
+                  <TableCell>{classItem.date}</TableCell>
                   <TableCell>{classItem.price}</TableCell>
                   <TableCell>
                     <div className="flex gap-1 items-center">
@@ -284,7 +282,7 @@ const PaymentsInvoices = () => {
                       className="bg-[#06574C] text-white"
                       startContent={<Download size={18} color="white" />}
                     >
-                        Download
+                      Download
                     </Button>
                   </TableCell>
                 </TableRow>
