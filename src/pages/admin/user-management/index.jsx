@@ -1,8 +1,6 @@
 import {
   Button,
-  Link,
   Pagination,
-  Progress,
   Select,
   SelectItem,
   Tab,
@@ -17,21 +15,13 @@ import {
 import { Chip } from "@heroui/react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
-  Edit,
-  Edit2,
-  ExternalLink,
-  Eye,
-  ListFilterIcon,
   ListFilterPlusIcon,
   Plus,
   SquarePen,
   Trash2,
 } from "lucide-react";
-import { use, useState } from "react";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import { useNavigate } from "react-router-dom";
+import {  useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
 
@@ -420,16 +410,16 @@ const UserManagement = () => {
           >
             Export
           </Button>
-          <Link className="max-md:w-full" href="/admin/user-management/add-user">
             <Button
               radius="sm"
+              as={Link}
+              to={"/admin/user-management/add-user"}
               startContent={<Plus color="white" size={15} />}
               className="bg-[#06574C] text-white py-4 px-3 sm:px-8 max-md:w-full"
               //   onPress={()=>{router.push("/admin/user-management/add-user")}}
             >
               Add User
             </Button>
-          </Link>
         </div>
       </div>
       <div>
