@@ -42,9 +42,9 @@ export default defineConfig({
       },
       {
         src: "/images/download-2.png",
-        sizes: "1440x1024",
+        sizes: "1080x1920",
         type: "image/png",
-        form_factor: "wide"
+        form_factor: "narrow"
       },
       {
         src: "/images/download-3.png",
@@ -54,9 +54,9 @@ export default defineConfig({
       },
       {
         src: "/images/download-4.png",
-        sizes: "1440x1024",
+        sizes: "1080x1920",
         type: "image/png",
-        form_factor: "wide"
+        form_factor: "narrow"
       },
       {
         src: "/images/download-5.png",
@@ -66,9 +66,9 @@ export default defineConfig({
       },
       {
         src: "/images/download-6.png",
-        sizes: "1440x1024",
+        sizes: "1080x1920",
         type: "image/png",
-        form_factor: "wide"
+        form_factor: "narrow"
       }
     ]
   }
