@@ -1,13 +1,23 @@
-import { Button, Progress, useDisclosure ,Drawer,
+import {
+  Button,
+  Progress,
+  useDisclosure,
+  Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerBody,
-  DrawerFooter,} from "@heroui/react";
+  DrawerFooter,
+  Form,
+  Select,
+  SelectItem,
+  Textarea,
+} from "@heroui/react";
 import {
   BookIcon,
   ChartPie,
   Clock,
   Edit,
+  LucideClock4,
   MapPin,
   MegaphoneIcon,
   PlusIcon,
@@ -25,6 +35,9 @@ import {
 import { LuClock4 } from "react-icons/lu";
 import { RiGroupLine } from "react-icons/ri";
 import { useState } from "react";
+import { GrAnnounce, GrAttachment, GrSend } from "react-icons/gr";
+import { CiCalendar } from "react-icons/ci";
+import { IoAlertCircleOutline } from "react-icons/io5";
 
 const TeachersDashboard = () => {
   const cardsData = [
@@ -57,7 +70,7 @@ const TeachersDashboard = () => {
       changeColor: "text-[#06574C]",
     },
   ];
-  const {isOpen, onOpen, onOpenChange} = useDisclosure();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const courseCard = [
     {
       id: 1,
@@ -125,12 +138,56 @@ const TeachersDashboard = () => {
       location: "Join Zoom",
     },
   ];
-    const [placement, setPlacement] = useState("left");
+  const [placement, setPlacement] = useState("left");
 
   const handleOpen = (placement) => {
     setPlacement(placement);
     onOpen();
   };
+  const courses = [
+    { key: "WebDevelopment", label: "Web Development" },
+    { key: "React", label: "React js" },
+    { key: "Next js", label: "Next js" },
+  ];
+
+  const announcements = [
+    {
+      id: 1, 
+      title: "Important Update",
+      description: "The deadline for Assignment 3 has been extended to Friday, 5 PM. Make sure to submit your work before the new deadline.",
+      time:"2 hours ago",
+      course: "Web Development 101",
+      students: "42 students",
+      icone: <GrAnnounce color="#D28E3D" size={22} />,
+    },
+    {
+      id: 2, 
+      title: "Upcoming Event",
+      description: "Guest lecture on Advanced React Patterns scheduled for next Monday at 3 PM. Don't miss this opportunity!",
+      time:"2 hours ago",
+      course: "Web Development 101",
+      students: "42 students",
+      icone: <CiCalendar color="#D28E3D" size={22} />,
+    },
+    {
+      id: 3, 
+      title: "Reminder",
+      description: "Mid-term exam preparation sessions will be held every Tuesday and Thursday at 4 PM in Room 301.",
+      time:"2 hours ago",
+      course: "Web Development 101",
+      students: "42 students",
+      icone: <IoAlertCircleOutline color="#D28E3D" size={22} />,
+    },
+    {
+      id: 4, 
+      title: "Reminder",
+      description: "The deadline for Assignment 3 has been extended to Friday, 5 PM. Make sure to submit your work before the new deadline.",
+      time:"2 hours ago",
+      course: "Web Development 101",
+      students: "42 students",
+      icone: <IoAlertCircleOutline  color="#D28E3D" size={22} />,
+    },
+  ]
   return (
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-scrseen px-2 sm:px-3">
       {/* banner */}
@@ -288,16 +345,18 @@ const TeachersDashboard = () => {
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {["left"].map((placement) => (<Button
-          key={placement}
-            variant="solid"
-            color="primary"
-            startContent={<PlusIcon />}
-            className="w-full py-4 bg-[#06574C] text-white"
-            onPress={() => handleOpen(placement)}
-          >
-            New Announcement
-          </Button> ))}
+          {["left"].map((placement) => (
+            <Button
+              key={placement}
+              variant="solid"
+              color="primary"
+              startContent={<PlusIcon />}
+              className="w-full py-4 bg-[#06574C] text-white"
+              onPress={() => handleOpen(placement)}
+            >
+              New Announcement
+            </Button>
+          ))}
           <Button
             variant="solid"
             color="primary"
@@ -314,28 +373,81 @@ const TeachersDashboard = () => {
             Create Quiz
           </Button>
         </div>
-         
-      <Drawer isOpen={isOpen} placement={placement} onOpenChange={onOpenChange}>
-        <DrawerContent>
-          {(onClose) => (
-            <>
-              <DrawerHeader className="flex flex-col gap-1 ">Announcements
-                <Button className="bg-[#06574C] text-white">New Announcement</Button>
-              </DrawerHeader>
-              <DrawerBody>
-              </DrawerBody>
-              <DrawerFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  Close
-                </Button>
-                <Button color="primary" onPress={onClose}>
-                  Action
-                </Button>
-              </DrawerFooter>
-            </>
-          )}
-        </DrawerContent>
-      </Drawer>
+
+        <Drawer
+          isOpen={isOpen}
+          placement={placement}
+          backdrop={"blur"}
+          size={"sm"}
+          onOpenChange={onOpenChange}
+        >
+          <DrawerContent>
+            {(onClose) => (
+              <>
+                <DrawerHeader className="flex flex-col gap-1 ">
+                  Announcements
+                  <Button className="bg-[#06574C] text-white">
+                    New Announcement
+                  </Button>
+                </DrawerHeader>
+                <DrawerBody
+          className="!px-0">
+                  <Form className="bg-[#95C4BE47] p-3">
+                    <Select
+                      radius="sm"
+                      label="Select Course"
+                      name="Course"
+                      variant="bordered"
+                      defaultSelectedKeys={"React"}
+                      labelPlacement="outside"
+                      placeholder="Select Course"
+                    >
+                      {courses.map((item, index) => (
+                        <SelectItem key={index}>{item.label}</SelectItem>
+                      ))}
+                    </Select>
+                  </Form>
+                  <div className="overflow-y-scroll no-scrollbar">
+                    {announcements.map((item, index) => (
+                      <div
+                        key={index}
+                        className="p-4 bg-white rounded-md my-2 group hover:bg-[#FBF4EC] border-[#D28E3D] border-1 m-3 cursor-pointer"
+                      >
+                        <div className="flex gap-3 itmes-center">
+                          <div className="h-10 w-10 flex justify-center items-center group-has-hover:bg-white bg-[#FBF4EC] rounded-full shadow-xl">
+                            {item.icone}
+                          </div>
+                        <div>
+                          <h1 className="text-sm font-bold group-has-hover:text-[#D28E3D]">{item.title}</h1>
+                          <p className="text-[#666666] text-xs">{item.time}</p>
+                        </div>
+                        </div>
+                        <div  className="my-2">
+                          <p className="text-[#B7721F] text-xs">{item.description}</p>
+                        </div>
+                        <div className="flex justify-between items-center mt-6">
+                          <p className="text-xs text-[#B7721f]">{item.course}</p>
+                          <div className="text-xs flex gap-1 items-center text-[#B7721f]"><RiGroupLine size={14} />{item.students}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </DrawerBody>
+                <DrawerFooter>
+                  <Textarea
+                  variant="bordered"
+                  className="shadow-xl"
+                    placeholder="Write your announcement..."
+                    // label="Announcement"
+                    // labelPlacement="outside"
+                    startContent={<GrAttachment className="absolute bottom-3 left-2" size={20}></GrAttachment>}
+                    endContent={<div className="p-2 bg-[#06574C] rounded-md absolute right-2 bottom-1"><GrSend color="white" size={16}></GrSend></div>}
+                  />
+                </DrawerFooter>
+              </>
+            )}
+          </DrawerContent>
+        </Drawer>
       </div>
     </div>
   );
