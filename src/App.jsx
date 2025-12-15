@@ -20,6 +20,8 @@ import StudentClassSheduling from "./pages/student/class-sheduling";
 import BrowseCourses from "./pages/student/browse-courses";
 import PaymentsInvoices from "./pages/student/payments-invoices";
 import CourseDetails from "./pages/student/browse-courses/course-details";
+import { useRegisterSW } from 'virtual:pwa-register/react'
+
 
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const Home = lazy(() => import("./pages/Home"));
@@ -44,8 +46,31 @@ const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 
 
 function App() {
+    const {
+    needRefresh,
+    updateServiceWorker
+  } = useRegisterSW()
   return (
     <HeroUIProvider>
+           {needRefresh && (
+        <div style={{
+          position: 'fixed',
+          bottom: 20,
+          right: 20,
+          background: '#000',
+          color: '#fff',
+          padding: '12px',
+          borderRadius: '8px'
+        }}>
+          <span>New version available</span>
+          <button
+            style={{ marginLeft: '10px' }}
+            onClick={() => updateServiceWorker(true)}
+          >
+            Update
+          </button>
+        </div>
+      )}
       <BrowserRouter>
         <Routes>
           {/* ---------- Auth Layout (NO HEADER/FOOTER) ---------- */}

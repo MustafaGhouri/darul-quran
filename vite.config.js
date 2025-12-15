@@ -10,25 +10,23 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      devOptions: {
-        enabled: true,
-      },
       manifest: {
-        name: "My React PWA",
-        short_name: "ReactPWA",
-        description: "My React Progressive Web App",
+        name: "Darul Quran",
+        short_name: "Darul Quran",
+        description: "",
         start_url: "/",
+        scope: "/",
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#0d6efd",
         icons: [
           {
-            src: "/logo.png",
+            src: "/icons/logo.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "/logo.png",
+            src: "/icons/logo.png",
             sizes: "512x512",
             type: "image/png",
           },
