@@ -21,7 +21,6 @@ import "swiper/css/navigation";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
 
 const DownloadModal = () => {
-  const appearButton = window.location.pathname === "/";
   const [installPrompt, setInstallPrompt] = useState(null);
 
   useEffect(() => {
@@ -116,7 +115,7 @@ const DownloadModal = () => {
                   >
                     Close
                   </Button>
-                  {installPrompt && 
+                  {installPrompt ? 
                   <Button
                     variant="solid"
                     size="md"
@@ -126,7 +125,7 @@ const DownloadModal = () => {
                   >
                     Download App
                   </Button>
-                  } 
+                  :""} 
                 </div>
 
                 <div className="my-6  ">
