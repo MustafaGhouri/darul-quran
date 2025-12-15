@@ -58,7 +58,7 @@ const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 
 function App() {
 
-  const appearbutton = window.location ==="/";
+  // const appearButton = window.location.pathname === "/";
   const [installPrompt, setInstallPrompt] = useState(null);
 
   useEffect(() => {
@@ -84,7 +84,7 @@ function App() {
   };
   return (
     <HeroUIProvider>
-      {appearbutton && installPrompt ? (
+      { installPrompt ? (
         <div
           style={{
             position: "fixed",
