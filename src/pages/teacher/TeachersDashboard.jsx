@@ -1,4 +1,8 @@
-import { Button, Progress } from "@heroui/react";
+import { Button, Progress, useDisclosure ,Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  DrawerFooter,} from "@heroui/react";
 import {
   BookIcon,
   ChartPie,
@@ -20,6 +24,7 @@ import {
 } from "react-icons/ai";
 import { LuClock4 } from "react-icons/lu";
 import { RiGroupLine } from "react-icons/ri";
+import { useState } from "react";
 
 const TeachersDashboard = () => {
   const cardsData = [
@@ -52,7 +57,7 @@ const TeachersDashboard = () => {
       changeColor: "text-[#06574C]",
     },
   ];
-
+  const {isOpen, onOpen, onOpenChange} = useDisclosure();
   const courseCard = [
     {
       id: 1,
@@ -120,6 +125,12 @@ const TeachersDashboard = () => {
       location: "Join Zoom",
     },
   ];
+    const [placement, setPlacement] = useState("left");
+
+  const handleOpen = (placement) => {
+    setPlacement(placement);
+    onOpen();
+  };
   return (
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-scrseen px-2 sm:px-3">
       {/* banner */}
@@ -277,14 +288,16 @@ const TeachersDashboard = () => {
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button
+          {["left"].map((placement) => (<Button
+          key={placement}
             variant="solid"
             color="primary"
             startContent={<PlusIcon />}
             className="w-full py-4 bg-[#06574C] text-white"
+            onPress={() => handleOpen(placement)}
           >
             New Announcement
-          </Button>
+          </Button> ))}
           <Button
             variant="solid"
             color="primary"
@@ -301,6 +314,28 @@ const TeachersDashboard = () => {
             Create Quiz
           </Button>
         </div>
+         
+      <Drawer isOpen={isOpen} placement={placement} onOpenChange={onOpenChange}>
+        <DrawerContent>
+          {(onClose) => (
+            <>
+              <DrawerHeader className="flex flex-col gap-1 ">Announcements
+                <Button className="bg-[#06574C] text-white">New Announcement</Button>
+              </DrawerHeader>
+              <DrawerBody>
+              </DrawerBody>
+              <DrawerFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Close
+                </Button>
+                <Button color="primary" onPress={onClose}>
+                  Action
+                </Button>
+              </DrawerFooter>
+            </>
+          )}
+        </DrawerContent>
+      </Drawer>
       </div>
     </div>
   );
