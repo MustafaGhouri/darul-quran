@@ -96,7 +96,19 @@ function App() {
     <HeroUIProvider>
       {/* {appearButton && installPrompt ? <DownloadModal/>:""} */}
 
-      {/* {installPrompt && ( */}
+      {installPrompt && (
+        <div
+        style={{
+          position: "fixed",
+          bottom: 20,
+          right: 20,
+          background: "transparent",
+          color: "transparent",
+          padding: "12px",
+          borderRadius: "8px",
+          cursor: "pointer",
+          zIndex: 1000,
+        }}>
         <Button
           variant="solid"
           size="md"
@@ -106,7 +118,8 @@ function App() {
         >
           Download App
         </Button>
-      {/* )} */}
+      </div>
+      )}
       <BrowserRouter>
         <Routes>
           {/* ---------- Auth Layout (NO HEADER/FOOTER) ---------- */}
