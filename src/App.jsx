@@ -4,7 +4,7 @@ import Login from "./pages/auth/Login";
 import AuthLayout from "./components/layouts/AuthLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Button, HeroUIProvider } from "@heroui/react";
+import {  HeroUIProvider , Modal,  ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure, Checkbox, Input, Link, } from "@heroui/react";
 import { lazy, use } from "react";
 import ChatLayout from "./components/layouts/ChatLayout";
 import TeachersLayout from "./components/layouts/Teacherslayout";
@@ -20,8 +20,7 @@ import StudentClassSheduling from "./pages/student/class-sheduling";
 import BrowseCourses from "./pages/student/browse-courses";
 import PaymentsInvoices from "./pages/student/payments-invoices";
 import CourseDetails from "./pages/student/browse-courses/course-details";
-import { useRegisterSW } from "virtual:pwa-register/react";
-import { useEffect, useState } from "react";
+import DownloadModal from "./components/dashboard-components/DownloadModal";
 
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const Home = lazy(() => import("./pages/Home"));
@@ -58,53 +57,9 @@ const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 
 function App() {
 
-  // const appearButton = window.location.pathname === "/";
-  const [installPrompt, setInstallPrompt] = useState(null);
-
-  useEffect(() => {
-    const handler = (e) => {
-      e.preventDefault(); // stop auto prompt
-      setInstallPrompt(e);
-    };
-
-    window.addEventListener("beforeinstallprompt", handler);
-
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
-
-  const handleInstall = async () => {
-    if (!installPrompt) return;
-
-    installPrompt.prompt();
-
-    const result = await installPrompt.userChoice;
-    console.log(result.outcome); // accepted / dismissed
-
-    setInstallPrompt(null);
-  };
   return (
     <HeroUIProvider>
-      { installPrompt ? (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 20,
-            right: 20,
-            background: "#000",
-            color: "#fff",
-            padding: "12px",
-            borderRadius: "8px",
-            cursor: "pointer",
-            zIndex: 1000,
-          }}
-        >
-          <button style={{ marginLeft: "10px" }} onClick={handleInstall}>
-            Download App
-          </button>
-        </div>
-      ) : (
-        ""
-      )}
+      <DownloadModal/>
       <BrowserRouter>
         <Routes>
           {/* ---------- Auth Layout (NO HEADER/FOOTER) ---------- */}
