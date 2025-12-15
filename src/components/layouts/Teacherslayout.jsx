@@ -57,7 +57,7 @@ export default function TeachersLayout() {
                         width: (isSidebarOpen ? 270 : 0),
                         x: (isSidebarOpen ? 0 : -270)
                     }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 35 }}
                     className="h-full fixed lg:relative overflow-hidden z-40 lg:z-10"
                 >
                     <Sidebar

@@ -69,7 +69,7 @@ const Login = () => {
               />
             </div>
             {/* <Link to=""> */}
-            <div className="flex gap-3 ">
+            <div className="flex max-sm:flex-wrap gap-3 ">
               <Button
               type="submit"
               as={Link}

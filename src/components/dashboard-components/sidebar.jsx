@@ -16,6 +16,8 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 import { b } from 'framer-motion/client';
 import { FaChalkboardTeacher } from 'react-icons/fa';
+import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@heroui/react';
+import { MdLogout } from 'react-icons/md';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const [expandedItems, setExpandedItems] = useState([0, 6]);
@@ -184,7 +186,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         <ul className="space-y-1 mx-2">
           {menuItems.map((item, idx) => {
             const isActiveParent =
-              location.pathname === item.link ||
+              location.pathname.startsWith(item.link) ||
               (item.children && item.children.some((child) => child.link === location.pathname));
 
             return (
@@ -262,20 +264,45 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         </ul>
       </div>
 
-      {isSidebarOpen && (
-        <div className="p-4 border-t border-white/10">
-          <div className="flex items-center gap-3 px-2">
-            <div className="w-10 h-10 rounded-full bg-linear-to-br from-pink-400 to-orange-300 flex items-center justify-center text-white font-bold">
-              JP
+
+      <Dropdown
+        showArrow
+        classNames={{
+          base: "before:bg-default-200", // change arrow background
+          content:
+            "py-1 px-1 border border-default-200 bg-linear-to-br from-white to-default-200 dark:from-default-50 dark:to-black",
+        }}
+      >
+        <DropdownTrigger>
+          <div className="p-4 cursor-pointer border-t border-white/10">
+            <div className="flex items-center gap-3 px-2">
+              <div className="w-10 h-10 rounded-full bg-linear-to-br from-pink-400 to-orange-300 flex items-center justify-center text-white font-bold">
+                JP
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium truncate">Jenny Patron</div>
+                <div className="text-xs text-[#b8d4d0] truncate">jenny@gmail.com</div>
+              </div>
+              <ChevronDown className="w-5 h-5 text-[#b8d4d0]" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">Jenny Patron</div>
-              <div className="text-xs text-[#b8d4d0] truncate">jenny@gmail.com</div>
-            </div>
-            <ChevronDown className="w-5 h-5 text-[#b8d4d0]" />
           </div>
-        </div>
-      )}
+        </DropdownTrigger>
+        <DropdownMenu aria-label="Dropdown menu with description" variant="faded">
+          <DropdownItem
+            as={Link}
+            to={'/'}
+            className="hover:text-white! text-[#323232] hover:bg-[#406C65]!"
+            startContent={
+              <span className="w-5">
+                <MdLogout size={18} />
+              </span>
+            }
+          >
+            Logout
+          </DropdownItem>
+        </DropdownMenu>
+      </Dropdown>
+
     </div>
   );
 };
