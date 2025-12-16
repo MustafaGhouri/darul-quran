@@ -42,7 +42,7 @@ const PaymentsInvoices = () => {
       email: "john.davis@email.com",
       payment_method: "•••• 4532",
       roles: "Support Staff",
-      status: "Active",
+      status: "Complete",
       date: "Nov 20, 2025",
     },
     {
@@ -56,7 +56,7 @@ const PaymentsInvoices = () => {
       email: "john.davis@email.com",
       payment_method: "•••• 4532",
       roles: "Support Staff",
-      status: "Active",
+      status: "Pending",
       date: "Nov 20, 2025",
     },
     {
@@ -69,7 +69,7 @@ const PaymentsInvoices = () => {
       last_active: "2 hourse ago",
       email: "john.davis@email.com",
       roles: "Support Staff",
-      status: "Active",
+      status: "Complete",
       payment_method: "•••• 4532",
       date: "Nov 20, 2025",
     },
@@ -84,7 +84,7 @@ const PaymentsInvoices = () => {
       last_active: "2 hourse ago",
       email: "john.davis@email.com",
       roles: "Support Staff",
-      status: "Active",
+      status: "Pending",
       date: "Nov 20, 2025",
     },
     {
@@ -98,7 +98,7 @@ const PaymentsInvoices = () => {
       last_active: "2 hourse ago",
       email: "john.davis@email.com",
       roles: "Support Staff",
-      status: "Active",
+      status: "Refunded",
       date: "Nov 20, 2025",
     },
     {
@@ -112,7 +112,7 @@ const PaymentsInvoices = () => {
       email: "john.davis@email.com",
       payment_method: "•••• 4532",
       roles: "Support Staff",
-      status: "Active",
+      status: "Pending",
       date: "2Nov 20, 2025",
     },
     {
@@ -126,7 +126,7 @@ const PaymentsInvoices = () => {
       email: "john.davis@email.com",
       payment_method: "•••• 4532",
       roles: "Support Staff",
-      status: "Active",
+      status: "Complete",
       date: "Nov 20, 2025",
     },
     {
@@ -140,7 +140,7 @@ const PaymentsInvoices = () => {
       last_active: "2 hourse ago",
       email: "john.davis@email.com",
       roles: "Support Staff",
-      status: "Active",
+      status: "Pending",
       date: "Nov 20, 2025",
     },
     {
@@ -154,7 +154,7 @@ const PaymentsInvoices = () => {
       email: "john.davis@email.com",
       roles: "Students",
       payment_method: "•••• 4532",
-      status: "Active",
+      status: "Refunded",
       date: "Nov 20, 2025",
     },
   ];
@@ -180,9 +180,9 @@ const PaymentsInvoices = () => {
         desc={"Keep track of all payments with transparency and ease"}
       />
       <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
-        <div className="flex max-md:flex-wrap items-center gap-2">
+        <div className="flex max-md:flex-wrap items-center gap-2 max-md:w-full">
           <Select
-            className="min-w-[120px]"
+            className="w-full md:min-w-[120px]"
             radius="sm"
             defaultSelectedKeys={["all"]}
             placeholder="Select status"
@@ -193,7 +193,7 @@ const PaymentsInvoices = () => {
           </Select>
           <Select
             radius="sm"
-            className="min-w-[120px]"
+            className="w-full md:min-w-[120px]"
             defaultSelectedKeys={["all"]}
             selectorIcon={<ListFilterIcon />}
             placeholder="Filter"
@@ -262,7 +262,7 @@ const PaymentsInvoices = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
+                    <Button className={`text-sm p-2 rounded-md  ${classItem.status === "Complete" ? "bg-[#95C4BE33] text-[#06574C]" : classItem.status === "Pending" ? "bg-[#F1C2AC33] text-[#D28E3D]" : "bg-[#FFEAEC] text-[#E8505B]"}`}>
                       {classItem.status}
                     </Button>
                   </TableCell>
@@ -287,7 +287,7 @@ const PaymentsInvoices = () => {
               ))}
             </TableBody>
           </Table>
-          <div className="flex items-center pb-4 gap-2 justify-between">
+          <div className="md:flex items-center pb-4 gap-2 justify-between overflow-hidden">
             <div className="flex text-sm items-center gap-1">
               <span>Showing</span>
               <Select

@@ -78,7 +78,7 @@ const CourseDetails = () => {
         desc={"Everything you need to know about this course"}
       />
       <div
-        className="p-4 rounded-xl mb-3 "
+        className="p-4 rounded-xl mb-3  bg-cover bg-no-repeat bg-center"
         style={{ backgroundImage: "url(/images/student-banner.png)" }}
       >
         <div className="grid grid-cols-12 gap-3">
@@ -247,6 +247,7 @@ const CourseDetails = () => {
           </div>
         </div>
         <div className="bg-white p-3 rounded-xl col-span-12 md:col-span-4">
+          <h2 className="text-xl font-semibold mb-3">What's included</h2>
           {quickStats.map((item) => (
             <div
               className={`my-2 flex gap-2 ${

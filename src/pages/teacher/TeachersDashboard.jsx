@@ -50,7 +50,7 @@ const TeachersDashboard = () => {
     },
     {
       title: "Attendance Rate",
-      value: "$89,432",
+      value: "92%",
       icon: <AiOutlineLineChart color="#06574C" size={22} />,
       changeText: "+8.2% from last month",
       changeColor: "text-[#38A100]",
@@ -347,6 +347,7 @@ const TeachersDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {["left"].map((placement) => (
             <Button
+              radius="sm"
               key={placement}
               variant="solid"
               color="primary"
@@ -358,6 +359,7 @@ const TeachersDashboard = () => {
             </Button>
           ))}
           <Button
+              radius="sm"
             variant="solid"
             color="primary"
             startContent={<PlusIcon />}
@@ -366,6 +368,7 @@ const TeachersDashboard = () => {
             Shedule New Class
           </Button>
           <Button
+              radius="sm"
             variant="flat"
             startContent={<PlusIcon />}
             className="w-full py-4 bg-[#06574C] text-white font-semibold"
@@ -414,11 +417,11 @@ const TeachersDashboard = () => {
                         className="p-4 bg-white rounded-md my-2 group hover:bg-[#FBF4EC] border-[#D28E3D] border-1 m-3 cursor-pointer"
                       >
                         <div className="flex gap-3 itmes-center">
-                          <div className="h-10 w-10 flex justify-center items-center group-has-hover:bg-white bg-[#FBF4EC] rounded-full shadow-xl">
+                          <div className="h-10 w-10 flex justify-center items-center group-hover:bg-white bg-[#FBF4EC] rounded-full shadow-xl">
                             {item.icone}
                           </div>
                         <div>
-                          <h1 className="text-sm font-bold group-has-hover:text-[#D28E3D]">{item.title}</h1>
+                          <h1 className="text-sm font-bold group-hover:text-[#D28E3D]">{item.title}</h1>
                           <p className="text-[#666666] text-xs">{item.time}</p>
                         </div>
                         </div>
@@ -433,15 +436,17 @@ const TeachersDashboard = () => {
                     ))}
                   </div>
                 </DrawerBody>
-                <DrawerFooter>
+                <DrawerFooter className="rounded-xl">
                   <Textarea
+                  classNames={{base:"rounded-xl"} }
                   variant="bordered"
+                  radius="sm"
                   className="shadow-xl"
                     placeholder="Write your announcement..."
                     // label="Announcement"
                     // labelPlacement="outside"
                     startContent={<GrAttachment className="absolute bottom-3 left-2" size={20}></GrAttachment>}
-                    endContent={<div className="p-2 bg-[#06574C] rounded-md absolute right-2 bottom-1"><GrSend color="white" size={16}></GrSend></div>}
+                    endContent={<div className="p-2 bg-[#06574C] rounded-md absolute right-2 bottom-1 "><GrSend color="white" size={16}></GrSend></div>}
                   />
                 </DrawerFooter>
               </>

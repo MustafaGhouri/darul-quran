@@ -8,6 +8,7 @@ const LESSONS = [
     {
         id: 1,
         title: "1. Introduction to HTML Basics",
+        title2: "Build Your First Webpage",
         description: "Learn the fundamentals of HTML structure and semantic elements",
         duration: "45:30",
         views: 12234,
@@ -18,6 +19,7 @@ const LESSONS = [
     {
         id: 2,
         title: "1. Introduction to HTML Basics",
+        title2: "Build Your First Webpage",
         description: "Learn the fundamentals of HTML structure and semantic elements",
         duration: "45:30",
         views: 12234,
@@ -43,6 +45,7 @@ export default function Videos() {
         { key: "true", label: "Attach To Lesson" },
         { key: "false", label: "Deattach To Lesson" },
     ];
+    const hideBtn = window.location.pathname === "/teacher/courses/upload-material" ? "hidden" : "";
     return (
         <div className=" bg-white rounded-lg my-2">
             {/* Header */}
@@ -65,7 +68,7 @@ export default function Videos() {
                             <Button
                                 radius="sm"
                                 variant="bordered"
-                                className="border-[#06574C] border-2 text-[#06574C]"
+                                className={`border-[#06574C] border-2 text-[#06574C] ${hideBtn}`}
                                 startContent={<Download className="h-4 w-4" />}
                             >
                                 Download
@@ -192,6 +195,7 @@ const DOCUMENTS = [
     {
         id: 1,
         title: "HTML Cheat Sheet",
+        title2: "Build Your First Webpage",
         description: "Learn the fundamentals of HTML structure and semantic elements",
         size: "2.4 MB",
         pages: 8,
@@ -203,6 +207,7 @@ const DOCUMENTS = [
     {
         id: 2,
         title: "HTML Cheat Sheet",
+        title2: "Build Your First Webpage",
         description: "Learn the fundamentals of HTML structure and semantic elements",
         size: "2.4 MB",
         pages: 8,
@@ -339,6 +344,7 @@ const ASSIGNMENTS = [
     {
         id: 1,
         title: "1. Introduction to HTML Basics",
+        title2: "Build Your First Webpage",
         description: "Learn the fundamentals of HTML structure and semantic elements",
         due: '7 days',
         thumbnail: "/images/lesson-example.png",
@@ -348,6 +354,7 @@ const ASSIGNMENTS = [
     {
         id: 2,
         title: "1. Introduction to HTML Basics",
+        title2: "Build Your First Webpage",
         description: "Learn the fundamentals of HTML structure and semantic elements",
         due: "7 days",
         thumbnail: "/images/lesson-example.png",
@@ -371,6 +378,8 @@ export function Assignments() {
         { key: "true", label: "Attach To Lesson" },
         { key: "false", label: "Deattach To Lesson" },
     ];
+    
+    const changetitle = window.location.pathname === "/teacher/courses/upload-material";
     return (
         <div className=" bg-white rounded-lg my-2">
             <div className="">
@@ -410,7 +419,11 @@ export function Assignments() {
 
                                 <div className="flex flex-1 flex-col justify-between gap-3">
                                     <div className="space-y-2">
-                                        <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">{asignment.title}</h3>
+                                        <h3 className="text-lg font-semibold text-gray-900 sm:text-xl">{
+                                            changetitle ? 
+                                            <p>{asignment.title2}</p> 
+                                            : <p>{asignment.title} </p> 
+                                            }</h3>
                                         <p className="text-sm text-gray-600 sm:text-base">
                                             Due: {asignment.due} After Enrollment
                                         </p>

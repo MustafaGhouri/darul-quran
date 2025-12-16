@@ -1,5 +1,5 @@
-import { Button, Input, Select, SelectItem } from "@heroui/react";
-import { Clock, Download, MapPin, UsersRound, Video } from "lucide-react";
+import { Button, Form, Input, Select, SelectItem } from "@heroui/react";
+import { Clock, Download, MapPin, Plus, UsersRound, Video } from "lucide-react";
 import { AiOutlineBook, AiOutlineCheck, AiOutlineLineChart } from "react-icons/ai";
 import { LuClipboardList, LuSquareArrowOutUpRight } from "react-icons/lu";
 import { RiDeleteBin6Line, RiGroupLine } from "react-icons/ri";
@@ -113,6 +113,30 @@ const UploadMaterial = () => {
       </div>
       <div className=" bg-white rounded-lg mb-3 py-3 ">
         <Videos />
+        <div>
+          <Form className="flex flex-col md:flex-row md:justify-between md:items-end max-md:gap-3 items-start w-full px-3">
+            <Input
+              className="w-full text-lg font-semibold"
+              radius="sm"
+              label="Or add external video link"
+              name="Or add external video link"
+              variant="bordered"
+              defaultValue="https://youtube.com..."
+              labelPlacement="outside"
+              placeholder="Enter video link"
+            />
+            <Button
+              variant="solid"
+              size="md"
+              radius="sm"
+              color="success"
+              className="max-md:w-full"
+              startContent={<Plus />}
+            >
+              Add Video
+            </Button>
+          </Form>
+        </div>
       </div>
       <div className=" bg-white rounded-lg mb-3 py-3 ">
         <PdfAndNotes />

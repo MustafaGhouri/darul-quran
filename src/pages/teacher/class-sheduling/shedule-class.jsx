@@ -1,12 +1,12 @@
 import React from "react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
-import { Button, Divider, Select, SelectItem,  } from "@heroui/react";
+import { Button, Divider, Select, SelectItem } from "@heroui/react";
 import { CiCalendar } from "react-icons/ci";
 import { Clock } from "lucide-react";
 import { FaRegAddressCard } from "react-icons/fa";
 import { LuSquareArrowOutUpRight } from "react-icons/lu";
-import {RangeCalendar} from "@heroui/react";
-import {today, getLocalTimeZone} from "@internationalized/date";
+import { RangeCalendar } from "@heroui/react";
+import { today, getLocalTimeZone } from "@internationalized/date";
 const SheduleClass = () => {
   const SheduledClass = [
     {
@@ -44,8 +44,8 @@ const SheduleClass = () => {
         desc={"You have 3 classes scheduled today"}
       />
       <div className="grid grid-cols-12 gap-3 items-start justify-between mb-3 w-full">
-          <div className="col-span-12 md:col-span-8 ">
-        {SheduledClass.map((item, index) => (
+        <div className="col-span-12 md:col-span-8 ">
+          {SheduledClass.map((item, index) => (
             <div className="bg-white p-3 rounded-md mb-3">
               <div className="flex flex-col md:flex-row gap-3 ">
                 <Button
@@ -119,7 +119,7 @@ const SheduleClass = () => {
                 </div>
               </div>
             </div>
-        ))}
+          ))}
         </div>
         <div className=" col-span-12 md:col-span-4 bg-white p-3 rounded-md space-y-4">
           <Button
@@ -130,22 +130,43 @@ const SheduleClass = () => {
             Shedule
           </Button>
           <div className=" w-full flex justify-center ">
+            <style>{`
+                  [data-selection-start="true"] {
+                    background-color: #8FC9C3 !important;
+                    color: white !important;
+                    border-radius: 9999px !important;
+                  }
+                  [data-selection-end="true"] {
+                    background-color: #F04D23 !important;
+                    color: white !important;
+                    border-radius: 9999px !important;
+                  }
+                    [data-range-selection="true"]{
+                    color: #06574C !important;
+                  }
+           `}</style>
             <RangeCalendar
-              aria-label="Date (Read Only)"
-              // calendarWidth={30}
-            className="self-center"
-              value={{
-                start: today(getLocalTimeZone()),
-                end: today(getLocalTimeZone()).add({ weeks: 1 }),
+              showMonthAndYearPickers
+              classNames={{
+                headerWrapper: "bg-[#FBF4EC] w-full",
+                gridHeaderRow: "bg-[#FBF4EC] w-full",
+                gridBody: "bg-[#FBF4EC] w-full md:flex md:flex-col md:gap-1.5",
+                gridWrapper: "bg-[#FBF4EC] w-full",
+                root: "md:w-full",
+                cell: "w-auto md:w-full",
+                table: "md:w-full",
               }}
+              aria-label="Date (Read Only)"
+              className="md:w-full shadow-lg"
+              style={{ width: "100%" }}
             />
           </div>
           <Select
-        //   variant="solid"
-        color="success"
-        size="sm"
-          label="Filter"
-          className="w-full "
+            //   variant="solid"
+            color="success"
+            size="sm"
+            label="Filter"
+            className="w-full "
           >
             {filters.map((item, index) => (
               <SelectItem key={index} value={item.key}>
@@ -155,18 +176,14 @@ const SheduleClass = () => {
           </Select>
           <h1 className="text-[#666666] font-medium">Class Type</h1>
           <div className=" flex flex-row gap-2 items-center">
-                <Button
-                size="sm"
-                radius="sm"
-                className="bg-[#06574C] text-white"
-                >
-                    Live Zoom
-                </Button>
-                <p>Video Lesson</p>
+            <Button size="sm" radius="sm" className="bg-[#06574C] text-white">
+              Live Zoom
+            </Button>
+            <p>Video Lesson</p>
           </div>
         </div>
         <div className="col-span-12 md:col-span-8 ">
-          <DashHeading title={"Today, January 15"} />
+          <DashHeading title={"Tomorrow, January 16"} />
         </div>
         {SheduledClass.map((item, index) => (
           <div className="col-span-12 md:col-span-8 ">

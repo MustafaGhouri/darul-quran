@@ -8,16 +8,18 @@ import {
   SelectItem,
   useCheckbox,
   VisuallyHidden,
-  tv, // ✅ IMPORTANT IMPORT
+  tv,
+  Pagination, // ✅ IMPORTANT IMPORT
 } from "@heroui/react";
 
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import { RiGroupLine } from "react-icons/ri";
 import { AiOutlineEye } from "react-icons/ai";
-import { Clock } from "lucide-react";
+import { CheckIcon, Clock } from "lucide-react";
 import { FaIdCard } from "react-icons/fa";
 import { IoSearchOutline, IoStarSharp } from "react-icons/io5";
 import { MdKeyboardArrowDown } from "react-icons/md";
+import { Link } from "react-router-dom";
 
 const BrowseCourses = () => {
   const courseCard = [
@@ -41,7 +43,7 @@ const BrowseCourses = () => {
       name: "Sarah Johnson",
       role: "Student",
       time: "30 Minutes",
-      price: "$89.99",
+      price: "Free",
       rating: "4.8",
       stacks: "Development",
     },
@@ -53,7 +55,7 @@ const BrowseCourses = () => {
       role: "Student",
       name: "Sarah Johnson",
       time: "30 Minutes",
-      price: "$89.99",
+      price: "Free",
       rating: "4.8",
       stacks: "Marketing",
     },
@@ -77,7 +79,7 @@ const BrowseCourses = () => {
       name: "Sarah Johnson",
       role: "Student",
       time: "30 Minutes",
-      price: "$89.99",
+      price: "Free",
       rating: "4.8",
       stacks: "Development",
     },
@@ -89,7 +91,43 @@ const BrowseCourses = () => {
       role: "Student",
       name: "Sarah Johnson",
       time: "30 Minutes",
+      price: "Free",
+      rating: "4.8",
+      stacks: "Marketing",
+    },
+    {
+      id: 7,
+      Status: "Paid",
+      course: "Full Stack Web Development: React, Node.js & MongoDB",
+      students: "15,432",
+      name: "Sarah Johnson",
+      role: "Student",
+      time: "30 Minutes",
       price: "$89.99",
+      rating: "4.8",
+      stacks: "Design",
+    },
+    {
+      id: 8,
+      Status: "Free",
+      course: "Full Stack Web Development: React, Node.js & MongoDB",
+      students: "15,432",
+      name: "Sarah Johnson",
+      role: "Student",
+      time: "30 Minutes",
+      price: "Free",
+      rating: "4.8",
+      stacks: "Development",
+    },
+    {
+      id: 9,
+      Status: "Free",
+      course: "Full Stack Web Development: React, Node.js & MongoDB",
+      students: "15,432",
+      role: "Student",
+      name: "Sarah Johnson",
+      time: "30 Minutes",
+      price: "Free",
       rating: "4.8",
       stacks: "Marketing",
     },
@@ -127,11 +165,18 @@ const BrowseCourses = () => {
     { key: "Marketing", label: "Marketing" },
     { key: "Photography", label: "Photography" },
   ];
+  const limits = [
+    { key: "10", label: "10" },
+    { key: "20", label: "20" },
+    { key: "30", label: "30" },
+    { key: "40", label: "40" },
+    { key: "50", label: "50" },
+  ];
   return (
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-scrseen px-2 sm:px-3">
       <DashHeading
-        title={"My Learning Journey"}
-        desc={"See & continue your learning journey"}
+        title={"Browse Courses"}
+        desc={"Discover your next learning adventure from 2,847 courses"}
       />
 
       <div className="bg-white p-3 rounded-lg mb-3">
@@ -187,9 +232,10 @@ const BrowseCourses = () => {
             <MdKeyboardArrowDown size={22} />
           </div>
           <div className="mt-5">
-            <h1 className="text-sm font-semibold text-[#666666]  mt-3">Categories</h1>
-            <CheckboxGroup 
-             orientation="horizontal" className="gap-2">
+            <h1 className="text-sm font-semibold text-[#666666]  mt-3">
+              Categories
+            </h1>
+            <CheckboxGroup orientation="horizontal" className="gap-2">
               {category.map((item) => (
                 <CustomCheckbox
                   key={item.key}
@@ -202,7 +248,9 @@ const BrowseCourses = () => {
             </CheckboxGroup>
           </div>
           <div className="mt-5">
-            <h1 className="text-sm font-semibold text-[#666666]  mt-3">Difficulty Level</h1>
+            <h1 className="text-sm font-semibold text-[#666666]  mt-3">
+              Difficulty Level
+            </h1>
             <CheckboxGroup orientation="horizontal" className="gap-2">
               {Difficulty.map((item) => (
                 <CustomCheckbox
@@ -216,7 +264,9 @@ const BrowseCourses = () => {
             </CheckboxGroup>
           </div>
           <div className="mt-5">
-            <h1 className="text-sm font-semibold text-[#666666]  mt-3">Categories</h1>
+            <h1 className="text-sm font-semibold text-[#666666]  mt-3">
+              Categories
+            </h1>
             <CheckboxGroup orientation="horizontal" className="gap-2">
               {category.map((item) => (
                 <CustomCheckbox
@@ -242,7 +292,7 @@ const BrowseCourses = () => {
                     <Button
                       size="sm"
                       radius="sm"
-                      className="bg-white text-[#06574C] px-4"
+                      className={`bg-white  px-4 ${item.Status === "Paid" ? "text-[#D28E3D]" : "text-[#34A853]"}`}
                     >
                       {item.Status}
                     </Button>
@@ -273,7 +323,7 @@ const BrowseCourses = () => {
                       </div>
                     </div>
                     <div className="text-end">
-                      <p className="font-semibold text-[#D28E3D] text-xl leading-tight">
+                      <p className={`font-semibold text-xl leading-tight ${item.Status === "Paid" ? "text-[#D28E3D]" : "text-[#34A853]"}`}>
                         {item.price}
                       </p>
                       <div className="text-sm flex items-center gap-1 text-[#666666]">
@@ -289,7 +339,7 @@ const BrowseCourses = () => {
                         {item.time}
                       </div>
                       <span className="text-xs px-2 py-1 rounded-md bg-[#95C4BE33] text-[#06574C]">
-                        {item.stacks}%
+                        {item.stacks}
                       </span>
                     </div>
                     {/* <Progress
@@ -300,6 +350,9 @@ const BrowseCourses = () => {
                   </div>
                   <div>
                     <Button
+                      radius="sm"
+                      as={Link}
+                      to="/student/browse-courses/course-details"
                       size="sm"
                       className="bg-[#06574C] text-white rounded-md w-full mt-"
                       startContent={<AiOutlineEye size={22} />}
@@ -312,6 +365,35 @@ const BrowseCourses = () => {
             </div>
           ))}
         </div>
+        <div className="md:flex md:flex-row items-center pb-4 gap-2 justify-between overflow-hidden ">
+            <div className="flex text-sm items-center gap-1">
+              <span>Showing</span>
+              <Select
+                radius="sm"
+                className="w-[70px]"
+                defaultSelectedKeys={["10"]}
+                placeholder="1"
+              >
+                {limits.map((limit) => (
+                  <SelectItem key={limit.key}>{limit.label}</SelectItem>
+                ))}
+              </Select>
+              <span className="min-w-56">Out of 58</span>
+            </div>
+            <Pagination
+              className=""
+              showControls
+              variant="ghost"
+              initialPage={1}
+              total={10}
+              classNames={{
+                item: "rounded-sm hover:bg-bg-[#06574C]/50",
+                cursor: "bg-[#06574C] rounded-sm text-white",
+                prev: "rounded-sm bg-white/80",
+                next: "rounded-sm bg-white/80",
+              }}
+            />
+          </div>
       </div>
     </div>
   );
@@ -350,7 +432,7 @@ const CustomCheckbox = (props) => {
           base: styles.base(),
           content: styles.content(),
         }}
-        // startContent={isSelected ? <CheckIcon /> : null}
+        startContent={isSelected ? <CheckIcon size={20} color="white" /> : null}
         variant="faded"
         {...getLabelProps()}
       >
@@ -359,4 +441,3 @@ const CustomCheckbox = (props) => {
     </label>
   );
 };
-

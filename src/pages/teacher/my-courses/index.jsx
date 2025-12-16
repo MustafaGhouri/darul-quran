@@ -1,5 +1,13 @@
 import { Button, Chip, Input, Tab, Tabs } from "@heroui/react";
-import { Clock, Download, MapPin, Plus, Search, UsersRound, Video } from "lucide-react";
+import {
+  Clock,
+  Download,
+  MapPin,
+  Plus,
+  Search,
+  UsersRound,
+  Video,
+} from "lucide-react";
 import { AiOutlineBook, AiOutlineLineChart } from "react-icons/ai";
 import { LuSquareArrowOutUpRight } from "react-icons/lu";
 import { RiDeleteBin6Line, RiGroupLine } from "react-icons/ri";
@@ -7,6 +15,7 @@ import { IoBulbOutline } from "react-icons/io5";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import { PiFilePdfDuotone } from "react-icons/pi";
 import { FaClipboardList, FaRegLightbulb } from "react-icons/fa";
+import { TbListCheck } from "react-icons/tb";
 
 const MyCourses = () => {
   const cardsData = [
@@ -19,7 +28,7 @@ const MyCourses = () => {
     },
     {
       title: "Avg. Attendance",
-      value: "Avg. Attendance",
+      value: "87%",
       icon: <AiOutlineLineChart color="#06574C" size={22} />,
       changeText: "5%",
       changeColor: "text-[#38A100]",
@@ -62,11 +71,9 @@ const MyCourses = () => {
       id: 1,
       day: "11",
       month: "Nov",
-      time: "10:00 AM - 11:30 AM",
-      Title: "Advanced Web Development",
-      students: "32",
-      role: "Student",
-      status: "Online",
+      size: "2.4 MB",
+      pages: "8 pages",
+      Title: "HTML Cheat Sheet",
       course: "Python",
       location: "Join Zoom",
       icone: <PiFilePdfDuotone color="#06574C" size={30} />,
@@ -75,11 +82,8 @@ const MyCourses = () => {
       id: 2,
       day: "11",
       month: "Nov",
-      time: "10:00 AM - 11:30 AM",
-      Title: "Advanced Web Development",
-      students: "32",
-      role: "Student",
-      status: "Online",
+      Title: "Build Your First Webpage",
+      due: "7 days after enrollment",
       course: "Python",
       icone: <FaClipboardList color="#06574C" size={30} />,
     },
@@ -87,14 +91,16 @@ const MyCourses = () => {
       id: 3,
       day: "11",
       month: "Nov",
-      time: "10:00 AM - 11:30 AM",
-      Title: "Advanced Web Development",
+      time: "15 Minutes",
+      Title: "HTML Basics Quiz",
       students: "32",
       role: "Student",
       status: "Online",
       course: "Python",
       location: "Join Zoom",
       icone: <FaRegLightbulb color="#06574C" size={30} />,
+      quizs: "10 Questions",
+      Passing: "70%",
     },
   ];
 
@@ -239,16 +245,24 @@ const MyCourses = () => {
           </Tabs>
         </div>
         <div className="p-3 flex justify-between items-center ">
-          <div >
-            <Input  className="w-100" size="md" radius="sm" placeholder="Search Cources..." endContent={<Search />} />
+          <div>
+            <Input
+              className="w-100"
+              size="md"
+              radius="sm"
+              placeholder="Search Cources..."
+              endContent={<Search />}
+            />
           </div>
           <div>
             <Button
-            size="md"
-            radius="sm"
-            startContent={<Plus size={18} />}
-            className="bg-[#06574C] text-white"
-            >Upload Materials</Button>
+              size="md"
+              radius="sm"
+              startContent={<Plus size={18} />}
+              className="bg-[#06574C] text-white"
+            >
+              Upload Materials
+            </Button>
           </div>
         </div>
         <div className="flex flex-col gap-3">
@@ -267,20 +281,37 @@ const MyCourses = () => {
                     <div className="text-lg text-[#06574C] font-semibold">
                       {item.Title}
                     </div>
-                    <div className="flex flex-wrap max-md:my-3 md:items-center mb-2 gap-5 text-sm text-[#666666]">
-                      <div className="flex items-center gap-1 ">
-                        <Clock size={20} />
-                        {item.time}
+                    {item.Title === "HTML Basics Quiz" ? (
+                      <div className="flex flex-wrap max-md:my-3 md:items-center mb-2 gap-5 text-sm text-[#666666]">
+                        <div className="flex items-center gap-1 ">
+                          <TbListCheck size={20} />
+                          {item.quizs}
+                        </div>
+                        <div className="flex items-center gap-1 ">
+                          <Clock size={16} />
+                          {item.time}
+                        </div>
+                        <div className="flex items-center gap-1 ">
+                          <p className="text-xs text-[#06574C] p-2 bg-white rounded-md">
+                            Passing: {item.Passing}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 ">
-                        <MapPin size={20} />
-                        {item.status}
+                    ) : (
+                      <div className="flex flex-wrap max-md:my-3 md:items-center mb-2 gap-5 text-sm text-[#666666]">
+                        {item.Title === "HTML Cheat Sheet" ? (
+                          <div className="flex items-center gap-3">
+                            <p>{item.size}</p>
+                            <p>{item.pages}</p>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <p>Due:</p>
+                            <p>{item.due}</p>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1 ">
-                        <Video size={20} />
-                        {item.students} {item.role}
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
                 <div className="items-center flex justify-between gap-3">

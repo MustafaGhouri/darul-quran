@@ -64,7 +64,7 @@ const MyLearning = () => {
               <FaUserGraduate size={30} color="#D28E3D" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold ">My Learning Journey</h1>
+              <h1 className="text-2xl font-semibold ">Sarah Mitchell</h1>
               <div className="flex gap-3 items-center mt-1">
                 <p className="text-xs text-[#06574C] bg-[#95C4BE33] w-20 py-2 rounded-lg text-center">
                   Level 3
@@ -80,7 +80,7 @@ const MyLearning = () => {
             progress.
           </p>
           <Progress
-            classNames={{ indicator: "bg-[#95C4BE]" }}
+            classNames={{ indicator: "bg-[#06574C]" }}
             showValueLabel
             className="mt-3"
             label="Overall Progress"
@@ -125,7 +125,7 @@ const MyLearning = () => {
           <p className="py-3 text-sm text-[#333333]">Currently on Level 3 of 6 - Master the fundamentals</p>
           <div>
             <Progress
-              classNames={{ indicator: "bg-[#95C4BE]" }}
+              classNames={{ indicator: "bg-[#06574C]" }}
               showValueLabel
               label="Level Progress"
               size="sm"

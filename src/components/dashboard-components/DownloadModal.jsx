@@ -59,7 +59,6 @@ const DownloadModal = () => {
   ];
   return (
     <div>
-      {/* {appearButton && installPrompt ? ( */}
       <div
         style={{
           position: "fixed",
@@ -73,11 +72,6 @@ const DownloadModal = () => {
           zIndex: 1000,
         }}
       >
-        {/* <Button variant="solid" size="lg" radius="sm" className="bg-[#06574c] text-white" style={{ marginLeft: "10px" }} 
-          onPress={handleInstall}
-          >
-            Download App
-          </Button> */}
         {isOpen === false ? (
           <Button
             variant="solid"

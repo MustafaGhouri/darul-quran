@@ -32,7 +32,6 @@ import StudentClassSheduling from "./pages/student/class-sheduling";
 import BrowseCourses from "./pages/student/browse-courses";
 import PaymentsInvoices from "./pages/student/payments-invoices";
 import CourseDetails from "./pages/student/browse-courses/course-details";
-import DownloadModal from "./components/dashboard-components/DownloadModal";
 
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const Home = lazy(() => import("./pages/Home"));
@@ -92,11 +91,12 @@ function App() {
 
     setInstallPrompt(null);
   };
+  const btnvisibility = window.location.pathname === "/";
   return (
     <HeroUIProvider>
       {/* {appearButton && installPrompt ? <DownloadModal/>:""} */}
 
-      {installPrompt && (
+      {btnvisibility && installPrompt && (
         <div
         style={{
           position: "fixed",

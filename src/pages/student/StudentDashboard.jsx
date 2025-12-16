@@ -132,26 +132,26 @@ const StudentDashboard = () => {
   const Announcements = [
     {
       id: 1,
-      icone:<GrAnnounce color="#06574C" size={30} />,
+      icone: <GrAnnounce color="#06574C" size={30} />,
       time: "2 hours ago",
-      desc:"Web Development 101: Complete the React project by Friday. Check the assignment details in your course portal.",
+      desc: "Web Development 101: Complete the React project by Friday. Check the assignment details in your course portal.",
       Title: "Advanced Web Development",
       students: "32",
       professer: "Prof. Sarah Johnson",
     },
     {
       id: 2,
-      icone:<CiCalendar color="#D28E3D" size={30} />,
+      icone: <CiCalendar color="#D28E3D" size={30} />,
       time: "2 hours ago",
-      desc:"Web Development 101: Complete the React project by Friday. Check the assignment details in your course portal.",
+      desc: "Web Development 101: Complete the React project by Friday. Check the assignment details in your course portal.",
       Title: "Class Schedule Update",
       professer: "Prof. Sarah Johnson",
     },
     {
       id: 3,
-      icone:<GrAnnounce color="#06574C" size={30} />,
+      icone: <GrAnnounce color="#06574C" size={30} />,
       time: "2 hours ago",
-      desc:"Web Development 101: Complete the React project by Friday. Check the assignment details in your course portal.",
+      desc: "Web Development 101: Complete the React project by Friday. Check the assignment details in your course portal.",
       Title: "Advanced Web Development",
       professer: "Prof. Sarah Johnson",
     },
@@ -160,9 +160,12 @@ const StudentDashboard = () => {
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-scrseen px-2 sm:px-3">
       {/* banner */}
       <div className="space-y-4 mt-3 w-full bg-[url('/images/banner.png')] p-4 rounded-lg bg-center bg-no-repeat bg-cover">
-        <h1 className="text-xl sm:text-3xl text-white font-semibold ">
-          Welcome back, Alex!  <br />
+        <h1 className="text-xl sm:text-3xl text-white font-semibold mb-0 ">
+          Welcome back, Alex! 👋
         </h1>
+        <p className="text-white text-sm">
+          Ready to continue your learning journey? Let's make today productive!
+        </p>
         <Button size="sm" className="bg-[#06574C] text-white rounded-md">
           Learn More
         </Button>
@@ -173,10 +176,14 @@ const StudentDashboard = () => {
             <div className="col-span-12 md:col-span-6 lg:col-span-4 ">
               <div className="w-full bg-white rounded-lg">
                 <div className="">
-                  <img className="h-full" src="/images/studentcard.png" alt="" />
+                  <img
+                    className="h-full"
+                    src="/images/studentcard.png"
+                    alt=""
+                  />
                 </div>
                 <div className="p-3 space-y-3">
-                    <h1 className="text-xl font-semibold">{item.course}</h1>
+                  <h1 className="text-xl font-semibold">{item.course}</h1>
                   {/* <div className="flex justify-between items-center ">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-[#95C4BE33] flex items-center justify-center text-white font-bold text-sm  shrink-0">
@@ -198,8 +205,16 @@ const StudentDashboard = () => {
                   </div> */}
                   <div>
                     <div className="flex justify-between items-center text-sm text-[#6B7280]">
-                      <div className="flex gap-1 items-center ">{<FaRegAddressCard size={22}/>}{"  "}{item.name}</div>
-                      <div className="flex gap-1 items-center ">{<Clock size={22}/>}{"  "}{item.time}</div>
+                      <div className="flex gap-1 items-center ">
+                        {<FaRegAddressCard size={22} />}
+                        {"  "}
+                        {item.name}
+                      </div>
+                      <div className="flex gap-1 items-center ">
+                        {<Clock size={22} />}
+                        {"  "}
+                        {item.time}
+                      </div>
                     </div>
                     {/* <Progress
                       color="success"
@@ -227,7 +242,9 @@ const StudentDashboard = () => {
       </div>
 
       <div className=" bg-white rounded-lg mb-3 ">
-        <h1 className="p-3 text-xl font-medium text-[#333333]">Today's Schedule</h1>
+        <h1 className="p-3 text-xl font-medium text-[#333333]">
+          Today's Schedule
+        </h1>
         <div className="flex flex-col gap-3">
           {upcomingClasses.map((item, index) => (
             <div
@@ -241,9 +258,7 @@ const StudentDashboard = () => {
                     <p className="text-xl text-[#06574C] font-semibold">
                       {item.time}
                     </p>
-                    <p className="text-sm text-[#06574C] font-semibold">
-                      PM
-                    </p>
+                    <p className="text-sm text-[#06574C] font-semibold">PM</p>
                   </div>
                   <div>
                     <div className="text-lg text-[#06574C] font-semibold">
@@ -254,10 +269,12 @@ const StudentDashboard = () => {
                         <Clock size={20} />
                         {item.minutes}
                       </div>
-                      {item.students && <div className="flex items-center gap-1 ">
-                        <BiGroup  size={20} />
-                        {item.students} {item.role}
-                      </div>}
+                      {item.students && (
+                        <div className="flex items-center gap-1 ">
+                          <BiGroup size={20} />
+                          {item.students} {item.role}
+                        </div>
+                      )}
                       <div className="flex items-center gap-1 ">
                         <Video size={20} />
                         {item.status}
@@ -268,29 +285,20 @@ const StudentDashboard = () => {
                         {item.course}
                       </Button>
                       <Button size="sm" className="bg-white text-[#D28E3D]">
-                         Starting Soon
+                        Starting Soon
                       </Button>
                     </div>
                   </div>
                 </div>
                 <div>
-                  <Button
-                    startContent={
-                      item.location === "Join Zoom" ? (
-                        <Edit size={20} />
-                      ) : (
-                        <AiOutlineEye size={22} />
-                      )
-                    }
-                    size="sm"
-                    className={`${
-                      item.location === "Join Zoom"
-                        ? "bg-[#1570E8]"
-                        : "bg-[#06574C]"
-                    } w-32 text-white rounded-md`}
-                  >
-                    {item.location || "View Details"}
-                  </Button>
+                  {item.id === 1 && (
+                    <Button
+                      size="sm"
+                      className={` bg-[#06574C]  w-32 text-white rounded-md`}
+                    >
+                      Join class
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -298,12 +306,16 @@ const StudentDashboard = () => {
         </div>
       </div>
       <div className=" bg-white rounded-lg mb-3 ">
-        <h1 className="p-3 text-xl font-medium text-[#333333]">Recent Announcements</h1>
+        <h1 className="p-3 text-xl font-medium text-[#333333]">
+          Recent Announcements
+        </h1>
         <div className="flex flex-col gap-3">
           {Announcements.map((item, index) => (
             <div
               className={`${
-                item.Title !== "Class Schedule Update" ? "bg-[#EAF3F2]" : "bg-[#F5E3DA]"
+                item.Title !== "Class Schedule Update"
+                  ? "bg-[#EAF3F2]"
+                  : "bg-[#F5E3DA]"
               } `}
             >
               <div className="flex flex-col md:flex-row gap-4 md:justify-between p-4 md:items-start">
@@ -312,7 +324,13 @@ const StudentDashboard = () => {
                     {item.icone}
                   </div>
                   <div>
-                    <div className="text-lg text-[#06574C] font-semibold">
+                    <div
+                      className={`${
+                        item.Title === "Class Schedule Update"
+                          ? "text-[#B7721F]"
+                          : "text-[#06574C]"
+                      } font-semibold`}
+                    >
                       {item.Title}
                     </div>
                     <div className=" text-xs text-[#666666]">
@@ -324,14 +342,15 @@ const StudentDashboard = () => {
                   </div>
                 </div>
                 <div>
-                  <p className="font-medium text-sm text-[#666666]">{item.professer}</p>
+                  <p className="font-medium text-sm text-[#666666]">
+                    {item.professer}
+                  </p>
                 </div>
               </div>
             </div>
           ))}
         </div>
       </div>
-
     </div>
   );
 };
