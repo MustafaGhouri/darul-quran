@@ -70,7 +70,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     {
       name: 'My Courses',
       icon: <BookIcon />,
-      // link: '/teacher/courses',
+      link: '/teacher/courses/course-details',
       children: [
         { name: 'Course Details View', link: '/teacher/courses/course-details' },
         { name: 'Upload Materials', link: '/teacher/courses/upload-material' }
@@ -89,6 +89,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     {
       name: 'Help and Support',
       icon: <FileQuestionIcon />,
+      link: '/student/help/messages',
       children: [
         { name: 'Chat Center', link: '/student/help/messages' },
         { name: 'Payments & Invoices', link: '/student/payments' },

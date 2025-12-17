@@ -30,11 +30,7 @@ export default function AdminLayout() {
         }
     }, [isMobile, window.innerWidth]);
 
-    const Routes = [
-        '/admin/help/messages',
-        '/admin/help/chat'
-    ]
-    const shouldHeaderOnRoutes = Routes.includes(pathname);
+    const shouldHeaderOnRoutes = pathname.includes("help")|| pathname.includes("chat");
     return (
         <>
             <main className="flex h-screen w-screen overflow-hidden bg-gray-50">
