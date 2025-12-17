@@ -316,7 +316,7 @@ export default function ChatInterface({
             </div>
 
             {
-        showInput && <div className=" border-t border-gray-200 px-4 py-3 shrink-0">
+        showInput && <div className=" border-t border-gray-200 px-4 py-3 shrink-0 sticky bottom-0">
             <div className="flex bg-white p-3 rounded-xl items-center gap-2">
                 <button className="p-2 text-gray-500 hover:text-gray-700 shrink-0">
                     <FiPaperclip size={20} />
