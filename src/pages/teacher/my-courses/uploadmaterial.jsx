@@ -17,28 +17,28 @@ import { GoLightBulb, GoRocket } from "react-icons/go";
 const UploadMaterial = () => {
   const cardsData = [
     {
-      title: "Total Courses ",
+      title: "Videos ",
       value: "10",
       icon: <Video color="#06574C" size={22} />,
       // changeText: "8%",
       changeColor: "text-[#38A100]",
     },
     {
-      title: "Attendance Rate",
+      title: "PDFs",
       value: "10",
       icon: <PiFilePdf color="#06574C" size={22} />,
       // changeText: "5%",
       changeColor: "text-[#38A100]",
     },
     {
-      title: "Total Students",
+      title: "Quizzes",
       value: "20",
       icon: <GoLightBulb color="#06574C" size={22} />,
       // changeText: "12%",
       changeColor: "text-[#E8505B]",
     },
     {
-      title: "Active Quizzes",
+      title: "Assignment",
       value: "15",
       icon: <LuClipboardList color="#06574C" size={22} />,
       // changeText: "-0%",
