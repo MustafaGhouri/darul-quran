@@ -22,7 +22,7 @@ export default function ChatInterface({
             const messagesByChatId = mockMessages.filter(i => i.chat_id === chat?.id);
             setMessages(messagesByChatId)
             setIsOpen(true)
-            console.log(messagesByChatId, chat?.id);
+            // console.log(messagesByChatId, chat?.id);
 
         } else if (user?.id) {
             const messagesByUserId = mockMessages.filter(i => i.user_id === user?.id);

@@ -34,6 +34,7 @@ import PaymentsInvoices from "./pages/student/payments-invoices";
 import CourseDetails from "./pages/student/browse-courses/course-details";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ChangePassword from "./pages/auth/ChangePassword";
+import DownloadModal from "./components/dashboard-components/DownloadModal";
 
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const Home = lazy(() => import("./pages/Home"));
@@ -69,45 +70,46 @@ const Review = lazy(() => import("./pages/admin/help/review"));
 const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 
 function App() {
-  const appearButton = window.location.pathname === "/";
-  const [installPrompt, setInstallPrompt] = useState(null);
+//   const appearButton = window.location.pathname === "/";
+//   const [installPrompt, setInstallPrompt] = useState(null);
 
-  useEffect(() => {
-    const handler = (e) => {
-      e.preventDefault(); // stop auto prompt
-      setInstallPrompt(e);
-    };
+//   useEffect(() => {
+//     const handler = (e) => {
+//       e.preventDefault(); // stop auto prompt
+//       setInstallPrompt(e);
+//     };
 
-    window.addEventListener("beforeinstallprompt", handler);
+//     window.addEventListener("beforeinstallprompt", handler);
 
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
-  const isIos = () => {
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    return /iphone|ipad|ipod/.test(userAgent);
-  };
+//     return () => window.removeEventListener("beforeinstallprompt", handler);
+//   }, []);
+//   const isIos = () => {
+//     const userAgent = window.navigator.userAgent.toLowerCase();
+//     return /iphone|ipad|ipod/.test(userAgent);
+//   };
 
-  const isInStandaloneMode = () => ("standalone" in window.navigator) && window.navigator.standalone;
+// const isInStandaloneMode = () => {
+//   return window.matchMedia("(display-mode: standalone)").matches;
+// };console.log(isInStandaloneMode);
 
-  const handleInstall = async () => {
-    if (installPrompt) {
-      installPrompt.prompt();
-      const result = await installPrompt.userChoice;
-      console.log("User choice:", result.outcome); 
-      setInstallPrompt(null);
-    } else if (isIos() && !isInStandaloneMode()) {
-      alert(
-        "To install this app on your iPhone, tap the Share icon and select 'Add to Home Screen'."
-      );
-    } else {
-      alert("Already Installed OR Try Again Later");
-    }
-  };
-  const btnvisibility = window.location.pathname === "/";
+//   const handleInstall = async () => {
+//     if (installPrompt) {
+//       installPrompt.prompt();
+//       const result = await installPrompt.userChoice;
+//       console.log("User choice:", result.outcome); 
+//       setInstallPrompt(null);
+//     } else if (isIos() && !isInStandaloneMode()) {
+//       alert(
+//         "To install this app on your iPhone, tap the Share icon and select 'Add to Home Screen'."
+//       );
+//     } else {
+//       alert("Already Installed OR Try Again Later");
+//     }
+//   };
+//   const btnvisibility = window.location.pathname === "/";
   return (
     <HeroUIProvider>
-
-      {btnvisibility && installPrompt && <div
+      {/* {btnvisibility && installPrompt && <div
         style={{
           position: "fixed",
           bottom: 20,
@@ -118,18 +120,19 @@ function App() {
           borderRadius: "8px",
           cursor: "pointer",
           zIndex: 1000,
-        }}>
-        <Button
+          }}>
+          <Button
           variant="solid"
           size="md"
           radius="sm"
           className="bg-[#06574c] text-white md:ml-3 max-sm:w-40"
           onPress={handleInstall}
-        >
+          >
           Download App
-        </Button>
-      </div>}
+          </Button>
+          </div>} */}
       <BrowserRouter>
+          <DownloadModal/>
         <Routes>
           {/* ---------- Auth Layout (NO HEADER/FOOTER) ---------- */}
           <Route element={<AuthLayout />}>
