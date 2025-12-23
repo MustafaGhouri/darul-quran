@@ -1,9 +1,44 @@
 import { Button, Form, Input } from "@heroui/react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const handleSubmit = (e) => {
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  // };
+
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async (e) => {
     e.preventDefault();
+
+    try {
+      const res = await fetch( import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message);
+        return;
+      }
+
+      if (data.user.role === "Admin") {
+        navigate("/admin/dashboard");
+      } else if (data.user.role === "Teacher") {
+        navigate("/teacher/dashboard");
+      } else {
+        navigate("/student/dashboard");
+      }
+    } catch (error) {
+      alert("Server not responding");
+    }
   };
 
   return (
@@ -26,22 +61,22 @@ const Login = () => {
                 </div> */}
       </div>
       <div className="flex-1 flex flex-col max-sm:items-center items-start md:justify-center bg-[#E9E0D6] !ml-0 px-6 sm:px-12 md:px-16 lg:px-24 py-8 lg:py-0 m-0 lg:m-6 lg:rounded-r-lg ">
-          <img
-            src="/icons/darul-quran-logo.png"
-            alt="Darul Quran"
-            className=" w-45 h-45 md:hidden"
-          />
+        <img
+          src="/icons/darul-quran-logo.png"
+          alt="Darul Quran"
+          className=" w-45 h-45 md:hidden"
+        />
         <div className="w-full max-w-xl mx-auto lg:mx-16">
           <h1 className="text-xl sm:text-3xl lg:text-4xl xl:text-[35px] text-[#3F3F44] leading-tight mb-6 lg:mb-8 font-medium">
             {/* Assalamu 'alaykum, <br /> */}
             <strong>Welcome</strong>
             {""} to{" "}
-            <span className="text-[#95C4BE]">Darul Qur'an Leicester </span> 
+            <span className="text-[#95C4BE]">Darul Qur'an Leicester </span>
             {/* - a space to grow, reflect and connect */}
           </h1>
 
           <Form
-            onSubmit={handleSubmit}
+           onSubmit={handleLogin}
             className="w-full space-y-5 lg:space-y-6 items-center justify-center"
           >
             <div className="w-full space-y-2">
@@ -52,13 +87,17 @@ const Login = () => {
                 className="rounded-md"
                 placeholder="youremail@guru.com"
                 type="email"
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
             <div className="w-full space-y-2">
               <div className="flex justify-between items-center text-sm lg:text-base">
                 <p className="text-[#3F3F44]">Password</p>
-                <Link to="/auth/forget-password" className=" cursor-pointer hover:underline">
+                <Link
+                  to="/auth/forget-password"
+                  className=" cursor-pointer hover:underline"
+                >
                   Forget Password?
                 </Link>
               </div>
@@ -66,35 +105,42 @@ const Login = () => {
                 className="rounded-md"
                 placeholder="Enter your password"
                 type="password"
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
             {/* <Link to=""> */}
             <div className="flex max-sm:flex-wrap gap-3 w-full  ">
-              <Button
-              type="submit"
-              as={Link}
-              to="/admin/dashboard"
-              className="w-full text-center text-white rounded-md py-3 bg-[#06574C]"
-            >
-              Login as admin
-            </Button>
+              {/* <Button
+                type="submit"
+                as={Link}
+                to="/admin/dashboard"
+                className="w-full text-center text-white rounded-md py-3 bg-[#06574C]"
+              >
+                Login as admin
+              </Button>
 
-            <Button
-              type="submit"
-              as={Link}
-              to="/teacher/dashboard"
-              className="w-full text-center text-white rounded-md py-3 bg-[#06574C]"
-            >
-              Login as teacher
-            </Button>
-            <Button
-              type="submit"
-              as={Link}
-              to="/student/dashboard"
-              className="w-full text-center text-white rounded-md py-3 bg-[#06574C]"
-            >
-              Login as student
-            </Button>
+              <Button
+                type="submit"
+                as={Link}
+                to="/teacher/dashboard"
+                className="w-full text-center text-white rounded-md py-3 bg-[#06574C]"
+              >
+                Login as teacher
+              </Button>
+              <Button
+                type="submit"
+                as={Link}
+                to="/student/dashboard"
+                className="w-full text-center text-white rounded-md py-3 bg-[#06574C]"
+              >
+                Login as student
+              </Button> */}
+              <Button
+                type="submit"
+                className="w-full text-center text-white rounded-md py-3 bg-[#06574C]"
+              >
+                Login
+              </Button>
             </div>
             {/* </Link> */}
             <div className="text-center text-sm lg:text-base mb-4 text-[#3F3F44]">
