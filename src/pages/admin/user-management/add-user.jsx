@@ -13,7 +13,7 @@ import {
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import { SearchCheck } from "lucide-react";
 import { Link } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 const Adduser = () => {
   const [selectedRole, setSelectedRole] = useState("");
 
@@ -42,34 +42,54 @@ const Adduser = () => {
     // { key: "Advance_Python", label: "Advance Python" , value: "advance_python"},
   ];
 
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const handleRoleChange = (e) => {
     setSelectedRole(e.target.value);
   };
 
   const handleUserSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const permissions = formData.getAll("permissions");
-    const payload = {
-      name: formData.get("name")?.toString() || "",
-      first_name: formData.get("first_name")?.toString() || "",
-      last_name: formData.get("last_name")?.toString() || "",
-      email: formData.get("email")?.toString() || "",
-      phone_number: formData.get("phone_number")?.toString() || "",
-      city: formData.get("city")?.toString() || 0,
-      role: formData.get("role")?.toString() || "",
-      is_active: isSelected ? true : false,
-      password: formData.get("password")?.toString() || "",
-      permissions: permissions,
-    };
-    console.log("Payload:", payload);
-    const res = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/auth/create-user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+
+    if (loading) return; // double click protection
+    setLoading(true);
+
+    try {
+      const formData = new FormData(e.target);
+      const permissions = formData.getAll("permissions");
+
+      const payload = {
+        first_name: formData.get("first_name") || "",
+        last_name: formData.get("last_name") || "",
+        email: formData.get("email") || "",
+        phone_number: formData.get("phone_number") || "",
+        city: formData.get("city") || "",
+        role: formData.get("role") || "",
+        is_active: isSelected,
+        password: formData.get("password") || "",
+        permissions,
+      };
+
+      const res = await fetch(
+        import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/auth/create-user",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to create user");
+      }
+
+      // ✅ success pe redirect
+      navigate("/admin/user-management");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const [isSelected, setIsSelected] = useState(true);
@@ -217,13 +237,15 @@ const Adduser = () => {
             Cancel
           </Button>
           <Button
-            type="Submit"
+            type="submit"
             radius="sm"
             className="w-50 bg-[#06574C]"
             variant="solid"
             color="primary"
+            isDisabled={loading}
+            isLoading={loading}
           >
-            Create User
+            {loading ? "Creating User..." : "Create User"}
           </Button>
         </div>
       </Form>

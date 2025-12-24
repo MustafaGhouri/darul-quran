@@ -207,7 +207,7 @@ const Scheduling = () => {
   ];
 
   return (
-    <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
+    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
       <DashHeading
         title={"Schedule Live Classes"}
         desc={"Manage and organize your upcoming live sessions"}

@@ -381,7 +381,7 @@ useEffect(() => {
 
 
   return (
-    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5 ">
+    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5 h-screen max:md:absolute top-0 bottom-0 right-0 left-0 overflow-y-auto pb-5">
       <DashHeading
         title={"Users Management"}
         desc={
@@ -491,7 +491,7 @@ useEffect(() => {
                     </TableHeader>
 
                     <TableBody>
-                      {students.map((classItem) => (
+                      {students.length >  0 ? students.map((classItem) => (
                         <TableRow key={classItem.id}>
                           <TableCell className="px-4">
                             <div>
@@ -508,7 +508,7 @@ useEffect(() => {
                               {classItem.role}
                             </Button>
                           </TableCell>
-                          <TableCell>{classItem.created_at}</TableCell>
+                          <TableCell>{dateFormatter(classItem.created_at)}</TableCell>
                           <TableCell>
                             <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
                               {classItem.is_active == true ? "Active" : "Inactive"}
@@ -536,7 +536,12 @@ useEffect(() => {
                             </Button>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )) : <TableRow>
+                        <TableCell colSpan={6} className="text-center py-4">
+                          No Student Users Found.
+                        </TableCell>
+                      </TableRow>
+                      }
                     </TableBody>
                   </Table>
                 </motion.div>
@@ -600,7 +605,7 @@ useEffect(() => {
                               {classItem.role}
                             </Button>
                           </TableCell>
-                          <TableCell>{classItem.created_at}</TableCell>
+                          <TableCell>{dateFormatter(classItem.created_at)}</TableCell>
                           <TableCell>
                             <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
                               {classItem.is_active == true ? "Active" : "Inactive"}
@@ -692,7 +697,7 @@ useEffect(() => {
                               {classItem.role}
                             </Button>
                           </TableCell>
-                          <TableCell>{classItem.created_at}</TableCell>
+                          <TableCell>{dateFormatter(classItem.created_at)}</TableCell>
                           <TableCell>
                             <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
                               {classItem.is_active == true ? "Active" : "Inactive"}
@@ -765,3 +770,11 @@ useEffect(() => {
 };
 
 export default UserManagement;
+export const dateFormatter = (date) => {
+    const formatterUS = new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    });
+    return formatterUS.format(new Date(date))
+}

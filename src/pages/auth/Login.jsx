@@ -33,6 +33,10 @@ const Login = () => {
         alert(data.message);
         return;
       }
+      // if (data.is_active === false) {
+      //   alert("Your account is currently inactive.");
+      //   return;
+      // }
 
       if (data.user.role === "Admin") {
         navigate("/admin/dashboard");
