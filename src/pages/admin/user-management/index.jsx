@@ -510,7 +510,7 @@ useEffect(() => {
                           </TableCell>
                           <TableCell>{dateFormatter(classItem.created_at)}</TableCell>
                           <TableCell>
-                            <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
+                            <Button className={`text-sm p-2 rounded-md ${classItem.is_active === true ? "bg-[#95C4BE33] text-[#06574C]" : "bg-[#FBF4EC] text-[#D28E3D]"} `}>
                               {classItem.is_active == true ? "Active" : "Inactive"}
                             </Button>
                           </TableCell>
@@ -523,7 +523,7 @@ useEffect(() => {
                               startContent={
                                 <SquarePen size={18} color="#06574C" />
                               }
-                              onPress={classItem.id}
+                              onPress={() => {router(`/admin/user-management/edit-user/${classItem.id}`)}}
                             >
                               Edit
                             </Button>
@@ -588,7 +588,8 @@ useEffect(() => {
                     </TableHeader>
 
                     <TableBody>
-                      {teachers.map((classItem) => (
+                      {teachers.length >  0 ?
+                       teachers.map((classItem) => (
                         <TableRow key={classItem.id}>
                           <TableCell className="px-4">
                             <div>
@@ -607,7 +608,7 @@ useEffect(() => {
                           </TableCell>
                           <TableCell>{dateFormatter(classItem.created_at)}</TableCell>
                           <TableCell>
-                            <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
+                            <Button className={`text-sm p-2 rounded-md ${classItem.is_active === true ? "bg-[#95C4BE33] text-[#06574C]" : "bg-[#FBF4EC] text-[#D28E3D]"} `}>
                               {classItem.is_active == true ? "Active" : "Inactive"}
                             </Button>
                           </TableCell>
@@ -620,6 +621,7 @@ useEffect(() => {
                               startContent={
                                 <SquarePen size={18} color="#06574C" />
                               }
+                              onPress={() => {router(`/admin/user-management/edit-user/${classItem.id}`)}}
                             >
                               Edit
                             </Button>
@@ -632,7 +634,12 @@ useEffect(() => {
                             </Button>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ))
+                      : <TableRow>
+                        <TableCell colSpan={6} className="text-center py-4">
+                          No Teacher Users Found.
+                        </TableCell>
+                      </TableRow>}
                     </TableBody>
                   </Table>
                 </motion.div>
@@ -699,7 +706,7 @@ useEffect(() => {
                           </TableCell>
                           <TableCell>{dateFormatter(classItem.created_at)}</TableCell>
                           <TableCell>
-                            <Button className="text-sm p-2 rounded-md bg-[#95C4BE33] text-[#06574C]">
+                            <Button className={`text-sm p-2 rounded-md ${classItem.is_active === true ? "bg-[#95C4BE33] text-[#06574C]" : "bg-[#FBF4EC] text-[#D28E3D]"} `}>
                               {classItem.is_active == true ? "Active" : "Inactive"}
                             </Button>
                           </TableCell>
@@ -712,6 +719,7 @@ useEffect(() => {
                               startContent={
                                 <SquarePen size={18} color="#06574C" />
                               }
+                              onPress={() => {router(`/admin/user-management/edit-user/${classItem.id}`)}}
                             >
                               Edit
                             </Button>

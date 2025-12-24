@@ -35,6 +35,8 @@ import CourseDetails from "./pages/student/browse-courses/course-details";
 import ForgetPassword from "./pages/auth/ForgetPassword";
 import ChangePassword from "./pages/auth/ChangePassword";
 import DownloadModal from "./components/dashboard-components/DownloadModal";
+import AddUser from "./pages/admin/user-management/add-user";
+import EditUser from "./pages/admin/user-management/add-user/edituser";
 
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const Home = lazy(() => import("./pages/Home"));
@@ -48,7 +50,6 @@ const Attendance = lazy(() =>
   import("./pages/admin/course-management/Attendance")
 );
 const UserManagement = lazy(() => import("./pages/admin/user-management"));
-const Adduser = lazy(() => import("./pages/admin/user-management/add-user"));
 const UserDetails = lazy(() =>
   import("./pages/admin/user-management/users-details")
 );
@@ -240,7 +241,15 @@ function App() {
               path="/admin/user-management/add-user"
               element={
                 <ProtectedRoute isAuthenticated={true}>
-                  <Adduser />
+                  <AddUser />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/user-management/edit-user/:id"
+              element={
+                <ProtectedRoute isAuthenticated={true}>
+                  <EditUser />
                 </ProtectedRoute>
               }
             />

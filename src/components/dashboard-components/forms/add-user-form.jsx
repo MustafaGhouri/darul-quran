@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   Checkbox,
@@ -10,13 +10,13 @@ import {
   SelectItem,
   Switch,
 } from "@heroui/react";
-import { DashHeading } from "../../../components/dashboard-components/DashHeading";
+import { DashHeading } from "../DashHeading";
 import { SearchCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-const Adduser = () => {
+const AddUserForm = ({ id, title, desc, userData ,isEdit }) => {
   const [selectedRole, setSelectedRole] = useState("");
-
+  console.log("User Data in Form:", userData);
   const role = [
     { key: "Admin", label: "Admin" },
     { key: "Teacher", label: "Teacher" },
@@ -48,6 +48,14 @@ const Adduser = () => {
     setSelectedRole(e.target.value);
   };
 
+  useEffect(() => {
+  if (userData) {
+    // normalize role value to match keys
+    const roleKey = role.find(r => r.key.toLowerCase() === (userData.role || "").toLowerCase())?.key || "";
+    setSelectedRole(roleKey);
+    setIsSelected(userData.is_active ?? true);
+  }
+}, [userData]);
   const handleUserSubmit = async (e) => {
     e.preventDefault();
 
@@ -59,6 +67,7 @@ const Adduser = () => {
       const permissions = formData.getAll("permissions");
 
       const payload = {
+        id: userData?.id || undefined,
         first_name: formData.get("first_name") || "",
         last_name: formData.get("last_name") || "",
         email: formData.get("email") || "",
@@ -97,14 +106,16 @@ const Adduser = () => {
   return (
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5 pb-3">
       <DashHeading
-        title={"Add New User"}
-        desc={"Add a new user to the platform"}
+        title={title || "Add New User"}
+        desc={desc || "Create a new user by filling out the form below."}
       />
       <Form onSubmit={handleUserSubmit} className="w-full">
         <div className="p-6 bg-white rounded-lg mb-6 w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
             <div className="flex flex-col gap-5">
               <Input
+                key={userData?.first_name}
+                defaultValue={userData?.first_name}
                 type="text"
                 name="first_name"
                 labelPlacement="outside"
@@ -114,8 +125,10 @@ const Adduser = () => {
                 placeholder="Enter your first name"
               />
               <Input
+                key={userData?.email}
                 type="text"
                 name="email"
+                defaultValue={userData?.email}
                 labelPlacement="outside"
                 variant="bordered"
                 size="lg"
@@ -123,6 +136,8 @@ const Adduser = () => {
                 placeholder="Enter your email address"
               />
               <Input
+                defaultValue={userData?.city}
+                key={userData?.city}
                 type="text"
                 name="city"
                 labelPlacement="outside"
@@ -134,6 +149,8 @@ const Adduser = () => {
             </div>
             <div className="flex flex-col gap-5">
               <Input
+                key={userData?.last_name}
+                defaultValue={userData?.last_name}
                 type="text"
                 name="last_name"
                 labelPlacement="outside"
@@ -143,6 +160,8 @@ const Adduser = () => {
                 placeholder="Enter your Last name"
               />
               <Input
+                key={userData?.phone_number}
+                defaultValue={userData?.phone_number}
                 type="text"
                 name="phone_number"
                 labelPlacement="outside"
@@ -158,8 +177,8 @@ const Adduser = () => {
                 size="lg"
                 label="Role"
                 placeholder="Select a role"
-                onChange={handleRoleChange}
                 value={selectedRole}
+                onChange={handleRoleChange}
               >
                 {role.map((item) => (
                   <SelectItem key={item.key} value={item.key}>
@@ -171,6 +190,8 @@ const Adduser = () => {
           </div>
           <div className="py-3">
             <Input
+              key={userData?.password}
+              defaultValue={userData?.password}
               type="text"
               name="password"
               labelPlacement="outside"
@@ -217,9 +238,10 @@ const Adduser = () => {
               {courses.map((item, index) => (
                 <Checkbox
                   key={index}
-                  value={item.value}
                   name="permissions"
                   color="success"
+                  value={item.value}
+                  defaultSelected={userData?.permissions?.includes(item.value)}
                 >
                   {item.label}
                 </Checkbox>
@@ -245,7 +267,8 @@ const Adduser = () => {
             isDisabled={loading}
             isLoading={loading}
           >
-            {loading ? "Creating User..." : "Create User"}
+           {isEdit === true ? (loading ? "Updating User..." : "Update User") : (loading ? "Creating User..." : "Create User")}
+           
           </Button>
         </div>
       </Form>
@@ -253,4 +276,4 @@ const Adduser = () => {
   );
 };
 
-export default Adduser;
+export default AddUserForm;
