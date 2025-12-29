@@ -167,7 +167,7 @@ const AddUserForm = ({ id, title, desc, userData ,isEdit }) => {
               <Input
                 key={userData?.phone_number}
                 defaultValue={userData?.phone_number}
-                type="text"
+                type="number"
                 name="phone_number"
                 labelPlacement="outside"
                 variant="bordered"

@@ -10,8 +10,8 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("syedmazzh@gmail.com");
+  const [password, setPassword] = useState("password123");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e) => {
@@ -95,6 +95,7 @@ const Login = () => {
               <Input
                 className="rounded-md"
                 placeholder="youremail@guru.com"
+                value={email}
                 type="email"
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -113,6 +114,7 @@ const Login = () => {
               <Input
                 className="rounded-md"
                 placeholder="Enter your password"
+                value={password}
                 type={showPassword ? "text" : "password"}
                 endContent={
                   <span onClick={() => setShowPassword(!showPassword)}>
