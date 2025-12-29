@@ -11,8 +11,15 @@ import {
   TableHeader,
   TableRow,
   Tabs,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
 } from "@heroui/react";
 import { Chip } from "@heroui/react";
+import toast from "react-hot-toast";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
   ListFilterPlusIcon,
@@ -361,6 +368,8 @@ const UserManagement = () => {
 const [teachers, setTeachers] = useState([]);
 const [students, setStudents] = useState([]);
 const [admins, setAdmins] = useState([]);
+const [userToDelete, setUserToDelete] = useState(null);
+const { isOpen, onOpen, onClose } = useDisclosure();
 
 useEffect(() => {
   const fetchUsers = async () => {
@@ -379,23 +388,44 @@ useEffect(() => {
   fetchUsers();
 }, []); 
 
-const handleDelete = async (userId) => {
-  if (window.confirm("Are you sure you want to delete this user?")) {
-    try {
-      const res = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/auth/deleteUser/${userId}`, {
-        method: "DELETE",
-      });
+const openDeleteModal = (userId) => {
+  setUserToDelete(userId);
+  onOpen();
+};
 
-      if (res.ok) {
-        alert("User deleted successfully!");
-        window.location.reload();
-      } else {
-        alert("Failed to delete user.");
-      }
-    } catch (error) {
-      console.error("Error deleting user:", error);
+const handleDelete = async () => {
+  if (!userToDelete) return;
+  
+  try {
+    const res = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/auth/deleteUser/${userToDelete}`, {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+      toast.success("User deleted successfully!");
+      onClose();
+      setUserToDelete(null);
+      // Refresh the user list
+      const response = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/auth/getAllUsers");
+      const data = await response.json();
+      const teacherData = data.users.filter(u => u.role === "Teacher");
+      const studentData = data.users.filter(u => u.role === "Student");
+      const adminData = data.users.filter(u => u.role === "Admin");
+      setTeachers(teacherData);
+      setStudents(studentData);
+      setAdmins(adminData);
+    } else {
+      toast.error("Failed to delete user.");
     }
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    toast.error("An error occurred while deleting the user.");
   }
+};
+
+const handleCancelDelete = () => {
+  setUserToDelete(null);
+  onClose();
 };
 
   return (
@@ -549,7 +579,7 @@ const handleDelete = async (userId) => {
                               radius="sm"
                               className="bg-[#06574C] text-white"
                               startContent={<Trash2 size={18} color="white" />}
-                              onPress={() => handleDelete(classItem.id)}
+                              onPress={() => openDeleteModal(classItem.id)}
                             >
                               Delete
                             </Button>
@@ -648,7 +678,7 @@ const handleDelete = async (userId) => {
                               radius="sm"
                               className="bg-[#06574C] text-white"
                               startContent={<Trash2 size={18} color="white" />}
-                              onPress={() => handleDelete(classItem.id)}
+                              onPress={() => openDeleteModal(classItem.id)}
                             >
                               Delete
                             </Button>
@@ -743,11 +773,11 @@ const handleDelete = async (userId) => {
                             >
                               Edit
                             </Button>
-                            <Button
+                           <Button
                               radius="sm"
                               className="bg-[#06574C] text-white"
                               startContent={<Trash2 size={18} color="white" />}
-                              onPress={() => handleDelete(classItem.id)}
+                              onPress={() => openDeleteModal(classItem.id)}
                             >
                               Delete
                             </Button>
@@ -794,6 +824,34 @@ const handleDelete = async (userId) => {
           />
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={isOpen} onClose={handleCancelDelete} size="md">
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            Confirm Delete
+          </ModalHeader>
+          <ModalBody>
+            <p>Are you sure you want to delete this user?</p>
+            <p className="text-sm text-gray-500">This action cannot be undone.</p>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              color="default"
+              variant="light"
+              onPress={handleCancelDelete}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="danger"
+              onPress={handleDelete}
+            >
+              Yes, Delete
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

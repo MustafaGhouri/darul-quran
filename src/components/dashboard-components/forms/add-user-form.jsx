@@ -12,6 +12,7 @@ import {
 import { DashHeading } from "../DashHeading";
 import { SearchCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
   const [selectedRole, setSelectedRole] = useState(new Set());
@@ -170,11 +171,23 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
         }
       );
 
-      if (!res.ok) throw new Error("Failed to create user");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to save user");
+      }
+
+      // Show success toast based on whether it's edit or create
+      if (userData?.id) {
+        toast.success("User updated successfully!");
+      } else {
+        toast.success("User created successfully!");
+      }
 
       navigate("/admin/user-management");
     } catch (err) {
       console.error(err);
+      // Show error toast
+      toast.error(err.message || "An error occurred while saving the user");
     } finally {
       setLoading(false);
     }

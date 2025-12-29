@@ -18,6 +18,7 @@ import {
   Link,
 } from "@heroui/react";
 import { lazy, use, useEffect, useState } from "react";
+import { Toaster } from "react-hot-toast";
 import ChatLayout from "./components/layouts/ChatLayout";
 import TeachersLayout from "./components/layouts/Teacherslayout";
 import TeachersDashboard from "./pages/teacher/TeachersDashboard";
@@ -133,6 +134,7 @@ function App() {
           </Button>
           </div>} */}
       <BrowserRouter>
+          <Toaster position="top-right" />
           <DownloadModal/>
         <Routes>
           {/* ---------- Auth Layout (NO HEADER/FOOTER) ---------- */}
