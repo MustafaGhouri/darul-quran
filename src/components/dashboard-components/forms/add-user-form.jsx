@@ -225,7 +225,7 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
 
       navigate("/admin/user-management");
     } catch (error) {
-      toast.error(error.message || "An error occurred");
+      toast.error(error.message || "User already exists");
     } finally {
       setLoading(false);
     }
