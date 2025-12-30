@@ -73,7 +73,7 @@ const ChangePassword = () => {
       
       // Redirect after a short delay
       setTimeout(() => {
-        navigate("/login");
+        navigate("/");
       }, 1500);
     } catch (err) {
       toast.error(err.message || "An error occurred. Please try again.");
