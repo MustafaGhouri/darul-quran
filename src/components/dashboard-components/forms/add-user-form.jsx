@@ -10,7 +10,7 @@ import {
   Switch,
 } from "@heroui/react";
 import { DashHeading } from "../DashHeading";
-import { SearchCheck } from "lucide-react";
+import { EyeIcon, EyeOffIcon, SearchCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -21,6 +21,7 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
   const [isSelected, setIsSelected] = useState(true);
   const [loading, setLoading] = useState(false);
   const [selectedCourses, setSelectedCourses] = useState(new Set());
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
   
@@ -378,7 +379,6 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
           {!userData?.id && (
             <div className="py-3">
               <Input
-                type="password"
                 name="password"
                 labelPlacement="outside"
                 variant="bordered"
@@ -389,6 +389,17 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
                 errorMessage="Password must be at least 6 characters"
                 validate={validatePassword}
                 description="Minimum 6 characters"
+                type={showPassword ? "text" : "password"}
+                endContent={
+                  <span onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? (
+                      <EyeOffIcon className="cursor-pointer" size={20} />
+                    ) : (
+                      <EyeIcon className="cursor-pointer" size={20} />
+                    )}
+                  </span>
+                }
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           )}
