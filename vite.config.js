@@ -10,6 +10,11 @@ export default defineConfig({
     react(),
     VitePWA({
   registerType: "autoUpdate",
+  // ✅ YAHAN ADD KARO (IMPORTANT)
+      workbox: {
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB
+      },
+
   manifest: {
     name: "Darul Quran",
     short_name: "Darul Quran",

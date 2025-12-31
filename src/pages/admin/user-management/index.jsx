@@ -971,7 +971,7 @@ const getCurrentTab = () => {
   );
 };
 
-export default UserManagement;
+export default UserManagement;  
 export const dateFormatter = (date) => {
     const formatterUS = new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
