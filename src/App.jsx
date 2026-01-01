@@ -3,7 +3,7 @@ import ProtectedRoute from "./components/protected-route";
 import Login from "./pages/auth/Login";
 import AuthLayout from "./components/layouts/AuthLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
   HeroUIProvider,
   Modal,
@@ -16,6 +16,7 @@ import {
   Checkbox,
   Input,
   Link,
+  Spinner,
 } from "@heroui/react";
 import { lazy, use, useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
@@ -72,392 +73,342 @@ const Review = lazy(() => import("./pages/admin/help/review"));
 const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 
 function App() {
-//   const appearButton = window.location.pathname === "/";
-//   const [installPrompt, setInstallPrompt] = useState(null);
+  const navigate = useNavigate();
+  const pathname = useLocation().pathname;
+  const [loading, setLoading] = useState(false);
+  const [redirect, setRedirect] = useState('');
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        setLoading(true)
+        const res = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/auth/me`, {
+          credentials: "include",
+        });
+        const { user } = await res.json();
 
-//   useEffect(() => {
-//     const handler = (e) => {
-//       e.preventDefault(); // stop auto prompt
-//       setInstallPrompt(e);
-//     };
+        if (user.role?.toLowerCase() === "admin") {
+          setRedirect("/admin/dashboard");
+        } else if (user.role?.toLowerCase() === "student") {
+          setRedirect("/student/dashboard");
+        } else if (user.role?.toLowerCase() === "teacher") {
+          setRedirect("/teacher/dashboard");
+        }
 
-//     window.addEventListener("beforeinstallprompt", handler);
+      } catch (err) {
+        setRedirect("");
+      } finally {
+        const isAuthRoute = pathname === "/" || pathname === "/auth/forget-password" || pathname === "/auth/change-password";
+        if(isAuthRoute){
+          navigate(redirect)
+        }
+        setLoading(false)
+      }
+    };
 
-//     return () => window.removeEventListener("beforeinstallprompt", handler);
-//   }, []);
-//   const isIos = () => {
-//     const userAgent = window.navigator.userAgent.toLowerCase();
-//     return /iphone|ipad|ipod/.test(userAgent);
-//   };
+    checkAuth();
+  }, [navigate]);
 
-// const isInStandaloneMode = () => {
-//   return window.matchMedia("(display-mode: standalone)").matches;
-// };console.log(isInStandaloneMode);
+  if (loading !== false) return (
+    <div className="h-screen flex items-center justify-center">
+      <Spinner size="lg" label="Loading..." labelColor="success" color="success" />
+    </div>
+  );
 
-//   const handleInstall = async () => {
-//     if (installPrompt) {
-//       installPrompt.prompt();
-//       const result = await installPrompt.userChoice;
-//       console.log("User choice:", result.outcome); 
-//       setInstallPrompt(null);
-//     } else if (isIos() && !isInStandaloneMode()) {
-//       alert(
-//         "To install this app on your iPhone, tap the Share icon and select 'Add to Home Screen'."
-//       );
-//     } else {
-//       alert("Already Installed OR Try Again Later");
-//     }
-//   };
-//   const btnvisibility = window.location.pathname === "/";
   return (
     <HeroUIProvider>
-      {/* {btnvisibility && installPrompt && <div
-        style={{
-          position: "fixed",
-          bottom: 20,
-          right: 20,
-          background: "transparent",
-          color: "transparent",
-          padding: "12px",
-          borderRadius: "8px",
-          cursor: "pointer",
-          zIndex: 1000,
-          }}>
-          <Button
-          variant="solid"
-          size="md"
-          radius="sm"
-          className="bg-[#06574c] text-white md:ml-3 max-sm:w-40"
-          onPress={handleInstall}
-          >
-          Download App
-          </Button>
-          </div>} */}
-      <BrowserRouter>
-          <Toaster position="top-right" />
-          <DownloadModal/>
-        <Routes>
-          {/* ---------- Auth Layout (NO HEADER/FOOTER) ---------- */}
-          <Route element={<AuthLayout />}>
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute
-                  publicOnly
-                  isAuthenticated={false}
-                  redirect="/dashboard"
-                >
-                  <Login />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/auth/forget-password"
-              element={
-                <ProtectedRoute
-                  publicOnly
-                  isAuthenticated={false}
-                  redirect="/dashboard"
-                >
-                  <ForgetPassword />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/auth/change-password"
-              element={
-                <ProtectedRoute
-                  publicOnly
-                  isAuthenticated={false}
-                  redirect="/dashboard"
-                >
-                  <ChangePassword />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute
-                  publicOnly
-                  isAuthenticated={false}
-                  redirect="/dashboard"
-                >
-                  <Home />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
+      <Toaster position="top-right" />
+      <DownloadModal />
+      <Routes>
+        {/* ---------- Auth Layout (NO HEADER/FOOTER) ---------- */}
+        <Route element={<AuthLayout redirect={redirect} />}>
+          <Route
+            path="/"
+            element={
+              <Login />
+            }
+          />
+          <Route
+            path="/auth/forget-password"
+            element={
+              <ForgetPassword />
+            }
+          />
+          <Route
+            path="/auth/change-password"
+            element={
+              <ChangePassword />
+            }
+          />
+        </Route>
 
-          {/* --- ----- Admin Layout (WITH HEADER/SIDEBAR) -------- */}
-          <Route element={<AdminLayout />}>
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/courses-management"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <CourseManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/courses-management/builder"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <CourseBuilder />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/courses-management/live-sessions"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <LiveSession />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/courses-management/attendance"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <Attendance />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/user-management"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <UserManagement />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/user-management/add-user"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <AddUser />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/user-management/edit-user/:id"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <EditUser />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/user-management/users-details"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <UserDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/scheduling"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <Scheduling />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/announcements"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <Announcements />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/payments"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <PaymentsRefunds />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/tickets"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <SupportTickets />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/analytics"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <Analytics />
-                </ProtectedRoute>
-              }
-            />
+        {/* --- ----- Admin Layout (WITH HEADER/SIDEBAR) -------- */}
+        <Route element={<AdminLayout />}>
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/courses-management"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <CourseManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/courses-management/builder"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <CourseBuilder />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/courses-management/live-sessions"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <LiveSession />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/courses-management/attendance"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <Attendance />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/user-management"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/user-management/add-user"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <AddUser />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/user-management/edit-user/:id"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <EditUser />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/user-management/users-details"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <UserDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/scheduling"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <Scheduling />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/announcements"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <Announcements />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/payments"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <PaymentsRefunds />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/tickets"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <SupportTickets />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/analytics"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <Analytics />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route
-              path="/admin/help/reviews"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <Review />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/help/faqs"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <Faqs />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/help/messages"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <HelpMessages />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/help/chat"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <TeacherAndStudentChat />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
-          {/* <Route element={<ChatLayout />}>
+          <Route
+            path="/admin/help/reviews"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <Review />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/help/faqs"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <Faqs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/help/messages"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <HelpMessages />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/help/chat"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <TeacherAndStudentChat />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+        {/* <Route element={<ChatLayout />}>
           </Route> */}
-          {/* teachers routes -------------*/}
-          <Route element={<TeachersLayout />}>
-            <Route
-              path="/teacher/dashboard"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <TeachersDashboard />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
-          <Route element={<TeachersLayout />}>
-            <Route
-              path="/teacher/courses/course-details"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <MyCourses />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher/courses/upload-material"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <UploadMaterial />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher/student-attendance"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <StudentAttendance />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher/class-scheduling"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <ClassSheduling />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher/class-scheduling/sheduled-class"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <SheduleClass />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/teacher/chat"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <HelpMessages />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/dashboard"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <StudentDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/my-learning"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <MyLearning />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/class-scheduling"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <StudentClassSheduling />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/browse-courses"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <BrowseCourses />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/browse-courses/course-details"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <CourseDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/help/messages"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <HelpMessages />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/student/payments"
-              element={
-                <ProtectedRoute isAuthenticated={true}>
-                  <PaymentsInvoices />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+        {/* teachers routes -------------*/}
+        <Route element={<TeachersLayout />}>
+          <Route
+            path="/teacher/dashboard"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <TeachersDashboard />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+        <Route element={<TeachersLayout />}>
+          <Route
+            path="/teacher/courses/course-details"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <MyCourses />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/courses/upload-material"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <UploadMaterial />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/student-attendance"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <StudentAttendance />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/class-scheduling"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <ClassSheduling />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/class-scheduling/sheduled-class"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <SheduleClass />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/chat"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <HelpMessages />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/dashboard"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <StudentDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/my-learning"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <MyLearning />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/class-scheduling"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <StudentClassSheduling />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/browse-courses"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <BrowseCourses />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/browse-courses/course-details"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <CourseDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/help/messages"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <HelpMessages />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/payments"
+            element={
+              <ProtectedRoute isAuthenticated={true}>
+                <PaymentsInvoices />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+      </Routes>
     </HeroUIProvider>
   );
 }

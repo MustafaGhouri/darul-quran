@@ -40,6 +40,7 @@ const Login = () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ email, password }),
         }
       );
@@ -53,7 +54,7 @@ const Login = () => {
         return;
       }
       if (res.ok) {
-      // ✅ success
+        // ✅ success
         toast.success("Login successful");
       }
       setTimeout(() => {
