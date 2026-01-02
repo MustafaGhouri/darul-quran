@@ -110,27 +110,27 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
     return true;
   };
 
-  const validatePhoneNumber = (value) => {
-    if (!value) return "Phone number is required";
+  // const validatePhoneNumber = (value) => {
+  //   if (!value) return "Phone number is required";
     
-    // Remove any non-digit characters
-    const cleanPhone = value.replace(/\D/g, '');
+  //   // Remove any non-digit characters
+  //   const cleanPhone = value.replace(/\D/g, '');
     
-    if (selectedCountryValue === "Pakistan") {
-      // Check for valid Pakistani mobile numbers (starting with 03 and length 11)
-      const pakistaniRegex = /^03[0-9]{9}$/;
-      if (!pakistaniRegex.test(cleanPhone)) {
-        return "Please enter a valid Pakistani mobile number (e.g., 03163137189)";
-      }
-    } else {
-      // For other countries, just check if it's all digits and reasonable length
-      if (cleanPhone.length < 7 || cleanPhone.length > 15) {
-        return "Please enter a valid phone number";
-      }
-    }
+  //   if (selectedCountryValue === "Pakistan") {
+  //     // Check for valid Pakistani mobile numbers (starting with 03 and length 11)
+  //     const pakistaniRegex = /^03[0-9]{9}$/;
+  //     if (!pakistaniRegex.test(cleanPhone)) {
+  //       return "Please enter a valid Pakistani mobile number (e.g., 03163137189)";
+  //     }
+  //   } else {
+  //     // For other countries, just check if it's all digits and reasonable length
+  //     if (cleanPhone.length < 7 || cleanPhone.length > 15) {
+  //       return "Please enter a valid phone number";
+  //     }
+  //   }
     
-    return true;
-  };
+  //   return true;
+  // };
 
   useEffect(() => {
     if (userData) {
@@ -333,13 +333,15 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
                 name="phone_number"
                 labelPlacement="outside"
                 variant="bordered"
+                inputmode="numeric"
+                pattern='^\+?[0-9]+$'
                 size="lg"
                 label="Phone Number"
-                placeholder="e.g., 03163137189"
+                placeholder="e.g., 07XXX XXXXXX"
                 isRequired
                 errorMessage="Please enter a valid phone number"
-                validate={validatePhoneNumber}
-                description={selectedCountryValue === "Pakistan" ? "Format: 03XXXXXXXXX (11 digits)" : "Enter valid phone number"}
+                // validate={validatePhoneNumber}
+                description={selectedCountryValue === "Pakistan" ? "Format: 07XXX XXXXXX (11 digits)" : "Enter valid phone number"}
               />
             </div>
           </div>

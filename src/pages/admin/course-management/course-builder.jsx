@@ -28,6 +28,7 @@ import Videos, {
 } from "../../../components/dashboard-components/forms/ContentUpload";
 import { useSearchParams } from "react-router-dom";
 import { label } from "framer-motion/client";
+import { UploadButton, UploadDropzone } from "../../../lib/uploadthing";
 const containerVariants = {
   hidden: { opacity: 0, y: 10, scale: 0.98 },
 
@@ -43,7 +44,23 @@ const containerVariants = {
   },
 };
 const CourseBuilder = () => {
+// useEffect(() => {
+//   const fetchCourses = async () => {
+//     const response = await fetch(
+//       import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/admin/addCourse",
+//       {
+//         method: "POST",
+//       }
+//     );
+//     const data = await response.json();
+//     console.log(data);
+//   };
+
+//   fetchCourses();
+// }, []);
+
   const [thumbnail, setThumbnail] = useState([]); //file
+  console.log("thumbnail",thumbnail);
   const category = [
     { key: "Advance_JavaScript", label: "Advance JavaScript" },
     { key: "Advance_React", label: "Advance React" },
@@ -110,18 +127,147 @@ const CourseBuilder = () => {
     // searchParams.set('tab', value);
     setSearchParams({ tab: value });
   };
+const [formData, setFormData] = useState({
+  course_name: "",
+  category: "",
+  difficulty_level: "",
+  description: "",
+  course_price: "",
+  teacher_name: "",
+  access_duration: "",
+  previous_lesson: "",
+  enroll_number: "",
+  status: "Draft", // Default
+});
+const handleChange = (name, value) => {
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
+ const handleSubmitTab1 = async (e) => {
+  e.preventDefault();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSearchParams({
-      tab:
-        currentTab === "info"
-          ? "content"
-          : currentTab === "content"
-          ? "pricing"
-          : "info",
-    });
+  const payload = {
+    ...formData,
+    previous_lesson: formData.previous_lesson ? parseInt(formData.previous_lesson) : null,
+    enroll_number: formData.enroll_number ? parseInt(formData.enroll_number) : null,
+    status: "Draft",
   };
+  const uploadfiles = {
+    thumbnail: thumbnail,
+    // videos: videos,
+    // pdf_and_notes: pdf_and_notes,
+    // assignments: assignments,
+    // quizzes: quizzes,
+  };
+  console.log("uploadfiles",uploadfiles);
+  try{
+  const uploadfilesData = await response.json();
+  if(uploadfilesData.success){
+    const response = await fetch (
+      import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/admin/addCourse",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", 
+        body: JSON.stringify(payload , uploadfilesData),
+      }
+    );
+    const data = await response.json();
+    console.log(data);
+  }
+  }catch(error){
+    console.log(error);
+  }
+  // const response = await fetch(
+  //   import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/admin/addCourse",
+  //   {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify(payload),
+  //   }
+  // );
+
+  // const data = await response.json();
+
+  // if (data.success) {
+  //   // Navigate to Tab 2 with the course ID
+  //   navigate(`/course-builder/${data.courseId}?tab=content`);
+  // }
+};
+// const handleSubmitTab1 = async (e) => {
+//   e.preventDefault();
+
+//   const payload = {
+//     ...formData,
+//     previous_lesson: formData.previous_lesson
+//       ? parseInt(formData.previous_lesson)
+//       : null,
+//     enroll_number: formData.enroll_number
+//       ? parseInt(formData.enroll_number)
+//       : null,
+//     status: "Draft",
+//   };
+
+//   const uploadfiles = {
+//     images: thumbnail, // ⚠️ backend expects "images"
+//     isConvert: true,
+//   };
+
+//   try {
+//     const response = await fetch(
+//   import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/admin/uploadImages",
+//   {
+//     method: "POST",
+//     credentials: "include",
+//     body: formData, // ✅ NO headers
+//   }
+//     );
+
+//     const uploadfilesData = await response.json();
+
+//     if (!response.ok) {
+//       console.error(uploadfilesData);
+//       return;
+//     }
+
+//     // upload success
+//     const courseResponse = await fetch(
+//       import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/admin/addCourse",
+//       {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         credentials: "include",
+//         body: JSON.stringify({
+//           ...payload,
+//           thumbnail: uploadfilesData.uploaded,
+//         }),
+//       }
+//     );
+
+//     const data = await courseResponse.json();
+//     console.log("Course Created:", data);
+//   } catch (error) {
+//     console.error(error);
+//   }
+// };
+
+// const handleUpdate = async (fieldsToUpdate) => {
+//   if (!courseId) return;
+
+//   const response = await fetch(
+//     `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/admin/updateCourse/${courseId}`,
+//     {
+//       method: "PATCH",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(fieldsToUpdate),
+//     }
+//   );
+
+//   const data = await response.json();
+//   console.log(data);
+// };
   return (
     <div className="h-full bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full no-scrollbar top-0 bottom-0 overflow-y-auto">
       <DashHeading
@@ -182,7 +328,7 @@ const CourseBuilder = () => {
               animate="show"
               transition={{ when: "beforeChildren" }}
             >
-              <Form onSubmit={handleSubmit} className="w-full py-4">
+              <Form onSubmit={handleSubmitTab1} className="w-full py-4">
                 <div className="grid grid-cols-12 gap-2 w-full">
                   <div className="bg-white rounded-lg p-4 col-span-12 sm:col-span-8 shadow-xl">
                     <div>
@@ -208,6 +354,8 @@ const CourseBuilder = () => {
                           labelPlacement="outside"
                           placeholder="Select category"
                           className="w-full"
+                          selectedKeys={[formData.category]}
+                          onSelectionChange={(keys) => handleChange("category", [...keys][0])}
                         >
                           {category.map((item) => (
                             <SelectItem key={item.id} value={item.id}>
@@ -222,6 +370,8 @@ const CourseBuilder = () => {
                           labelPlacement="outside"
                           placeholder="Select Difficulty Level"
                           className="w-full"
+                          selectedKeys={[formData.difficulty_level]}
+                          onSelectionChange={(keys) => handleChange("difficulty_level", [...keys][0])}
                         >
                           {Difficulty.map((item) => (
                             <SelectItem key={item.id} value={item.id}>
@@ -235,6 +385,8 @@ const CourseBuilder = () => {
                           size="lg"
                           variant="bordered"
                           label="Description"
+                          value={formData.description}
+                          onChange={(e) => handleChange("description", e.target.value)}
                           labelPlacement="outside"
                           placeholder="Enter course description"
                         />
@@ -246,6 +398,8 @@ const CourseBuilder = () => {
                         labelPlacement="outside"
                         placeholder="$  0.00"
                         className="w-full"
+                        value={formData.course_price}
+                        onChange={(e) => handleChange("course_price", e.target.value)}
                       />
                       <div className="py-4">
                         <Select
@@ -255,6 +409,8 @@ const CourseBuilder = () => {
                           labelPlacement="outside"
                           placeholder="Select teacher"
                           className="w-full"
+                          selectedKeys={[formData.teacher_name]}
+                          onSelectionChange={(keys) => handleChange("teacher_name", [...keys][0])}
                         >
                           {teacher.map((item) => (
                             <SelectItem key={item.id} value={item.id}>
@@ -271,10 +427,43 @@ const CourseBuilder = () => {
                         Course Details
                       </h1>
                       <div className="py-6">
-                        <FileDropzone
+                        {/* <FileDropzone
                           files={thumbnail}
                           setFiles={setThumbnail}
-                        />
+                        /> */}
+                       <UploadDropzone
+                         className="w-full h-[300px] border-2 border-dashed border-gray-300 rounded-lg ut-label:text-lg ut-allowed-content:ut-uploading:text-red-300 relative"
+                         endpoint="imageUploader"
+                         appearance={{
+                           container: {
+                             width: "100%",
+                             height: "300px",
+                             display: "flex",
+                             justifyContent: "center",
+                             alignItems: "center",
+                             backgroundColor: "white",
+                             
+                           },
+                           button: {
+                            position: "absolute",
+                            bottom: "3rem",
+                             background: "#06574C",
+                             color: "white",
+                             marginTop: "1rem", // Add spacing if needed
+                           },
+                           label: {
+                             color: "#06574C",
+                           },
+                         }}
+                         onClientUploadComplete={(res) => {
+                           console.log("Files: ", res);
+                           toast.success("Upload Completed");
+                         }}
+                         onUploadError={(error) => {
+                           // Do something with the error.
+                           toast.error(`ERROR! ${error.message}`);
+                         }}
+                       />
                       </div>
                     </div>
                     <div className="bg-white rounded-lg p-3 shadow-xl mt-3">
@@ -306,6 +495,17 @@ const CourseBuilder = () => {
                   >
                     Save Draft
                   </Button>
+                   {/* 
+                   <UploadButton
+      endpoint="imageUploader"
+      onClientUploadComplete={(res) => {
+        console.log("Upload complete:", res);
+      }}
+      onUploadError={(error) => {
+        console.error("Upload error:", error);
+      }}
+    /> 
+    */}
                   <div className="flex flex-wrap gap-3">
                     <Button
                       size="lg"
@@ -353,7 +553,9 @@ const CourseBuilder = () => {
               animate="show"
               transition={{ when: "beforeChildren" }}
             >
-              {/* <Form onSubmit={handleSubmit} > */}
+              <Form 
+              // onSubmit={handleUpdate} 
+              >
               <div className="w-full grid grid-cols-2 md:grid-cols-4 py-4 gap-2">
                 {card.map((item) => (
                   <div className="w-full sm:flex-1 max-sm:border border-gray-300 p-3 bg-white rounded-lg">
@@ -418,7 +620,7 @@ const CourseBuilder = () => {
                   </Button>
                 </div>
               </div>
-              {/* </Form> */}
+              </Form>
             </motion.div>
           </Tab>
           <Tab
@@ -475,12 +677,16 @@ const CourseBuilder = () => {
                             color="success"
                             defaultSelected
                             aria-label="Automatic updates"
-                            isSelected={isSelected}
-                            onValueChange={setIsSelected}
+                            // isSelected={isSelected}
+                            // onValueChange={setIsSelected}
+                            isSelected={formData.status === "Published"}
+                            onValueChange={(val) =>
+                              handleChange("status", val ? "Published" : "Draft")
+                            }
                           />
                         </div>
                       </div>
-                      <div className="flex gap-3 items-center pt-4">
+                      {/* <div className="flex gap-3 items-center pt-4">
                         <Input
                           size="lg"
                           variant="bordered"
@@ -503,7 +709,7 @@ const CourseBuilder = () => {
                             </SelectItem>
                           ))}
                         </Select>
-                      </div>
+                      </div> */}
 
                       <h1 className="pt-4 text-xl text-[#333333] font-bold">
                         Access Settings
@@ -517,6 +723,8 @@ const CourseBuilder = () => {
                           labelPlacement="outside"
                           placeholder="Select Access Duration"
                           className="w-full"
+                          selectedKeys={[formData.access_duration]}
+                          onSelectionChange={(keys) => handleChange("access_duration", [...keys][0])}
                         >
                           {accessDuration.map((item) => (
                             <SelectItem key={item.id} value={item.id}>
@@ -532,6 +740,8 @@ const CourseBuilder = () => {
                           placeholder="Select Preview Lessons "
                           className="w-full"
                           type="number"
+                          value={formData.previous_lesson}
+                          onChange={(e) => handleChange("previous_lesson", e.target.value)}
                         />
                       </div>
                       <Input
@@ -542,6 +752,8 @@ const CourseBuilder = () => {
                         placeholder="0"
                         className="w-full"
                         type="number"
+                        value={formData.enroll_number}
+                        onChange={(e) => handleChange("enroll_number", e.target.value)} 
                       />
                       <span className="text-xs text-[#06574C]">
                         Leave empty for unlimited enrollments
