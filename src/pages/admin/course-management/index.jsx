@@ -183,6 +183,36 @@ const CourseManagement = () => {
     { key: "40", label: "40" },
     { key: "50", label: "50" },
   ];
+    const [open, setOpen] = useState(false);
+  const handleDelete = (id) => {
+    setOpen(true);
+      const deleteCourse = async () => {
+        const response = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/admin/deleteCourse`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id }),
+        });
+        const data = await response.json();
+        console.log(data);
+        if (data.success) {
+          setOpen(false);
+          setLoading(true);
+          const response = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/admin/getAllCourses`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+          const data = await response.json();
+          console.log(data);
+          setCourses(data.courses || []);
+          setLoading(false);
+        }
+      }
+      deleteCourse();
+  }
 
   return (
     <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
@@ -313,6 +343,7 @@ const CourseManagement = () => {
                         size="md"
                         className="bg-[#06574C] text-white"
                         startContent={<Trash2 color="white" />}
+                        onPress={() => handleDelete(classItem.id)}
                       >
                         Delete
                       </Button>
