@@ -4,6 +4,7 @@ import {
   Pagination,
   Select,
   SelectItem,
+  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -146,6 +147,7 @@ const CourseManagement = () => {
   ];
   useEffect(() => {
     const fetchCourses = async () => {
+      setLoading(true);
       const response = await fetch(`${
           import.meta.env.VITE_PUBLIC_SERVER_URL
         }/api/admin/getAllCourses`, {
@@ -157,10 +159,12 @@ const CourseManagement = () => {
       const data = await response.json();
       console.log(data);
       setCourses(data.courses || []);
-    };
+      setLoading(false);
+      };
     fetchCourses();
   }, []);
   const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
   console.log("courses",courses);
   const statuses = [
     { key: "all", label: "All Status" },
@@ -243,71 +247,79 @@ const CourseManagement = () => {
             </TableHeader>
 
             <TableBody>
-              {courses?.map((classItem) => (
-                <TableRow key={classItem.id}>
-                  <TableCell>
-                    <div className="min-w-0">
-                      <div className="font-medium text-gray-900 truncate">
-                        {classItem?.course_name}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-0.5 whitespace-normal max-w-[220px]">
-                        {classItem?.description}
-                      </div>
-                    </div>
-                  </TableCell>
-
-                  <TableCell>
-                    <p className="p-2 w-full text-center text-xs rounded-md text-[#06574C] bg-[#95C4BE]/20">
-                      {classItem?.category}
-                    </p>
-                  </TableCell>
-
-                  <TableCell>
-                    <div className="min-w-0">
-                      <div className="font-medium truncate">
-                        {classItem?.teacher_name}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-0.5 truncate max-w-[150px]">
-                        {classItem?.teacher_email}
-                      </div>
-                    </div>
-                  </TableCell>
-
-                  <TableCell className="text-center">
-                    <span className="font-medium">${classItem?.course_price}</span>
-                  </TableCell>
-
-                  <TableCell className="text-center">
-                    <span className="font-medium">{classItem?.enroll_number}</span>
-                  </TableCell>
-
-                  <TableCell className="text-center">
-                    <p className="p-2 w-full text-xs text-center rounded-md text-[#06574C] bg-[#95C4BE]/20">
-                      {classItem.status}
-                    </p>
-                  </TableCell>
-
-                  <TableCell>
-                    <div className="min-w-0 flex items-center">
-                      <span className="font-medium truncate max-w-[220px] block">
-                        {classItem?.reviews || "No reviews"}
-                      </span>
-                    </div>
-                  </TableCell>
-
-                  <TableCell className="flex items-center gap-2 justify-end">
-                    <CourseForm initialData={classItem} />
-                    <Button
-                      radius="sm"
-                      size="md"
-                      className="bg-[#06574C] text-white"
-                      startContent={<Trash2 color="white" />}
-                    >
-                      Delete
-                    </Button>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-80 text-center">
+                    <Spinner className="animate-spin" size="lg" color="success" />
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                courses?.map((classItem) => (
+                  <TableRow key={classItem.id}>
+                    <TableCell>
+                      <div className="min-w-0">
+                        <div className="font-medium text-gray-900 truncate">
+                          {classItem?.course_name}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5 whitespace-normal max-w-[220px]">
+                          {classItem?.description}
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <p className="p-2 w-full text-xs rounded-md text-[#06574C] bg-[#95C4BE]/20">
+                        {classItem?.category}
+                      </p>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">
+                          {classItem?.teacher_name}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5 truncate max-w-[150px]">
+                          {classItem?.teacher_email}
+                        </div>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <span className="font-medium">${classItem?.course_price}</span>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <span className="font-medium">{classItem?.enroll_number}</span>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <p className="p-2 w-full text-xs text-center rounded-md text-[#06574C] bg-[#95C4BE]/20">
+                        {classItem.status}
+                      </p>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="min-w-0 flex items-center">
+                        <span className="font-medium truncate max-w-[220px] block">
+                          {classItem?.reviews || "No reviews"}
+                        </span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="flex items-center gap-2 justify-end">
+                      <CourseForm initialData={classItem} />
+                      <Button
+                        radius="sm"
+                        size="md"
+                        className="bg-[#06574C] text-white"
+                        startContent={<Trash2 color="white" />}
+                      >
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
