@@ -13,6 +13,7 @@ import {
 } from "@heroui/react";
 import { ListFilterIcon, Trash2 } from "lucide-react";
 import CourseForm from "../../../components/dashboard-components/forms/CourseForm";
+import { useEffect, useState } from "react";
 
 const CourseManagement = () => {
   const classes = [
@@ -143,6 +144,24 @@ const CourseManagement = () => {
       date: "2025-11-22",
     },
   ];
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const response = await fetch(`${
+          import.meta.env.VITE_PUBLIC_SERVER_URL
+        }/api/admin/getAllCourses`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      console.log(data);
+      setCourses(data.courses || []);
+    };
+    fetchCourses();
+  }, []);
+  const [courses, setCourses] = useState([]);
+  console.log("courses",courses);
   const statuses = [
     { key: "all", label: "All Status" },
     { key: "draft", label: "Draft" },
@@ -224,42 +243,42 @@ const CourseManagement = () => {
             </TableHeader>
 
             <TableBody>
-              {classes.map((classItem) => (
+              {courses?.map((classItem) => (
                 <TableRow key={classItem.id}>
                   <TableCell>
                     <div className="min-w-0">
                       <div className="font-medium text-gray-900 truncate">
-                        {classItem.name}
+                        {classItem?.course_name}
                       </div>
                       <div className="text-xs text-gray-500 mt-0.5 whitespace-normal max-w-[220px]">
-                        {classItem.desc}
+                        {classItem?.description}
                       </div>
                     </div>
                   </TableCell>
 
                   <TableCell>
                     <p className="p-2 w-full text-center text-xs rounded-md text-[#06574C] bg-[#95C4BE]/20">
-                      {classItem.category}
+                      {classItem?.category}
                     </p>
                   </TableCell>
 
                   <TableCell>
                     <div className="min-w-0">
                       <div className="font-medium truncate">
-                        {classItem.teacher}
+                        {classItem?.teacher_name}
                       </div>
                       <div className="text-xs text-gray-500 mt-0.5 truncate max-w-[150px]">
-                        {classItem.email}
+                        {classItem?.teacher_email}
                       </div>
                     </div>
                   </TableCell>
 
                   <TableCell className="text-center">
-                    <span className="font-medium">${classItem.price}</span>
+                    <span className="font-medium">${classItem?.course_price}</span>
                   </TableCell>
 
                   <TableCell className="text-center">
-                    <span className="font-medium">{classItem.enrolled}</span>
+                    <span className="font-medium">{classItem?.enroll_number}</span>
                   </TableCell>
 
                   <TableCell className="text-center">
@@ -271,7 +290,7 @@ const CourseManagement = () => {
                   <TableCell>
                     <div className="min-w-0 flex items-center">
                       <span className="font-medium truncate max-w-[220px] block">
-                        {classItem.reviews}
+                        {classItem?.reviews || "No reviews"}
                       </span>
                     </div>
                   </TableCell>
