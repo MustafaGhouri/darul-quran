@@ -150,7 +150,7 @@ const CourseManagement = () => {
       setLoading(true);
       const response = await fetch(`${
           import.meta.env.VITE_PUBLIC_SERVER_URL
-        }/api/admin/getAllCourses`, {
+        }/api/course/getAllCourses`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

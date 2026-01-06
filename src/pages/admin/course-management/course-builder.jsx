@@ -52,7 +52,7 @@ const CourseBuilder = () => {
     const fetchTeachers = async () => {
       try {
         const response = await fetch(
-          import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/admin/getTeachers"
+          import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/user/getTeachers"
         );
         const data = await response.json();
 

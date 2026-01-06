@@ -385,7 +385,7 @@ const UserManagement = () => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const res = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/auth/getAllUsers");
+        const res = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/user/getAllUsers");
         const data = await res.json();
 
         const teacherData = data.users.filter(u => u.role?.toLowerCase() === "teacher");
@@ -416,7 +416,7 @@ const UserManagement = () => {
     if (!userToDelete) return;
 
     try {
-      const res = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/auth/deleteUser/${userToDelete}`, {
+      const res = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/user/deleteUser/${userToDelete}`, {
         method: "DELETE",
       });
 
@@ -424,7 +424,7 @@ const UserManagement = () => {
         toast.success("User deleted successfully!");
         onClose();
         setUserToDelete(null);
-        const response = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/auth/getAllUsers");
+        const response = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/user/getAllUsers");
         const data = await response.json();
         const teacherData = data.users.filter(u => u.role === "Teacher");
         const studentData = data.users.filter(u => u.role === "Student");
@@ -459,7 +459,7 @@ const UserManagement = () => {
     try {
       // Delete all selected users
       const deletePromises = selectedIds.map(userId =>
-        fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/auth/deleteUser/${userId}`, {
+        fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/user/deleteUser/${userId}`, {
           method: "DELETE",
         })
       );
@@ -483,7 +483,7 @@ const UserManagement = () => {
       onBulkDeleteClose();
 
       // Refresh user list
-      const response = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/auth/getAllUsers");
+      const response = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/user/getAllUsers");
       const data = await response.json();
       const teacherData = data.users.filter(u => u.role === "Teacher");
       const studentData = data.users.filter(u => u.role === "Student");

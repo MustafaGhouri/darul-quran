@@ -240,7 +240,7 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
       console.log("Submitting payload:", payload);
 
       const res = await fetch(
-        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/auth/create-user`,
+        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/user/create-user`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
