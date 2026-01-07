@@ -193,12 +193,12 @@ const CourseBuilder = () => {
         lesson_video: videoUrl,
         pdf_notes: pdfUrl,
         assignments: assignmentUrl,
-        quizzes: quizUrl
+        quizzes: quizUrl,
       },
       lesson_video: videoUrl,
       pdf_notes: pdfUrl,
       assignments: assignmentUrl,
-      quizzes: quizUrl
+      quizzes: quizUrl,
     };
 
     try {
@@ -312,12 +312,12 @@ const CourseBuilder = () => {
           lesson_video: videoUrl,
           pdf_notes: pdfUrl,
           assignments: assignmentUrl,
-          quizzes: quizUrl
+          quizzes: quizUrl,
         },
         lesson_video: videoUrl,
         pdf_notes: pdfUrl,
         assignments: assignmentUrl,
-        quizzes: quizUrl
+        quizzes: quizUrl,
       };
       const response = await fetch(
         `${
@@ -362,12 +362,12 @@ const CourseBuilder = () => {
           lesson_video: videoUrl,
           pdf_notes: pdfUrl,
           assignments: assignmentUrl,
-          quizzes: quizUrl
+          quizzes: quizUrl,
         },
         lesson_video: videoUrl,
         pdf_notes: pdfUrl,
         assignments: assignmentUrl,
-        quizzes: quizUrl
+        quizzes: quizUrl,
       };
       const response = await fetch(
         `${
@@ -545,30 +545,34 @@ const CourseBuilder = () => {
                       />
                       <div className="py-4">
                         <Select
-  size="lg"
-  variant="bordered"
-  label="Teacher Name"
-  labelPlacement="outside"
-  placeholder="Select teacher"
-  className="w-full"
-  selectedKeys={
-    formData.teacher_id ? new Set([String(formData.teacher_id)]) : new Set()
-  }
-  onSelectionChange={(keys) => {
-    const teacherId = [...keys][0];
-    handleChange("teacher_id", teacherId); // ✅ ID store
-  }}
->
-  {teachers.map((teacher) => {
-    const fullName = `${teacher.first_name} ${teacher.last_name}`;
-    return (
-      <SelectItem key={String(teacher.id)} textValue={fullName}>
-        {fullName}
-      </SelectItem>
-    );
-  })}
-</Select>
-
+                          size="lg"
+                          variant="bordered"
+                          label="Teacher Name"
+                          labelPlacement="outside"
+                          placeholder="Select teacher"
+                          className="w-full"
+                          selectedKeys={
+                            formData.teacher_id
+                              ? new Set([String(formData.teacher_id)])
+                              : new Set()
+                          }
+                          onSelectionChange={(keys) => {
+                            const teacherId = [...keys][0];
+                            handleChange("teacher_id", teacherId); // ✅ ID store
+                          }}
+                        >
+                          {teachers.map((teacher) => {
+                            const fullName = `${teacher.first_name} ${teacher.last_name}`;
+                            return (
+                              <SelectItem
+                                key={String(teacher.id)}
+                                textValue={fullName}
+                              >
+                                {fullName}
+                              </SelectItem>
+                            );
+                          })}
+                        </Select>
                       </div>
                     </div>
                   </div>
@@ -750,7 +754,10 @@ const CourseBuilder = () => {
                 </div>
                 <Videos videoUrl={videoUrl} setVideoUrl={setVideoUrl} />
                 <PdfAndNotes pdfUrl={pdfUrl} setPdfUrl={setPdfUrl} />
-                <Assignments assignmentUrl={assignmentUrl} setAssignmentUrl={setAssignmentUrl} />
+                <Assignments
+                  assignmentUrl={assignmentUrl}
+                  setAssignmentUrl={setAssignmentUrl}
+                />
                 <Quizzes quizUrl={quizUrl} setQuizUrl={setQuizUrl} />
                 <div className="p-3 my-5 bg-[#95C4BE33] rounded-md flex justify-between items-center">
                   <div>

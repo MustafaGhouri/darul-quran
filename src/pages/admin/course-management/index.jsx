@@ -148,25 +148,26 @@ const CourseManagement = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
-      const response = await fetch(`${
-          import.meta.env.VITE_PUBLIC_SERVER_URL
-        }/api/course/getAllCourses`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/getAllCourses`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
       const data = await response.json();
       console.log(data);
       setCourses(data.courses || []);
       setLoading(false);
-      };
+    };
     fetchCourses();
   }, []);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
-  console.log("courses",courses);
+  console.log("courses", courses);
   const statuses = [
     { key: "all", label: "All Status" },
     { key: "draft", label: "Draft" },
@@ -184,36 +185,47 @@ const CourseManagement = () => {
     { key: "40", label: "40" },
     { key: "50", label: "50" },
   ];
-    const [open, setOpen] = useState(false);
-  const handleDelete = (id) => {
+  const [open, setOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+
+  const handleDelete = async (id) => {
     setOpen(true);
-      const deleteCourse = async () => {
-        const response = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/deleteCourse`, {
+    setDeleteLoading(true);
+    setDeletingId(id);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/deleteCourse`,
+        {
           method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id }),
-        });
-        const data = await response.json();
-        console.log(data);
-        if (data.success) {
-          setOpen(false);
-          setLoading(true);
-          const response = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/getAllCourses`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-          const data = await response.json();
-          console.log(data);
-          setCourses(data.courses || []);
-          setLoading(false);
         }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        const res = await fetch(
+          `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/getAllCourses`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          }
+        );
+        const coursesData = await res.json();
+        setCourses(coursesData.courses || []);
+        setOpen(false);
       }
-      deleteCourse();
-  }
+    } catch (error) {
+      console.error("Delete error:", error);
+    } finally {
+      setDeleteLoading(false);
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
@@ -277,15 +289,19 @@ const CourseManagement = () => {
               <TableColumn className="w-24">Actions</TableColumn>
             </TableHeader>
 
-            <TableBody loadingContent={<Spinner color="success"/>} emptyContent={"  No Course Found."} loadingState={loading ? 'loading' : 'idle'}>
+            <TableBody
+              loadingContent={<Spinner color="success" />}
+              emptyContent={"  No Course Found."}
+              loadingState={loading ? "loading" : "idle"}
+            >
               {
-              // loading ? (
-              //   <TableRow>
-              //     <TableCell colSpan={8} className="h-80 text-center">
-              //       <Spinner className="animate-spin" size="lg" color="success" />
-              //     </TableCell>
-              //   </TableRow>
-              // ) : (
+                // loading ? (
+                //   <TableRow>
+                //     <TableCell colSpan={8} className="h-80 text-center">
+                //       <Spinner className="animate-spin" size="lg" color="success" />
+                //     </TableCell>
+                //   </TableRow>
+                // ) : (
                 courses?.map((classItem) => (
                   <TableRow key={classItem.id}>
                     <TableCell>
@@ -317,11 +333,15 @@ const CourseManagement = () => {
                     </TableCell>
 
                     <TableCell className="text-center">
-                      <span className="font-medium">${classItem?.course_price}</span>
+                      <span className="font-medium">
+                        ${classItem?.course_price}
+                      </span>
                     </TableCell>
 
                     <TableCell className="text-center">
-                      <span className="font-medium">{classItem?.enroll_number}</span>
+                      <span className="font-medium">
+                        {classItem?.enroll_number}
+                      </span>
                     </TableCell>
 
                     <TableCell className="text-center">
@@ -341,10 +361,9 @@ const CourseManagement = () => {
                     <TableCell className="flex items-center gap-2 justify-end">
                       <CourseForm initialData={classItem} />
                       <Button
-                        radius="sm"
-                        size="md"
-                        className="bg-[#06574C] text-white"
-                        startContent={<Trash2 color="white" />}
+                        color="success"
+                        isLoading={deleteLoading && deletingId === classItem.id}
+                        isDisabled={deleteLoading}
                         onPress={() => handleDelete(classItem.id)}
                       >
                         Delete
@@ -352,7 +371,7 @@ const CourseManagement = () => {
                     </TableCell>
                   </TableRow>
                 ))
-              // )
+                // )
               }
             </TableBody>
           </Table>
