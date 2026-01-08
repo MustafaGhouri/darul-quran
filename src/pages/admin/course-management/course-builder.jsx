@@ -169,86 +169,86 @@ const CourseBuilder = () => {
     }));
   };
   const handleSubmitTab1 = async (e) => {
-  e.preventDefault();
-  setLoadingAction(pendingAction);
+    e.preventDefault();
+    setLoadingAction(pendingAction);
 
-  if (!thumbnailUrl) {
-    toast.error("Please upload a thumbnail image first");
-    setLoadingAction(null);
-    setPendingAction(null);
-    return;
-  }
-
-  const payload = {
-    ...formData,
-    previous_lesson: formData.previous_lesson
-      ? parseInt(formData.previous_lesson)
-      : null,
-    enroll_number: formData.enroll_number
-      ? parseInt(formData.enroll_number)
-      : null,
-    status: "Draft",
-    thumbnailurl: thumbnailUrl,
-    teacher_id: Number(formData.teacher_id), // ✅ ensure number
-    course_file: {
-      lesson_video: videoUrl,
-      pdf_notes: pdfUrl,
-      assignments: assignmentUrl,
-      quizzes: quizUrl,
-    },
-  };
-  console.log("payload", payload);
-  try {
-    const courseId = searchParams.get("id");
-    let response; // ✅ yahan declare karo
-
-    if (courseId) {
-      // ✅ UPDATE COURSE
-      response = await fetch(
-        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/updateCourse/${courseId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload),
-        }
-      );
-    } else {
-      // ✅ ADD COURSE
-      response = await fetch(
-        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/addCourse`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload),
-        }
-      );
+    if (!thumbnailUrl) {
+      toast.error("Please upload a thumbnail image first");
+      setLoadingAction(null);
+      setPendingAction(null);
+      return;
     }
 
-    const data = await response.json(); // ✅ ab safe hai
+    const payload = {
+      ...formData,
+      previous_lesson: formData.previous_lesson
+        ? parseInt(formData.previous_lesson)
+        : null,
+      enroll_number: formData.enroll_number
+        ? parseInt(formData.enroll_number)
+        : null,
+      status: "Draft",
+      thumbnailurl: thumbnailUrl,
+      teacher_id: Number(formData.teacher_id), // ✅ ensure number
+      course_file: {
+        lesson_video: videoUrl,
+        pdf_notes: pdfUrl,
+        assignments: assignmentUrl,
+        quizzes: quizUrl,
+      },
+    };
+    console.log("payload", payload);
+    try {
+      const courseId = searchParams.get("id");
+      let response; // ✅ yahan declare karo
 
-    if (data.success) {
-      toast.success(courseId ? "Course Updated!" : "Course Created!");
-
-      if (!courseId && data.courseId) {
-        setSearchParams({ tab: "content", id: data.courseId });
+      if (courseId) {
+        // ✅ UPDATE COURSE
+        response = await fetch(
+          `${
+            import.meta.env.VITE_PUBLIC_SERVER_URL
+          }/api/course/updateCourse/${courseId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload),
+          }
+        );
       } else {
-        handleSelected("content");
+        // ✅ ADD COURSE
+        response = await fetch(
+          `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/addCourse`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload),
+          }
+        );
       }
-    } else {
-      toast.error(data.message || "Something went wrong");
+
+      const data = await response.json(); // ✅ ab safe hai
+
+      if (data.success) {
+        toast.success(courseId ? "Course Updated!" : "Course Created!");
+
+        if (!courseId && data.courseId) {
+          setSearchParams({ tab: "content", id: data.courseId });
+        } else {
+          handleSelected("content");
+        }
+      } else {
+        toast.error(data.message || "Something went wrong");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("An error occurred");
+    } finally {
+      setLoadingAction(null);
+      setPendingAction(null);
     }
-  } catch (error) {
-    console.error(error);
-    toast.error("An error occurred");
-  } finally {
-    setLoadingAction(null);
-    setPendingAction(null);
-  }
-};
-
-
+  };
   // const handleSubmitTab1 = async (e) => {
   //   e.preventDefault();
 
@@ -391,6 +391,7 @@ const CourseBuilder = () => {
       console.log(data);
       if (data.success) {
         toast.success("Course Updated Successfully");
+        navigate("/admin/courses-management");
       } else {
         toast.error("Failed to update course");
       }
@@ -402,6 +403,57 @@ const CourseBuilder = () => {
       setPendingAction(null);
     }
   };
+
+  useEffect(() => {
+    const fetchCourseById = async () => {
+      const id = searchParams.get("id");
+      if (!id) return;
+
+      try {
+        const response = await fetch(
+          `${
+            import.meta.env.VITE_PUBLIC_SERVER_URL
+          }/api/course/getCourseById/${id}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          }
+        );
+
+        const data = await response.json();
+        if (!data.success) return;
+
+        const course = data.course;
+
+        // ✅ 1. Form data
+        setFormData({
+          course_name: course.course_name || "",
+          category: course.category || "",
+          difficulty_level: course.difficulty_level || "",
+          description: course.description || "",
+          course_price: course.course_price || "",
+          teacher_id: Number(course.teacher_id) || "",
+          access_duration: course.access_duration || "",
+          previous_lesson: course.previous_lesson || "",
+          enroll_number: course.enroll_number || "",
+          status: course.status || "Draft",
+        });
+        // ✅ 2. Thumbnail
+        setThumbnailUrl(course.thumbnailurl || "");
+        // ✅ 3. Content files
+        setVideoUrl(course.lesson_video || "");
+        setPdfUrl(course.pdf_notes || "");
+        setAssignmentUrl(course.assignments || "");
+        setQuizUrl(course.quizzes || "");
+      } catch (error) {
+        console.error("Failed to fetch course", error);
+        toast.error("Failed to load course data");
+      }
+    };
+
+    fetchCourseById();
+  }, [searchParams]);
 
   return (
     <div className="h-full bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full no-scrollbar top-0 bottom-0 overflow-y-auto">
@@ -759,7 +811,7 @@ const CourseBuilder = () => {
                     </div>
                   ))}
                 </div>
-                <Videos videoUrl={videoUrl} setVideoUrl={setVideoUrl} />
+                <Videos videoUrl={videoUrl} setVideoUrl={setVideoUrl}  />
                 <PdfAndNotes pdfUrl={pdfUrl} setPdfUrl={setPdfUrl} />
                 <Assignments
                   assignmentUrl={assignmentUrl}

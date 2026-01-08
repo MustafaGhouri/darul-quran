@@ -15,6 +15,7 @@ import {
 import { ListFilterIcon, Trash2 } from "lucide-react";
 import CourseForm from "../../../components/dashboard-components/forms/CourseForm";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const CourseManagement = () => {
   const classes = [
@@ -188,7 +189,7 @@ const CourseManagement = () => {
   const [open, setOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
-
+  const navigate = useNavigate();
   const handleDelete = async (id) => {
     setOpen(true);
     setDeleteLoading(true);
@@ -225,6 +226,10 @@ const CourseManagement = () => {
       setDeleteLoading(false);
       setDeletingId(null);
     }
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/admin/courses-management/builder?tab=info&id=${id}`);
   };
 
   return (
@@ -295,75 +300,82 @@ const CourseManagement = () => {
               loadingState={loading ? "loading" : "idle"}
             >
               {courses?.map((classItem) => (
-                  <TableRow key={classItem.id}>
-                    <TableCell>
-                      <div className="min-w-0">
-                        <div className="font-medium text-gray-900 truncate">
-                          {classItem?.course_name}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-0.5 whitespace-normal max-w-[220px]">
-                          {classItem?.description}
-                        </div>
+                <TableRow key={classItem.id}>
+                  <TableCell>
+                    <div className="min-w-0">
+                      <div className="font-medium text-gray-900 truncate">
+                        {classItem?.course_name}
                       </div>
-                    </TableCell>
-
-                    <TableCell>
-                      <p className="p-2 w-full text-xs rounded-md text-[#06574C] bg-[#95C4BE]/20">
-                        {classItem?.category}
-                      </p>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="min-w-0">
-                        <div className="font-medium truncate">
-                          {classItem?.first_name} {classItem?.last_name}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-0.5 truncate max-w-[150px]">
-                          {classItem?.email}
-                        </div>
+                      <div className="text-xs text-gray-500 mt-0.5 whitespace-normal max-w-[220px]">
+                        {classItem?.description}
                       </div>
-                    </TableCell>
+                    </div>
+                  </TableCell>
 
-                    <TableCell className="text-center">
-                      <span className="font-medium">
-                        ${classItem?.course_price}
+                  <TableCell>
+                    <p className="p-2 w-full text-xs rounded-md text-[#06574C] bg-[#95C4BE]/20">
+                      {classItem?.category}
+                    </p>
+                  </TableCell>
+
+                  <TableCell>
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">
+                        {classItem?.first_name} {classItem?.last_name}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5 truncate max-w-[150px]">
+                        {classItem?.email}
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="text-center">
+                    <span className="font-medium">
+                      ${classItem?.course_price}
+                    </span>
+                  </TableCell>
+
+                  <TableCell className="text-center">
+                    <span className="font-medium">
+                      {classItem?.enroll_number}
+                    </span>
+                  </TableCell>
+
+                  <TableCell className="text-center">
+                    <p className="p-2 w-full text-xs text-center rounded-md text-[#06574C] bg-[#95C4BE]/20">
+                      {classItem.status}
+                    </p>
+                  </TableCell>
+
+                  <TableCell>
+                    <div className="min-w-0 flex items-center">
+                      <span className="font-medium truncate max-w-[220px] block">
+                        {classItem?.reviews || "No reviews"}
                       </span>
-                    </TableCell>
+                    </div>
+                  </TableCell>
 
-                    <TableCell className="text-center">
-                      <span className="font-medium">
-                        {classItem?.enroll_number}
-                      </span>
-                    </TableCell>
+                  <TableCell className="flex items-center gap-2 justify-end">
+                    {/* <CourseForm initialData={classItem} /> */}
 
-                    <TableCell className="text-center">
-                      <p className="p-2 w-full text-xs text-center rounded-md text-[#06574C] bg-[#95C4BE]/20">
-                        {classItem.status}
-                      </p>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="min-w-0 flex items-center">
-                        <span className="font-medium truncate max-w-[220px] block">
-                          {classItem?.reviews || "No reviews"}
-                        </span>
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="flex items-center gap-2 justify-end">
-                      <CourseForm initialData={classItem} />
-                      <Button
-                        color="success"
-                        isLoading={deleteLoading && deletingId === classItem.id}
-                        isDisabled={deleteLoading}
-                        onPress={() => handleDelete(classItem.id)}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              }
+                    <Button
+                      variant="bordered"
+                      color="success"
+                      onPress={() => handleEdit(classItem.id)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      color="success"
+                      isLoading={deleteLoading && deletingId === classItem.id}
+                      isDisabled={deleteLoading}
+                      onPress={() => handleDelete(classItem.id)}
+                    >
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
