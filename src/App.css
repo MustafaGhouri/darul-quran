@@ -1,8 +1,34 @@
-@import url('https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&display=swap'); 
+@import url('https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&display=swap');
 @import "tailwindcss";
 @plugin "./components/hero.js";
 @source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
 @config "../tailwind.config.js";
+
+
+@layer utilities {
+    .custom-scrollbar {
+        /* Firefox support */
+        scrollbar-width: auto;
+        scrollbar-color: #1a5850 #f1f1f1;
+    }
+
+    /* Chrome, Edge, and Safari support */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: #1a5850;
+        border-radius: 10px;
+        border: 2px solid #f1f1f1;
+        /* Creates a padding effect */
+    }
+}
 
 body {
     font-family: "Karla", sans-serif;

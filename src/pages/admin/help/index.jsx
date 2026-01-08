@@ -50,7 +50,7 @@ export default function HelpMessages() {
                 key={chat.id}
                 className={`
                 flex items-start gap-3 px-4 py-4 cursor-pointer transition-colors hover:opacity-65 border-b border-b-gray-200 
-                ${chat.id === selectedUser.id ? "bg-[#EBD4C9] border-l-4 border-l-teal-accent" : ''}`
+                ${chat.id === selectedUser.id ? `bg-[#EBD4C9] border-l-4 ${chat.role === 'student' ? ' border-l-[#D28E3D]' : ' border-l-[#D28E3D]'}` : ''}`
                 }
                 onClick={() => setSelectedUser(chat)}
               >
