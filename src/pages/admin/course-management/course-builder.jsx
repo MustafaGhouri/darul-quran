@@ -169,41 +169,54 @@ const CourseBuilder = () => {
     }));
   };
   const handleSubmitTab1 = async (e) => {
-    e.preventDefault();
-    setLoadingAction(pendingAction);
+  e.preventDefault();
+  setLoadingAction(pendingAction);
 
-    if (!thumbnailUrl) {
-      toast.error("Please upload a thumbnail image first");
-      setLoadingAction(null);
-      setPendingAction(null);
-      return;
-    }
-    const payload = {
-      ...formData,
-      teacher_id: formData.teacher_id,
-      previous_lesson: formData.previous_lesson
-        ? parseInt(formData.previous_lesson)
-        : null,
-      enroll_number: formData.enroll_number
-        ? parseInt(formData.enroll_number)
-        : null,
-      status: "Draft",
-      thumbnailurl: thumbnailUrl,
-      course_file: {
-        lesson_video: videoUrl,
-        pdf_notes: pdfUrl,
-        assignments: assignmentUrl,
-        quizzes: quizUrl,
-      },
+  if (!thumbnailUrl) {
+    toast.error("Please upload a thumbnail image first");
+    setLoadingAction(null);
+    setPendingAction(null);
+    return;
+  }
+
+  const payload = {
+    ...formData,
+    previous_lesson: formData.previous_lesson
+      ? parseInt(formData.previous_lesson)
+      : null,
+    enroll_number: formData.enroll_number
+      ? parseInt(formData.enroll_number)
+      : null,
+    status: "Draft",
+    thumbnailurl: thumbnailUrl,
+    teacher_id: Number(formData.teacher_id), // ✅ ensure number
+    course_file: {
       lesson_video: videoUrl,
       pdf_notes: pdfUrl,
       assignments: assignmentUrl,
       quizzes: quizUrl,
-    };
+    },
+  };
+  console.log("payload", payload);
+  try {
+    const courseId = searchParams.get("id");
+    let response; // ✅ yahan declare karo
 
-    try {
-      const response = await fetch(
-        import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/course/addCourse",
+    if (courseId) {
+      // ✅ UPDATE COURSE
+      response = await fetch(
+        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/updateCourse/${courseId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        }
+      );
+    } else {
+      // ✅ ADD COURSE
+      response = await fetch(
+        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/addCourse`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -211,36 +224,30 @@ const CourseBuilder = () => {
           body: JSON.stringify(payload),
         }
       );
-
-      const data = await response.json();
-
-      console.log("Add Course Response:", data);
-
-      if (data.success && data.courseId) {
-        const courseId = data.courseId;
-        setSearchParams({
-          tab: "content",
-          id: courseId,
-        });
-        setSelected("content");
-        toast.success("Course details saved!");
-      } else {
-        toast.error(
-          "Failed to create course: " + (data.message || "Unknown error")
-        );
-        setLoadingAction(null);
-        setPendingAction(null);
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("An error occurred. Please try again.");
-      setLoadingAction(null);
-      setPendingAction(null);
-    } finally {
-      setLoadingAction(null);
-      setPendingAction(null);
     }
-  };
+
+    const data = await response.json(); // ✅ ab safe hai
+
+    if (data.success) {
+      toast.success(courseId ? "Course Updated!" : "Course Created!");
+
+      if (!courseId && data.courseId) {
+        setSearchParams({ tab: "content", id: data.courseId });
+      } else {
+        handleSelected("content");
+      }
+    } else {
+      toast.error(data.message || "Something went wrong");
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error("An error occurred");
+  } finally {
+    setLoadingAction(null);
+    setPendingAction(null);
+  }
+};
+
 
   // const handleSubmitTab1 = async (e) => {
   //   e.preventDefault();
@@ -557,8 +564,8 @@ const CourseBuilder = () => {
                               : new Set()
                           }
                           onSelectionChange={(keys) => {
-                            const teacherId = [...keys][0];
-                            handleChange("teacher_id", teacherId); // ✅ ID store
+                            const teacherId = Number([...keys][0]); // ✅ convert to number
+                            handleChange("teacher_id", teacherId);
                           }}
                         >
                           {teachers.map((teacher) => {
