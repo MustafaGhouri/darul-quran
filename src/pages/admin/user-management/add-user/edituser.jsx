@@ -10,7 +10,7 @@ const EditUser = () => {
     const fetchUserById = async () => {
       try {
         const res = await fetch(
-          import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/admin/userByID/${id}`,
+          import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/user/userByID/${id}`,
           {
             method: "GET",
             headers: { "Content-Type": "application/json" },
