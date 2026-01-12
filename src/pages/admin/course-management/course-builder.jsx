@@ -99,18 +99,7 @@ const CourseBuilder = () => {
     { key: "Advanced", label: "Advanced" },
     { key: "Expert", label: "Expert" },
   ];
-  const coursepreview = [
-    { title: "Title:", desc: "Untitled Course" },
-    { title: "Category:", desc: "No Selected" },
-    { title: "Difficulty Level:", desc: "Beginner" },
-    { title: "Price:", desc: "Free" },
-  ];
-
-  const teacher = [
-    { key: "All", label: "All Teachers" },
-    { key: "jhon_davis", label: "John Davis" },
-  ];
-
+ 
   const card = [
     {
       title: "Videos",
@@ -138,10 +127,11 @@ const CourseBuilder = () => {
   ];
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get("tab");
-  const courseId = searchParams.get("id"); // Extract courseId
+  const courseId = searchParams.get("id");
   const [selected, setSelected] = useState(currentTab || "info");
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [newCategory, setNewCategory] = useState("");
+   
   useEffect(() => {
     if (currentTab) {
       setSelected(currentTab);
@@ -157,11 +147,13 @@ const CourseBuilder = () => {
       return newParams;
     });
   };
+  
   const [formData, setFormData] = useState({
     course_name: "",
     category_id: null,
     difficulty_level: "",
     description: "",
+    category_name: "",
     course_price: "",
     teacher_id: "",
     access_duration: "",
@@ -169,6 +161,14 @@ const CourseBuilder = () => {
     enroll_number: "",
     status: "Draft", // Default
   });
+  // console.log(formData);
+  const coursepreview = [
+    { title: "Title:", desc: formData?.course_name || "Add Tittle"},
+    { title: "Category:", desc: categories?.find((category) => category.id === formData?.category_id)?.categoryName || formData?.category_name|| "Add Category"},
+    { title: "Difficulty Level:", desc: formData?.difficulty_level || "Add Difficulty Level"},
+    { title: "Price:", desc: formData?.course_price || "Add Price"},
+  ];
+// handle change
   const handleChange = (name, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -176,6 +176,7 @@ const CourseBuilder = () => {
     }));
     console.log(formData);
   };
+// handle submit tab 1
   const handleSubmitTab1 = async (e) => {
     e.preventDefault();
     setLoadingAction(pendingAction);
@@ -363,7 +364,7 @@ const CourseBuilder = () => {
       setPendingAction(null);
     }
   };
-
+// handle submit 3rd tab
   const handleSubmit3tab = async (e) => {
     if (e) e.preventDefault();
     setLoadingAction(pendingAction);
@@ -411,7 +412,7 @@ const CourseBuilder = () => {
       setPendingAction(null);
     }
   };
-
+// fetch course by id and set form data
   useEffect(() => {
     const fetchCourseById = async () => {
       const id = searchParams.get("id");
@@ -441,6 +442,7 @@ const CourseBuilder = () => {
           difficulty_level: course.difficulty_level || "",
           description: course.description || "",
           course_price: course.course_price || "",
+          category_id: Number(course.category_id) || "",
           teacher_id: Number(course.teacher_id) || "",
           access_duration: course.access_duration || "",
           previous_lesson: course.previous_lesson || "",
@@ -462,7 +464,7 @@ const CourseBuilder = () => {
 
     fetchCourseById();
   }, [searchParams]);
-
+// add category
   const handleSubmitAddCategory = async () => {
     if (!newCategory.trim()) {
       toast.error("Category name is required");
@@ -497,7 +499,7 @@ const CourseBuilder = () => {
       toast.error("Server error");
     }
   };
-
+// fetch categories
   const fetchCategories = async () => {
     try {
       const response = await fetch(
@@ -522,10 +524,11 @@ const CourseBuilder = () => {
       toast.error("Server error");
     }
   };
+// useEffect fetch categories
   useEffect(() => {
     fetchCategories();
   }, []);
-
+// delete category
   const deleteCategory = async (id) => {
     try {
       console.log("id",id);
@@ -636,13 +639,15 @@ const CourseBuilder = () => {
                         labelPlacement="outside"
                         placeholder="Enter course title"
                         className="w-full"
+                        isRequired
+                        errorMessage="Course title is required"
                         value={formData.course_name}
                         onChange={(e) =>
                           handleChange("course_name", e.target.value)
                         }
                       />
 
-                      <div className="flex max-sm:flex-wrap gap-3 items-center pt-4">
+                      <div className="flex max-sm:flex-wrap gap-3 items-center pt-6">
                         <Select
                           size="lg"
                           variant="bordered"
@@ -650,8 +655,10 @@ const CourseBuilder = () => {
                           labelPlacement="outside"
                           placeholder="Select category"
                           className="w-full"
+                          isRequired
+                          errorMessage="Category is required"
                           selectedKeys={
-                            formData.category_id ? [String(formData.category_id)] : []
+                           formData.category_id ? [String(formData.category_id)] : [] 
                           }
                           onSelectionChange={(keys) => {
                             const selected = [...keys][0];
@@ -693,6 +700,8 @@ const CourseBuilder = () => {
                           label="Difficulty Level"
                           labelPlacement="outside"
                           placeholder="Select Difficulty Level"
+                          isRequired
+                          errorMessage="Difficulty Level is required"
                           className="w-full"
                           selectedKeys={[formData.difficulty_level]}
                           onSelectionChange={(keys) =>
@@ -725,19 +734,23 @@ const CourseBuilder = () => {
                         label="Course Price ($)"
                         labelPlacement="outside"
                         placeholder="$  0.00"
+                        isRequired
+                        errorMessage="Course Price is required"
                         className="w-full"
                         value={formData.course_price}
                         onChange={(e) =>
                           handleChange("course_price", e.target.value)
                         }
                       />
-                      <div className="py-4">
+                      <div className="pt-6">
                         <Select
                           size="lg"
                           variant="bordered"
                           label="Teacher Name"
                           labelPlacement="outside"
                           placeholder="Select teacher"
+                          isRequired
+                          errorMessage="Teacher is required"
                           className="w-full"
                           selectedKeys={
                             formData.teacher_id
@@ -860,28 +873,7 @@ const CourseBuilder = () => {
                   >
                     Save Draft
                   </Button>
-                  {/* 
-                   <UploadButton
-                      endpoint="imageUploader"
-                      onClientUploadComplete={(res) => {
-                        console.log("Upload complete:", res);
-                      }}
-                      onUploadError={(error) => {
-                        console.error("Upload error:", error);
-                      }}
-                    /> 
-                  */}
                   <div className="flex flex-wrap gap-3">
-                    {/* <Button
-                      size="lg"
-                      startContent={<Rocket color="white" size={16} />}
-                      className="bg-[#B1A7A7] w-full text-white sm:w-60"
-                      type="submit"
-                      onPress={() => setPendingAction("publish-1")}
-                      isLoading={loadingAction === "publish-1"}
-                    >
-                      Publish Course
-                    </Button> */}
                     <Button
                       size="lg"
                       className="bg-[#06574C] w-full text-white sm:w-35"

@@ -185,11 +185,14 @@ export default function Videos({ videoUrl, setVideoUrl }) {
                     setFiles={setLessonsFiles}
                 /> */}
                 {videoUrl ? (
-                          <div className="relative w-full h-[300px] overflow-hidden rounded-lg">
-                            <Image
+                          <div className="relative w-full  overflow-hidden rounded-lg">
+                            <video
                               removeWrapper
-                              className="w-full h-full object-cover"
+                              className="w-full h-full aspect-16/7 object-cover"
                               src={videoUrl}
+                              controls
+                              autoPlay
+                              loop
                               alt="Video Preview"
                             />
                             <Button
@@ -203,7 +206,7 @@ export default function Videos({ videoUrl, setVideoUrl }) {
                         ) : (
                           <UploadDropzone
                             className="w-full h-[300px] border-2 border-dashed border-gray-300 rounded-lg ut-label:text-lg ut-allowed-content:ut-uploading:text-red-300 relative"
-                            endpoint="imageUploader"
+                            endpoint="videoUploader"
                             appearance={{
                               container: {
                                 width: "100%",
@@ -391,7 +394,7 @@ export function PdfAndNotes({ pdfUrl, setPdfUrl }) {
                 /> */}
                 {pdfUrl ? (
                           <div className="relative w-full h-[300px] overflow-hidden rounded-lg">
-                            <Image
+                            <iframe
                               removeWrapper
                               className="w-full h-full object-cover"
                               src={pdfUrl}
@@ -408,7 +411,7 @@ export function PdfAndNotes({ pdfUrl, setPdfUrl }) {
                         ) : (
                           <UploadDropzone
                             className="w-full h-[300px] border-2 border-dashed border-gray-300 rounded-lg ut-label:text-lg ut-allowed-content:ut-uploading:text-red-300 relative"
-                            endpoint="imageUploader"
+                            endpoint="pdfUploader"
                             appearance={{
                               container: {
                                 width: "100%",
