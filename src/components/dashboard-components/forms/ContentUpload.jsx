@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import toast from "react-hot-toast";
 import { Plus, Download, Trash2, Eye, Clock, Menu, Edit, ClipboardListIcon, List } from "lucide-react";
 import FileDropzone from "../dropzone";
 import { Button, Image, Select, SelectItem } from "@heroui/react";
@@ -17,22 +18,20 @@ const LESSONS = [
         status: "immediate",
         releaseDate: "0",
     },
-    {
-        id: 2,
-        title: "1. Introduction to HTML Basics",
-        title2: "Build Your First Webpage",
-        description: "Learn the fundamentals of HTML structure and semantic elements",
-        duration: "45:30",
-        views: 12234,
-        thumbnail: "/images/lesson-example.png",
-        status: "scheduled",
-        releaseDate: "3",
-    },
 ];
 
 export default function Videos({ videoUrl, setVideoUrl }) {
     const [lessons, setLessons] = useState(LESSONS);
     const [lessonsFiles, setLessonsFiles] = useState([]);
+
+    useEffect(() => {
+        if (videoUrl) {
+            setLessons(prev => prev.map(lesson => ({
+                ...lesson,
+                thumbnail: videoUrl
+            })));
+        }
+    }, [videoUrl]);
 
     const deleteLesson = (id) => {
         setLessons(lessons.filter((lesson) => lesson.id !== id));
@@ -100,12 +99,32 @@ export default function Videos({ videoUrl, setVideoUrl }) {
                             <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
                                 <div className="shrink-0">
                                     <div className="relative">
-                                        <img
-                                            src={lesson.thumbnail}
-                                            alt={lesson.title}
-                                            className="h-24 w-full rounded-lg border border-gray-300 object-cover sm:h-28 sm:w-48"
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center rounded-lg">
+                                        {lesson.thumbnail && (lesson.thumbnail.includes("utfs.io") || lesson.thumbnail.match(/\.(mp4|webm|ogg)$/i)) ? (
+                                            <video
+                                                src={lesson.thumbnail}
+                                                className="h-24 w-full rounded-lg border border-gray-300 object-cover sm:h-28 sm:w-48"
+                                                autoPlay
+                                                controls
+                                                muted
+                                                loop
+                                                // playsInline
+                                                // onMouseEnter={(e) => e.target.play()}
+                                                // onMouseLeave={(e) => {
+                                                //     e.target.pause();
+                                                //     e.target.currentTime = 0;
+                                                // }}
+                                                // onLoadedData={(e) => {
+                                                //     e.target.play();
+                                                // }}
+                                            />
+                                        ) : (
+                                            <img
+                                                src={lesson.thumbnail}
+                                                alt={lesson.title}
+                                                className="h-24 w-full rounded-lg border border-gray-300 object-cover sm:h-28 sm:w-48"
+                                            />
+                                        )}
+                                        {/* <div className="absolute inset-0 flex items-center justify-center rounded-lg">
                                             <svg
                                                 className="h-12 w-12 hover:opacity-65 duration-300 cursor-pointer sm:h-14 sm:w-14"
                                                 viewBox="0 0 57 57"
@@ -117,7 +136,7 @@ export default function Videos({ videoUrl, setVideoUrl }) {
                                                     fill="#06574C"
                                                 />
                                             </svg>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </div>
 

@@ -306,7 +306,7 @@ const CourseManagement = () => {
                       <div className="font-medium text-gray-900 truncate">
                         {classItem?.course_name}
                       </div>
-                      <div className="text-xs text-gray-500 mt-0.5 whitespace-normal max-w-[220px]">
+                      <div className="text-xs text-gray-500 mt-0.5 whitespace-normal max-w-[220px] line-clamp-1">
                         {classItem?.description}
                       </div>
                     </div>
