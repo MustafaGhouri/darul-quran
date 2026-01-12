@@ -32,6 +32,7 @@ import EditUser from "./pages/admin/user-management/add-user/edituser";
 import { showMessage } from "./lib/toast.config";
 import { clearUser, setUser } from "./redux/reducers/user";
 import Loader from "./components/Loader";
+import StudentLayout from "./components/layouts/Studentlayout";
 
 const Home = lazy(() => import("./pages/Home"));
 const CourseManagement = lazy(() =>
@@ -300,8 +301,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-        </Route>
-        <Route element={<TeachersLayout />}>
           <Route
             path="/teacher/courses/course-details"
             element={
@@ -350,6 +349,9 @@ function App() {
               </ProtectedRoute>
             }
           />
+        </Route>
+        <Route element={<StudentLayout />}>
+          
           <Route
             path="/student/dashboard"
             element={
