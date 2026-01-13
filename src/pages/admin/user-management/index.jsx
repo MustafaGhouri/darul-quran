@@ -379,6 +379,7 @@ const UserManagement = () => {
   const [selectedStudents, setSelectedStudents] = useState(new Set());
   const [selectedTeachers, setSelectedTeachers] = useState(new Set());
   const [selectedAdmins, setSelectedAdmins] = useState(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
   const { isOpen: isBulkDeleteOpen, onOpen: onBulkDeleteOpen, onClose: onBulkDeleteClose } = useDisclosure();
 
   useEffect(() => {
@@ -416,6 +417,7 @@ const UserManagement = () => {
     if (!userToDelete) return;
 
     try {
+      setIsDeleting(true);
       const res = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/user/deleteUser/${userToDelete}`, {
         method: "DELETE",
       });
@@ -426,9 +428,9 @@ const UserManagement = () => {
         setUserToDelete(null);
         const response = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/user/getAllUsers");
         const data = await response.json();
-        const teacherData = data.users.filter(u => u.role === "Teacher");
-        const studentData = data.users.filter(u => u.role === "Student");
-        const adminData = data.users.filter(u => u.role === "Admin");
+        const teacherData = data.users.filter(u => u.role?.toLowerCase() === "teacher");
+        const studentData = data.users.filter(u => u.role?.toLowerCase() === "student");
+        const adminData = data.users.filter(u => u.role?.toLowerCase() === "admin");
         setTeachers(teacherData);
         setStudents(studentData);
         setAdmins(adminData);
@@ -438,6 +440,8 @@ const UserManagement = () => {
     } catch (error) {
       console.error("Error deleting user:", error);
       toast.error("An error occurred while deleting the user.");
+    } finally {
+        setIsDeleting(false);
     }
   };
 
@@ -448,31 +452,34 @@ const UserManagement = () => {
 
   // Bulk delete handler
   const handleBulkDelete = async () => {
-    const currentTab = getCurrentTab();
-    const selectedIds = Array.from(currentTab.selectedKeys);
+      const { selectedKeys, type, total } = getCurrentTab();
+      let selectedIds = [];
 
-    if (selectedIds.length === 0) {
-      toast.error("No users selected");
-      return;
-    }
+      if (selectedKeys === "all") {
+          const dataSource = type === 'students' ? students : type === 'teachers' ? teachers : admins;
+          selectedIds = dataSource.map(u => u.id);
+      } else {
+          selectedIds = Array.from(selectedKeys);
+      }
+
+      if (selectedIds.length === 0) {
+          toast.error("No users selected");
+          return;
+      }
 
     try {
-      // Delete all selected users
-      const deletePromises = selectedIds.map(userId =>
-        fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/user/deleteUser/${userId}`, {
-          method: "DELETE",
-        })
-      );
+      setIsDeleting(true);
+      // Delete all selected users via bulk API
+      const res = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/user/bulkDelete`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedIds }),
+      });
 
-      const results = await Promise.all(deletePromises);
-      const successCount = results.filter(res => res.ok).length;
-      const failCount = results.length - successCount;
-
-      if (successCount > 0) {
-        toast.success(`${successCount} user deleted successfully!`);
-      }
-      if (failCount > 0) {
-        toast.error(`Failed to delete ${failCount} user`);
+      if (res.ok) {
+        toast.success(`Users deleted successfully!`);
+      } else {
+        toast.error(`Failed to delete users`);
       }
 
       // Clear selections
@@ -485,25 +492,42 @@ const UserManagement = () => {
       // Refresh user list
       const response = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/user/getAllUsers");
       const data = await response.json();
-      const teacherData = data.users.filter(u => u.role === "Teacher");
-      const studentData = data.users.filter(u => u.role === "Student");
-      const adminData = data.users.filter(u => u.role === "Admin");
+      const teacherData = data.users.filter(u => u.role?.toLowerCase() === "teacher");
+      const studentData = data.users.filter(u => u.role?.toLowerCase() === "student");
+      const adminData = data.users.filter(u => u.role?.toLowerCase() === "admin");
       setTeachers(teacherData);
       setStudents(studentData);
       setAdmins(adminData);
     } catch (error) {
       console.error("Error deleting users:", error);
       toast.error("An error occurred while deleting users.");
+    } finally {
+        setIsDeleting(false);
     }
   };
 
   // Helper function to get current tab's selected keys
   const getCurrentTab = () => {
-    // Determine which tab is active based on selected keys
-    if (selectedStudents.size > 0) return { selectedKeys: selectedStudents, type: 'students' };
-    if (selectedTeachers.size > 0) return { selectedKeys: selectedTeachers, type: 'teachers' };
-    if (selectedAdmins.size > 0) return { selectedKeys: selectedAdmins, type: 'admins' };
-    return { selectedKeys: new Set(), type: null };
+      if (selectedStudents === "all" || (selectedStudents instanceof Set && selectedStudents.size > 0)) {
+          return { selectedKeys: selectedStudents, type: 'students', total: students.length };
+      }
+      if (selectedTeachers === "all" || (selectedTeachers instanceof Set && selectedTeachers.size > 0)) {
+          return { selectedKeys: selectedTeachers, type: 'teachers', total: teachers.length };
+      }
+      if (selectedAdmins === "all" || (selectedAdmins instanceof Set && selectedAdmins.size > 0)) {
+          return { selectedKeys: selectedAdmins, type: 'admins', total: admins.length };
+      }
+      return { selectedKeys: new Set(), type: null, total: 0 };
+  };
+
+  const isSelectionEmpty = (selection) => {
+      if (selection === "all") return false;
+      return selection.size === 0;
+  };
+
+  const getSelectionCount = (selection, total) => {
+      if (selection === "all") return total;
+      return selection.size;
   };
 
 
@@ -551,14 +575,18 @@ const UserManagement = () => {
         </div>
         <div className=" flex gap-3 max-md:flex-wrap max-md:w-full">
           {/* Bulk Delete Button - Shows when users are selected */}
-          {(selectedStudents.size > 0 || selectedTeachers.size > 0 || selectedAdmins.size > 0) && (
+          {(!isSelectionEmpty(selectedStudents) || !isSelectionEmpty(selectedTeachers) || !isSelectionEmpty(selectedAdmins)) && (
             <Button
               radius="sm"
               startContent={<Trash2 color="white" size={15} />}
               className="bg-red-600 text-white py-4 px-3 sm:px-8 max-md:w-full"
               onPress={onBulkDeleteOpen}
             >
-              Delete Selected ({selectedStudents.size + selectedTeachers.size + selectedAdmins.size})
+              Delete Selected ({
+                  getSelectionCount(selectedStudents, students.length) + 
+                  getSelectionCount(selectedTeachers, teachers.length) + 
+                  getSelectionCount(selectedAdmins, admins.length)
+              })
             </Button>
           )}
           <Button
@@ -936,12 +964,14 @@ const UserManagement = () => {
               color="default"
               variant="light"
               onPress={handleCancelDelete}
+              isDisabled={isDeleting}
             >
               Cancel
             </Button>
             <Button
               color="danger"
               onPress={handleDelete}
+              isLoading={isDeleting}
             >
               Yes, Delete
             </Button>
@@ -956,7 +986,11 @@ const UserManagement = () => {
             Confirm Bulk Delete
           </ModalHeader>
           <ModalBody>
-            <p>Are you sure you want to delete {selectedStudents.size + selectedTeachers.size + selectedAdmins.size} selected user?</p>
+            <p>Are you sure you want to delete {
+                getSelectionCount(selectedStudents, students.length) + 
+                getSelectionCount(selectedTeachers, teachers.length) + 
+                getSelectionCount(selectedAdmins, admins.length)
+            } selected user?</p>
             <p className="text-sm text-gray-500">This action cannot be undone.</p>
           </ModalBody>
           <ModalFooter>
@@ -964,12 +998,14 @@ const UserManagement = () => {
               color="default"
               variant="light"
               onPress={onBulkDeleteClose}
+              isDisabled={isDeleting}
             >
               Cancel
             </Button>
             <Button
               color="danger"
               onPress={handleBulkDelete}
+              isLoading={isDeleting}
             >
               Yes, Delete All
             </Button>
