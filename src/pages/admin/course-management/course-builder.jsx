@@ -104,18 +104,18 @@ const CourseBuilder = () => {
   const card = [
     {
       title: "Videos",
-      count: "10",
+      count: videos.length || 0,
       icone: <Video size={20} color="#06574C" />,
     },
-    { title: "PDFs:", count: "10", icone: <File size={20} color="#06574C" /> },
+    { title: "PDFs:", count: pdfs.length || 0, icone: <File size={20} color="#06574C" /> },
     {
       title: "Quizzes",
-      count: "20",
+      count: quizzes.length || 0,
       icone: <Lightbulb size={20} color="#06574C" />,
     },
     {
       title: "Assignments",
-      count: "15",
+      count: assignments.length || 0,
       icone: <ScrollText size={20} color="#06574C" />,
     },
   ];
@@ -218,7 +218,7 @@ const CourseBuilder = () => {
         : null,
       status: "Draft",
       thumbnailurl: currentThumbnailUrl,
-      teacher_id: Number(formData.teacher_id), // ✅ ensure number
+      teacher_id: Number(formData.teacher_id),
       lesson_video: videos,
       pdf_notes: pdfs,
       assignments: assignments,
@@ -332,10 +332,42 @@ const CourseBuilder = () => {
   //   }
   // };
 
+  const saveContent = async (updatedList, field) => {
+    if (!courseId) return;
+    const payload = {
+      ...formData,
+      thumbnailurl: thumbnailUrl,
+      lesson_video: field === 'lesson_video' ? updatedList : videos,
+      pdf_notes: field === 'pdf_notes' ? updatedList : pdfs,
+      assignments: field === 'assignments' ? updatedList : assignments,
+      quizzes: field === 'quizzes' ? updatedList : quizzes,
+    };
+    try {
+      await fetch(
+        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/updateCourse/${courseId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleUpdate = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     setLoadingAction(pendingAction);
     if (!courseId) return;
+
+    // Validation: All uploads required
+    if (videos.length === 0 || pdfs.length === 0 || assignments.length === 0 || quizzes.length === 0) {
+      toast.error("All content sections (Videos, PDFs, Assignments, Quizzes) must have at least one upload.");
+      setLoadingAction(null);
+      setPendingAction(null);
+      return;
+    }
 
     try {
       const payload = {
@@ -564,7 +596,7 @@ const CourseBuilder = () => {
   };
 
   return (
-    <div className="h-full bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full no-scrollbar top-0 bottom-0 overflow-y-auto">
+    <div className="bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full pb-10">
       <DashHeading
         title={"Course Builder"}
         desc={"Create a new course step by step"}
@@ -938,13 +970,14 @@ const CourseBuilder = () => {
                     </div>
                   ))}
                 </div>
-                <Videos videos={videos} setVideos={setVideos} />
-                <PdfAndNotes pdfs={pdfs} setPdfs={setPdfs} />
+                <Videos videos={videos} setVideos={setVideos} onSave={(data) => saveContent(data, 'lesson_video')} />
+                <PdfAndNotes pdfs={pdfs} setPdfs={setPdfs} onSave={(data) => saveContent(data, 'pdf_notes')} />
                 <Assignments
                   assignments={assignments}
                   setAssignments={setAssignments}
+                  onSave={(data) => saveContent(data, 'assignments')}
                 />
-                <Quizzes quizzes={quizzes} setQuizzes={setQuizzes} />
+                <Quizzes quizzes={quizzes} setQuizzes={setQuizzes} onSave={(data) => saveContent(data, 'quizzes')} />
                 <div className="p-3 my-5 bg-[#95C4BE33] rounded-md flex justify-between items-center">
                   <div>
                     <h1 className="text-[#06574C] font-medium text-lg">

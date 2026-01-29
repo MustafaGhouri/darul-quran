@@ -17,6 +17,7 @@ const FileDropzone = ({
 }) => {
   const { getRootProps, getInputProps, open, acceptedFiles } = useDropzone({
     noKeyboard: true,
+    multiple: isMultiple,
     onDrop: (acceptedFiles) => {
       setFiles(acceptedFiles);
     },
@@ -100,15 +101,7 @@ const FileDropzone = ({
             {text}
           </p>
 
-          <Button
-            type="button"
-            onPress={open}
-            radius="sm"
-            size="md"
-            className="bg-[#06574C] mt-3 text-white hover:bg-teal-700"
-          >
-            Select Files
-          </Button>
+          {/* Select Files button removed as per user request */}
 
         </div>
       }

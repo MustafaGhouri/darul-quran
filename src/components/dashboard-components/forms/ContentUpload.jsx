@@ -50,6 +50,7 @@ const getVideoDuration = (file) => {
 
 export default function Videos({ videos = [], setVideos, onSave, courseId, setLoadingAction, setPendingAction }) {
     const { startUpload, isUploading } = useUploadThing("videoUploader");
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     const handleContentSave = async (field, contentData) => {
         if (!courseId) return;
@@ -84,14 +85,27 @@ export default function Videos({ videos = [], setVideos, onSave, courseId, setLo
 
     const handleUpload = async (files) => {
         if (!files || files.length === 0) return;
+        setUploadProgress(0);
 
         const filesWithMeta = await Promise.all(files.map(async (file) => {
             const d = await getVideoDuration(file);
             return { file, duration: formatTime(d) };
         }));
 
+        // Simulated Progress since native callback is not reliable
+        const interval = setInterval(() => {
+            setUploadProgress((prev) => {
+                if (prev >= 95) return prev;
+                return prev + 5;
+            });
+        }, 500);
+
         try {
             const res = await startUpload(filesWithMeta.map(f => f.file));
+
+            clearInterval(interval);
+            setUploadProgress(100);
+
             if (res) {
                 const newItems = res.map((r, i) => ({
                     id: Date.now() + i + Math.random(),
@@ -102,10 +116,25 @@ export default function Videos({ videos = [], setVideos, onSave, courseId, setLo
                     status: "Draft",
                     releaseDate: "0"
                 }));
-                setVideos([...videos, ...newItems]);
+                const updatedList = [...videos, ...newItems];
+                setVideos(updatedList);
+                if (onSave) onSave(updatedList);
                 toast.success("Videos uploaded");
             }
-        } catch (e) { toast.error("Upload error"); }
+        } catch (e) {
+            toast.error("Upload error");
+        } finally {
+            clearInterval(interval);
+            setTimeout(() => setUploadProgress(0), 1000);
+        }
+    };
+
+    const updateLesson = (id, field, value) => {
+        const updatedList = videos.map((lesson) =>
+            lesson.id === id ? { ...lesson, [field]: value } : lesson
+        );
+        setVideos(updatedList);
+        if (onSave) onSave(updatedList);
     };
 
     const deleteLesson = (id) => {
@@ -239,7 +268,8 @@ export default function Videos({ videos = [], setVideos, onSave, courseId, setLo
                                         radius="sm"
                                         className="w-50"
                                         variant="bordered"
-                                        defaultSelectedKeys={[lesson.releaseDate]}
+                                        selectedKeys={[lesson.releaseDate]}
+                                        onSelectionChange={(keys) => updateLesson(lesson.id, "releaseDate", Array.from(keys)[0])}
                                         placeholder="Select Schedule"
                                     >
                                         {Interval.map((filter) => (
@@ -282,9 +312,18 @@ export default function Videos({ videos = [], setVideos, onSave, courseId, setLo
                 <div className="mt-4">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload New Video</h3>
                     {isUploading ? (
-                        <div className="w-full h-[300px] flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                        <div className="w-full h-[300px] flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 px-4">
                             <Loader className="animate-spin h-8 w-8 text-[#06574C] mb-2" />
-                            <p className="text-gray-600">Uploading videos...</p>
+                            <div className="w-full max-w-md flex justify-between text-gray-600 mb-1 text-sm font-medium">
+                                <span>Uploading videos...</span>
+                                <span>{Math.round(uploadProgress)}%</span>
+                            </div>
+                            <div className="w-full max-w-md h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-[#06574C] transition-all duration-300 ease-out"
+                                    style={{ width: `${uploadProgress}%` }}
+                                />
+                            </div>
                         </div>
                     ) : (
                         <FileDropzone
@@ -293,6 +332,7 @@ export default function Videos({ videos = [], setVideos, onSave, courseId, setLo
                             label="Drag & Drop Videos"
                             text="or click to upload. Supports multiple files."
                             height="300px"
+                            isMultiple={true}
                         />
                     )}
                 </div>
@@ -329,19 +369,81 @@ const DOCUMENTS = [
     },
 ];
 
-export function PdfAndNotes({ pdfs = [], setPdfs }) {
-    const deleteDocument = (id) => {
-        setPdfs(pdfs.filter((document) => document.id !== id));
+export function PdfAndNotes({ pdfs = [], setPdfs, onSave }) {
+    const { startUpload } = useUploadThing("pdfUploader");
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+
+    const updateDocument = (id, field, value) => {
+        const updatedList = pdfs.map((doc) =>
+            doc.id === id ? { ...doc, [field]: value } : doc
+        );
+        setPdfs(updatedList);
+        if (onSave) onSave(updatedList);
     };
+
+    const deleteDocument = (id) => {
+        const updatedList = pdfs.filter((document) => document.id !== id);
+        setPdfs(updatedList);
+        if (onSave) onSave(updatedList);
+    };
+
+    const handleUpload = async (files) => {
+        if (!files || files.length === 0) return;
+        setIsUploading(true);
+        setUploadProgress(0);
+
+        // Simulated Progress
+        const interval = setInterval(() => {
+            setUploadProgress((prev) => {
+                if (prev >= 95) return prev;
+                return prev + 5;
+            });
+        }, 500);
+
+        try {
+            const res = await startUpload(files);
+
+            clearInterval(interval);
+            setUploadProgress(100);
+
+            if (res) {
+                const newDocs = res.map((r, i) => ({
+                    id: Date.now() + i + Math.random(),
+                    title: r.name,
+                    size: (r.size / 1024 / 1024).toFixed(2) + " MB",
+                    pages: 0,
+                    url: r.url,
+                    status: "Draft",
+                    releaseDate: "0",
+                    doc_type: 'pdf'
+                }));
+                const updatedList = [...pdfs, ...newDocs];
+                setPdfs(updatedList);
+                if (onSave) onSave(updatedList);
+                toast.success("PDF(s) Uploaded");
+            }
+        } catch (e) {
+            toast.error("Upload error");
+        } finally {
+            clearInterval(interval);
+            setTimeout(() => {
+                setUploadProgress(0);
+                setIsUploading(false);
+            }, 1000);
+        }
+    };
+
     const Interval = [
         { key: "0", label: "Release Immediately" },
         { key: "1", label: "After 1 Days" },
         { key: "3", label: "After 3 Days" },
     ];
-    const AtachOrNot = [
-        { key: "true", label: "Attach To Lesson" },
-        { key: "false", label: "Deattach To Lesson" },
-    ];
+    // const AtachOrNot = [
+    //     { key: "true", label: "Attach To Lesson" },
+    //     { key: "false", label: "Deattach To Lesson" },
+    // ];
+
     return (
         <div className=" bg-white rounded-lg my-2 w-full">
             <div className="">
@@ -355,10 +457,10 @@ export function PdfAndNotes({ pdfs = [], setPdfs }) {
                         <Button
                             radius="sm"
                             variant="solid"
-                            className="bg-[#06574C] text-white"
-                            startContent={<Plus className="h-4 w-4" />}
+                            className="bg-white text-[#06574C] border border-[#06574C]"
+                            startContent={<Download className="h-4 w-4" />}
                         >
-                            Upload PDF/Notes
+                            Download
                         </Button>
                     </div>
                 </div>
@@ -403,7 +505,8 @@ export function PdfAndNotes({ pdfs = [], setPdfs }) {
                                         radius="sm"
                                         className="w-50"
                                         variant="bordered"
-                                        defaultSelectedKeys={[document.releaseDate]}
+                                        selectedKeys={[document.releaseDate]}
+                                        onSelectionChange={(keys) => updateDocument(document.id, "releaseDate", Array.from(keys)[0])}
                                         placeholder="Select Schedule"
                                     >
                                         {Interval.map((filter) => (
@@ -436,58 +539,33 @@ export function PdfAndNotes({ pdfs = [], setPdfs }) {
                         </div>
                     ))}
                 </div>
-                {/* <FileDropzone
-                    label="Drag & Drop Your Files Here"
-                    text="or click to browse and select files"
-                    files={documentsFiles}
-                    uploadBgColor="#ffff"
-                    setFiles={setDocumentsFiles}
-                /> */}
+
                 <div className="mt-4">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload PDF/Notes</h3>
-                    <UploadDropzone
-                        className="w-full h-[300px] border-2 border-dashed border-gray-300 rounded-lg ut-label:text-lg ut-allowed-content:ut-uploading:text-red-300 relative"
-                        endpoint="pdfUploader"
-                        appearance={{
-                            container: {
-                                width: "100%",
-                                height: "300px",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                backgroundColor: "white",
-                            },
-                            button: {
-                                position: "absolute",
-                                bottom: "3rem",
-                                background: "#06574C",
-                                color: "white",
-                                marginTop: "1rem",
-                            },
-                            label: {
-                                color: "#06574C",
-                            },
-                        }}
-                        onClientUploadComplete={(res) => {
-                            if (res && res.length > 0) {
-                                const newDoc = {
-                                    id: Date.now(),
-                                    title: res[0].name,
-                                    size: (res[0].size / 1024 / 1024).toFixed(2) + " MB",
-                                    pages: 0,
-                                    url: res[0].url,
-                                    status: "Draft",
-                                    releaseDate: "0",
-                                    doc_type: 'pdf'
-                                };
-                                setPdfs([...pdfs, newDoc]);
-                                toast.success("PDF Uploaded");
-                            }
-                        }}
-                        onUploadError={(error) => {
-                            toast.error("ERROR! " + error.message);
-                        }}
-                    />
+                    {isUploading ? (
+                        <div className="w-full h-[300px] flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 px-4">
+                            <Loader className="animate-spin h-8 w-8 text-[#06574C] mb-2" />
+                            <div className="w-full max-w-md flex justify-between text-gray-600 mb-1 text-sm font-medium">
+                                <span>Uploading files...</span>
+                                <span>{Math.round(uploadProgress)}%</span>
+                            </div>
+                            <div className="w-full max-w-md h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-[#06574C] transition-all duration-300 ease-out"
+                                    style={{ width: `${uploadProgress}%` }}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <FileDropzone
+                            files={[]}
+                            setFiles={handleUpload}
+                            label="Drag & Drop PDF/Notes"
+                            text="or click to upload. Supports multiple files."
+                            height="300px"
+                            isMultiple={true}
+                        />
+                    )}
                 </div>
             </div>
         </div>
@@ -516,22 +594,80 @@ const ASSIGNMENTS = [
         releaseDate: "3",
     },
 ];
-export function Assignments({ assignmentUrl, setAssignmentUrl }) {
-    const [asignments, setAssignments] = useState(ASSIGNMENTS);
-    const [asignmentsFiles, setAsignmentsFiles] = useState([]);
+export function Assignments({ assignments = [], setAssignments, onSave }) {
+    const { startUpload } = useUploadThing("pdfUploader");
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
-    const deleteAsignment = (id) => {
-        setAssignments(asignments.filter((asignment) => asignment.id !== id));
+    const updateAssignment = (id, field, value) => {
+        const updatedList = assignments.map((assign) =>
+            assign.id === id ? { ...assign, [field]: value } : assign
+        );
+        setAssignments(updatedList);
+        if (onSave) onSave(updatedList);
     };
+
+    const deleteAssignment = (id) => {
+        const updatedList = assignments.filter((assign) => assign.id !== id);
+        setAssignments(updatedList);
+        if (onSave) onSave(updatedList);
+    };
+
+    const handleUpload = async (files) => {
+        if (!files || files.length === 0) return;
+        setIsUploading(true);
+        setUploadProgress(0);
+
+        // Simulated Progress
+        const interval = setInterval(() => {
+            setUploadProgress((prev) => {
+                if (prev >= 95) return prev;
+                return prev + 5;
+            });
+        }, 500);
+
+        try {
+            const res = await startUpload(files);
+
+            clearInterval(interval);
+            setUploadProgress(100);
+
+            if (res) {
+                const newAssigns = res.map((r, i) => ({
+                    id: Date.now() + i + Math.random(),
+                    title: r.name,
+                    title2: r.name,
+                    description: "Uploaded File",
+                    due: "7 days",
+                    thumbnail: r.url, // storing URL
+                    status: "Draft",
+                    releaseDate: "0"
+                }));
+                const updatedList = [...assignments, ...newAssigns];
+                setAssignments(updatedList);
+                if (onSave) onSave(updatedList);
+                toast.success("Assignment(s) Uploaded");
+            }
+        } catch (e) {
+            toast.error("Upload error");
+        } finally {
+            clearInterval(interval);
+            setTimeout(() => {
+                setUploadProgress(0);
+                setIsUploading(false);
+            }, 1000);
+        }
+    };
+
     const Interval = [
         { key: "0", label: "Release Immediately" },
         { key: "1", label: "After 1 Days" },
         { key: "3", label: "After 3 Days" },
     ];
-    const AtachOrNot = [
-        { key: "true", label: "Attach To Lesson" },
-        { key: "false", label: "Deattach To Lesson" },
-    ];
+    // const AtachOrNot = [
+    //     { key: "true", label: "Attach To Lesson" },
+    //     { key: "false", label: "Deattach To Lesson" },
+    // ];
 
     const changetitle = window.location.pathname === "/teacher/courses/upload-material";
     return (
@@ -543,14 +679,13 @@ export function Assignments({ assignmentUrl, setAssignmentUrl }) {
                             <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">Assignments</h1>
                         </div>
 
-
                         <Button
                             radius="sm"
                             variant="solid"
-                            className="bg-[#06574C] text-white"
-                            startContent={<Plus className="h-4 w-4" />}
+                            className="bg-white text-[#06574C] border border-[#06574C]"
+                            startContent={<Download className="h-4 w-4" />}
                         >
-                            Add Assignment
+                            Download
                         </Button>
                     </div>
                 </div>
@@ -558,7 +693,7 @@ export function Assignments({ assignmentUrl, setAssignmentUrl }) {
 
             <div className="mx-auto max-w-7xl px-2 pb-3 sm:px-4">
                 <div className="space-y-4 my-4">
-                    {asignments.map((asignment) => (
+                    {assignments.map((asignment) => (
                         <div
                             key={asignment.id}
                             className={`rounded-lg p-4 sm:p-6 transition-all ${asignment.status === "scheduled"
@@ -589,7 +724,8 @@ export function Assignments({ assignmentUrl, setAssignmentUrl }) {
                                         radius="sm"
                                         className="w-50"
                                         variant="bordered"
-                                        defaultSelectedKeys={[asignment.releaseDate]}
+                                        selectedKeys={[asignment.releaseDate]}
+                                        onSelectionChange={(keys) => updateAssignment(asignment.id, "releaseDate", Array.from(keys)[0])}
                                         placeholder="Select Schedule"
                                     >
                                         {Interval.map((filter) => (
@@ -612,7 +748,7 @@ export function Assignments({ assignmentUrl, setAssignmentUrl }) {
                                             variant="flat"
                                             isIconOnly
                                             color="danger"
-                                            onPress={() => deleteAsignment(asignment.id)}
+                                            onPress={() => deleteAssignment(asignment.id)}
                                         >
                                             <Trash2 color="#fb2c36" className="h-4 w-4" />
                                         </Button>
@@ -622,69 +758,35 @@ export function Assignments({ assignmentUrl, setAssignmentUrl }) {
                         </div>
                     ))}
                 </div>
-                {/* <FileDropzone
-                    label="Drag & Drop Your Files Here"
-                    text="or click to browse and select files"
-                    files={asignmentsFiles}
-                    uploadBgColor="#ffff"
-                    setFiles={setAsignmentsFiles}
-                /> */}
-                {assignmentUrl ? (
-                    <div className="relative w-full h-[300px] overflow-hidden rounded-lg">
-                        <Image
-                            removeWrapper
-                            className="w-full h-full object-cover"
-                            src={assignmentUrl}
-                            alt="Assignment Preview"
+
+                <div className="mt-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Assignment</h3>
+                    {isUploading ? (
+                        <div className="w-full h-[300px] flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 px-4">
+                            <Loader className="animate-spin h-8 w-8 text-[#06574C] mb-2" />
+                            <div className="w-full max-w-md flex justify-between text-gray-600 mb-1 text-sm font-medium">
+                                <span>Uploading files...</span>
+                                <span>{Math.round(uploadProgress)}%</span>
+                            </div>
+                            <div className="w-full max-w-md h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-[#06574C] transition-all duration-300 ease-out"
+                                    style={{ width: `${uploadProgress}%` }}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <FileDropzone
+                            files={[]}
+                            setFiles={handleUpload}
+                            label="Drag & Drop Assignment Files"
+                            text="or click to upload. Supports multiple files."
+                            height="300px"
+                            isMultiple={true}
                         />
-                        <Button
-                            size="sm"
-                            className="absolute top-2 right-2 bg-red-500 text-white z-10"
-                            onPress={() => setAssignmentUrl("")}
-                        >
-                            Remove
-                        </Button>
-                    </div>
-                ) : (
-                    <UploadDropzone
-                        className="w-full h-[300px] border-2 border-dashed border-gray-300 rounded-lg ut-label:text-lg ut-allowed-content:ut-uploading:text-red-300 relative"
-                        endpoint="imageUploader"
-                        appearance={{
-                            container: {
-                                width: "100%",
-                                height: "300px",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                backgroundColor: "white",
-                            },
-                            button: {
-                                position: "absolute",
-                                bottom: "3rem",
-                                background: "#06574C",
-                                color: "white",
-                                marginTop: "1rem", // Add spacing if needed
-                            },
-                            label: {
-                                color: "#06574C",
-                            },
-                        }}
-                        onClientUploadComplete={(res) => {
-                            console.log("Files: ", res);
-                            if (res && res.length > 0) {
-                                setAssignmentUrl(res[0].url);
-                                toast.success("Upload Completed");
-                            }
-                        }}
-                        onUploadError={(error) => {
-                            // Do something with the error.
-                            toast.error("ERROR! " + error.message);
-                        }}
-                    />
-                )}
+                    )}
+                </div>
             </div>
-
-
         </div>
     );
 }
@@ -713,12 +815,71 @@ const QUIZZES = [
         is_attached: true,
     },
 ];
-export function Quizzes({ quizUrl, setQuizUrl }) {
-    const [quizzes, setQuizzes] = useState(QUIZZES);
-    const [quizzesFiles, setQuizzesFiles] = useState([]);
+export function Quizzes({ quizzes = [], setQuizzes, onSave }) {
+    const { startUpload } = useUploadThing("pdfUploader");
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+
+    const updateQuiz = (id, field, value) => {
+        const updatedList = quizzes.map((quiz) =>
+            quiz.id === id ? { ...quiz, [field]: value } : quiz
+        );
+        setQuizzes(updatedList);
+        if (onSave) onSave(updatedList);
+    };
 
     const deleteQuiz = (id) => {
-        setQuizzes(quizzesFiles.filter((quizzes) => quizzes.id !== id));
+        const updatedList = quizzes.filter((quiz) => quiz.id !== id);
+        setQuizzes(updatedList);
+        if (onSave) onSave(updatedList);
+    };
+
+    const handleUpload = async (files) => {
+        if (!files || files.length === 0) return;
+        setIsUploading(true);
+        setUploadProgress(0);
+
+        // Simulated Progress
+        const interval = setInterval(() => {
+            setUploadProgress((prev) => {
+                if (prev >= 95) return prev;
+                return prev + 5;
+            });
+        }, 500);
+
+        try {
+            const res = await startUpload(files);
+
+            clearInterval(interval);
+            setUploadProgress(100);
+
+            if (res) {
+                const newQs = res.map((r, i) => ({
+                    id: Date.now() + i + Math.random(),
+                    title: r.name,
+                    description: "Uploaded Quiz File",
+                    duration: "15",
+                    question: 0,
+                    thumbnail: r.url,
+                    status: "Draft",
+                    passing: 70,
+                    is_attached: false,
+                    releaseDate: "0"
+                }));
+                const updatedList = [...quizzes, ...newQs];
+                setQuizzes(updatedList);
+                if (onSave) onSave(updatedList);
+                toast.success("Quiz(s) Uploaded");
+            }
+        } catch (e) {
+            toast.error("Upload error");
+        } finally {
+            clearInterval(interval);
+            setTimeout(() => {
+                setUploadProgress(0);
+                setIsUploading(false);
+            }, 1000);
+        }
     };
     const Interval = [
         { key: "0", label: "Release Immediately" },
@@ -744,10 +905,10 @@ export function Quizzes({ quizUrl, setQuizUrl }) {
                         <Button
                             radius="sm"
                             variant="solid"
-                            className="bg-[#06574C] text-white"
-                            startContent={<Plus className="h-4 w-4" />}
+                            className="bg-white text-[#06574C] border border-[#06574C]"
+                            startContent={<Download className="h-4 w-4" />}
                         >
-                            Course Qiuz
+                            Download
                         </Button>
                     </div>
                 </div>
@@ -777,7 +938,9 @@ export function Quizzes({ quizUrl, setQuizUrl }) {
                                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                                         <span className="inline-flex items-center gap-1">
                                             <List />
-                                            {quiz.question.toLocaleString()} Questions
+                                            {// quiz.question might be number, so toLocaleString safe if number
+                                                Number(quiz.question || 0).toLocaleString()
+                                            } Questions
                                         </span>
                                         <span className="inline-flex items-center gap-1">
                                             <Clock className="h-4 w-4" />
@@ -798,8 +961,9 @@ export function Quizzes({ quizUrl, setQuizUrl }) {
                                         radius="sm"
                                         className="w-50"
                                         variant="bordered"
-                                        defaultSelectedKeys={[`${quiz.is_attached}`]}
-                                        placeholder="Select Schedule"
+                                        selectedKeys={[`${quiz.is_attached}`]}
+                                        onSelectionChange={(keys) => updateQuiz(quiz.id, "is_attached", Array.from(keys)[0] === 'true')}
+                                        placeholder="Attach?"
                                     >
                                         {AtachOrNot.map((filter) => (
                                             <SelectItem key={filter.key}>{filter.label}</SelectItem>
@@ -831,66 +995,32 @@ export function Quizzes({ quizUrl, setQuizUrl }) {
                         </div>
                     ))}
                 </div>
-                {/* <FileDropzone
-                    label="Drag & Drop Your Files Here"
-                    text="or click to browse and select files"
-                    files={quizzesFiles}
-                    uploadBgColor="#ffff"
-                    setFiles={setQuizzesFiles}
-                /> */}
-                {quizUrl ? (
-                    <div className="relative w-full h-[300px] overflow-hidden rounded-lg">
-                        <Image
-                            removeWrapper
-                            className="w-full h-full object-cover"
-                            src={quizUrl}
-                            alt="Quiz Preview"
+
+                <div className="mt-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Quiz</h3>
+                    {isUploading ? (
+                        <div className="w-full h-[300px] flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 px-4">
+                            <Loader className="animate-spin h-8 w-8 text-[#06574C] mb-2" />
+                            <div className="w-full max-w-md flex justify-between text-gray-600 mb-1 text-sm font-medium">
+                                <span>Uploading files...</span>
+                                <span>{Math.round(uploadProgress)}%</span>
+                            </div>
+                            <div
+                                className="h-full bg-[#06574C] transition-all duration-300 ease-out"
+                                style={{ width: `${uploadProgress}%` }}
+                            />
+                        </div>
+                    ) : (
+                        <FileDropzone
+                            files={[]}
+                            setFiles={handleUpload}
+                            label="Drag & Drop Quiz Files"
+                            text="or click to upload. Supports multiple files."
+                            height="300px"
+                            isMultiple={true}
                         />
-                        <Button
-                            size="sm"
-                            className="absolute top-2 right-2 bg-red-500 text-white z-10"
-                            onPress={() => setQuizUrl("")}
-                        >
-                            Remove
-                        </Button>
-                    </div>
-                ) : (
-                    <UploadDropzone
-                        className="w-full h-[300px] border-2 border-dashed border-gray-300 rounded-lg ut-label:text-lg ut-allowed-content:ut-uploading:text-red-300 relative"
-                        endpoint="imageUploader"
-                        appearance={{
-                            container: {
-                                width: "100%",
-                                height: "300px",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                backgroundColor: "white",
-                            },
-                            button: {
-                                position: "absolute",
-                                bottom: "3rem",
-                                background: "#06574C",
-                                color: "white",
-                                marginTop: "1rem", // Add spacing if needed
-                            },
-                            label: {
-                                color: "#06574C",
-                            },
-                        }}
-                        onClientUploadComplete={(res) => {
-                            console.log("Files: ", res);
-                            if (res && res.length > 0) {
-                                setQuizUrl(res[0].url);
-                                toast.success("Upload Completed");
-                            }
-                        }}
-                        onUploadError={(error) => {
-                            // Do something with the error.
-                            toast.error("ERROR! " + error.message);
-                        }}
-                    />
-                )}
+                    )}
+                </div>
             </div>
 
 
