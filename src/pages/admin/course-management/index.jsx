@@ -18,134 +18,134 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const CourseManagement = () => {
-  const classes = [
-    {
-      id: 1,
-      name: "React Hooks Deep Dive",
-      desc: "Advanced JavaScript Course",
-      teacher: "John Davis",
-      email: "john.davis@email.com",
-      enrolled: "1296",
-      enrollment_limit: 1300,
-      price: 199,
-      reviews: "Great course, I learned a lot...",
-      category: "Web Development",
-      status: "draft",
-      date: "2025-11-27",
-    },
-    {
-      id: 2,
-      name: "React Hooks Deep Dive",
-      desc: "Advanced JavaScript Course",
-      teacher: "John Davis",
-      email: "john.davis@email.com",
-      enrolled: "1296",
-      enrollment_limit: 1300,
-      price: 199,
-      reviews: "Great course, I learned a lot...",
-      category: "Web Development",
-      status: "Published",
-      date: "2025-11-26",
-    },
-    {
-      id: 3,
-      name: "React Hooks Deep Dive",
-      desc: "Advanced JavaScript Course",
-      teacher: "John Davis",
-      email: "john.davis@email.com",
-      enrolled: "1296",
-      enrollment_limit: 1300,
-      price: 199,
-      reviews: "Great course, I learned a lot...",
-      category: "Web Development",
-      status: "Draft",
-      date: "2025-11-17",
-    },
-    {
-      id: 4,
-      name: "React Hooks Deep Dive",
-      desc: "Advanced JavaScript Course",
-      teacher: "John Davis",
-      email: "john.davis@email.com",
-      enrolled: "1296",
-      enrollment_limit: 1300,
-      price: 199,
-      reviews: "Great course, I learned a lot...",
-      category: "Web Development",
-      status: "Published",
-      date: "2025-11-16",
-    },
-    {
-      id: 5,
-      name: "React Hooks Deep Dive",
-      desc: "Advanced JavaScript Course",
-      teacher: "John Davis",
-      email: "john.davis@email.com",
-      enrolled: "1296",
-      enrollment_limit: 1300,
-      price: 199,
-      reviews: "Great course, I learned a lot...",
-      category: "Web Development",
-      status: "Published",
-      date: "2025-11-15",
-    },
-    {
-      id: 6,
-      name: "React Hooks Deep Dive",
-      desc: "Advanced JavaScript Course",
-      teacher: "John Davis",
-      email: "john.davis@email.com",
-      enrolled: "1296",
-      enrollment_limit: 1300,
-      price: 199,
-      reviews: "Great course, I learned a lot...",
-      category: "Web Development",
-      status: "Published",
-      date: "2025-11-12",
-    },
-    {
-      id: 7,
-      name: "React Hooks Deep Dive",
-      desc: "Advanced JavaScript Course",
-      teacher: "John Davis",
-      email: "john.davis@email.com",
-      enrolled: "1296",
-      enrollment_limit: 1300,
-      price: 199,
-      reviews: "Great course, I learned a lot...",
-      category: "Web Development",
-      status: "Published",
-      date: "2025-11-03",
-    },
-    {
-      id: 8,
-      name: "React Hooks Deep Dive",
-      desc: "Advanced JavaScript Course",
-      teacher: "John Davis",
-      email: "john.davis@email.com",
-      enrolled: "1296",
-      enrollment_limit: 1300,
-      price: 199,
-      reviews: "Great course, I learned a lot...",
-      category: "Web Development",
-      status: "Published",
-      date: "2025-11-29",
-    },
-    {
-      id: 9,
-      name: "React Hooks Deep Dive",
-      desc: "Advanced JavaScript Course",
-      teacher: "John Davis",
-      email: "john.davis@email.com",
-      enrolled: "1296",
-      enrollment_limit: 1300,
-      price: 199,
-      reviews: "Great course, I learned a lot...",
-      category: "Web Development",
-      status: "Published",
-      date: "2025-11-22",
-    },
-  ];
+  // const classes = [
+  //   {
+  //     id: 1,
+  //     name: "React Hooks Deep Dive",
+  //     desc: "Advanced JavaScript Course",
+  //     teacher: "John Davis",
+  //     email: "john.davis@email.com",
+  //     enrolled: "1296",
+  //     enrollment_limit: 1300,
+  //     price: 199,
+  //     reviews: "Great course, I learned a lot...",
+  //     category: "Web Development",
+  //     status: "draft",
+  //     date: "2025-11-27",
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "React Hooks Deep Dive",
+  //     desc: "Advanced JavaScript Course",
+  //     teacher: "John Davis",
+  //     email: "john.davis@email.com",
+  //     enrolled: "1296",
+  //     enrollment_limit: 1300,
+  //     price: 199,
+  //     reviews: "Great course, I learned a lot...",
+  //     category: "Web Development",
+  //     status: "Published",
+  //     date: "2025-11-26",
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "React Hooks Deep Dive",
+  //     desc: "Advanced JavaScript Course",
+  //     teacher: "John Davis",
+  //     email: "john.davis@email.com",
+  //     enrolled: "1296",
+  //     enrollment_limit: 1300,
+  //     price: 199,
+  //     reviews: "Great course, I learned a lot...",
+  //     category: "Web Development",
+  //     status: "Draft",
+  //     date: "2025-11-17",
+  //   },
+  //   {
+  //     id: 4,
+  //     name: "React Hooks Deep Dive",
+  //     desc: "Advanced JavaScript Course",
+  //     teacher: "John Davis",
+  //     email: "john.davis@email.com",
+  //     enrolled: "1296",
+  //     enrollment_limit: 1300,
+  //     price: 199,
+  //     reviews: "Great course, I learned a lot...",
+  //     category: "Web Development",
+  //     status: "Published",
+  //     date: "2025-11-16",
+  //   },
+  //   {
+  //     id: 5,
+  //     name: "React Hooks Deep Dive",
+  //     desc: "Advanced JavaScript Course",
+  //     teacher: "John Davis",
+  //     email: "john.davis@email.com",
+  //     enrolled: "1296",
+  //     enrollment_limit: 1300,
+  //     price: 199,
+  //     reviews: "Great course, I learned a lot...",
+  //     category: "Web Development",
+  //     status: "Published",
+  //     date: "2025-11-15",
+  //   },
+  //   {
+  //     id: 6,
+  //     name: "React Hooks Deep Dive",
+  //     desc: "Advanced JavaScript Course",
+  //     teacher: "John Davis",
+  //     email: "john.davis@email.com",
+  //     enrolled: "1296",
+  //     enrollment_limit: 1300,
+  //     price: 199,
+  //     reviews: "Great course, I learned a lot...",
+  //     category: "Web Development",
+  //     status: "Published",
+  //     date: "2025-11-12",
+  //   },
+  //   {
+  //     id: 7,
+  //     name: "React Hooks Deep Dive",
+  //     desc: "Advanced JavaScript Course",
+  //     teacher: "John Davis",
+  //     email: "john.davis@email.com",
+  //     enrolled: "1296",
+  //     enrollment_limit: 1300,
+  //     price: 199,
+  //     reviews: "Great course, I learned a lot...",
+  //     category: "Web Development",
+  //     status: "Published",
+  //     date: "2025-11-03",
+  //   },
+  //   {
+  //     id: 8,
+  //     name: "React Hooks Deep Dive",
+  //     desc: "Advanced JavaScript Course",
+  //     teacher: "John Davis",
+  //     email: "john.davis@email.com",
+  //     enrolled: "1296",
+  //     enrollment_limit: 1300,
+  //     price: 199,
+  //     reviews: "Great course, I learned a lot...",
+  //     category: "Web Development",
+  //     status: "Published",
+  //     date: "2025-11-29",
+  //   },
+  //   {
+  //     id: 9,
+  //     name: "React Hooks Deep Dive",
+  //     desc: "Advanced JavaScript Course",
+  //     teacher: "John Davis",
+  //     email: "john.davis@email.com",
+  //     enrolled: "1296",
+  //     enrollment_limit: 1300,
+  //     price: 199,
+  //     reviews: "Great course, I learned a lot...",
+  //     category: "Web Development",
+  //     status: "Published",
+  //     date: "2025-11-22",
+  //   },
+  // ];
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
@@ -169,14 +169,11 @@ const CourseManagement = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   console.log("courses", courses);
+
   const statuses = [
     { key: "all", label: "All Status" },
     { key: "draft", label: "Draft" },
     { key: "published", label: "Published" },
-  ];
-  const categories = [
-    { key: "Web Development", label: "Web Development" },
-    { key: "all", label: "All Category" },
   ];
   const filters = [{ key: "all", label: "Filter" }];
   const limits = [
@@ -219,9 +216,12 @@ const CourseManagement = () => {
         const coursesData = await res.json();
         setCourses(coursesData.courses || []);
         setOpen(false);
+      } else {
+        alert(data.message || "Failed to delete course");
       }
     } catch (error) {
       console.error("Delete error:", error);
+      alert("An error occurred while deleting the course");
     } finally {
       setDeleteLoading(false);
       setDeletingId(null);
@@ -251,10 +251,11 @@ const CourseManagement = () => {
             className="min-w-[120px]"
             radius="sm"
             defaultSelectedKeys={["all"]}
-            placeholder="Select an category"
+            placeholder="Select a category"
           >
-            {categories.map((category) => (
-              <SelectItem key={category.key}>{category.label}</SelectItem>
+            <SelectItem key="all">All Category</SelectItem>
+            {courses.map((cat) => (
+              <SelectItem key={cat.category}>{cat.category_name}</SelectItem>
             ))}
           </Select>
           <Select
@@ -304,7 +305,7 @@ const CourseManagement = () => {
                   <TableCell>
                     <div className="min-w-0">
                       <div className="font-medium text-gray-900 truncate">
-                        {classItem?.course_name}
+                        {classItem?.courseName}
                       </div>
                       <div className="text-xs text-gray-500 mt-0.5 whitespace-normal max-w-[220px] line-clamp-1">
                         {classItem?.description}
@@ -330,13 +331,13 @@ const CourseManagement = () => {
 
                   <TableCell className="text-center">
                     <span className="font-medium">
-                      ${classItem?.course_price}
+                      ${classItem?.coursePrice}
                     </span>
                   </TableCell>
 
                   <TableCell className="text-center">
                     <span className="font-medium">
-                      {classItem?.enroll_number}
+                      {classItem?.enrollNumber}
                     </span>
                   </TableCell>
 

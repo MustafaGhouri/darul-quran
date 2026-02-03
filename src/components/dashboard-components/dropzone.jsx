@@ -58,22 +58,38 @@ const FileDropzone = ({
           />
 
           {files.length === 1 ? (
-            <img
-              src={getUploadedImageSrc(files[0])}
-              alt="uploded file"
-              title="uploded file"
-              className="w-full h-full object-contain"
-            />
+            files[0].type?.startsWith("video") || files[0].name?.match(/\.(mp4|webm|ogg)$/i) ? (
+              <video
+                src={getUploadedImageSrc(files[0])}
+                className="w-full h-full object-contain"
+                controls
+              />
+            ) : (
+              <img
+                src={getUploadedImageSrc(files[0])}
+                alt="uploded file"
+                title="uploded file"
+                className="w-full h-full object-contain"
+              />
+            )
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2 w-full h-full overflow-auto">
               {files.map((file, i) => (
                 <div key={i} className="relative group">
-                  <img
-                    src={getUploadedImageSrc(file)}
-                    alt={`uploded file ${i}`}
-                    title={`uploded file ${i}`}
-                    className="w-full h-32 object-cover rounded-md"
-                  />
+                  {file.type?.startsWith("video") || file.name?.match(/\.(mp4|webm|ogg)$/i) ? (
+                    <video
+                      src={getUploadedImageSrc(file)}
+                      className="w-full h-32 object-cover rounded-md"
+                      controls={false} // No controls for thumbnails in grid
+                    />
+                  ) : (
+                    <img
+                      src={getUploadedImageSrc(file)}
+                      alt={`uploded file ${i}`}
+                      title={`uploded file ${i}`}
+                      className="w-full h-32 object-cover rounded-md"
+                    />
+                  )}
                   <PlusCircle
                     onClick={() => removeFile(i)}
                     color="white"

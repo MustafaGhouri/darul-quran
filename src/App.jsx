@@ -21,6 +21,7 @@ import SheduleClass from "./pages/teacher/class-sheduling/shedule-class";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import MyLearning from "./pages/student/my-learning-joureny";
 import StudentClassSheduling from "./pages/student/class-sheduling";
+import ClassSchedule from "./pages/student/ClassSchedule";
 import BrowseCourses from "./pages/student/browse-courses";
 import PaymentsInvoices from "./pages/student/payments-invoices";
 import CourseDetails from "./pages/student/browse-courses/course-details";
@@ -71,7 +72,7 @@ function App() {
 
   const dispatch = useDispatch();
 
-  const { user, loading, shouldFetch,isAuthenticated } = useSelector(
+  const { user, loading, shouldFetch, isAuthenticated } = useSelector(
     (state) => state?.user
   )
 
@@ -113,8 +114,8 @@ function App() {
     if (loading || shouldFetch) {
       loadUser();
     }
-  }, [shouldFetch,user]);
-  if (loading) return <Loader/>;
+  }, [shouldFetch, user]);
+  if (loading) return <Loader />;
   return (
     <HeroUIProvider>
       <Toaster position="top-right" />
@@ -351,7 +352,7 @@ function App() {
           />
         </Route>
         <Route element={<StudentLayout />}>
-          
+
           <Route
             path="/student/dashboard"
             element={
@@ -372,7 +373,7 @@ function App() {
             path="/student/class-scheduling"
             element={
               <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
-                <StudentClassSheduling />
+                <ClassSchedule />
               </ProtectedRoute>
             }
           />
@@ -385,7 +386,7 @@ function App() {
             }
           />
           <Route
-            path="/student/browse-courses/course-details"
+            path="/student/browse-courses/course-details/:id"
             element={
               <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                 <CourseDetails />

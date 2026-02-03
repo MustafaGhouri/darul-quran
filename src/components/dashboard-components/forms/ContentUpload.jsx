@@ -48,7 +48,7 @@ const getVideoDuration = (file) => {
     });
 };
 
-export default function Videos({ videos = [], setVideos, onSave, courseId, setLoadingAction, setPendingAction }) {
+export default function Videos({ videos = [], setVideos, onSave, courseId, setLoadingAction, setPendingAction, setVideoDuration }) {
     const { startUpload, isUploading } = useUploadThing("videoUploader");
     const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -82,6 +82,13 @@ export default function Videos({ videos = [], setVideos, onSave, courseId, setLo
     }, 0);
 
     const displayTotalDuration = formatTime(totalDurationSeconds);
+
+    // Update parent component's videoDuration whenever total changes
+    useEffect(() => {
+        if (setVideoDuration) {
+            setVideoDuration(totalDurationSeconds);
+        }
+    }, [totalDurationSeconds, setVideoDuration]);
 
     const handleUpload = async (files) => {
         if (!files || files.length === 0) return;

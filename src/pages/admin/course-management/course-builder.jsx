@@ -77,13 +77,17 @@ const CourseBuilder = () => {
   const navigate = useNavigate();
   const [thumbnail, setThumbnail] = useState([]); //file
   const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [videoThumbnail, setVideoThumbnail] = useState([]); // Cover image file
+  const [videoThumbnailUrl, setVideoThumbnailUrl] = useState(""); // Cover image URL
   const [videos, setVideos] = useState([]);
   const [pdfs, setPdfs] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
   const [loadingAction, setLoadingAction] = useState(null);
   const [pendingAction, setPendingAction] = useState(null);
-  const { startUpload } = useUploadThing("imageUploader");
+  const [videoDuration, setVideoDuration] = useState(0);
+
+  const { startUpload } = useUploadThing("introUploader");
 
   // const category = [
   //   { key: "Advance_JavaScript", label: "Advance JavaScript" },
@@ -161,6 +165,9 @@ const CourseBuilder = () => {
     previous_lesson: "",
     enroll_number: "",
     status: "Draft", // Default
+    videoDuration: "",
+    is_free: false, // Free/Paid toggle
+    video_count: 0, // Number of videos
   });
   // console.log(formData);
   const coursepreview = [
@@ -183,26 +190,42 @@ const CourseBuilder = () => {
     setLoadingAction(pendingAction);
 
     let currentThumbnailUrl = thumbnailUrl;
+    let currentVideoThumbnailUrl = videoThumbnailUrl;
 
+    // Upload Main File (Video or Image)
     if (thumbnail.length > 0) {
       try {
         const res = await startUpload(thumbnail);
         if (res && res[0]) {
           currentThumbnailUrl = res[0].url;
           setThumbnailUrl(currentThumbnailUrl);
-          toast.success("Thumbnail uploaded successfully");
+          toast.success("Main file uploaded successfully");
         }
       } catch (error) {
         console.error("Upload failed", error);
-        toast.error("Failed to upload thumbnail");
+        toast.error("Failed to upload file");
         setLoadingAction(null);
         setPendingAction(null);
         return;
       }
     }
 
+    // Upload Video Cover Image (if exists)
+    if (videoThumbnail.length > 0) {
+      try {
+        const res = await startUpload(videoThumbnail);
+        if (res && res[0]) {
+          currentVideoThumbnailUrl = res[0].url;
+          setVideoThumbnailUrl(currentVideoThumbnailUrl);
+          toast.success("Cover image uploaded");
+        }
+      } catch (error) {
+        console.error("Cover upload failed", error);
+      }
+    }
+
     if (!currentThumbnailUrl) {
-      toast.error("Please upload a thumbnail image first");
+      toast.error("Please upload an introduction video or thumbnail");
       setLoadingAction(null);
       setPendingAction(null);
       return;
@@ -218,11 +241,15 @@ const CourseBuilder = () => {
         : null,
       status: "Draft",
       thumbnailurl: currentThumbnailUrl,
+      videoThumbnail: currentVideoThumbnailUrl,
       teacher_id: Number(formData.teacher_id),
       lesson_video: videos,
+      videoDuration: videoDuration,
       pdf_notes: pdfs,
       assignments: assignments,
       quizzes: quizzes,
+      video_count: videos.length, // Calculate video count
+      is_free: formData.is_free, // Include free/paid flag
     };
     console.log("payload", payload);
     try {
@@ -377,6 +404,8 @@ const CourseBuilder = () => {
         pdf_notes: pdfs,
         assignments: assignments,
         quizzes: quizzes,
+        video_count: videos.length, // Add video count
+        is_free: formData.is_free, // Add free/paid status
       };
       const response = await fetch(
         `${import.meta.env.VITE_PUBLIC_SERVER_URL
@@ -420,6 +449,8 @@ const CourseBuilder = () => {
         pdf_notes: pdfs,
         assignments: assignments,
         quizzes: quizzes,
+        video_count: videos.length,
+        is_free: formData.is_free,
       };
       const response = await fetch(
         `${import.meta.env.VITE_PUBLIC_SERVER_URL
@@ -471,20 +502,24 @@ const CourseBuilder = () => {
 
         // ✅ 1. Form data
         setFormData({
-          course_name: course.course_name || "",
-          category: course.category || "",
-          difficulty_level: course.difficulty_level || "",
+          course_name: course.courseName || "",
+          category_id: Number(course.category) || "",
+          difficulty_level: course.difficultyLevel || "",
           description: course.description || "",
-          course_price: course.course_price || "",
-          category_id: Number(course.category_id) || "",
-          teacher_id: Number(course.teacher_id) || "",
-          access_duration: course.access_duration || "",
-          previous_lesson: course.previous_lesson || "",
-          enroll_number: course.enroll_number || "",
+          course_price: course.coursePrice || "",
+          teacher_id: Number(course.teacherId) || "",
+          access_duration: course.accessDuration || "",
+          previous_lesson: course.previousLesson || "",
+          enroll_number: course.enrollNumber || "",
           status: course.status || "Draft",
+          videoDuration: course.videoDuration || "",
+          is_free: course.isFree || false,
+          video_count: course.videoCount || 0,
         });
-        // ✅ 2. Thumbnail
+        // ✅ 2. Thumbnail & Metadata
         setThumbnailUrl(course.thumbnailurl || "");
+        setVideoThumbnailUrl(course.videoThumbnail || "");
+        setVideoDuration(course.videoDuration || "");
         // ✅ 3. Content files
         setVideos(course.lesson_video || []);
         setPdfs(course.pdf_notes || []);
@@ -814,35 +849,83 @@ const CourseBuilder = () => {
                   <div className="col-span-12 sm:col-span-4">
                     <div className="bg-white rounded-lg p-3 shadow-xl">
                       <h1 className="text-xl font-medium text-[#333333]">
-                        Course Details
+                        Introduction Video
                       </h1>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Upload a preview video to showcase your course
+                      </p>
                       <div className="py-6">
-                        {/* <FileDropzone
-                          files={thumbnail}
-                          setFiles={setThumbnail}
-                        /> */}
                         {thumbnailUrl ? (
-                          <div className="relative w-full h-[300px] overflow-hidden rounded-lg">
-                            <Image
-                              removeWrapper
-                              className="w-full h-full object-cover"
-                              src={thumbnailUrl}
-                              alt="Course Thumbnail"
-                            />
-                            <Button
-                              size="sm"
-                              className="absolute top-2 right-2 bg-red-500 text-white z-10"
-                              onPress={() => setThumbnailUrl("")}
-                            >
-                              Remove
-                            </Button>
+                          <div className="flex flex-col gap-4">
+                            <div className="relative w-full h-[300px] overflow-hidden rounded-lg bg-black">
+                              {thumbnailUrl.match(/\.(mp4|webm|ogg)$/i) || thumbnailUrl.includes('utfs.io') ? (
+                                <video
+                                  className="w-full h-full object-contain"
+                                  src={thumbnailUrl}
+                                  controls
+                                  preload="metadata"
+                                >
+                                  Your browser does not support the video tag.
+                                </video>
+                              ) : (
+                                <Image
+                                  removeWrapper
+                                  className="w-full h-full object-cover"
+                                  src={thumbnailUrl}
+                                  alt="Course Thumbnail"
+                                />
+                              )}
+                              <Button
+                                size="sm"
+                                className="absolute top-2 right-2 bg-red-500 text-white z-10"
+                                onPress={() => {
+                                  setThumbnailUrl("");
+                                  setVideoThumbnailUrl(""); // Reset cover if video removed
+                                }}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+
+                            {/* Video Cover Image Uploader */}
+                            {(thumbnailUrl.match(/\.(mp4|webm|ogg)$/i) || thumbnailUrl.includes('utfs.io')) && (
+                              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                <h4 className="font-medium text-sm mb-2 text-gray-700">Video Cover Image (Thumbnail)</h4>
+                                {videoThumbnailUrl ? (
+                                  <div className="relative w-full h-40 rounded-lg overflow-hidden group border border-gray-300">
+                                    <Image
+                                      removeWrapper
+                                      src={videoThumbnailUrl}
+                                      className="w-full h-full object-cover"
+                                      alt="Video Poster"
+                                    />
+                                    <Button
+                                      size="sm"
+                                      color="danger"
+                                      className="absolute top-2 right-2 z-10"
+                                      onPress={() => setVideoThumbnailUrl("")}
+                                    >
+                                      Remove
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <FileDropzone
+                                    files={videoThumbnail}
+                                    setFiles={setVideoThumbnail}
+                                    label="Upload Cover Image"
+                                    text="JPG/PNG, 1280x720 recommended"
+                                    height="150px"
+                                  />
+                                )}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <FileDropzone
                             files={thumbnail}
                             setFiles={setThumbnail}
-                            label="Upload Course Thumbnail"
-                            text="Recommended: 1280x720 pixels (JPG, PNG, WEBP)"
+                            label="Upload Introduction Video"
+                            text="Recommended: MP4 format, 1280x720 pixels. Images also supported."
                           />
                         )}
                       </div>
@@ -970,7 +1053,7 @@ const CourseBuilder = () => {
                     </div>
                   ))}
                 </div>
-                <Videos videos={videos} setVideos={setVideos} onSave={(data) => saveContent(data, 'lesson_video')} />
+                <Videos setVideoDuration={setVideoDuration} videos={videos} setVideos={setVideos} onSave={(data) => saveContent(data, 'lesson_video')} />
                 <PdfAndNotes pdfs={pdfs} setPdfs={setPdfs} onSave={(data) => saveContent(data, 'pdf_notes')} />
                 <Assignments
                   assignments={assignments}
@@ -1075,21 +1158,19 @@ const CourseBuilder = () => {
                         </div>
                         <div className="flex items-center gap-3">
                           <p className="text-md text-[#06574C]">
-                            {formData.status === "Published" ? "Paid" : "Free"}
+                            {formData.is_free ? "Free" : "Paid"}
                           </p>
                           <Switch
                             color="success"
-                            defaultSelected
-                            aria-label="Automatic updates"
-                            // isSelected={isSelected}
-                            // onValueChange={setIsSelected}
-                            isSelected={formData.status === "Published"}
-                            onValueChange={(val) =>
-                              handleChange(
-                                "status",
-                                val ? "Published" : "Draft"
-                              )
-                            }
+                            aria-label="Free or Paid course"
+                            isSelected={!formData.is_free}
+                            onValueChange={(val) => {
+                              handleChange("is_free", !val);
+                              // If switching to free, set price to 0
+                              if (val === false) {
+                                handleChange("course_price", "0");
+                              }
+                            }}
                           />
                         </div>
                       </div>

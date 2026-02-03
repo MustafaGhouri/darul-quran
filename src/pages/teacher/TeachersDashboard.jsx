@@ -25,6 +25,7 @@ import {
   UsersRound,
   UserStar,
   Video,
+  Check,
 } from "lucide-react";
 import OverviewCards from "../../components/dashboard-components/OverviewCards";
 import {
@@ -34,12 +35,12 @@ import {
 } from "react-icons/ai";
 import { LuClock4 } from "react-icons/lu";
 import { RiGroupLine } from "react-icons/ri";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GrAnnounce, GrAttachment, GrClose, GrSend } from "react-icons/gr";
 import { CiCalendar } from "react-icons/ci";
 import { IoAlertCircleOutline } from "react-icons/io5";
 import { Link } from "react-router-dom";
-
+import { formatTime12Hour, isClassLive, isClassExpired } from "../../utils/scheduleHelpers";
 const TeachersDashboard = () => {
   const cardsData = [
     {
@@ -102,43 +103,32 @@ const TeachersDashboard = () => {
     },
   ];
 
-  const upcomingClasses = [
-    {
-      id: 1,
-      day: "11",
-      month: "Nov",
-      time: "10:00 AM - 11:30 AM",
-      Title: "Advanced Web Development",
-      students: "32",
-      role: "Student",
-      status: "Online",
-      course: "Python",
-      location: "Join Zoom",
-    },
-    {
-      id: 2,
-      day: "11",
-      month: "Nov",
-      time: "10:00 AM - 11:30 AM",
-      Title: "Advanced Web Development",
-      students: "32",
-      role: "Student",
-      status: "Online",
-      course: "Python",
-    },
-    {
-      id: 3,
-      day: "11",
-      month: "Nov",
-      time: "10:00 AM - 11:30 AM",
-      Title: "Advanced Web Development",
-      students: "32",
-      role: "Student",
-      status: "Online",
-      course: "Python",
-      location: "Join Zoom",
-    },
-  ];
+  /* Dynamic Classes Fetching */
+  const [upcomingClasses, setUpcomingClasses] = useState([]);
+
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        // 1. Get Current User Info (Session Cookie based)
+        const meRes = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/auth/me`, {
+          credentials: 'include'
+        });
+        const meData = await meRes.json();
+
+        if (meData.user) {
+          // 2. Fetch Schedules for this Teacher
+          const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule/getAll?teacherId=${meData.user.id}`);
+          const data = await res.json();
+          if (data.success) {
+            // Filter for future/today
+            const future = data.schedules.filter(s => new Date(s.date) >= new Date().setHours(0, 0, 0, 0));
+            setUpcomingClasses(future.slice(0, 5)); // Show top 5
+          }
+        }
+      } catch (e) { console.error("Failed to load classes", e); }
+    };
+    fetchClasses();
+  }, []);
   const [placement, setPlacement] = useState("left");
 
   const handleOpen = (placement) => {
@@ -294,72 +284,108 @@ const TeachersDashboard = () => {
       <div className=" bg-white rounded-lg mb-3 ">
         <h1 className="p-3 text-xl text-[#333333]">Upcoming Classes</h1>
         <div className="flex flex-col gap-3">
-          {upcomingClasses.map((item, index) => (
-            <div
-              className={`${
-                item.location === "Join Zoom" ? "bg-[#EAF3F2]" : "bg-[#F5E3DA]"
-              } `}
-            >
-              <div className="flex flex-col md:flex-row gap-4 md:justify-between p-4 md:items-center">
-                <div className="flex flex-col md:flex-row gap-3 md:items-center justify-center">
-                  <div className="h-20 w-20 rounded-full shadow-xl flex flex-col items-center justify-center bg-white">
-                    <p className="text-xl text-[#06574C] font-semibold">
-                      {item.day}
-                    </p>
-                    <p className="text-sm text-[#06574C] font-semibold">
-                      {item.month}
-                    </p>
+          {upcomingClasses.length === 0 ? (
+            <div className="p-4 text-gray-500 text-center bg-[#F5E3DA]/20 rounded-lg">
+              No upcoming classes found.
+            </div>
+          ) : upcomingClasses.map((item, index) => {
+            const dateObj = new Date(item.date);
+            const day = dateObj.getDate();
+            const month = dateObj.toLocaleString('default', { month: 'short' });
+            return (
+              <div
+                key={item.id}
+                className={`${item.meetingLink ? "bg-[#EAF3F2]" : "bg-[#F5E3DA]"
+                  } rounded-md`}
+              >
+                <div className="flex flex-col md:flex-row gap-4 md:justify-between p-4 md:items-center">
+                  <div className="flex flex-col md:flex-row gap-3 md:items-center justify-center">
+                    <div className="h-20 w-20 rounded-full shadow-xl flex flex-col items-center justify-center bg-white">
+                      <p className="text-xl text-[#06574C] font-semibold">
+                        {day}
+                      </p>
+                      <p className="text-sm text-[#06574C] font-semibold">
+                        {month}
+                      </p>
+                    </div>
+                    <div>
+                      <div className="text-lg text-[#06574C] font-semibold">
+                        {item.title}
+                      </div>
+                      <div className="flex flex-wrap max-md:my-3 md:items-center mb-2 gap-5 text-sm text-[#666666]">
+                        <div className="flex items-center gap-1 ">
+                          <Clock size={20} />
+                          {formatTime12Hour(item.startTime)} - {formatTime12Hour(item.endTime)}
+                        </div>
+                        <div className="flex items-center gap-1 ">
+                          <Video size={20} />
+                          {item.meetingLink ? "Online (Zoom)" : "Pending"}
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <Button size="sm" className="bg-white text-[#06574C]">
+                          {item.courseName || "General Class"}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                   <div>
-                    <div className="text-lg text-[#06574C] font-semibold">
-                      {item.Title}
-                    </div>
-                    <div className="flex flex-wrap max-md:my-3 md:items-center mb-2 gap-5 text-sm text-[#666666]">
-                      <div className="flex items-center gap-1 ">
-                        <Clock size={20} />
-                        {item.time}
-                      </div>
-                      <div className="flex items-center gap-1 ">
-                        <Video size={20} />
-                        {item.status}
-                      </div>
-                      <div className="flex items-center gap-1 ">
-                        <RiGroupLine size={18} />
-                        {item.students} {item.role}
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <Button size="sm" className="bg-white text-[#06574C]">
-                        {item.course}
-                      </Button>
-                      <Button size="sm" className="bg-white text-[#D28E3D]">
-                        Join Now
-                      </Button>
-                    </div>
+                    {(() => {
+                      const live = isClassLive(item);
+                      const expired = isClassExpired(item);
+
+                      if (expired) {
+                        return (
+                          <Button
+                            startContent={<Check size={20} />}
+                            size="sm"
+                            className="bg-gray-400 w-32 text-white rounded-md"
+                            isDisabled
+                          >
+                            Completed
+                          </Button>
+                        );
+                      } else if (live && item.meetingLink) {
+                        return (
+                          <Button
+                            startContent={<Video size={20} />}
+                            size="sm"
+                            className="bg-green-600 w-32 text-white rounded-md"
+                            as={Link}
+                            to={item.meetingLink}
+                            target="_blank"
+                          >
+                            Start Class
+                          </Button>
+                        );
+                      } else if (item.meetingLink) {
+                        return (
+                          <Button
+                            startContent={<Clock size={20} />}
+                            size="sm"
+                            className="bg-[#06574C] w-32 text-white rounded-md"
+                            isDisabled
+                          >
+                            Locked
+                          </Button>
+                        );
+                      } else {
+                        return (
+                          <Button
+                            startContent={<AiOutlineEye size={22} />}
+                            size="sm"
+                            className="bg-[#06574C] w-32 text-white rounded-md"
+                          >
+                            Details
+                          </Button>
+                        );
+                      }
+                    })()}
                   </div>
                 </div>
-                <div>
-                  <Button
-                    startContent={
-                      item.location === "Join Zoom" ? (
-                        <Edit size={20} />
-                      ) : (
-                        <AiOutlineEye size={22} />
-                      )
-                    }
-                    size="sm"
-                    className={`${
-                      item.location === "Join Zoom"
-                        ? "bg-[#1570E8]"
-                        : "bg-[#06574C]"
-                    } w-32 text-white rounded-md`}
-                  >
-                    {item.location || "View Details"}
-                  </Button>
-                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
       <div className="px-3 sm:px-6 py-4 rounded-lg bg-white my-4">
@@ -488,7 +514,7 @@ const TeachersDashboard = () => {
                       }
                       endContent={
                         <div className="p-2 bg-[#06574C] rounded-md absolute right-2 bottom-1 cursor-pointer">
-                          <GrSend  color="white" size={16} />
+                          <GrSend color="white" size={16} />
                         </div>
                       }
                     />

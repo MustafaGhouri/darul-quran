@@ -22,34 +22,39 @@ import { BsClipboard2Check } from "react-icons/bs";
 import { HiDevicePhoneMobile } from "react-icons/hi2";
 import { LiaCertificateSolid } from "react-icons/lia";
 import { MdMenuBook } from "react-icons/md";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 
 const CourseDetails = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { course } = location.state || {};
+
+  console.log("course....................", course)
+  if (!course) {
+    navigate("/student/browse-courses");
+    return null;
+  }
   const quickStats = [
     {
-      title: "47 Video Lessons",
-      desc: "12h 30m of on-demand video",
+      title: `${course?.videoCount || course?.lesson_video?.length || 0} Video Lessons`,
+      desc: `${course?.videoDuration || 0} minutes of video`,
       icon: <HiOutlinePlay size={22} color="#06574C" />,
       bg: "#95C4BE",
     },
     {
-      title: "23 PDF Resources",
-      desc: "Downloadable design templates",
+      title: `${course?.pdf_notes?.length || 0} PDF Resources`,
+      desc: "Downloadable materials",
       icon: <PiFilePdfLight size={22} color="#06574C" />,
     },
     {
-      title: "15 Quizzes",
+      title: `${course?.quizzes?.length || 0} Quizzes`,
       desc: "Test your knowledge",
       icon: <GoLightBulb size={22} color="#06574C" />,
       bg: "#95C4BE",
     },
     {
-      title: "4 Live Zoom Sessions",
-      desc: "Q&A with the instructor",
-      icon: <GiPhotoCamera size={22} color="#06574C" />,
-    },
-    {
-      title: "8 Real Assignments",
-      desc: "12h 30m of on-demand video",
+      title: `${course?.assignments?.length || 0} Assignments`,
+      desc: "Practice exercises",
       icon: <BsClipboard2Check size={22} color="#06574C" />,
       bg: "#95C4BE",
     },
@@ -84,7 +89,7 @@ const CourseDetails = () => {
         <div className="grid grid-cols-12 gap-3">
           <div className="col-span-12 md:col-span-8 space-y-3">
             <h1 className="text-3xl font-bold">
-              Complete UI/UX Design Masterclass: <br /> From Zero to Hero
+              {course?.courseName}
             </h1>
             <div className="bg-white rounded-xl p-4 space-y-4 shadow-sm">
               {/* Instructor Row */}
@@ -96,7 +101,7 @@ const CourseDetails = () => {
 
                   <div>
                     <h2 className="text-lg font-semibold text-[#06574C]">
-                      Sarah Mitchell
+                      {course?.first_name + " " + course?.last_name}
                     </h2>
                     <p className="text-sm text-[#6B7280]">Teacher</p>
                   </div>
@@ -108,16 +113,13 @@ const CourseDetails = () => {
                   radius="sm"
                   className="bg-[#E6F2F0] text-[#06574C] font-medium px-4"
                 >
-                  Design
+                  {course?.category_name}
                 </Button>
               </div>
 
               {/* Description */}
               <p className="text-[#374151] text-sm leading-relaxed">
-                This course covers modern web development technologies including
-                HTML5, CSS3, JavaScript ES6+, React, Node.js, and database
-                integration. Students will build full-stack web applications and
-                learn industry best practices.
+                {course?.description.slice(0, 150) + "..."}
               </p>
 
               {/* Meta Info */}
@@ -149,19 +151,40 @@ const CourseDetails = () => {
             </div>
           </div>
           <div className="col-span-12 md:col-span-4  rounded-lg bg-white ">
-            <div className="bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)] h-30 p-3 flex items-center relative">
-              <h1 className="text-xl font-bold text-center ">
-                Full Stack Web Development: React, Node.js & MongoDB
-              </h1>
-              <div className="h-15 w-15 flex justify-center items-center rounded-full  absolute p-2 bg-[#95C4BEC4] left-1/2 -translate-x-1/2">
-                <IoPlay color="#06574C" size={35} />
+            {course?.thumbnailurl ? (
+              <div className="w-full h-48 rounded-t-lg overflow-hidden bg-black relative">
+                {course.thumbnailurl.match(/\.(mp4|webm|ogg)$/i) || course.thumbnailurl.includes('utfs.io') ? (
+                  <video
+                    src={course.thumbnailurl}
+                    className="w-full h-full object-contain bg-black"
+                    controls
+                    poster={course.videoThumbnail || course.thumbnailurl.replace(/\.(mp4|webm|ogg)$/i, '.jpg')}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <img
+                    src={course.thumbnailurl}
+                    alt={course.courseName}
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)] h-30 p-3 flex items-center relative rounded-t-lg">
+                <h1 className="text-xl font-bold text-center ">
+                  {course?.courseName}
+                </h1>
+                <div className="h-15 w-15 flex justify-center items-center rounded-full  absolute p-2 bg-[#95C4BEC4] left-1/2 -translate-x-1/2">
+                  <IoPlay color="#06574C" size={35} />
+                </div>
+              </div>
+            )}
             <div className="flex justify-between items-center p-3">
               <div className="flex gap-1 items-center ">
-                <h1 className="text-2xl font-bold text-[#06574C]">$89.99 </h1>
+                <h1 className="text-2xl font-bold text-[#06574C]">${course?.coursePrice} </h1>
                 <h1 className="text-lg  text-[#666666]  line-through">
-                  $199.99
+                  ${course?.coursePrice}
                 </h1>
               </div>
               <Button
@@ -169,7 +192,7 @@ const CourseDetails = () => {
                 size="sm"
                 className="bg-[#FFEAEC] text-[#E8505B]"
               >
-                55% OFF
+                {course?.coursePrice == 0 ? "0" : "55"}% OFF
               </Button>
             </div>
             <div className="p-3">
@@ -203,56 +226,17 @@ const CourseDetails = () => {
             {/* Description */}
             <h2 className="text-xl font-semibold mb-2">Description</h2>
             <p className="text-sm text-gray-600 leading-relaxed mb-4">
-              welcome to the most comprehensive ui/ux design course available
-              online! this course is designed to take you from absolute beginner
-              to confident designer, ready to tackle real-world projects and
-              land your dream job.
+              {course.description}
             </p>
-            <p className="text-sm text-gray-600 leading-relaxed mb-6">
-              whether you're looking to switch careers, add design skills to
-              your toolkit, or start freelancing, this course provides
-              everything you need to succeed in the exciting field of ui/ux
-              design.
-            </p>
-
-            {/* What makes this course different */}
-            <h2 className="text-xl font-semibold mb-2">
-              What makes this course different?
-            </h2>
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
-              unlike other courses that only focus on theory or tools, we
-              provide a perfect balance of design principles, practical skills,
-              and real-world application. you'll learn industry-standard tools
-              like figma while understanding the psychology and methodology
-              behind great design.
-            </p>
-            <p className="text-sm text-gray-600 leading-relaxed mb-6">
-              throughout the course, you'll work on multiple hands-on projects
-              that you can add directly to your portfolio. these aren't just
-              exercises – they're real-world scenarios that prepare you for
-              actual design work.
-            </p>
-
-            {/* Who is this course for */}
-            <h2 className="text-xl font-semibold mb-3">
-              Who is this course for?
-            </h2>
-            <ul className="list-disc pl-5 space-y-2 text-sm text-gray-600">
-              <li>complete beginners with no design experience</li>
-              <li>developers who want to add design skills</li>
-              <li>career changers looking to enter the design field</li>
-              <li>entrepreneurs who want to design their own products</li>
-              <li>designers who want to formalize their skills</li>
-            </ul>
           </div>
         </div>
         <div className="bg-white p-3 rounded-xl col-span-12 md:col-span-4">
           <h2 className="text-xl font-semibold mb-3">What's included</h2>
-          {quickStats.map((item) => (
+          {quickStats.map((item, index) => (
             <div
-              className={`my-2 flex gap-2 ${
-                item?.bg ? `bg-[${item.bg}]` : "bg-[#EBD4C982]"
-              } items-center p-2 rounded-lg`}
+              key={index}
+              className={`my-2 flex gap-2 ${item?.bg ? `bg-[${item.bg}]` : "bg-[#EBD4C982]"
+                } items-center p-2 rounded-lg`}
             >
               <div className="h-10 w-10 rounded-full bg-white shadow-[5px_6px_16.2px_0px_#0000001C] items-center flex justify-center">
                 {item.icon}

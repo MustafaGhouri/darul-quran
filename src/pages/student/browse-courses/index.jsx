@@ -9,7 +9,8 @@ import {
   useCheckbox,
   VisuallyHidden,
   tv,
-  Pagination, // ✅ IMPORTANT IMPORT
+  Pagination,
+  Spinner, // ✅ IMPORTANT IMPORT
 } from "@heroui/react";
 
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
@@ -20,118 +21,100 @@ import { FaIdCard } from "react-icons/fa";
 import { IoSearchOutline, IoStarSharp } from "react-icons/io5";
 import { MdKeyboardArrowDown } from "react-icons/md";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+
+// Helper function to format duration in seconds to readable format
+const formatDuration = (seconds) => {
+  if (!seconds || seconds === 0) return "0m";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+};
 
 const BrowseCourses = () => {
-  const courseCard = [
-    {
-      id: 1,
-      Status: "Paid",
-      course: "Full Stack Web Development: React, Node.js & MongoDB",
-      students: "15,432",
-      name: "Sarah Johnson",
-      role: "Student",
-      time: "30 Minutes",
-      price: "$89.99",
-      rating: "4.8",
-      stacks: "Design",
-    },
-    {
-      id: 2,
-      Status: "Free",
-      course: "Full Stack Web Development: React, Node.js & MongoDB",
-      students: "15,432",
-      name: "Sarah Johnson",
-      role: "Student",
-      time: "30 Minutes",
-      price: "Free",
-      rating: "4.8",
-      stacks: "Development",
-    },
-    {
-      id: 3,
-      Status: "Free",
-      course: "Full Stack Web Development: React, Node.js & MongoDB",
-      students: "15,432",
-      role: "Student",
-      name: "Sarah Johnson",
-      time: "30 Minutes",
-      price: "Free",
-      rating: "4.8",
-      stacks: "Marketing",
-    },
-    {
-      id: 4,
-      Status: "Paid",
-      course: "Full Stack Web Development: React, Node.js & MongoDB",
-      students: "15,432",
-      name: "Sarah Johnson",
-      role: "Student",
-      time: "30 Minutes",
-      price: "$89.99",
-      rating: "4.8",
-      stacks: "Design",
-    },
-    {
-      id: 5,
-      Status: "Free",
-      course: "Full Stack Web Development: React, Node.js & MongoDB",
-      students: "15,432",
-      name: "Sarah Johnson",
-      role: "Student",
-      time: "30 Minutes",
-      price: "Free",
-      rating: "4.8",
-      stacks: "Development",
-    },
-    {
-      id: 6,
-      Status: "Free",
-      course: "Full Stack Web Development: React, Node.js & MongoDB",
-      students: "15,432",
-      role: "Student",
-      name: "Sarah Johnson",
-      time: "30 Minutes",
-      price: "Free",
-      rating: "4.8",
-      stacks: "Marketing",
-    },
-    {
-      id: 7,
-      Status: "Paid",
-      course: "Full Stack Web Development: React, Node.js & MongoDB",
-      students: "15,432",
-      name: "Sarah Johnson",
-      role: "Student",
-      time: "30 Minutes",
-      price: "$89.99",
-      rating: "4.8",
-      stacks: "Design",
-    },
-    {
-      id: 8,
-      Status: "Free",
-      course: "Full Stack Web Development: React, Node.js & MongoDB",
-      students: "15,432",
-      name: "Sarah Johnson",
-      role: "Student",
-      time: "30 Minutes",
-      price: "Free",
-      rating: "4.8",
-      stacks: "Development",
-    },
-    {
-      id: 9,
-      Status: "Free",
-      course: "Full Stack Web Development: React, Node.js & MongoDB",
-      students: "15,432",
-      role: "Student",
-      name: "Sarah Johnson",
-      time: "30 Minutes",
-      price: "Free",
-      rating: "4.8",
-      stacks: "Marketing",
-    },
-  ];
+  const navigate = useNavigate(); // ✅ Initialize navigate hook
+
+  const [categories, setCategories] = useState([]);
+  const [course, setCourse] = useState([]);
+  console.log("categories:", categories);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useSelector((state) => state.user);
+  const role = user?.role;
+
+
+
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(
+          import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/course/getAllCategories`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${user?.token}`,
+            },
+          }
+        );
+        const data = await res.json();
+        console.log("Fetched Categories:", data);
+        setCategories(data.categories || []);
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user?.id) {
+      fetchCategories();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(
+          import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/course/getAllCourses`,
+          {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const data = await res.json();
+        console.log("Fetched difficultydfjhakjsdfhajkdfhakjdfh:", data);
+        setCourse(data.courses || []);
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user?.id) {
+      fetchCourses();
+    }
+  }, [user]);
+
+
+  const viewCourseDetails = (courseData) => {
+    navigate(`/student/browse-courses/course-details/${courseData.id}`, {
+      state: { course: courseData }
+    });
+  };
 
   const Sort = [
     { key: "a-z", label: "A-Z" },
@@ -147,18 +130,6 @@ const BrowseCourses = () => {
     { key: "Free", label: "Free" },
   ];
   const category = [
-    { key: "Design", label: "Design" },
-    { key: "Development", label: "Development" },
-    { key: "Business", label: "Business" },
-    { key: "Marketing", label: "Marketing" },
-    { key: "Photography", label: "Photography" },
-  ];
-  const Difficulty = [
-    { key: "Beginner", label: "Beginner" },
-    { key: "Intermediate", label: "Intermediate" },
-    { key: "Advanced", label: "Advanced" },
-  ];
-  const Duration = [
     { key: "Design", label: "Design" },
     { key: "Development", label: "Development" },
     { key: "Business", label: "Business" },
@@ -252,7 +223,7 @@ const BrowseCourses = () => {
               Difficulty Level
             </h1>
             <CheckboxGroup orientation="horizontal" className="gap-2">
-              {Difficulty.map((item) => (
+              {course.map((item) => (
                 <CustomCheckbox
                   key={item.key}
                   value={item.key}
@@ -267,24 +238,31 @@ const BrowseCourses = () => {
             <h1 className="text-sm font-semibold text-[#666666]  mt-3">
               Categories
             </h1>
-            <CheckboxGroup orientation="horizontal" className="gap-2">
-              {category.map((item) => (
-                <CustomCheckbox
-                  key={item.key}
-                  value={item.key}
-                  className="capitalize"
-                >
-                  {item.label}
-                </CustomCheckbox>
-              ))}
-            </CheckboxGroup>
+
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <Spinner color="success" />
+              </div>
+            ) : (
+              <CheckboxGroup orientation="horizontal" className="gap-2">
+                {categories.map((item) => (
+                  <CustomCheckbox
+                    key={item.id}
+                    value={item.id}
+                    className="capitalize"
+                  >
+                    {item.categoryName}
+                  </CustomCheckbox>
+                ))}
+              </CheckboxGroup>
+            )}
           </div>
         </div>
       </div>
 
       <div>
         <div className="grid grid-cols-12 gap-3 pb-4">
-          {courseCard.map((item, index) => (
+          {course.map((item, index) => (
             <div className="col-span-12 md:col-span-6 lg:col-span-4 ">
               <div className="w-full bg-white rounded-lg">
                 <div className="bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)]  rounded-lg p-3 ">
@@ -292,9 +270,9 @@ const BrowseCourses = () => {
                     <Button
                       size="sm"
                       radius="sm"
-                      className={`bg-white  px-4 ${item.Status === "Paid" ? "text-[#D28E3D]" : "text-[#34A853]"}`}
+                      className={`bg-white  px-4 font-bold ${item.coursePrice === "00" ? "text-[#D28E3D]" : "text-[#34A853]"}`}
                     >
-                      {item.Status}
+                      {item.coursePrice === "00" ? "Free" : "Paid"}
                     </Button>
                     <div className="flex items-center gap-1">
                       <IoStarSharp size={20} color="#FDD835" />
@@ -305,7 +283,7 @@ const BrowseCourses = () => {
                   </div>
                   <div className="">
                     <span className=" flex justify-center items-center text-center py-6 text-2xl font-semibold ">
-                      {item.course}
+                      {item.courseName}
                     </span>
                   </div>
                 </div>
@@ -317,9 +295,9 @@ const BrowseCourses = () => {
                       </div>
                       <div>
                         <p className="font-semibold text-[#06574C] text-lg leading-tight">
-                          {item.students}
+                          {item.students} Enrolled
                         </p>
-                        <p className="text-sm text-[#666666]">{item.role}</p>
+                        <p className="text-sm text-[#666666]">{role}</p>
                       </div>
                     </div>
                     <div className="text-end">
@@ -328,7 +306,7 @@ const BrowseCourses = () => {
                       </p>
                       <div className="text-sm flex items-center gap-1 text-[#666666]">
                         <FaIdCard size={20} color="#666666" />
-                        {item.name}
+                        {item.first_name + " " + item.last_name}
                       </div>
                     </div>
                   </div>
@@ -336,10 +314,10 @@ const BrowseCourses = () => {
                     <div className="flex justify-between items-center text-[#6B7280]">
                       <div className="flex items-center gap-1 text-sm">
                         <Clock size={20} color="#6B7280" />
-                        {item.time}
+                        {formatDuration(item.videoDuration)}
                       </div>
                       <span className="text-xs px-2 py-1 rounded-md bg-[#95C4BE33] text-[#06574C]">
-                        {item.stacks}
+                        {item.category_name}
                       </span>
                     </div>
                     {/* <Progress
@@ -351,14 +329,15 @@ const BrowseCourses = () => {
                   <div>
                     <Button
                       radius="sm"
-                      as={Link}
-                      to="/student/browse-courses/course-details"
                       size="sm"
-                      className="bg-[#06574C] text-white rounded-md w-full mt-"
+                      className="bg-[#06574C] text-white rounded-md w-full"
                       startContent={<AiOutlineEye size={22} />}
+                      onPress={() => viewCourseDetails(item)}
                     >
                       View Course
                     </Button>
+
+
                   </div>
                 </div>
               </div>
@@ -366,34 +345,34 @@ const BrowseCourses = () => {
           ))}
         </div>
         <div className="md:flex md:flex-row items-center pb-4 gap-2 justify-between overflow-hidden ">
-            <div className="flex text-sm items-center gap-1">
-              <span>Showing</span>
-              <Select
-                radius="sm"
-                className="w-[70px]"
-                defaultSelectedKeys={["10"]}
-                placeholder="1"
-              >
-                {limits.map((limit) => (
-                  <SelectItem key={limit.key}>{limit.label}</SelectItem>
-                ))}
-              </Select>
-              <span className="min-w-56">Out of 58</span>
-            </div>
-            <Pagination
-              className=""
-              showControls
-              variant="ghost"
-              initialPage={1}
-              total={10}
-              classNames={{
-                item: "rounded-sm hover:bg-bg-[#06574C]/50",
-                cursor: "bg-[#06574C] rounded-sm text-white",
-                prev: "rounded-sm bg-white/80",
-                next: "rounded-sm bg-white/80",
-              }}
-            />
+          <div className="flex text-sm items-center gap-1">
+            <span>Showing</span>
+            <Select
+              radius="sm"
+              className="w-[70px]"
+              defaultSelectedKeys={["10"]}
+              placeholder="1"
+            >
+              {limits.map((limit) => (
+                <SelectItem key={limit.key}>{limit.label}</SelectItem>
+              ))}
+            </Select>
+            <span className="min-w-56">Out of 58</span>
           </div>
+          <Pagination
+            className=""
+            showControls
+            variant="ghost"
+            initialPage={1}
+            total={10}
+            classNames={{
+              item: "rounded-sm hover:bg-bg-[#06574C]/50",
+              cursor: "bg-[#06574C] rounded-sm text-white",
+              prev: "rounded-sm bg-white/80",
+              next: "rounded-sm bg-white/80",
+            }}
+          />
+        </div>
       </div>
     </div>
   );
