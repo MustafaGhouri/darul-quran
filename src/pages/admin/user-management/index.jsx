@@ -307,7 +307,7 @@ const UserManagement = () => {
             </Tab>
             <Tab
               key="Supports_Staff"
-              onClick={() => {setRole('admin');setSelectedUsers(new Set());}}
+              onClick={() => { setRole('admin'); setSelectedUsers(new Set()); }}
               title={
                 <div className="text-[#06574C] flex gap-2 items-center">
                   <span>Admins </span>

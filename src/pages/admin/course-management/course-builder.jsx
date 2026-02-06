@@ -38,6 +38,7 @@ import { useSearchParams } from "react-router-dom";
 import { label } from "framer-motion/client";
 import { UploadButton, UploadDropzone, useUploadThing } from "../../../lib/uploadthing";
 import { useNavigate } from "react-router-dom";
+import { useAddCategoryMutation, useDeleteCategoryMutation, useGetAllCategoriesQuery, useGetCourseByIdQuery } from "../../../redux/api/courses";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 10, scale: 0.98 },
@@ -54,6 +55,9 @@ const containerVariants = {
   },
 };
 const CourseBuilder = () => {
+
+
+
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
@@ -86,19 +90,10 @@ const CourseBuilder = () => {
   const [loadingAction, setLoadingAction] = useState(null);
   const [pendingAction, setPendingAction] = useState(null);
   const [videoDuration, setVideoDuration] = useState(0);
-
+  const { data: categoriesData, isError: categoriesError } = useGetAllCategoriesQuery();
+  const [deleteCategory] = useDeleteCategoryMutation();
+  const [addCategory] = useAddCategoryMutation();
   const { startUpload } = useUploadThing("introUploader");
-
-  // const category = [
-  //   { key: "Advance_JavaScript", label: "Advance JavaScript" },
-  //   { key: "Advance_React", label: "Advance React" },
-  //   { key: "Advance_Python", label: "Advance Python" },
-  // ];
-  // const Duration = [
-  //   { key: "Lifetime_Access", label: "Lifetime Access" },
-  //   { key: "One_Month", label: "One Month" },
-  //   { key: "Yearly", label: "Yearly" },
-  // ];
   const Difficulty = [
     { key: "Beginner", label: "Beginner" },
     { key: "Advanced", label: "Advanced" },
@@ -133,6 +128,7 @@ const CourseBuilder = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get("tab");
   const courseId = searchParams.get("id");
+  const { data, isLoading, isError } = useGetCourseByIdQuery(courseId, { skip: !courseId })
   const [selected, setSelected] = useState(currentTab || "info");
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [newCategory, setNewCategory] = useState("");
@@ -302,62 +298,6 @@ const CourseBuilder = () => {
       setPendingAction(null);
     }
   };
-  // const handleSubmitTab1 = async (e) => {
-  //   e.preventDefault();
-
-  //   const payload = {
-  //     ...formData,
-  //     previous_lesson: formData.previous_lesson
-  //       ? parseInt(formData.previous_lesson)
-  //       : null,
-  //     enroll_number: formData.enroll_number
-  //       ? parseInt(formData.enroll_number)
-  //       : null,
-  //     status: "Draft",
-  //   };
-
-  //   const uploadfiles = {
-  //     images: thumbnail, // ⚠️ backend expects "images"
-  //     isConvert: true,
-  //   };
-
-  //   try {
-  //     const response = await fetch(
-  //   import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/admin/uploadImages",
-  //   {
-  //     method: "POST",
-  //     credentials: "include",
-  //     body: formData, // ✅ NO headers
-  //   }
-  //     );
-
-  //     const uploadfilesData = await response.json();
-
-  //     if (!response.ok) {
-  //       console.error(uploadfilesData);
-  //       return;
-  //     }
-
-  //     // upload success
-  //     const courseResponse = await fetch(
-  //       import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/admin/addCourse",
-  //       {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         credentials: "include",
-  //         body: JSON.stringify({
-  //           ...payload,
-  //           thumbnail: uploadfilesData.uploaded,
-  //         }),
-  //       }
-  //     );
-
-  //     const data = await courseResponse.json();
-  //     console.log("Course Created:", data);
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
 
   const saveContent = async (updatedList, field) => {
     if (!courseId) return;
@@ -483,19 +423,7 @@ const CourseBuilder = () => {
     const fetchCourseById = async () => {
       const id = searchParams.get("id");
       if (!id) return;
-
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_PUBLIC_SERVER_URL
-          }/api/course/getCourseById/${id}`,
-          {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-          }
-        );
-
-        const data = await response.json();
         if (!data.success) return;
 
         const course = data.course;
@@ -533,7 +461,7 @@ const CourseBuilder = () => {
 
     fetchCourseById();
   }, [searchParams]);
-  // add category
+
   const handleSubmitAddCategory = async () => {
     if (!newCategory.trim()) {
       toast.error("Category name is required");
@@ -541,19 +469,19 @@ const CourseBuilder = () => {
     }
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/addCategory`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            category_name: newCategory,
-          }),
-        }
-      );
-
-      const data = await response.json();
+      // const response = await fetch(
+      //   `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/addCategory`,
+      //   {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     credentials: "include",
+      //     body: JSON.stringify({
+      //       category_name: newCategory,
+      //     }),
+      //   }
+      // );
+      const res = await addCategory(newCategory);
+      const data = res.data;
 
       if (!data.success) {
         toast.error(data.message || "Failed to add category");
@@ -568,62 +496,15 @@ const CourseBuilder = () => {
       toast.error("Server error");
     }
   };
-  // fetch categories
-  const fetchCategories = async () => {
+
+  const handleDeleteCategory = async (id) => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/getAllCategories`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
-
-      const data = await response.json();
-
-      if (!data.success) {
-        toast.error(data.message || "Failed to fetch categories");
+      const res = await deleteCategory(id);
+      if (res.data.success) {
+        toast.success(res.data.message || "Category deleted successfully");
         return;
       }
-
-      setCategories(data.categories);
-    } catch (error) {
-      console.error(error);
-      toast.error("Server error");
-    }
-  };
-  // useEffect fetch categories
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-  // delete category
-  const deleteCategory = async (id) => {
-    try {
-      console.log("id", id);
-      const response = await fetch(
-        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/deleteCategory`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            category_id: id,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!data.success) {
-
-        toast.error(data.message || "Failed to delete category");
-        return;
-      }
-
       setCategories((prev) => prev.filter((category) => category.id !== id));
-      console.log("data", data);
-      toast.success("Category deleted successfully");
     } catch (error) {
       console.error(error);
       toast.error("Server error");
@@ -631,7 +512,7 @@ const CourseBuilder = () => {
   };
 
   return (
-    <div className="bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full pb-10">
+    <div className="h-full bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full no-scrollbar top-0 bottom-0 overflow-y-auto">
       <DashHeading
         title={"Course Builder"}
         desc={"Create a new course step by step"}
@@ -739,14 +620,14 @@ const CourseBuilder = () => {
                             handleChange("category_id", Number(selected));
                           }}
                         >
-                          {categories.map((item) => (
+                          {categoriesData?.categories?.map((item) => (
                             <SelectItem
                               endContent={<Button
                                 size="sm"
                                 variant="light"
                                 color="danger"
                                 isIconOnly
-                                onPress={() => { deleteCategory(item.id) }}
+                                onPress={() => { handleDeleteCategory(item.id) }}
                               >
                                 <Trash2Icon className="text-red-500" size={15} />
                               </Button>}

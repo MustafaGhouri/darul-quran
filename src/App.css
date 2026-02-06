@@ -48,3 +48,199 @@ body {
 .ut-dropzone {
     pointer-events: auto !important;
 }
+
+/* ============================================
+   FullCalendar Modern Compact Design
+   ============================================ */
+
+/* Calendar Container */
+.fc {
+    font-size: 0.875rem;
+}
+
+/* Header Styling */
+.fc .fc-toolbar-title {
+    font-size: 1.5rem !important;
+    font-weight: 700;
+    color: #06574C;
+}
+
+.fc .fc-button {
+    background-color: #06574C !important;
+    border-color: #06574C !important;
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.875rem !important;
+}
+
+.fc .fc-button:hover {
+    background-color: #044d43 !important;
+    border-color: #044d43 !important;
+}
+
+.fc .fc-button-primary:disabled {
+    background-color: #9ca3af !important;
+    border-color: #9ca3af !important;
+}
+
+/* Day Header (Sun, Mon, etc.) */
+.fc .fc-col-header-cell {
+    padding: 0.5rem 0.25rem;
+    background-color: #f9fafb;
+    border-color: #e5e7eb !important;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+/* Compact Day Cells - Reduced Height */
+.fc-daygrid-day {
+    height: 100px !important;
+    min-height: 100px !important;
+    max-height: 100px !important;
+    overflow: hidden;
+    border-color: #e5e7eb !important;
+    transition: background-color 0.2s ease;
+}
+
+.fc-daygrid-day:hover {
+    background-color: #f9fafb;
+}
+
+.fc-daygrid-day-frame {
+    height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    padding: 2px;
+}
+
+/* Day Number */
+.fc-daygrid-day-top {
+    flex-shrink: 0;
+    padding: 4px 6px;
+}
+
+.fc-daygrid-day-number {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.fc-daygrid-day:hover .fc-daygrid-day-number {
+    background-color: #06574C;
+    color: white;
+}
+
+/* Today Highlight */
+.fc .fc-day-today {
+    background-color: #f0fdf4 !important;
+}
+
+.fc .fc-day-today .fc-daygrid-day-number {
+    background-color: #06574C;
+    color: white;
+    font-weight: 700;
+}
+
+/* Events Container - Compact & Scrollable */
+.fc-daygrid-day-events {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 70px;
+    padding: 0 2px;
+    scrollbar-width: thin;
+    scrollbar-color: #06574C #f3f4f6;
+}
+
+.fc-daygrid-day-events::-webkit-scrollbar {
+    width: 3px;
+}
+
+.fc-daygrid-day-events::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 2px;
+}
+
+.fc-daygrid-day-events::-webkit-scrollbar-thumb {
+    background-color: #06574C;
+    border-radius: 2px;
+}
+
+/* Event Styling - Modern & Clean */
+.fc-daygrid-event {
+    margin-bottom: 2px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.7rem !important;
+    padding: 3px 6px !important;
+    border-radius: 4px !important;
+    border: none !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.fc-daygrid-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    opacity: 0.9;
+}
+
+.fc-event-time {
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.fc-event-title {
+    font-weight: 500;
+}
+
+/* More Events Link */
+.fc-daygrid-more-link {
+    font-size: 0.7rem;
+    color: #06574C;
+    font-weight: 600;
+    padding: 2px 4px;
+    margin: 2px;
+    border-radius: 3px;
+    background-color: #f0fdf4;
+}
+
+.fc-daygrid-more-link:hover {
+    background-color: #dcfce7;
+    text-decoration: none;
+}
+
+/* Other Month Days */
+.fc .fc-day-other .fc-daygrid-day-number {
+    color: #000000;
+}
+
+/* Remove default borders for cleaner look */
+.fc-theme-standard td,
+.fc-theme-standard th {
+    border-color: #e5e7eb !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .fc-daygrid-day {
+        height: 80px !important;
+        min-height: 80px !important;
+        max-height: 80px !important;
+    }
+
+    .fc-daygrid-day-events {
+        max-height: 50px;
+    }
+
+    .fc-daygrid-event {
+        font-size: 0.65rem !important;
+        padding: 2px 4px !important;
+    }
+}

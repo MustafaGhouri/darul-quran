@@ -235,22 +235,23 @@ const Scheduling = () => {
       <div className="">
         <Table
           removeWrapper
+          isHeaderSticky
           aria-label="Example static collection table"
           classNames={{
-            base: "w-full bg-white rounded-lg overflow-x-scroll w-full no-scrollbar",
-            th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+            base: "w-full bg-white rounded-lg overflow-x-scroll w-full no-scrollbar max-h-[500px] shadow-md",
+            th: "font-bold bg-[#EBD4C9] p-4 text-md text-[#333333] capitalize tracking-widest ",
             td: "py-3 items-center whitespace-nowrap",
             tr: "border-b border-default-200",
           }}
         >
           <TableHeader>
-            <TableColumn className="bg-[#EBD4C9]/30">Details</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Teacher</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Date</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Time</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Status</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Zoom Link</TableColumn>
-            <TableColumn className="bg-[#EBD4C9]/30">Actions</TableColumn>
+            <TableColumn>Details</TableColumn>
+            <TableColumn>Teacher</TableColumn>
+            <TableColumn>Date</TableColumn>
+            <TableColumn>Time</TableColumn>
+            <TableColumn>Status</TableColumn>
+            <TableColumn>Zoom Link</TableColumn>
+            <TableColumn>Actions</TableColumn>
           </TableHeader>
 
           <TableBody emptyContent={"No sessions scheduled."}>

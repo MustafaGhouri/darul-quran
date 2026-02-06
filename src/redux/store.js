@@ -1,16 +1,19 @@
 import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "./reducers/user";
 import { userAPI } from "./api/user";
+import { courseApi } from "./api/courses";
 
 
 export const store = configureStore({
   reducer: {
     [userAPI.reducerPath]: userAPI.reducer,
+    [courseApi.reducerPath]: courseApi.reducer,
     user: userReducer,
   },
   middleware: (mid) => [
     ...mid(),
     userAPI.middleware,
+    courseApi.middleware,
   ],
 });
 

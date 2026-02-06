@@ -159,7 +159,7 @@ const LiveSession = () => {
     const sortedDetails = [...rawSchedules].sort((a, b) => new Date(a.date) - new Date(b.date));
 
     return (
-        <div className='bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5 min-h-screen'>
+        <div className='bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5 '>
             <div className="flex justify-between items-center py-4">
                 <DashHeading
                     title={"Live Sessions Schedule"}
@@ -187,10 +187,7 @@ const LiveSession = () => {
                     initialView="dayGridMonth"
                     events={events}
                     height="auto"
-                    eventClick={(info) => {
-                        // Could enable clicking event to edit
-                        // For now just alert
-                    }}
+                    eventClick={(info) => { }}
                 />
             </div>
 

@@ -16,156 +16,36 @@ import { ListFilterIcon, Trash2 } from "lucide-react";
 import CourseForm from "../../../components/dashboard-components/forms/CourseForm";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDeleteCourseMutation, useGetAllCoursesQuery } from "../../../redux/api/courses";
 
 const CourseManagement = () => {
-  // const classes = [
-  //   {
-  //     id: 1,
-  //     name: "React Hooks Deep Dive",
-  //     desc: "Advanced JavaScript Course",
-  //     teacher: "John Davis",
-  //     email: "john.davis@email.com",
-  //     enrolled: "1296",
-  //     enrollment_limit: 1300,
-  //     price: 199,
-  //     reviews: "Great course, I learned a lot...",
-  //     category: "Web Development",
-  //     status: "draft",
-  //     date: "2025-11-27",
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "React Hooks Deep Dive",
-  //     desc: "Advanced JavaScript Course",
-  //     teacher: "John Davis",
-  //     email: "john.davis@email.com",
-  //     enrolled: "1296",
-  //     enrollment_limit: 1300,
-  //     price: 199,
-  //     reviews: "Great course, I learned a lot...",
-  //     category: "Web Development",
-  //     status: "Published",
-  //     date: "2025-11-26",
-  //   },
-  //   {
-  //     id: 3,
-  //     name: "React Hooks Deep Dive",
-  //     desc: "Advanced JavaScript Course",
-  //     teacher: "John Davis",
-  //     email: "john.davis@email.com",
-  //     enrolled: "1296",
-  //     enrollment_limit: 1300,
-  //     price: 199,
-  //     reviews: "Great course, I learned a lot...",
-  //     category: "Web Development",
-  //     status: "Draft",
-  //     date: "2025-11-17",
-  //   },
-  //   {
-  //     id: 4,
-  //     name: "React Hooks Deep Dive",
-  //     desc: "Advanced JavaScript Course",
-  //     teacher: "John Davis",
-  //     email: "john.davis@email.com",
-  //     enrolled: "1296",
-  //     enrollment_limit: 1300,
-  //     price: 199,
-  //     reviews: "Great course, I learned a lot...",
-  //     category: "Web Development",
-  //     status: "Published",
-  //     date: "2025-11-16",
-  //   },
-  //   {
-  //     id: 5,
-  //     name: "React Hooks Deep Dive",
-  //     desc: "Advanced JavaScript Course",
-  //     teacher: "John Davis",
-  //     email: "john.davis@email.com",
-  //     enrolled: "1296",
-  //     enrollment_limit: 1300,
-  //     price: 199,
-  //     reviews: "Great course, I learned a lot...",
-  //     category: "Web Development",
-  //     status: "Published",
-  //     date: "2025-11-15",
-  //   },
-  //   {
-  //     id: 6,
-  //     name: "React Hooks Deep Dive",
-  //     desc: "Advanced JavaScript Course",
-  //     teacher: "John Davis",
-  //     email: "john.davis@email.com",
-  //     enrolled: "1296",
-  //     enrollment_limit: 1300,
-  //     price: 199,
-  //     reviews: "Great course, I learned a lot...",
-  //     category: "Web Development",
-  //     status: "Published",
-  //     date: "2025-11-12",
-  //   },
-  //   {
-  //     id: 7,
-  //     name: "React Hooks Deep Dive",
-  //     desc: "Advanced JavaScript Course",
-  //     teacher: "John Davis",
-  //     email: "john.davis@email.com",
-  //     enrolled: "1296",
-  //     enrollment_limit: 1300,
-  //     price: 199,
-  //     reviews: "Great course, I learned a lot...",
-  //     category: "Web Development",
-  //     status: "Published",
-  //     date: "2025-11-03",
-  //   },
-  //   {
-  //     id: 8,
-  //     name: "React Hooks Deep Dive",
-  //     desc: "Advanced JavaScript Course",
-  //     teacher: "John Davis",
-  //     email: "john.davis@email.com",
-  //     enrolled: "1296",
-  //     enrollment_limit: 1300,
-  //     price: 199,
-  //     reviews: "Great course, I learned a lot...",
-  //     category: "Web Development",
-  //     status: "Published",
-  //     date: "2025-11-29",
-  //   },
-  //   {
-  //     id: 9,
-  //     name: "React Hooks Deep Dive",
-  //     desc: "Advanced JavaScript Course",
-  //     teacher: "John Davis",
-  //     email: "john.davis@email.com",
-  //     enrolled: "1296",
-  //     enrollment_limit: 1300,
-  //     price: 199,
-  //     reviews: "Great course, I learned a lot...",
-  //     category: "Web Development",
-  //     status: "Published",
-  //     date: "2025-11-22",
-  //   },
-  // ];
-  useEffect(() => {
-    const fetchCourses = async () => {
-      setLoading(true);
-      const response = await fetch(
-        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/getAllCourses`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const data = await response.json();
-      console.log(data);
-      setCourses(data.courses || []);
-      setLoading(false);
-    };
-    fetchCourses();
-  }, []);
+
+  const { data, isLoading, error, refetch } = useGetAllCoursesQuery();
+
+  console.log("data", data);
+  console.log("isLoading", isLoading);
+  console.log("error", error);
+
+  // useEffect(() => {
+  //   const fetchCourses = async () => {
+  //     setLoading(true);
+  //     const response = await fetch(
+  //       `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/getAllCourses`,
+  //       {
+  //         method: "GET",
+  //         credentials: "include",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+  //     const data = await response.json();
+  //     console.log(data);
+  //     setCourses(data.courses || []);
+  //     setLoading(false);
+  //   };
+  //   fetchCourses();
+  // }, []);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   console.log("courses", courses);
@@ -193,28 +73,30 @@ const CourseManagement = () => {
     setDeletingId(id);
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/deleteCourse`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id }),
-        }
-      );
+      // const response = await fetch(
+      //   `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/deleteCourse`,
+      //   {
+      //     method: "DELETE",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({ id }),
+      //   }
+      // );
 
-      const data = await response.json();
-
+      // const data = await response.json();
+      const res = await deleteProduct(id);
+      console.log("res", res);
       if (data.success) {
-        const res = await fetch(
-          `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/getAllCourses`,
-          {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-          }
-        );
-        const coursesData = await res.json();
-        setCourses(coursesData.courses || []);
+        // const res = await fetch(
+        //   `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/getAllCourses`,
+        //   {
+        //     method: "GET",
+        //     headers: { "Content-Type": "application/json" },
+        //     credentials: "include",
+        //   }
+        // );
+
+        // const coursesData = await res.json();
+        // setCourses(coursesData.courses || []);
         setOpen(false);
       } else {
         alert(data.message || "Failed to delete course");
@@ -227,6 +109,8 @@ const CourseManagement = () => {
       setDeletingId(null);
     }
   };
+  // const [updateProduct] = useUpdateProductMutation();
+  const [deleteProduct] = useDeleteCourseMutation();
 
   const handleEdit = (id) => {
     navigate(`/admin/courses-management/builder?tab=info&id=${id}`);
@@ -298,9 +182,9 @@ const CourseManagement = () => {
             <TableBody
               loadingContent={<Spinner color="success" />}
               emptyContent={"  No Course Found."}
-              loadingState={loading ? "loading" : "idle"}
+              loadingState={isLoading ? "loading" : "idle"}
             >
-              {courses?.map((classItem) => (
+              {data?.courses?.map((classItem) => (
                 <TableRow key={classItem.id}>
                   <TableCell>
                     <div className="min-w-0">
