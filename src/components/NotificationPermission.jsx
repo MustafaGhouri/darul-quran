@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@heroui/react";
+import { successMessage, errorMessage } from "../lib/toast.config";
 import { Bell, BellOff, BellRing } from "lucide-react";
 import { useNotifications } from "../hooks/useNotifications";
 import { useSendTestNotificationMutation } from "../redux/api/notifications";
-import toast from "react-hot-toast";
 
 const NotificationPermission = () => {
     const {
@@ -21,9 +21,45 @@ const NotificationPermission = () => {
     if (!isSupported) {
         return null;
     }
+    const handleTestNotification = async () => {
+        try {
+            await sendTestNotification().unwrap();
+            successMessage("Test notification sent! Check your notifications.");
+        } catch (error) {
+            console.error("Error sending test notification:", error);
+            errorMessage("Failed to send test notification");
+        }
+    };
+
+    const handleSubscribe = async () => {
+        setLoading(true);
+        try {
+            await subscribeToPush();
+            successMessage("Successfully subscribed to notifications!");
+        } catch (error) {
+            console.error("Error subscribing:", error);
+            errorMessage(error.message || "Failed to subscribe to notifications");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUnsubscribe = async () => {
+        setLoading(true);
+        try {
+            await unsubscribeFromPush();
+            successMessage("Successfully unsubscribed from notifications");
+        } catch (error) {
+            console.error("Error unsubscribing:", error);
+            errorMessage("Failed to unsubscribe from notifications");
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     // Don't show if already granted and subscribed
-    if (permission === "granted" && isSubscribed) {
+    if (permission === "granted") {
         return (
             <div className="flex items-center gap-2">
                 <Button
@@ -48,41 +84,6 @@ const NotificationPermission = () => {
         );
     }
 
-    const handleSubscribe = async () => {
-        setLoading(true);
-        try {
-            await subscribeToPush();
-            toast.success("Successfully subscribed to notifications!");
-        } catch (error) {
-            console.error("Error subscribing:", error);
-            toast.error(error.message || "Failed to subscribe to notifications");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleUnsubscribe = async () => {
-        setLoading(true);
-        try {
-            await unsubscribeFromPush();
-            toast.success("Successfully unsubscribed from notifications");
-        } catch (error) {
-            console.error("Error unsubscribing:", error);
-            toast.error("Failed to unsubscribe from notifications");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleTestNotification = async () => {
-        try {
-            await sendTestNotification().unwrap();
-            toast.success("Test notification sent! Check your notifications.");
-        } catch (error) {
-            console.error("Error sending test notification:", error);
-            toast.error("Failed to send test notification");
-        }
-    };
 
     // Show subscribe button if not subscribed
     return (

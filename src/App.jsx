@@ -77,6 +77,43 @@ function App() {
   const { user, loading, shouldFetch, isAuthenticated } = useSelector(
     (state) => state?.user
   )
+  const subscribeNow = async () => {
+    const registration = await navigator.serviceWorker.ready;
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      console.log("Permission denied");
+      return;
+    }
+    function urlBase64ToUint8Array(base64String) {
+      const padding = "=".repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding)
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
+
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+
+      return outputArray;
+    }
+
+    const res = await fetch("http://localhost:5000/api/notifications/vapid-public-key");
+    const { publicKey } = await res.json();
+
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey),
+    });
+
+    console.log("FULL SUB:", subscription);
+    console.log("ENDPOINT:", subscription.endpoint);
+    console.log("P256DH:", subscription.toJSON().keys.p256dh);
+    console.log("AUTH:", subscription.toJSON().keys.auth);
+  };
 
   useEffect(() => {
     async function loadUser() {
@@ -122,6 +159,8 @@ function App() {
     <HeroUIProvider>
       <Toaster position="top-right" />
       <DownloadModal />
+      <button onClick={subscribeNow}>Subscribe</button>
+
       <Routes>
         {/* ---------- Auth/Public Layout (NO HEADER/FOOTER) ---------- */}
         <Route element={<AuthLayout isAuthenticated={!isAuthenticated} redirect={''} />}>
