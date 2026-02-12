@@ -27,6 +27,7 @@ import { BiGroup } from "react-icons/bi";
 import { GrAnnounce } from "react-icons/gr";
 import { CiCalendar } from "react-icons/ci";
 import { useSelector } from "react-redux";
+import NotificationPermission from "../../components/NotificationPermission";
 
 import { Spinner } from "@heroui/react";
 
@@ -156,15 +157,22 @@ const StudentDashboard = () => {
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-scrseen px-2 sm:px-3">
       {/* banner */}
       <div className="space-y-4 mt-3 w-full bg-[url('/images/banner.png')] p-4 rounded-lg bg-center bg-no-repeat bg-cover">
-        <h1 className="text-xl sm:text-3xl text-white font-semibold mb-0 ">
-          Welcome back, {user?.firstName}! 👋
-        </h1>
-        <p className="text-white text-sm">
-          Ready to continue your learning journey? Let's make today productive!
-        </p>
-        <Button size="sm" className="bg-[#06574C] text-white rounded-md">
-          Learn More
-        </Button>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-xl sm:text-3xl text-white font-semibold mb-0 ">
+              Welcome back, {user?.firstName}! 👋
+            </h1>
+            <p className="text-white text-sm">
+              Ready to continue your learning journey? Let's make today productive!
+            </p>
+            <Button size="sm" className="bg-[#06574C] text-white rounded-md">
+              Learn More
+            </Button>
+          </div>
+          <div>
+            <NotificationPermission />
+          </div>
+        </div>
       </div>
       <div>
         <div className="grid grid-cols-12 gap-3 py-4">

@@ -1,0 +1,151 @@
+// Service Worker for Push Notifications
+// This file handles push notifications and caching for the PWA
+
+const CACHE_NAME = 'darul-quran-v1';
+const urlsToCache = [
+    '/',
+    '/index.html',
+    '/icons/darul-quran-logo.png',
+];
+
+// Install event - cache resources
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then((cache) => cache.addAll(urlsToCache))
+            .then(() => self.skipWaiting())
+    );
+});
+
+// Activate event - clean up old caches
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
+});
+
+// Fetch event - serve from cache, fallback to network
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request)
+            .then((response) => {
+                // Cache hit - return response
+                if (response) {
+                    return response;
+                }
+                return fetch(event.request);
+            })
+    );
+});
+
+// Push event - handle incoming push notifications
+self.addEventListener('push', (event) => {
+    console.log('Push notification received:', event);
+
+    let notificationData = {
+        title: 'Darul Quran',
+        body: 'You have a new notification',
+        icon: '/icons/darul-quran-logo.png',
+        badge: '/icons/darul-quran-logo.png',
+        data: {
+            url: '/',
+        },
+    };
+
+    // Parse notification data if available
+    if (event.data) {
+        try {
+            const data = event.data.json();
+            notificationData = {
+                title: data.title || notificationData.title,
+                body: data.body || notificationData.body,
+                icon: data.icon || notificationData.icon,
+                badge: data.badge || notificationData.badge,
+                image: data.image,
+                data: data.data || notificationData.data,
+                tag: data.tag || 'default',
+                requireInteraction: data.requireInteraction || false,
+                actions: data.actions || [],
+            };
+        } catch (error) {
+            console.error('Error parsing push notification data:', error);
+        }
+    }
+
+    const promiseChain = self.registration.showNotification(
+        notificationData.title,
+        {
+            body: notificationData.body,
+            icon: notificationData.icon,
+            badge: notificationData.badge,
+            image: notificationData.image,
+            data: notificationData.data,
+            tag: notificationData.tag,
+            requireInteraction: notificationData.requireInteraction,
+            actions: notificationData.actions,
+        }
+    );
+
+    event.waitUntil(promiseChain);
+});
+
+// Notification click event - handle notification clicks
+self.addEventListener('notificationclick', (event) => {
+    console.log('Notification clicked:', event);
+
+    event.notification.close();
+
+    // Get the URL to open from notification data
+    const urlToOpen = event.notification.data?.url || '/';
+
+    // Handle action button clicks
+    if (event.action) {
+        console.log('Action clicked:', event.action);
+        // You can handle different actions here
+    }
+
+    // Open the URL in a new window or focus existing window
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true })
+            .then((clientList) => {
+                // Check if there's already a window open with this URL
+                for (let i = 0; i < clientList.length; i++) {
+                    const client = clientList[i];
+                    if (client.url === urlToOpen && 'focus' in client) {
+                        return client.focus();
+                    }
+                }
+                // If no window is open, open a new one
+                if (clients.openWindow) {
+                    return clients.openWindow(urlToOpen);
+                }
+            })
+    );
+});
+
+// Background sync event (optional - for offline support)
+self.addEventListener('sync', (event) => {
+    if (event.tag === 'sync-notifications') {
+        event.waitUntil(
+            // Sync logic here
+            console.log('Background sync triggered')
+        );
+    }
+});
+
+// Message event - handle messages from the app
+self.addEventListener('message', (event) => {
+    console.log('Service Worker received message:', event.data);
+
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
