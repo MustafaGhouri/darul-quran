@@ -4,6 +4,7 @@ import AreaCharts from '../../components/charts/AreaChart'
 import { BookIcon, ChartPie, MegaphoneIcon, PlusIcon, UsersIcon, UsersRound, UserStar, Video } from 'lucide-react'
 import OverviewCards from '../../components/dashboard-components/OverviewCards'
 import { Link } from "react-router-dom";
+import NotificationPermission from '../../components/NotificationPermission'
 
 const AdminDashboard = () => {
   const classes = [
@@ -63,21 +64,21 @@ const AdminDashboard = () => {
     {
       title: "Revenue",
       value: "$89,432",
-      icon: <ChartPie color='#06574C' size={22}/>,
+      icon: <ChartPie color='#06574C' size={22} />,
       changeText: "+8.2% from last month",
       changeColor: "text-[#38A100]"
     },
     {
       title: "Active Users",
       value: "3,847",
-      icon: <UsersRound color='#06574C' size={22}/>,
+      icon: <UsersRound color='#06574C' size={22} />,
       changeText: "-2.1% from last week",
       changeColor: "text-[#E8505B]"
     },
     {
       title: "Live Classes Today",
       value: "24",
-      icon: <Video  color='#06574C' size={22}/>,
+      icon: <Video color='#06574C' size={22} />,
       changeText: "6 upcoming sessions",
       changeColor: "text-[#06574C]"
     }
@@ -94,13 +95,20 @@ const AdminDashboard = () => {
 
       {/* banner */}
       <div className="space-y-4 mt-3 w-full bg-[url('/images/banner.png')] p-4 rounded-lg bg-center bg-no-repeat bg-cover">
-        <h1 className='text-xl sm:text-3xl text-white font-semibold '>
-          Sharpen Your Skills <br />
-          With Trending Courses This Month
-        </h1>
-        <Button size='sm' className='bg-[#06574C] text-white rounded-md'>
-          View Course
-        </Button>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className='text-xl sm:text-3xl text-white font-semibold '>
+              Sharpen Your Skills <br />
+              With Trending Courses This Month
+            </h1>
+            <Button size='sm' className='bg-[#06574C] text-white rounded-md'>
+              View Course
+            </Button>
+          </div>
+          <div>
+            <NotificationPermission />
+          </div>
+        </div>
       </div>
 
       <OverviewCards data={cardsData} />
@@ -121,9 +129,9 @@ const AdminDashboard = () => {
               ))}
             </Select>
           </div>
-         <div className='overflow-scroll no-scrollbar w-full '>
-          <AreaCharts />
-          </div> 
+          <div className='overflow-scroll no-scrollbar w-full '>
+            <AreaCharts />
+          </div>
         </div>
         <div className="p-4 flex flex-col items-center  w-full bg-white  rounded-lg">
           <div className='flex items-center w-full  justify-between'>
@@ -169,15 +177,15 @@ const AdminDashboard = () => {
               </Button>
             </div>
 
-            <Table 
-            aria-label="Pending approvals table"
-                removeWrapper
-                classNames={{
-                  base: "bg-white  ",
-                  th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936] border-t border-default-200 ",
-                  td: "py-3",
-                  tr: "border-b border-default-200",
-                }}>
+            <Table
+              aria-label="Pending approvals table"
+              removeWrapper
+              classNames={{
+                base: "bg-white  ",
+                th: "font-bold p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936] border-t border-default-200 ",
+                td: "py-3",
+                tr: "border-b border-default-200",
+              }}>
               <TableHeader columns={columns}>
                 <TableColumn className='bg-[#EBD4C9]/30 rounded-none'>Class</TableColumn>
                 <TableColumn className='bg-[#EBD4C9]/30'>Teacher</TableColumn>
@@ -219,37 +227,37 @@ const AdminDashboard = () => {
       </div>
 
       <div className="px-2 sm:px-6 py-4 sm:rounded-lg sm:bg-white my-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button
-                variant="solid"
-                color="primary"
-                startContent={<PlusIcon />}
-                className="w-full py-4 bg-[#06574C] text-white"
-                as={Link}
-              to={"/admin/user-management/add-user"}
-              >
-                Add New User
-              </Button>
-              <Button
-                variant="solid"
-                color="primary"
-                startContent={<BookIcon />}
-                as={Link}
-                to={"/admin/courses-management/builder"}
-                className="w-full py-4 bg-[#06574C] text-white"
-              >
-                Create Course
-              </Button>
-              <Button
-                variant="flat"
-                startContent={<MegaphoneIcon />}
-                className="w-full py-4 bg-[#95C4BE] text-[#06574C] font-semibold"
-              >
-                Send Announcement
-              </Button>
-            </div>
-          </div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Button
+            variant="solid"
+            color="primary"
+            startContent={<PlusIcon />}
+            className="w-full py-4 bg-[#06574C] text-white"
+            as={Link}
+            to={"/admin/user-management/add-user"}
+          >
+            Add New User
+          </Button>
+          <Button
+            variant="solid"
+            color="primary"
+            startContent={<BookIcon />}
+            as={Link}
+            to={"/admin/courses-management/builder"}
+            className="w-full py-4 bg-[#06574C] text-white"
+          >
+            Create Course
+          </Button>
+          <Button
+            variant="flat"
+            startContent={<MegaphoneIcon />}
+            className="w-full py-4 bg-[#95C4BE] text-[#06574C] font-semibold"
+          >
+            Send Announcement
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

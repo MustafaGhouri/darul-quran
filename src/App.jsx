@@ -82,7 +82,7 @@ function App() {
 
     const permission = await Notification.requestPermission();
     if (permission !== "granted") {
-      console.log("Permission denied");
+      alert("Permission denied");
       return;
     }
     function urlBase64ToUint8Array(base64String) {
@@ -159,7 +159,7 @@ function App() {
     <HeroUIProvider>
       <Toaster position="top-right" />
       <DownloadModal />
-      <button onClick={subscribeNow}>Subscribe</button>
+      
 
       <Routes>
         {/* ---------- Auth/Public Layout (NO HEADER/FOOTER) ---------- */}
