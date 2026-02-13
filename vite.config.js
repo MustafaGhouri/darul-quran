@@ -21,9 +21,6 @@ export default defineConfig({
         globPatterns: [
           '**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg}'
         ],
-      },
-      // ✅ YAHAN ADD KARO (IMPORTANT)
-      workbox: {
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10 MB
       },
 

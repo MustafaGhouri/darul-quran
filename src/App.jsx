@@ -6,6 +6,7 @@ import AdminLayout from "./components/layouts/AdminLayout";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
   HeroUIProvider,
+  ToastProvider,
 } from "@heroui/react";
 import { lazy, useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
@@ -158,8 +159,9 @@ function App() {
   return (
     <HeroUIProvider>
       <Toaster position="top-right" />
+      <ToastProvider position="top-bottom" />
       <DownloadModal />
-      
+
 
       <Routes>
         {/* ---------- Auth/Public Layout (NO HEADER/FOOTER) ---------- */}
