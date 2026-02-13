@@ -66,7 +66,7 @@ export const useNotifications = () => {
 
     // Request notification permission
     const requestPermission = async () => {
-        if (!isSupported()) {
+        if (isSupported()) {
             throw new Error("Push notifications are not supported in this browser");
         }
 
