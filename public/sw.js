@@ -14,6 +14,10 @@ self.addEventListener('push', (event) => {
         body: 'You have a new notification',
         icon: '/icons/darul-quran-logo.png',
         badge: '/icons/darul-quran-logo.png',
+        vibrate: [400, 200, 400],
+        requireInteraction: true,
+        renotify: true,
+        tag: 'darul-quran-alert',
         data: {
             url: '/',
         },
@@ -31,7 +35,9 @@ self.addEventListener('push', (event) => {
                 image: data.image,
                 data: data.data || notificationData.data,
                 tag: data.tag || 'default',
-                requireInteraction: data.requireInteraction || false,
+                vibrate: [400, 200, 400],
+                requireInteraction: true,
+                renotify: true,
                 actions: data.actions || [],
             };
         } catch (error) {
@@ -49,6 +55,8 @@ self.addEventListener('push', (event) => {
             data: notificationData.data,
             tag: notificationData.tag,
             requireInteraction: notificationData.requireInteraction,
+            vibrate: notificationData.vibrate,
+            renotify: notificationData.renotify,
             actions: notificationData.actions,
         }
     );
