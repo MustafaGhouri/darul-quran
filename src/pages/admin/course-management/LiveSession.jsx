@@ -1,4 +1,4 @@
-import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Textarea, useDisclosure, Chip } from '@heroui/react'
+import { Button, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Textarea, useDisclosure } from '@heroui/react'
 import { DashHeading } from '../../../components/dashboard-components/DashHeading'
 import { Plus, Calendar } from 'lucide-react';
 import { useState, useEffect } from "react";
