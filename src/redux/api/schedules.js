@@ -25,11 +25,18 @@ export const scheduleApi = createApi({
             invalidatesTags: ["schedule"],
         }),
         updateSchedule: builder.mutation({
-            query: (id, data) => ({
+            query: ({id, data}) => ({
                 url: `/update/${id}`,
                 headers: { "Content-Type": "application/json" },
                 method: "PATCH",
                 body: data,
+            }),
+            invalidatesTags: ["schedule"],
+        }),
+         deleteSchedule: builder.mutation({
+            query: (id) => ({
+                url: `/delete/${id}`,
+                method: "DELETE",
             }),
             invalidatesTags: ["schedule"],
         }),
@@ -40,4 +47,5 @@ export const {
     useGetScheduleQuery,
     useCreateScheduleMutation,
     useUpdateScheduleMutation,
+    useDeleteScheduleMutation,
 } = scheduleApi;

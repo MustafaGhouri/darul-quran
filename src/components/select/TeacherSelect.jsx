@@ -7,11 +7,12 @@ import { debounce } from "../../lib/utils";
 /**
  * @param {Object} props
  * @param {(teacherId: Number)=>void} props.onChange
+ * @param {Number?} props.initialValue
  * @param {String} props.label
  */
-const TeacherSelect = ({ onChange, label = undefined }) => {
+const TeacherSelect = ({ onChange, initialValue, label = undefined }) => {
     const [searchValue, setSearchValue] = useState("");
-    const [selectedId, setSelectedId] = useState("");
+    const [selectedId, setSelectedId] = useState(String(initialValue) || "");
     const [total, setTotal] = useState(0);
 
     const { data: teachersData = { user: [], total: 0 }, isFetching: isLoading } = useGetAllTeachersQuery({
@@ -39,6 +40,7 @@ const TeacherSelect = ({ onChange, label = undefined }) => {
         <Autocomplete
             label={label}
             placeholder="Search a teacher"
+            title="Search a teacher"
             labelPlacement="outside"
             variant="bordered"
             size="lg"

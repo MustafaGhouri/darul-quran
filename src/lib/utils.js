@@ -21,7 +21,14 @@ export const convertTo12hrsFormat = (time) => {
   const hour12 = hours % 12 || 12;
   return `${hour12}:${minutes} ${ampm}`;
 }
-
+export const limits = [
+    { key: "6", label: "6" },
+    { key: "10", label: "10" },
+    { key: "20", label: "20" },
+    { key: "30", label: "30" },
+    { key: "40", label: "40" },
+    { key: "50", label: "50" },
+  ];
 export const uploadFilesToServer = async (filesArray, removeUrls) => {
   if (!filesArray || filesArray.length === 0) return [];
 

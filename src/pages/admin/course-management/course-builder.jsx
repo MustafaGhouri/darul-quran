@@ -235,7 +235,7 @@ const CourseBuilder = () => {
   // handle submit tab 1
   // Function to upload files to server
 
-  useEffect(()=>{
+  useEffect(() => {
     setFormData((prev) => ({
       ...prev,
       previous_lesson: files?.length || 0
@@ -316,6 +316,39 @@ const CourseBuilder = () => {
       setPendingAction(null);
     }
   };
+
+  const handleSubmit2tab = async (e) => {
+    if (e) e.preventDefault();
+    setLoadingAction(pendingAction);
+    if (files.length === 0) { errorMessage("Please upload at least one file"); return; };
+
+    if (data.previous_lesson === formData.previous_lesson) {
+      handleSelected("pricing");
+    }
+    try {
+
+      const payload = {
+        previous_lesson: formData.previous_lesson,
+      };
+
+      const response = await updateCourse({ id: courseId, data: payload });
+
+      const data = response.data;
+      if (data.success) {
+        successMessage("Course Files Updated  Successfully");
+        handleSelected("pricing");
+      } else {
+        errorMessage(data.message || "Failed to update course");
+      }
+    } catch (error) {
+      console.error(error);
+      errorMessage(error?.message || "Failed to update course");
+    } finally {
+      setLoadingAction(null);
+      setPendingAction(null);
+    }
+  };
+
 
   // handle submit 3rd tab
   const handleSubmit3tab = async (e) => {
@@ -882,10 +915,7 @@ const CourseBuilder = () => {
                     size="lg"
                     className="bg-[#06574C] w-full text-white sm:w-35"
                     type="submit"
-                    onPress={() => {
-                      if (files.length === 0) { errorMessage("Please upload at least one file"); return; };
-                      handleSelected("pricing");
-                    }}
+                    onPress={handleSubmit2tab}
                   >
                     Next Step
                   </Button>

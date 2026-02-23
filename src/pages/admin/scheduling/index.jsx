@@ -26,22 +26,28 @@ import {
   PopoverTrigger,
   PopoverContent,
   Spinner,
+  Pagination,
 } from "@heroui/react";
 import { CalendarIcon, Copy, Trash2, PlusIcon } from "lucide-react";
 
 import { getStatusColor, getStatusText, formatTime12Hour } from "../../../utils/scheduleHelpers";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
-import { dateFormatter } from "../../../lib/utils";
+import { dateFormatter, limits } from "../../../lib/utils";
 import TeacherSelect from "../../../components/select/TeacherSelect";
-import { useGetScheduleQuery } from "../../../redux/api/schedules";
+import { useCreateScheduleMutation, useDeleteScheduleMutation, useGetScheduleQuery, useUpdateScheduleMutation } from "../../../redux/api/schedules";
 import CourseSelect from "../../../components/select/CourseSelect";
+import Swal from "sweetalert2";
 
 const Scheduling = () => {
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
 
   // Pagination & Filtering (Basic Implementation)
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState('');
 
   // Modal State
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -72,11 +78,15 @@ const Scheduling = () => {
   });
 
   const { data, isFetching } = useGetScheduleQuery({
-    page: 1,
-    limit: 10,
-    search: "",
+    page: page,
+    limit: limit,
+    search,
     status: statusFilter
   });
+  const [createSchedule, { isLoading: isSubmitting }] = useCreateScheduleMutation();
+  const [updateSchedule, { isLoading: isUpdating }] = useUpdateScheduleMutation();
+  const [deleteSchedule] = useDeleteScheduleMutation();
+
 
   const handleSubmit = async () => {
     if (!formData.title || !formData.startTime || !formData.teacherId) {
@@ -92,19 +102,18 @@ const Scheduling = () => {
       curr.setDate(curr.getDate() + 1);
     }
 
-    setLoading(true);
     try {
-      const url = isEdit
-        ? `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule/update/${formData.id}`
-        : `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule/create`;
-      const method = isEdit ? "PATCH" : "POST";
 
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, dateArray })
-      });
-      const data = await res.json();
+      const payload = { ...formData, dateArray }
+      let response;
+
+      if (isEdit) {
+        response = await updateSchedule({ id: formData.id, data: payload });;
+      } else {
+        response = await createSchedule(payload);
+      }
+
+      const data = response.data;
 
       if (data.success) {
         successMessage(isEdit ? "Session Updated" : "Session Scheduled & Zoom Generated!");
@@ -116,26 +125,31 @@ const Scheduling = () => {
     } catch (error) {
       console.error(error);
       errorMessage("Error submitting form: " + error.message);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this session?")) return;
+    const { isConfirmed } = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#06574C",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    })
+    if (!isConfirmed) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule/delete/${id}`, {
-        method: "DELETE"
-      });
-      const data = await res.json();
-      if (data.success) {
-        successMessage("Session Deleted");
-        fetchSchedules();
-      } else {
-        errorMessage("Delete failed");
-      }
+      setDeleteLoading(id);
+      const res = await deleteSchedule(id);
+      if (res.data.success) {
+        successMessage(res.data.message || "Course deleted successfully");
+        return;
+      } else throw new Error(res.data.message);
     } catch (error) {
-      errorMessage("Error deleting session");
+      errorMessage("Error deleting session: " + error.message);
+    } finally {
+      setDeleteLoading(null);
     }
   };
 
@@ -200,7 +214,7 @@ const Scheduling = () => {
 
 
   return (
-    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 min-h-screen">
+    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 mins-h-screen">
       <DashHeading
         title={"Schedule Live Classes"}
         desc={"Manage and organize your upcoming live sessions"}
@@ -218,6 +232,17 @@ const Scheduling = () => {
               <SelectItem key={status.key}>{status.label}</SelectItem>
             ))}
           </Select>
+          <Input
+            type="search"
+            placeholder="Search by title or description"
+            radius="sm"
+            defaultValue={search}
+            onChange={(e) =>
+              debounce(() => {
+                setSearch(e.target.value);
+              }, 400)
+            }
+          />
         </div>
         <Button
           startContent={<PlusIcon />}
@@ -236,7 +261,7 @@ const Scheduling = () => {
           isHeaderSticky
           aria-label="Example static collection table"
           classNames={{
-            base: "w-full bg-white rounded-lg overflow-x-scroll w-full no-scrollbar max-h-[500px] shadow-md",
+            base: "w-full bg-white rounded-lg min-h-[50vh] overflow-x-scroll w-full no-scrollbar max-h-[500px] shadow-md",
             th: "font-bold bg-[#EBD4C9] p-4 text-md text-[#333333] capitalize tracking-widest ",
             td: "py-3 items-center whitespace-nowrap",
             tr: "border-b border-default-200",
@@ -328,11 +353,12 @@ const Scheduling = () => {
                     <Button
                       radius="sm"
                       className="bg-[#06574C] text-white"
-                      startContent={<Trash2 size={18} />}
                       size="sm"
+                      isLoading={deleteLoading === item.id}
                       isIconOnly
                       onPress={() => handleDelete(item.id)}
                     >
+                      <Trash2 size={18} />
                     </Button>
                   </div>
                 </TableCell>
@@ -340,6 +366,41 @@ const Scheduling = () => {
             ))}
           </TableBody>
         </Table>
+        <div className="flex flex-wrap items-center p-4 gap-2 justify-between overflow-hidden">
+          <div className="flex text-sm items-center gap-1">
+            <span>Limit</span>
+            <Select
+              radius="sm"
+              className="w-[70px]"
+              defaultSelectedKeys={["10"]}
+              isDisabled={isFetching || data?.total < 7}
+              onSelectionChange={(k) => {
+                const keys = [...k];
+                setLimit(Number(keys[0]))
+              }}
+              placeholder="1"
+            >
+              {limits.map((limit) => (
+                <SelectItem key={limit.key}>{limit.label}</SelectItem>
+              ))}
+            </Select>
+            <span className="min-w-56">Out of {data?.total}</span>
+          </div>
+          <Pagination
+            className=""
+            showControls
+            variant="ghost"
+            initialPage={1}
+            total={data?.totalPages}
+            onChange={setPage}
+            classNames={{
+              item: "rounded-sm hover:bg-bg-[#06574C]/50",
+              cursor: "bg-[#06574C] rounded-sm text-white",
+              prev: "rounded-sm bg-white/80",
+              next: "rounded-sm bg-white/80",
+            }}
+          />
+        </div>
       </div>
 
       {/* Schedule / Edit Modal */}
@@ -363,6 +424,7 @@ const Scheduling = () => {
                   }
                 />
                 <CourseSelect
+                  initialValue={formData.courseId}
                   onChange={(courseId) => setFormData({ ...formData, courseId })}
                 />
                 {/* Schedule Type */}
@@ -508,6 +570,7 @@ const Scheduling = () => {
                   />
                 </div>
                 <TeacherSelect
+                  initialValue={formData.teacherId}
                   onChange={(teacherId) => setFormData({ ...formData, teacherId })}
                 />
                 <Textarea
@@ -523,7 +586,7 @@ const Scheduling = () => {
                 <Button color="danger" variant="flat" onPress={onClose}>
                   Cancel
                 </Button>
-                <Button className="bg-[#06574C] text-white" onPress={handleSubmit} isLoading={loading}>
+                <Button className="bg-[#06574C] text-white" onPress={handleSubmit} isLoading={isSubmitting || isUpdating}>
                   {isEdit ? "Update Schedule" : "Schedule & Generate Zoom"}
                 </Button>
               </ModalFooter>
