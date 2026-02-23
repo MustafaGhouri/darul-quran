@@ -181,7 +181,7 @@ const CourseManagement = () => {
                   </TableCell>
                   <TableCell>
                     <p className="p-2 text-center w-full capitalize text-xs rounded-md text-[#06574C] bg-[#95C4BE]/20">
-                      {classItem?.type?.replace("_", " ")}
+                      {classItem?.type?.replace("_", "")}
                     </p>
                   </TableCell>
                   <TableCell>

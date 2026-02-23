@@ -6,7 +6,7 @@ import { notificationApi } from "./api/notifications";
 import { dashboardApi } from "./api/dashboard";
 import { announcementAPI } from "./api/announcements";
 import { scheduleApi } from "./api/schedules";
-import { attendanceAdminApi } from "./api/attendanceAdmin";
+import { attendanceApi } from "./api/attendance";
 import { enrollmentAdminApi } from "./api/enrollmentAdmin";
 
 
@@ -18,7 +18,7 @@ export const store = configureStore({
     [dashboardApi.reducerPath]: dashboardApi.reducer,
     [announcementAPI.reducerPath]: announcementAPI.reducer,
     [scheduleApi.reducerPath]: scheduleApi.reducer,
-    [attendanceAdminApi.reducerPath]: attendanceAdminApi.reducer,
+    [attendanceApi.reducerPath]: attendanceApi.reducer,
     [enrollmentAdminApi.reducerPath]: enrollmentAdminApi.reducer,
     user: userReducer,
   },
@@ -30,7 +30,7 @@ export const store = configureStore({
     dashboardApi.middleware,
     announcementAPI.middleware,
     scheduleApi.middleware,
-    attendanceAdminApi.middleware,
+    attendanceApi.middleware,
     enrollmentAdminApi.middleware,
   ],
 });

@@ -1,17 +1,17 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-export const attendanceAdminApi = createApi({
-    reducerPath: "attendanceAdminApi",
+export const attendanceApi = createApi({
+    reducerPath: "attendanceApi",
     baseQuery: fetchBaseQuery({
-        baseUrl: `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/attendance-admin`,
+        baseUrl: `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/attendance`,
         credentials: "include",
     }),
     tagTypes: ["attendance"],
     endpoints: (builder) => ({
         getCourseAttendanceSummary: builder.query({
-            query: ({ page, limit, search, sort, status }) => ({
+            query: ({ page, limit, search, sort, status ,type}) => ({
                 url: "/courses",
-                params: { page, limit, search, sort, status },
+                params: { page, limit, search, sort, status ,type},
             }),
             providesTags: ["attendance"],
         }),
@@ -36,4 +36,4 @@ export const {
     useGetCourseAttendanceSummaryQuery,
     useGetCourseAttendanceDetailQuery,
     useGetAttendanceStatsQuery,
-} = attendanceAdminApi;
+} = attendanceApi;

@@ -223,7 +223,7 @@ const CourseBuilder = () => {
     { title: "Price:", desc: formData?.course_price || "Add Price" },
     { title: "Type:", desc: formData?.type?.replace("_", " ") || "Add Type" },
     { title: "Duration:", desc: formData?.duration || "Add Duration" },
-    { title: "Subscription Interval:", desc: formData?.interval || "Add Subscription Interval" },
+    formData?.type === "live" && { title: "Subscription - Interval:", desc: formData?.interval || "Add Subscription - Interval" },
   ];
   // handle change
   const handleChange = (name, value) => {
@@ -623,7 +623,6 @@ const CourseBuilder = () => {
                           onSelectionChange={(k) => {
                             const keys = [...k];
                             handleChange("type", keys[0]);
-                            successMessage("Type changed successfully" + keys[0]);
                           }}
                           selectedKeys={
                             formData.type
@@ -744,17 +743,17 @@ const CourseBuilder = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="bg-white rounded-lg p-3 shadow-xl mt-3">
+                    <div className="bg-white rounded-lg p-2 shadow-xl mt-3">
                       <h1 className="text-xl font-medium text-[#333333]">
                         Course Preview
                       </h1>
                       <div className="py-2">
                         {coursepreview.map((item, i) => (
                           <div key={i} className="py-1 flex justify-between items-center">
-                            <h1 className="text-md font-medium text-[#666666]">
+                            <h1 className="text-[16px] font-medium text-[#666666]">
                               {item.title}
                             </h1>
-                            <p className="text-md capitalize font-semibold text-[#333333]">
+                            <p className="text-[16px] text-end capitalize font-semibold text-[#333333]">
                               {item.desc}
                             </p>
                           </div>

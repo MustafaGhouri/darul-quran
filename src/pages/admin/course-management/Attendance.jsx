@@ -30,7 +30,7 @@ import { useState } from "react";
 import {
   useGetCourseAttendanceSummaryQuery,
   useGetCourseAttendanceDetailQuery,
-} from "../../../redux/api/attendanceAdmin";
+} from "../../../redux/api/attendance";
 import { useGetTopPerformingStudentsQuery } from "../../../redux/api/enrollmentAdmin";
 import { dateFormatter } from "../../../lib/utils";
 
@@ -43,6 +43,7 @@ const Attendance = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [detailPage, setDetailPage] = useState(1);
+  const [type, setType] = useState('all');
 
   const {
     data: attendanceData,
@@ -55,6 +56,7 @@ const Attendance = () => {
     search,
     sort,
     status: status === "all" ? undefined : status,
+    type
   });
 
   const { data: topStudentsData } = useGetTopPerformingStudentsQuery({
@@ -150,6 +152,29 @@ const Attendance = () => {
               <SelectItem key={option.key}>{option.label}</SelectItem>
             ))}
           </Select>
+          <Select
+            radius="sm"
+            placeholder="Select Type"
+            title="Select Type"
+            className="w-xl flex-1"
+            onSelectionChange={(k) => {
+              const keys = [...k];
+              setType(keys[0]);
+            }}
+          // defaultSelectedKeys={["all"]}
+          >
+            <SelectItem key="all" value="all" className="capitalize">
+              All Courses
+            </SelectItem>
+
+            <SelectItem key="one_time" value="one_time" className="capitalize">
+              One Time Paid
+            </SelectItem>
+
+            <SelectItem key="live" value="live" className="capitalize">
+              Live Classes
+            </SelectItem>
+          </Select>
         </div>
         <Button
           radius="sm"
@@ -174,8 +199,10 @@ const Attendance = () => {
         <TableHeader>
           <TableColumn className="w-2/6 ">Session</TableColumn>
           <TableColumn>Date</TableColumn>
+          <TableColumn>Type</TableColumn>
           <TableColumn>Enrollments</TableColumn>
           <TableColumn>Attended</TableColumn>
+          <TableColumn>Progress Rate</TableColumn>
           <TableColumn>Attendance Rate</TableColumn>
           <TableColumn>Action</TableColumn>
         </TableHeader>
@@ -206,9 +233,21 @@ const Attendance = () => {
                   year: "numeric",
                 })}
               </TableCell>
+              <TableCell className="capitalize">{course.type?.replace("_", '')}</TableCell>
               <TableCell>{course.totalEnrollments}</TableCell>
               <TableCell>{course.attendedCount}</TableCell>
-
+              <TableCell>
+                <div className="flex justify-between items-center gap-2">
+                  <Progress
+                    classNames={{ indicator: "bg-[#95C4BE]" }}
+                    size="sm"
+                    value={course.avgProgressRate}
+                  />
+                  <p className="text-end text-sm font-medium">
+                    {course.avgProgressRate?.toFixed(0)}%
+                  </p>
+                </div>
+              </TableCell>
               <TableCell>
                 <div className="flex justify-between items-center gap-2">
                   <Progress
@@ -221,7 +260,6 @@ const Attendance = () => {
                   </p>
                 </div>
               </TableCell>
-
               <TableCell>
                 <Button
                   radius="sm"
@@ -272,9 +310,9 @@ const Attendance = () => {
           <p className="text-gray-500 text-center py-8">No students found</p>
         ) : (
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {topStudentsData?.students?.map((s) => (
+            {topStudentsData?.students?.map((s, i) => (
               <div
-                key={s.studentId}
+                key={i}
                 className="rounded-lg px-4 py-6 bg-[#EAF6F4] shadow-sm flex flex-col justify-between"
                 style={{ minHeight: 120 }}
               >
@@ -312,7 +350,7 @@ const Attendance = () => {
       <Modal
         isOpen={isDetailModalOpen}
         onClose={handleCloseModal}
-        size="2xl"
+        size="4xl"
         scrollBehavior="inside"
       >
         <ModalContent>
@@ -330,7 +368,7 @@ const Attendance = () => {
               </ModalHeader>
 
               <ModalBody>
-                <>
+                {isDetailLoading ? <Spinner color="success" size="lg" /> : <>
                   <div className="grid grid-cols-3 gap-4 mb-4">
                     <div className="bg-[#EAF6F4] p-4 rounded-lg">
                       <p className="text-xs text-gray-600">Total Enrollments</p>
@@ -371,8 +409,6 @@ const Attendance = () => {
                         <TableColumn>Rate</TableColumn>
                       </TableHeader>
                       <TableBody
-                        loading={isDetailLoading ? 'loading' : 'idle'}
-                        loadingContent={<Spinner color="success" size="md" />}
                         emptyContent={
                           <p className="text-center py-4">No students found</p>
                         }
@@ -408,7 +444,6 @@ const Attendance = () => {
                       </TableBody>
                     </Table>
                   </div>
-
                   {courseDetailData?.totalPages > 1 && (
                     <div className="flex justify-end gap-2 mt-4">
                       <Button
@@ -434,7 +469,7 @@ const Attendance = () => {
                       </Button>
                     </div>
                   )}
-                </>
+                </>}
               </ModalBody>
 
               <ModalFooter>
