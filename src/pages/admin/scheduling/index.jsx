@@ -305,7 +305,6 @@ const Scheduling = () => {
                         variant="underlined"
                         color='success'
                         isReadOnly
-
                         isDateUnavailable={(date) =>
                           item.scheduleDates?.includes(date.toString())
                         }

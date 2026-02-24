@@ -434,8 +434,7 @@ function App() {
             path="/student/class-scheduling"
             element={
               <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
-                <ClassSchedule />
-                {/* <StudentClassSheduling /> */}
+                <StudentClassSheduling />
               </ProtectedRoute>
             }
           />

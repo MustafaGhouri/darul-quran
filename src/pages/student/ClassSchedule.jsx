@@ -136,7 +136,6 @@ const StudentClassSchedule = () => {
                 </div>
             )}
 
-            {/* Reschedule Request Modal */}
             <RescheduleRequestModal
                 isOpen={isRescheduleModalOpen}
                 onClose={() => {

@@ -15,7 +15,6 @@ export const RescheduleRequestModal = ({
     const [reason, setReason] = useState("");
     const [errors, setErrors] = useState({});
 
-    // Reset form when modal opens or schedule changes
     useEffect(() => {
         if (isOpen && schedule) {
             setRequestedDate("");
@@ -74,7 +73,6 @@ export const RescheduleRequestModal = ({
         });
     };
 
-    // Calculate minimum date (4 hours from now)
     const getMinDateTime = () => {
         const now = new Date();
         now.setHours(now.getHours() + 4);
@@ -87,6 +85,7 @@ export const RescheduleRequestModal = ({
             isOpen={isOpen}
             onClose={onClose}
             size="lg"
+            scrollBehavior="inside"
             classNames={{
                 base: "rounded-xl",
                 header: "border-b border-gray-100 pb-4",
@@ -103,7 +102,6 @@ export const RescheduleRequestModal = ({
                 </ModalHeader>
 
                 <ModalBody>
-                    {/* Current Schedule Info */}
                     {schedule && (
                         <div className="bg-[#95C4BE]/20 rounded-lg p-4 mb-4">
                             <h3 className="font-semibold text-[#06574C] mb-2">Current Schedule</h3>
@@ -124,17 +122,16 @@ export const RescheduleRequestModal = ({
                         </div>
                     )}
 
-                    {/* Important Notice */}
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
                         <p className="text-sm text-amber-800">
-                            <strong>⚠️ Note:</strong> Reschedule requests must be made at least 4 hours before the scheduled class time.
+                            <strong>Note:</strong> Reschedule requests must be made at least 4 hours before the scheduled class time.
                         </p>
                     </div>
 
-                    {/* Requested Date */}
                     <Input
+                        placeholder="Requested Date"
                         label="Requested Date"
-                        type="datetime-local"
+                        type="date"
                         value={requestedDate}
                         onChange={(e) => setRequestedDate(e.target.value)}
                         isInvalid={!!errors.date}
@@ -146,7 +143,6 @@ export const RescheduleRequestModal = ({
                         }}
                     />
 
-                    {/* Requested Time */}
                     <div className="grid grid-cols-2 gap-4">
                         <Input
                             label="Start Time"
@@ -174,7 +170,6 @@ export const RescheduleRequestModal = ({
                         />
                     </div>
 
-                    {/* Reason */}
                     <Textarea
                         label="Reason for Reschedule"
                         placeholder="Please explain why you need to reschedule..."
@@ -189,10 +184,9 @@ export const RescheduleRequestModal = ({
                         }}
                     />
 
-                    {/* Info */}
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                         <p className="text-sm text-blue-800">
-                            <strong>ℹ️ Information:</strong> Your request will be reviewed by the admin team. You will be notified via email once a decision is made.
+                            <strong>ℹ Information:</strong> Your request will be reviewed by the admin team. You will be notified via email once a decision is made.
                         </p>
                     </div>
                 </ModalBody>
