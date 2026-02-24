@@ -12,6 +12,12 @@ import {
     Select,
     SelectItem,
     Spinner,
+    Table,
+    TableBody,
+    TableCell,
+    TableColumn,
+    TableHeader,
+    TableRow,
 } from "@heroui/react";
 import { DashHeading } from "../../components/dashboard-components/DashHeading";
 import {
@@ -29,7 +35,7 @@ const AdminRescheduleRequests = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
     const [adminResponse, setAdminResponse] = useState("");
-    const [actionType, setActionType] = useState(null); // 'approve' or 'reject'
+    const [actionType, setActionType] = useState(null);
 
     const { data, isLoading, refetch } = useGetRescheduleRequestsQuery({
         page: page.toString(),
@@ -37,7 +43,6 @@ const AdminRescheduleRequests = () => {
         status: statusFilter,
     });
 
-    // Debug: Log data when it changes
     useEffect(() => {
         if (data) {
             console.log("Reschedule Requests Data:", data);
@@ -50,7 +55,7 @@ const AdminRescheduleRequests = () => {
     const handleApproveClick = (request) => {
         setSelectedRequest(request);
         setActionType("approve");
-        setAdminResponse("Your reschedule request has been approved.");
+        setAdminResponse(`Your reschedule request has been approved. We will create a separate session for you and notify you with the new schedule details.`);
         setIsResponseModalOpen(true);
     };
 
@@ -84,6 +89,7 @@ const AdminRescheduleRequests = () => {
                 successMessage("Reschedule request rejected");
             }
             setIsResponseModalOpen(false);
+            setSelectedRequest(null);
             refetch();
         } catch (error) {
             errorMessage(error?.data?.message || "Failed to process request");
@@ -99,6 +105,17 @@ const AdminRescheduleRequests = () => {
         };
         return colors[status] || "default";
     };
+
+    const columns = [
+        { key: "student", label: "Student" },
+        { key: "class", label: "Class" },
+        { key: "originalSchedule", label: "Original Schedule" },
+        { key: "requestedSchedule", label: "Requested Schedule" },
+        { key: "reason", label: "Reason" },
+        { key: "status", label: "Status" },
+        { key: "requestedAt", label: "Requested At" },
+        { key: "actions", label: "Actions" },
+    ];
 
     return (
         <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 min-h-screen">
@@ -136,141 +153,134 @@ const AdminRescheduleRequests = () => {
                 </Button>
             </div>
 
-            {/* Debug: Remove after testing */}
-            {/* {JSON.stringify(data, null, 2)} */}
-            
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                {isLoading ? (
-                    <div className="flex justify-center items-center py-20">
-                        <Spinner size="lg" color="primary" />
-                    </div>
-                ) : !data?.requests || data.requests.length === 0 ? (
-                    <div className="text-center py-20">
-                        <CalendarIcon className="mx-auto mb-4 text-gray-400" size={48} />
-                        <p className="text-gray-500 text-lg">No reschedule requests found</p>
-                        <p className="text-gray-400 text-sm mt-2">
-                            {statusFilter !== "all" 
-                                ? `Try changing the filter from "${statusFilter}" to "all"` 
-                                : "Students haven't submitted any requests yet"}
-                        </p>
-                    </div>
-                ) : (
-                    <>
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-[#EBD4C9]">
-                                    <tr>
-                                        <th className="p-4 text-left font-bold text-[#333333] capitalize">Student</th>
-                                        <th className="p-4 text-left font-bold text-[#333333] capitalize">Class</th>
-                                        <th className="p-4 text-left font-bold text-[#333333] capitalize">Original Schedule</th>
-                                        <th className="p-4 text-left font-bold text-[#333333] capitalize">Requested Schedule</th>
-                                        <th className="p-4 text-left font-bold text-[#333333] capitalize">Reason</th>
-                                        <th className="p-4 text-left font-bold text-[#333333] capitalize">Status</th>
-                                        <th className="p-4 text-left font-bold text-[#333333] capitalize">Requested At</th>
-                                        <th className="p-4 text-left font-bold text-[#333333] capitalize">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.requests.map((request) => (
-                                        <tr key={request.id} className="border-b border-default-200 hover:bg-gray-50">
-                                            <td className="p-4">
-                                                <div>
-                                                    <p className="font-medium text-sm">{request.studentName}</p>
-                                                    <p className="text-xs text-gray-500">{request.studentEmail}</p>
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <div>
-                                                    <p className="font-medium text-sm">{request.scheduleTitle}</p>
-                                                    <p className="text-xs text-gray-500">
-                                                        {new Date(request.scheduleDate).toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="text-sm">
-                                                    <p>
-                                                        {new Date(request.scheduleDate).toLocaleDateString()}
-                                                    </p>
-                                                    <p className="text-gray-500">
-                                                        {formatTime12Hour(request.scheduleStartTime)}
-                                                    </p>
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="text-sm">
-                                                    <p className="font-medium text-[#06574C]">
-                                                        {new Date(request.requestedDate).toLocaleDateString()}
-                                                    </p>
-                                                    <p className="text-gray-500">
-                                                        {formatTime12Hour(request.requestedStartTime)} -{" "}
-                                                        {formatTime12Hour(request.requestedEndTime)}
-                                                    </p>
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <p className="text-sm max-w-xs truncate" title={request.reason}>
-                                                    {request.reason || "-"}
-                                                </p>
-                                            </td>
-                                            <td className="p-4">
-                                                <Chip size="sm" variant="flat" color={getStatusColor(request.status)}>
-                                                    {request.status}
-                                                </Chip>
-                                            </td>
-                                            <td className="p-4">
-                                                <p className="text-sm">
-                                                    {new Date(request.requestedAt).toLocaleDateString()}
-                                                </p>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex gap-2">
-                                                    {request.status === "pending" && (
-                                                        <>
-                                                            <Button
-                                                                size="sm"
-                                                                color="success"
-                                                                variant="flat"
-                                                                onPress={() => handleApproveClick(request)}
-                                                            >
-                                                                Approve
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                color="danger"
-                                                                variant="flat"
-                                                                onPress={() => handleRejectClick(request)}
-                                                            >
-                                                                Reject
-                                                            </Button>
-                                                        </>
-                                                    )}
-                                                    {request.status !== "pending" && (
-                                                        <Chip size="sm" variant="flat">
-                                                            {request.status}
-                                                        </Chip>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Pagination */}
-                        {data.totalPages > 1 && (
-                            <div className="flex justify-center mt-4 p-4">
-                                <Pagination
-                                    total={data.totalPages}
-                                    page={page}
-                                    onChange={setPage}
-                                    color="primary"
-                                    showControls
-                                />
-                            </div>
+                <Table
+                    removeWrapper
+                    isHeaderSticky
+                    aria-label="Reschedule Requests Table"
+                    classNames={{
+                        base: "w-full bg-white rounded-lg min-h-[50vh] overflow-x-scroll w-full no-scrollbar max-h-[500px] shadow-md",
+                        th: "font-bold bg-[#EBD4C9] p-4 text-md text-[#333333] capitalize tracking-widest ",
+                        td: "py-3 items-center whitespace-nowrap",
+                        tr: "border-b border-default-200",
+                    }}
+                >
+                    <TableHeader columns={columns}>
+                        {(column) => (
+                            <TableColumn key={column.key} align={column.key === "actions" ? "center" : "start"}>
+                                {column.label}
+                            </TableColumn>
                         )}
-                    </>
+                    </TableHeader>
+                    <TableBody
+                        loloadingContent={<Spinner color="success" />}
+                        loadingState={isLoading ? 'loading' : 'idle'}
+                        emptyContent={<div className="text-center py-20">
+                            <CalendarIcon className="mx-auto mb-4 text-gray-400" size={48} />
+                            <p className="text-gray-500 text-lg">No reschedule requests found</p>
+                            <p className="text-gray-400 text-sm mt-2">
+                                {statusFilter !== "all"
+                                    ? `Try changing the filter from "${statusFilter}" to "all"`
+                                    : "Students haven't submitted any requests yet"}
+                            </p>
+                        </div>}
+                        items={data.requests || []}>
+                        {(request) => (
+                            <TableRow key={request.id}>
+                                <TableCell>
+                                    <div>
+                                        <p className="font-medium text-sm">{request.studentName}</p>
+                                        <p className="text-xs text-gray-500">{request.studentEmail}</p>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div>
+                                        <p className="font-medium text-sm">{request.scheduleTitle}</p>
+                                        <p className="text-xs text-gray-500">
+                                            {new Date(request.scheduleDate).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="text-sm">
+                                        <p>
+                                            {new Date(request.scheduleDate).toLocaleDateString()}
+                                        </p>
+                                        <p className="text-gray-500">
+                                            {formatTime12Hour(request.scheduleStartTime)}
+                                        </p>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="text-sm">
+                                        <p className="font-medium text-[#06574C]">
+                                            {new Date(request.requestedDate).toLocaleDateString()}
+                                        </p>
+                                        <p className="text-gray-500">
+                                            {formatTime12Hour(request.requestedStartTime)} -{" "}
+                                            {formatTime12Hour(request.requestedEndTime)}
+                                        </p>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <p className="text-sm max-w-xs truncate" title={request.reason}>
+                                        {request.reason || "-"}
+                                    </p>
+                                </TableCell>
+                                <TableCell>
+                                    <Chip size="sm" variant="flat" color={getStatusColor(request.status)}>
+                                        {request.status}
+                                    </Chip>
+                                </TableCell>
+                                <TableCell>
+                                    <p className="text-sm">
+                                        {new Date(request.requestedAt).toLocaleDateString()}
+                                    </p>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex gap-2 justify-center">
+                                        {request.status === "pending" && (
+                                            <>
+                                                <Button
+                                                    size="sm"
+                                                    color="success"
+                                                    variant="flat"
+                                                    onPress={() => handleApproveClick(request)}
+                                                >
+                                                    Approve
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    color="danger"
+                                                    variant="flat"
+                                                    onPress={() => handleRejectClick(request)}
+                                                >
+                                                    Reject
+                                                </Button>
+                                            </>
+                                        )}
+                                        {request.status !== "pending" && (
+                                            <Chip size="sm" variant="flat">
+                                                {request.status}
+                                            </Chip>
+                                        )}
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+
+                {data.totalPages > 1 && (
+                    <div className="flex justify-center mt-4 p-4">
+                        <Pagination
+                            total={data.totalPages}
+                            page={page}
+                            onChange={setPage}
+                            color="primary"
+                            showControls
+                        />
+                    </div>
                 )}
             </div>
 
