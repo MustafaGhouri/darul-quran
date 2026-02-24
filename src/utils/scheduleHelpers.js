@@ -9,7 +9,9 @@
  */
 export const formatTime12Hour = (time24) => {
     if (!time24) return '';
-    const [hours, minutes] = time24.split(':');
+    const parts = time24.split(':');
+    if (parts.length < 2) return time24;
+    const [hours, minutes] = parts;
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const hour12 = hour % 12 || 12;
@@ -22,10 +24,17 @@ export const formatTime12Hour = (time24) => {
  * @returns {boolean}
  */
 export const isClassLive = (schedule) => {
+    if (!schedule) return false;
     const now = new Date();
-    const classDate = new Date(schedule.date);
-    const [startHour, startMin] = schedule.startTime.split(':');
-    const [endHour, endMin] = schedule.endTime.split(':');
+    const classDate = new Date(schedule.date || schedule.createdAt || new Date());
+    
+    const startTimeStr = schedule.startTime || schedule.start_time;
+    const endTimeStr = schedule.endTime || schedule.end_time;
+
+    if (!startTimeStr || !endTimeStr) return false;
+
+    const [startHour, startMin] = startTimeStr.split(':');
+    const [endHour, endMin] = endTimeStr.split(':');
 
     const startTime = new Date(classDate);
     startTime.setHours(parseInt(startHour), parseInt(startMin), 0);
@@ -42,9 +51,14 @@ export const isClassLive = (schedule) => {
  * @returns {boolean}
  */
 export const isClassExpired = (schedule) => {
+    if (!schedule) return false;
     const now = new Date();
-    const classDate = new Date(schedule.date);
-    const [endHour, endMin] = schedule.endTime.split(':');
+    const classDate = new Date(schedule.date || schedule.createdAt || new Date());
+    
+    const endTimeStr = schedule.endTime || schedule.end_time;
+    if (!endTimeStr) return false;
+
+    const [endHour, endMin] = endTimeStr.split(':');
 
     const endTime = new Date(classDate);
     endTime.setHours(parseInt(endHour), parseInt(endMin), 0);

@@ -45,36 +45,7 @@ import NotificationPermission from "../../components/NotificationPermission";
 import { useSelector } from "react-redux";
 const TeachersDashboard = () => {
   const { user: currentUser } = useSelector((state) => state.user);
-  const cardsData = [
-    {
-      title: "Total Courses ",
-      value: "12,847",
-      icon: <AiOutlineBook color="#06574C" size={22} />,
-      changeText: "Active",
-      changeColor: "text-[#38A100]",
-    },
-    {
-      title: "Attendance Rate",
-      value: "92%",
-      icon: <AiOutlineLineChart color="#06574C" size={22} />,
-      changeText: "+8.2% from last month",
-      changeColor: "text-[#38A100]",
-    },
-    {
-      title: "Total Students",
-      value: "3,847",
-      icon: <UsersRound color="#06574C" size={22} />,
-      changeText: "-2.1% from last week",
-      changeColor: "text-[#E8505B]",
-    },
-    {
-      title: "Total Hours",
-      value: "24",
-      icon: <LuClock4 color="#06574C" size={22} />,
-      changeText: " +8.2% from last month",
-      changeColor: "text-[#06574C]",
-    },
-  ];
+
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const courseCard = [
     {
@@ -107,31 +78,10 @@ const TeachersDashboard = () => {
   ];
 
   /* Dynamic Classes Fetching */
-  const [upcomingClasses, setUpcomingClasses] = useState([]);
+  // const [upcomingClasses, setUpcomingClasses] = useState([]);
 
-  useEffect(() => {
-    const fetchClasses = async () => {
-      try {
-        // 1. Get Current User Info (Session Cookie based)
-        const meRes = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/auth/me`, {
-          credentials: 'include'
-        });
-        const meData = await meRes.json();
+  /* Dynamic Classes Fetching moved to consolidated dashboard fetch */
 
-        if (meData.user) {
-          // 2. Fetch Schedules for this Teacher
-          const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule/getAll?teacherId=${meData.user.id}`);
-          const data = await res.json();
-          if (data.success) {
-            // Filter for future/today
-            const future = data.schedules.filter(s => new Date(s.date) >= new Date().setHours(0, 0, 0, 0));
-            setUpcomingClasses(future.slice(0, 5)); // Show top 5
-          }
-        }
-      } catch (e) { console.error("Failed to load classes", e); }
-    };
-    fetchClasses();
-  }, []);
   const [placement, setPlacement] = useState("left");
 
   const handleOpen = (placement) => {
@@ -205,9 +155,11 @@ const TeachersDashboard = () => {
   };
 
     const [featured, setFeatured] = useState(null);
+    const [upcomingClasses, setUpcomingClasses] = useState([]);
+    const [analytics, setAnalytics] = useState(null);
 
   useEffect(() => {
-    const fetchFeaturedAnnouncement = async () => {
+    const fetchTeacherDashboardData = async () => {
       try {
         const res = await fetch(
           `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/dashboard/teacher`,
@@ -216,16 +168,51 @@ const TeachersDashboard = () => {
           },
         );
         const data = await res.json();
-        if (data.success && data.data?.featured) {
-          setFeatured(data.data.featured);
+        console.log(data , "data");
+        if (data.success) {
+          if (data.data?.featured) setFeatured(data.data.featured);
+          if (data.data?.upcomingClasses) setUpcomingClasses(data.data.upcomingClasses);
+          if (data.data?.analytics) setAnalytics(data.data.analytics);
         }
       } catch (error) {
-        console.error("Error fetching featured announcement:", error);
+        console.error("Error fetching teacher dashboard data:", error);
       }
     };
-    fetchFeaturedAnnouncement();
+    fetchTeacherDashboardData();
   }, []);
 
+  const cardsData = [
+    {
+      title: "Total Courses ",
+      value: analytics?.total_courses || "0",
+      icon: <AiOutlineBook color="#06574C" size={22} />,
+      changeText: "Active",
+      changeColor: "text-[#38A100]",
+    },
+    {
+      title: "Attendance Rate",
+      value: `${analytics?.attendance_rate || "0"}%`,
+      icon: <AiOutlineLineChart color="#06574C" size={22} />,
+      changeText: "+8.2% from last month",
+      changeColor: "text-[#38A100]",
+    },
+    {
+      title: "Total Students",
+      value: analytics?.total_students || "0",
+      icon: <UsersRound color="#06574C" size={22} />,
+      changeText: "-2.1% from last week",
+      changeColor: "text-[#E8505B]",
+    },
+    {
+      title: "Total Hours",
+      value: Math.round(analytics?.total_hours || 0),
+      icon: <LuClock4 color="#06574C" size={22} />,
+      changeText: " +8.2% from last month",
+      changeColor: "text-[#06574C]",
+    },
+  ];
+
+  console.log(featured , "featured");
   return (
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-scrseen px-2 sm:px-3">
       {/* banner */}
@@ -331,11 +318,11 @@ const TeachersDashboard = () => {
       </div>
 
       <div className=" bg-white rounded-lg mb-3 ">
-        <h1 className="p-3 text-xl text-[#333333]">Upcoming Classes</h1>
+        <h1 className="p-3 text-xl text-[#333333]">Today's Classes</h1>
         <div className="flex flex-col gap-3">
           {upcomingClasses.length === 0 ? (
             <div className="p-4 text-gray-500 text-center bg-[#F5E3DA]/20 rounded-lg">
-              No upcoming classes found.
+              No today classes found.
             </div>
           ) : upcomingClasses.map((item, index) => {
             const dateObj = new Date(item.date);
@@ -344,7 +331,7 @@ const TeachersDashboard = () => {
             return (
               <div
                 key={item.id}
-                className={`${item.meetingLink ? "bg-[#EAF3F2]" : "bg-[#F5E3DA]"
+                className={`${item.meeting_link ? "bg-[#EAF3F2]" : "bg-[#F5E3DA]"
                   } rounded-md`}
               >
                 <div className="flex flex-col md:flex-row gap-4 md:justify-between p-4 md:items-center">
@@ -364,16 +351,16 @@ const TeachersDashboard = () => {
                       <div className="flex flex-wrap max-md:my-3 md:items-center mb-2 gap-5 text-sm text-[#666666]">
                         <div className="flex items-center gap-1 ">
                           <Clock size={20} />
-                          {formatTime12Hour(item.startTime)} - {formatTime12Hour(item.endTime)}
+                          {formatTime12Hour(item.start_time)} - {formatTime12Hour(item.end_time)}
                         </div>
                         <div className="flex items-center gap-1 ">
                           <Video size={20} />
-                          {item.meetingLink ? "Online (Zoom)" : "Pending"}
+                          {item.meeting_link ? "Online (Zoom)" : "Pending"}
                         </div>
                       </div>
                       <div className="flex gap-3">
                         <Button size="sm" className="bg-white text-[#06574C]">
-                          {item.courseName || "General Class"}
+                          {item.course_name || "General Class"}
                         </Button>
                       </div>
                     </div>
@@ -394,20 +381,20 @@ const TeachersDashboard = () => {
                             Completed
                           </Button>
                         );
-                      } else if (live && item.meetingLink) {
+                      } else if (live && item.meeting_link) {
                         return (
                           <Button
                             startContent={<Video size={20} />}
                             size="sm"
                             className="bg-green-600 w-32 text-white rounded-md"
                             as={Link}
-                            to={item.meetingLink}
+                            to={item.meeting_link}
                             target="_blank"
                           >
                             Start Class
                           </Button>
                         );
-                      } else if (item.meetingLink) {
+                      } else if (item.meeting_link) {
                         return (
                           <Button
                             startContent={<Clock size={20} />}
