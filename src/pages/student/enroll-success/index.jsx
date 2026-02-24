@@ -10,13 +10,13 @@ const EnrollSuccess = () => {
     const session_id = searchParams.get('session_id');
     const [status, setStatus] = useState('verifying'); // verifying, success, error
 
-    useEffect(() => {
-        if (session_id) {
-            verifyPayment();
-        } else {
-            setStatus('error');
-        }
-    }, [session_id]);
+    // useEffect(() => {
+    //     if (session_id) {
+    //         verifyPayment();
+    //     } else {
+    //         setStatus('error');
+    //     }
+    // }, [session_id]);
 
     const verifyPayment = async () => {
         try {

@@ -116,7 +116,7 @@ const CourseDetails = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ courseId: course.id, enrollmentId: data.enrollment?.id })
+          body: JSON.stringify({ courseId: course.id })
         });
         const paymentData = await paymentRes.json();
         if (paymentData.success && paymentData.url) {
