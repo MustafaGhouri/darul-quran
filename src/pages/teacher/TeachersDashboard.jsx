@@ -11,6 +11,7 @@ import {
   Select,
   SelectItem,
   Textarea,
+  Skeleton,
 } from "@heroui/react";
 import {
   BookIcon,
@@ -43,44 +44,12 @@ import { Link } from "react-router-dom";
 import { formatTime12Hour, isClassLive, isClassExpired } from "../../utils/scheduleHelpers";
 import NotificationPermission from "../../components/NotificationPermission";
 import { useSelector } from "react-redux";
+import { errorMessage } from "../../lib/toast.config";
 const TeachersDashboard = () => {
   const { user: currentUser } = useSelector((state) => state.user);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const courseCard = [
-    {
-      id: 1,
-      Status: "Active",
-      course: "Advanced Web Development",
-      students: "32",
-      role: "Student",
-      time: "Nov 11, 10:00 AM",
-      value: 70,
-    },
-    {
-      id: 2,
-      Status: "Active",
-      course: "Advanced Web Development",
-      students: "32",
-      role: "Student",
-      time: "Nov 11, 10:00 AM",
-      value: 70,
-    },
-    {
-      id: 3,
-      Status: "Active",
-      course: "Advanced Web Development",
-      students: "32",
-      role: "Student",
-      time: "Nov 11, 10:00 AM",
-      value: 70,
-    },
-  ];
-
-  /* Dynamic Classes Fetching */
-  // const [upcomingClasses, setUpcomingClasses] = useState([]);
-
-  /* Dynamic Classes Fetching moved to consolidated dashboard fetch */
+  const [activeCourses, setActiveCourses] = useState([]);
 
   const [placement, setPlacement] = useState("left");
 
@@ -108,8 +77,7 @@ const TeachersDashboard = () => {
     {
       id: 2,
       title: "Upcoming Event",
-      description:
-        "Guest lecture on Advanced React Patterns scheduled for next Monday at 3 PM. Don't miss this opportunity!",
+      description:"Guest lecture on Advanced React Patterns scheduled for next Monday at 3 PM. Don't miss this opportunity!",
       time: "2 hours ago",
       course: "Web Development 101",
       students: "42 students",
@@ -157,29 +125,39 @@ const TeachersDashboard = () => {
     const [featured, setFeatured] = useState(null);
     const [upcomingClasses, setUpcomingClasses] = useState([]);
     const [analytics, setAnalytics] = useState(null);
+    const [loading, setLoading] = useState(false);
+useEffect(() => {
+  const fetchTeacherDashboardData = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/dashboard/teacher`,
+        { credentials: "include" }
+      );
 
-  useEffect(() => {
-    const fetchTeacherDashboardData = async () => {
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/dashboard/teacher`,
-          {
-            credentials: "include",
-          },
-        );
-        const data = await res.json();
-        console.log(data , "data");
-        if (data.success) {
-          if (data.data?.featured) setFeatured(data.data.featured);
-          if (data.data?.upcomingClasses) setUpcomingClasses(data.data.upcomingClasses);
-          if (data.data?.analytics) setAnalytics(data.data.analytics);
-        }
-      } catch (error) {
-        console.error("Error fetching teacher dashboard data:", error);
+      const data = await res.json();
+
+      // 🔥 THIS IS IMPORTANT
+      if (!res.ok) {
+        throw new Error(data.message || "Something went wrong");
       }
-    };
-    fetchTeacherDashboardData();
-  }, []);
+
+      if (data.success) {
+        if (data.data?.featured) setFeatured(data.data.featured);
+        if (data.data?.upcomingClasses) setUpcomingClasses(data.data.upcomingClasses);
+        if (data.data?.analytics) setAnalytics(data.data.analytics);
+        if (data.data?.activeCourses) setActiveCourses(data.data.activeCourses);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error(error.message);
+      setLoading(false);
+      errorMessage(error.message); // ✅ Now message will show
+    }
+  };
+
+  fetchTeacherDashboardData();
+}, []);
 
   const cardsData = [
     {
@@ -249,78 +227,158 @@ const TeachersDashboard = () => {
         </div>
       </div>
 
-      <OverviewCards data={cardsData} />
+      <OverviewCards data={cardsData} isLoading={loading}/>
 
       <div>
         <div className="grid grid-cols-12 gap-3 pb-4">
-          {courseCard.map((item, index) => (
-            <div className="col-span-12 md:col-span-6 lg:col-span-4 ">
-              <div className="w-full bg-white rounded-lg">
-                <div className="bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)]  rounded-lg p-3 ">
-                  <Button
-                    size="sm"
-                    radius="sm"
-                    className="bg-white text-[#06574C] px-4"
-                  >
-                    {item.Status}
-                  </Button>
-                  <div className="">
-                    <span className=" flex justify-center items-center py-6 text-2xl font-semibold ">
-                      {item.course}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-3 space-y-3">
-                  <div className="flex justify-between items-center ">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-[#95C4BE33] flex items-center justify-center text-white font-bold text-sm  shrink-0">
-                        <RiGroupLine size={22} color="#06574C" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-[#06574C] text-lg leading-tight">
-                          {item.students}
-                        </p>
-                        <p className="text-sm text-[#666666]">{item.role}</p>
-                      </div>
-                    </div>
-                    <div className="text-end">
-                      <p className="font-semibold text-black text-sm leading-tight">
-                        Next Class
-                      </p>
-                      <p className="text-sm text-[#666666]">{item.time}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between items-center text-[#6B7280]">
-                      <span>Progress</span>
-                      <span>{item.value}%</span>
-                    </div>
-                    <Progress
-                      color="success"
-                      value={item.value}
-                      size="sm"
-                    ></Progress>
-                  </div>
-                  <div>
+        {loading
+  ? Array.from({ length: 3 }).map((_, index) => (
+      <div
+        key={index}
+        className="col-span-12 md:col-span-6 lg:col-span-4"
+      >
+        <div className="w-full bg-white rounded-lg shadow-sm border border-gray-100/50 p-4 space-y-4">
+          
+          {/* Status Badge */}
+          <Skeleton className="h-6 w-24 rounded-md" />
+
+          {/* Course Title */}
+          <Skeleton className="h-8 w-3/4 rounded-md mx-auto" />
+
+          {/* Student + Next Class Row */}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-16 rounded-md" />
+                <Skeleton className="h-3 w-24 rounded-md" />
+              </div>
+            </div>
+            <div className="space-y-2 text-end">
+              <Skeleton className="h-4 w-20 rounded-md" />
+              <Skeleton className="h-3 w-24 rounded-md" />
+            </div>
+          </div>
+
+          {/* Progress */}
+          <div className="space-y-2">
+            <Skeleton className="h-3 w-full rounded-md" />
+            <Skeleton className="h-3 w-full rounded-md" />
+          </div>
+
+          {/* Button */}
+          <Skeleton className="h-9 w-full rounded-md" />
+        </div>
+      </div>
+    )): activeCourses.length === 0 ? (
+            <div className="col-span-12 p-10 text-center bg-white/50 rounded-lg border-2 border-dashed border-gray-200">
+              <p className="text-gray-500 text-lg italic">No active courses found.</p>
+            </div>
+          ) : activeCourses.map((item, index) => {
+            const nextClassTime = item.nextClass?.date 
+              ? `${new Date(item.nextClass.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${formatTime12Hour(item.nextClass.startTime)}`
+              : "No upcoming classes";
+
+            return (
+              <div key={item.id} className="col-span-12 md:col-span-6 lg:col-span-4 ">
+                <div className="w-full bg-white rounded-lg shadow-sm border border-gray-100/50">
+                  <div className="bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)]  rounded-lg p-3 ">
                     <Button
                       size="sm"
-                      className="bg-[#06574C] text-white rounded-md w-full mt-2"
-                      startContent={<AiOutlineEye size={22} />}
+                      radius="sm"
+                      className="bg-white text-[#06574C] px-4 font-medium capitalize"
                     >
-                      View Course
+                      {item.status}
                     </Button>
+                    <div className="">
+                      <span className=" flex justify-center items-center py-6 text-2xl font-semibold text-[#333333]">
+                        {item.courseName}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-3 space-y-3">
+                    <div className="flex justify-between items-center ">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-[#95C4BE33] flex items-center justify-center text-white font-bold text-sm  shrink-0">
+                          <RiGroupLine size={22} color="#06574C" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-[#06574C] text-lg leading-tight">
+                            {item.studentCount}
+                          </p>
+                          <p className="text-sm text-[#666666]">Students Enrolled</p>
+                        </div>
+                      </div>
+                      <div className="text-end">
+                        <p className="font-semibold text-black text-sm leading-tight">
+                          Next Class
+                        </p>
+                        <p className="text-sm text-[#666666]">{nextClassTime}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center text-[#6B7280]">
+                        <span>Progress</span>
+                        <span>{item.progress}%</span>
+                      </div>
+                      <Progress
+                        color="success"
+                        value={item.progress}
+                        size="sm"
+                        className="mt-1"
+                      ></Progress>
+                    </div>
+                    <div>
+                      <Button
+                        as={Link}
+                        to={`/teacher/courses/${item.id}`}
+                        size="sm"
+                        className="bg-[#06574C] text-white rounded-md w-full mt-2"
+                        startContent={<AiOutlineEye size={22} />}
+                      >
+                        View Course
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       <div className=" bg-white rounded-lg mb-3 ">
         <h1 className="p-3 text-xl text-[#333333]">Today's Classes</h1>
         <div className="flex flex-col gap-3">
-          {upcomingClasses.length === 0 ? (
+          {loading ? (
+            // 🔥 Skeleton Loader (3 dummy rows)
+            Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className="rounded-md p-4 bg-gray-100 animate-pulse"
+              >
+                <div className="flex flex-col md:flex-row gap-4 md:justify-between md:items-center">
+
+                  {/* Left Section */}
+                  <div className="flex flex-col md:flex-row gap-3 md:items-center">
+
+                    {/* Date Circle Skeleton */}
+                    <div className="h-20 w-20 rounded-full bg-gray-300"></div>
+
+                    {/* Text Content */}
+                    <div className="space-y-3">
+                      <div className="h-4 w-48 bg-gray-300 rounded"></div>
+                      <div className="h-3 w-64 bg-gray-200 rounded"></div>
+                      <div className="h-3 w-32 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+
+                  {/* Button Skeleton */}
+                  <div className="h-10 w-32 bg-gray-300 rounded-md"></div>
+                </div>
+              </div>
+            ))
+          ) : upcomingClasses.length === 0 ? (
             <div className="p-4 text-gray-500 text-center bg-[#F5E3DA]/20 rounded-lg">
               No today classes found.
             </div>

@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  PlusIcon,
-  Trash2,
-  Eye,
-  TicketIcon,
-  MessageSquare,
-} from "lucide-react";
+import { PlusIcon, Trash2, Eye, TicketIcon, MessageSquare } from "lucide-react";
 import {
   Button,
   Select,
@@ -36,6 +30,7 @@ import {
   useDeleteTicketMutation,
 } from "../../../redux/api/supportTickets";
 import { addToast } from "@heroui/react";
+import { errorMessage, successMessage } from "../../../lib/toast.config";
 
 const STATUS_COLORS = {
   open: { bg: "bg-[#E8F1FF]", text: "text-[#3F86F2]" },
@@ -53,7 +48,10 @@ const SupportTicketsTeacher = () => {
   const createModal = useDisclosure();
   const viewModal = useDisclosure();
 
-  const { data, isLoading, isFetching } = useGetMyTicketsQuery({ page, limit: 10 });
+  const { data, isLoading, isFetching } = useGetMyTicketsQuery({
+    page,
+    limit: 10,
+  });
   const [createTicket, { isLoading: isCreating }] = useCreateTicketMutation();
   const [deleteTicket, { isLoading: isDeleting }] = useDeleteTicketMutation();
 
@@ -72,20 +70,20 @@ const SupportTicketsTeacher = () => {
     }
     try {
       await createTicket(formData).unwrap();
-      addToast({ title: "Ticket submitted successfully!", color: "success" });
+      successMessage("Ticket submitted successfully!");
       setFormData({ title: "", description: "" });
       createModal.onClose();
     } catch (err) {
-      addToast({ title: err?.data?.message || "Failed to create ticket", color: "danger" });
+      errorMessage(err?.data?.message || "Failed to create ticket");
     }
   };
 
   const handleDelete = async (id) => {
     try {
       await deleteTicket(id).unwrap();
-      addToast({ title: "Ticket deleted", color: "success" });
+      successMessage("Ticket deleted successfully");
     } catch (err) {
-      addToast({ title: err?.data?.message || "Failed to delete ticket", color: "danger" });
+      errorMessage(err?.data?.message || "Failed to delete ticket");
     }
   };
 
@@ -102,12 +100,12 @@ const SupportTicketsTeacher = () => {
       />
 
       {/* Toolbar */}
-      <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
+      <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex flex-row  justify-between items-center">
         <Select
           label="Status"
           radius="sm"
           size="sm"
-          className="min-w-40"
+          className="w-40"
           selectedKeys={[statusFilter]}
           onSelectionChange={(keys) => setStatusFilter([...keys][0] || "all")}
         >
@@ -133,15 +131,15 @@ const SupportTicketsTeacher = () => {
       <Table
         removeWrapper
         classNames={{
-          base: "w-full bg-white rounded-lg overflow-x-auto no-scrollbar shadow-md",
+          base: "w-full bg-white rounded-lg overflow-x-auto no-scrollbar shadow-md h-[calc(100vh-300px)]",
           th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
           td: "py-3 items-center whitespace-nowrap",
           tr: "border-b border-default-200",
         }}
       >
         <TableHeader>
-          <TableColumn>Ticket ID</TableColumn>
-          <TableColumn>Subject</TableColumn>
+          <TableColumn>Title</TableColumn>
+          <TableColumn>Description</TableColumn>
           <TableColumn>Status</TableColumn>
           <TableColumn>Date</TableColumn>
           <TableColumn>Actions</TableColumn>
@@ -155,13 +153,19 @@ const SupportTicketsTeacher = () => {
             const color = STATUS_COLORS[ticket.status] || STATUS_COLORS.open;
             return (
               <TableRow key={ticket.id}>
-                <TableCell className="font-medium text-gray-700">#{ticket.id}</TableCell>
-                <TableCell className="max-w-xs truncate">{ticket.title}</TableCell>
+                <TableCell className="font-medium text-gray-700">
+                  {" "}
+                  {ticket.title}
+                </TableCell>
+                <TableCell className="max-w-xs truncate">
+                  {ticket.description}
+                </TableCell>
                 <TableCell>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${color.bg} ${color.text}`}
                   >
-                    {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+                    {ticket.status.charAt(0).toUpperCase() +
+                      ticket.status.slice(1)}
                   </span>
                 </TableCell>
                 <TableCell className="text-gray-500 text-sm">
@@ -174,20 +178,22 @@ const SupportTicketsTeacher = () => {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Button
-                      isIconOnly
                       size="sm"
                       radius="sm"
-                      variant="light"
-                      className="text-gray-500 hover:text-[#06574C]"
+                      variant="solid"
+                      color="success"
+                      // className="text-gray-500 hover:text-[#06574C]"
                       onPress={() => handleView(ticket)}
+                      startContent={<Eye size={16} />}
                     >
-                      <Eye size={18} />
+                      View
                     </Button>
                     <Button
                       size="sm"
                       radius="sm"
                       variant="bordered"
-                      className="border-red-400 text-red-500 hover:bg-red-50"
+                      color="danger"
+                      // className="border-red-400 text-red-500 hover:bg-red-50/"
                       startContent={<Trash2 size={16} />}
                       isLoading={isDeleting}
                       onPress={() => handleDelete(ticket.id)}
@@ -222,7 +228,11 @@ const SupportTicketsTeacher = () => {
       )}
 
       {/* ── Create Ticket Modal ── */}
-      <Modal isOpen={createModal.isOpen} onOpenChange={createModal.onOpenChange} size="lg">
+      <Modal
+        isOpen={createModal.isOpen}
+        onOpenChange={createModal.onOpenChange}
+        size="lg"
+      >
         <ModalContent>
           {(onClose) => (
             <>
@@ -236,7 +246,9 @@ const SupportTicketsTeacher = () => {
                   placeholder="Brief title of your issue"
                   radius="sm"
                   value={formData.title}
-                  onValueChange={(v) => setFormData((p) => ({ ...p, title: v }))}
+                  onValueChange={(v) =>
+                    setFormData((p) => ({ ...p, title: v }))
+                  }
                   classNames={{ inputWrapper: "border border-gray-200" }}
                 />
                 <Textarea
@@ -245,7 +257,9 @@ const SupportTicketsTeacher = () => {
                   radius="sm"
                   minRows={4}
                   value={formData.description}
-                  onValueChange={(v) => setFormData((p) => ({ ...p, description: v }))}
+                  onValueChange={(v) =>
+                    setFormData((p) => ({ ...p, description: v }))
+                  }
                   classNames={{ inputWrapper: "border border-gray-200" }}
                 />
               </ModalBody>
@@ -268,7 +282,11 @@ const SupportTicketsTeacher = () => {
       </Modal>
 
       {/* ── View Ticket Modal ── */}
-      <Modal isOpen={viewModal.isOpen} onOpenChange={viewModal.onOpenChange} size="lg">
+      <Modal
+        isOpen={viewModal.isOpen}
+        onOpenChange={viewModal.onOpenChange}
+        size="lg"
+      >
         <ModalContent>
           {(onClose) => (
             <>
@@ -281,10 +299,14 @@ const SupportTicketsTeacher = () => {
                   <div className="space-y-4">
                     <div>
                       <p className="text-xs text-gray-400 mb-1">Subject</p>
-                      <p className="font-semibold text-gray-800">{selectedTicket.title}</p>
+                      <p className="font-semibold text-gray-800">
+                        {selectedTicket.title}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-400 mb-1">Your Description</p>
+                      <p className="text-xs text-gray-400 mb-1">
+                        Your Description
+                      </p>
                       <p className="text-gray-700 text-sm bg-gray-50 rounded-lg p-3">
                         {selectedTicket.description}
                       </p>
@@ -302,9 +324,13 @@ const SupportTicketsTeacher = () => {
                         </span>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-400 mb-1">Submitted on</p>
+                        <p className="text-xs text-gray-400 mb-1">
+                          Submitted on
+                        </p>
                         <p className="text-sm text-gray-600">
-                          {new Date(selectedTicket.createdAt).toLocaleDateString("en-US", {
+                          {new Date(
+                            selectedTicket.createdAt,
+                          ).toLocaleDateString("en-US", {
                             month: "long",
                             day: "numeric",
                             year: "numeric",
@@ -318,11 +344,15 @@ const SupportTicketsTeacher = () => {
                           <MessageSquare size={12} /> Admin Response
                         </p>
                         <div className="bg-[#95C4BE20] border border-[#06574C30] rounded-lg p-3">
-                          <p className="text-gray-800 text-sm">{selectedTicket.adminResponse}</p>
+                          <p className="text-gray-800 text-sm">
+                            {selectedTicket.adminResponse}
+                          </p>
                           {selectedTicket.adminResponseAt && (
                             <p className="text-xs text-gray-400 mt-2">
                               Responded on{" "}
-                              {new Date(selectedTicket.adminResponseAt).toLocaleDateString()}
+                              {new Date(
+                                selectedTicket.adminResponseAt,
+                              ).toLocaleDateString()}
                             </p>
                           )}
                         </div>
@@ -338,7 +368,11 @@ const SupportTicketsTeacher = () => {
                 )}
               </ModalBody>
               <ModalFooter>
-                <Button radius="sm" className="bg-[#06574C] text-white" onPress={onClose}>
+                <Button
+                  radius="sm"
+                  className="bg-[#06574C] text-white"
+                  onPress={onClose}
+                >
                   Close
                 </Button>
               </ModalFooter>

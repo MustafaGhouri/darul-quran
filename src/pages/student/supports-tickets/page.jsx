@@ -135,7 +135,7 @@ const SupportTicketsStudent = () => {
       <Table
         removeWrapper
         classNames={{
-          base: "w-full bg-white rounded-lg overflow-x-auto no-scrollbar shadow-md",
+          base: "w-full bg-white rounded-lg overflow-x-auto no-scrollbar shadow-md h-[calc(100vh-300px)]",
           th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
           td: "py-3 items-center whitespace-nowrap",
           tr: "border-b border-default-200",
