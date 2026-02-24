@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
   Button,
@@ -10,289 +11,372 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  Textarea,
+  Spinner,
+  Chip,
+  User,
 } from "@heroui/react";
 import {
-  BellRing,
-  Edit,
   Eye,
   ListFilterIcon,
-  Mail,
   MessageSquare,
-  PlusIcon,
   Trash2,
+  TicketIcon,
 } from "lucide-react";
+import {
+  useGetAllTicketsQuery,
+  useRespondToTicketMutation,
+  useDeleteTicketMutation,
+} from "../../../redux/api/supportTickets";
+import { addToast } from "@heroui/react";
 
-const SupportTickets = () => {
-  const classes = [
-    {
-      id: 1,
-      name: "John Davis",
-      desc: "john.davis@email.com",
-      status: "Resolved",
-      date: "2025-11-27",
-      time: "Nov 20, 2025",
-      sendto: "All",
-      issue:"Unable to access course materials",
-    },
-    {
-      id: 2,
-      name: "John Davis",
-      desc: "john.davis@email.com",
-      status: "Pending",
-      date: "2025-11-27",
-      time: "Nov 20, 2025",
-      sendto: "Teachers",
-      issue:"Unable to access course materials",
-    },
-    {
-      id: 3,
-      name: "John Davis",
-      desc: "john.davis@email.com",
-      status: "Resolved",
-      date: "2025-11-27",
-      time: "Nov 20, 2025",
-      sendto: "Students",
-      issue:"Unable to access course materials",
-    },
-    {
-      id: 4,
-      name: "John Davis",
-      desc: "john.davis@email.com",
-      status: "Pending",
-      date: "2025-11-27",
-      time: "Nov 20, 2025",
-      sendto: "All",
-      issue:"Unable to access course materials",
-    },
-    {
-      id: 5,
-      name: "John Davis",
-      desc: "john.davis@email.com",
-      status: "Open",
-      date: "2025-11-27",
-      time: "Nov 20, 2025",
-      sendto: "Teachers",
-      issue:"Unable to access course materials",
-    },
-    {
-      id: 6,
-      name: "John Davis",
-      desc: "john.davis@email.com",
-      status: "Pending",
-      date: "2025-11-27",
-      time: "Nov 20, 2025",
-      sendto: "Students",
-      issue:"Unable to access course materials",
-    },
-    {
-      id: 7,
-      name: "John Davis",
-      desc: "john.davis@email.com",
-      status: "Resolved",
-      date: "2025-11-27",
-      time: "Nov 20, 2025",
-      sendto: "All",
-      issue:"Unable to access course materials",
-    },
-    {
-      id: 8,
-      name: "John Davis",
-      desc: "john.davis@email.com",
-      status: "Pending",
-      date: "2025-11-27",
-      time: "Nov 20, 2025",
-      sendto: "Teachers",
-      issue:"Unable to access course materials",
-    },
-    {
-      id: 9,
-      name: "John Davis",
-      desc: "john.davis@email.com",
-      status: "Open",
-      date: "2025-11-27",
-      time: "Nov 20, 2025",
-      sendto: "Students",
-      issue:"Unable to access course materials",
-    },
-  ];
-  const statuses = [
-    { key: "all", label: "All Status" },
-    { key: "draft", label: "Draft" },
-    { key: "published", label: "Published" },
-  ];
-  const filters = [{ key: "all", label: "Filter" }];
-  const limits = [
-    { key: "10", label: "10" },
-    { key: "20", label: "20" },
-    { key: "30", label: "30" },
-    { key: "40", label: "40" },
-    { key: "50", label: "50" },
-  ];
-  const supportheader = [   
-    { key: "Student Name", label: "Student Name" },
-    { key: "Issue Summary", label: "Issue Summary" },
-    { key: "Role", label: "Role" },
-    { key: "Status", label: "Status" },
-    { key: "Date", label: "Date" },
-    { key: "Action", label: "Action" },
-  ]
+const STATUS_COLORS = {
+  open: { bg: "bg-[#E8F1FF]", text: "text-[#3F86F2]" },
+  pending: { bg: "bg-[#FBF4EC]", text: "text-[#D28E3D]" },
+  resolved: { bg: "bg-[#95C4BE33]", text: "text-[#06574C]" },
+  cancelled: { bg: "bg-[#FFE8E8]", text: "text-[#E53E3E]" },
+};
+
+const AdminSupportTickets = () => {
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [responseMessage, setResponseMessage] = useState("");
+  const [ticketStatus, setTicketStatus] = useState("");
+
+  const respondModal = useDisclosure();
+  const viewModal = useDisclosure();
+
+  const { data, isLoading, isFetching } = useGetAllTicketsQuery({ 
+    page, 
+    limit: 10, 
+    status: statusFilter 
+  });
+  const [respondToTicket, { isLoading: isResponding }] = useRespondToTicketMutation();
+  const [deleteTicket, { isLoading: isDeleting }] = useDeleteTicketMutation();
+
+  const tickets = data?.tickets || [];
+  const totalPages = data?.totalPages || 1;
+
+  const handleRespondOpen = (ticket) => {
+    setSelectedTicket(ticket);
+    setResponseMessage(ticket.adminResponse || "");
+    setTicketStatus(ticket.status);
+    respondModal.onOpen();
+  };
+
+  const handleViewOpen = (ticket) => {
+    setSelectedTicket(ticket);
+    viewModal.onOpen();
+  };
+
+  const handleSubmitResponse = async () => {
+    try {
+      await respondToTicket({
+        id: selectedTicket.id,
+        adminResponse: responseMessage,
+        status: ticketStatus,
+      }).unwrap();
+      addToast({ title: "Response sent successfully!", color: "success" });
+      respondModal.onClose();
+    } catch (err) {
+      addToast({ title: err?.data?.message || "Failed to send response", color: "danger" });
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this ticket?")) return;
+    try {
+      await deleteTicket(id).unwrap();
+      addToast({ title: "Ticket deleted", color: "success" });
+    } catch (err) {
+      addToast({ title: err?.data?.message || "Failed to delete ticket", color: "danger" });
+    }
+  };
+
   return (
-    <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
+    <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 min-h-full">
       <DashHeading
         title={"Support Tickets"}
-        desc={"Manage and respond to student help requests"}
+        desc={"Manage and respond to student and teacher help requests"}
       />
-      <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
-        <div className="flex  items-center gap-2">
+
+      <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex  justify-between items-center">
+        <div className="flex flex-col  items-center gap-2">
           <Select
-            className="min-w-[130px]"
+            className="min-w-[150px]"
             radius="sm"
-            defaultSelectedKeys={["all"]}
-            placeholder="Select status"
+            size="sm"
+            label="Filter by Status"
+            selectedKeys={[statusFilter]}
+            onSelectionChange={(keys) => setStatusFilter([...keys][0] || "all")}
           >
-            {statuses.map((status) => (
-              <SelectItem key={status.key}>{status.label}</SelectItem>
-            ))}
-          </Select>
-          <Select
-            radius="sm"
-            className="min-w-[120px]"
-            defaultSelectedKeys={["all"]}
-            selectorIcon={<ListFilterIcon />}
-            placeholder="Filter"
-          >
-            {filters.map((filter) => (
-              <SelectItem key={filter.key}>{filter.label}</SelectItem>
-            ))}
+            <SelectItem key="all">All Statistics</SelectItem>
+            <SelectItem key="open">Open</SelectItem>
+            <SelectItem key="pending">Pending</SelectItem>
+            <SelectItem key="resolved">Resolved</SelectItem>
+            <SelectItem key="cancelled">Cancelled</SelectItem>
           </Select>
         </div>
         <Button
           startContent={<Trash2 size={20} />}
           radius="sm"
           className="bg-[#06574C] text-white"
+          onPress={() => setStatusFilter("all")}
         >
-          Clear All
+          Reset Filters
         </Button>
       </div>
-      <div className=" overflow-hidden">
+
+      <div className="overflow-hidden">
         <Table
-        removeWrapper
+          removeWrapper
           classNames={{
-            base: "w-full bg-white rounded-lg overflow-x-scroll w-full no-scrollbar",
-            th: "font-bold p-4 text-md  text-[#333333] capitalize tracking-widest  bg-[#EBD4C936]",
-            td: "py-3 items-center whitespace-nowrap",
-            tr: "border-b border-default-200 ",
+            base: "w-full bg-white rounded-lg overflow-x-auto no-scrollbar",
+            th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+            td: "py-3 items-center whitespace-nowrap px-4",
+            tr: "border-b border-default-200",
           }}
         >
           <TableHeader>
-            {supportheader.map((item) => (
-                <TableColumn key={item.key}>{item.label}</TableColumn>
-              ))}
+            <TableColumn>User</TableColumn>
+            <TableColumn>Issue Summary</TableColumn>
+            <TableColumn>Role</TableColumn>
+            <TableColumn>Status</TableColumn>
+            <TableColumn>Date</TableColumn>
+            <TableColumn>Action</TableColumn>
           </TableHeader>
-
-          <TableBody>
-            {classes.map((classItem) => (
-              <TableRow key={classItem.id}>
-                <TableCell>
-                  <div>
-                    <div className="font-medium text-gray-900">
-                      {classItem.name}
+          <TableBody
+            isLoading={isLoading || isFetching}
+            loadingContent={<Spinner color="success" />}
+            emptyContent="No support tickets found."
+          >
+            {tickets.map((ticket) => {
+              const color = STATUS_COLORS[ticket.status] || STATUS_COLORS.open;
+              return (
+                <TableRow key={ticket.id}>
+                  <TableCell>
+                    <User
+                      name={`${ticket.userName} ${ticket.userLastName || ""}`}
+                      description={ticket.userEmail}
+                      avatarProps={{
+                        radius: "sm",
+                        className: "bg-[#06574C] text-white font-bold",
+                        name: ticket.userName?.charAt(0),
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div className="max-w-[200px] truncate font-medium">
+                      {ticket.title}
                     </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      {classItem.desc}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      className="capitalize"
+                      color={ticket.userRole === "teacher" ? "secondary" : "primary"}
+                    >
+                      {ticket.userRole}
+                    </Chip>
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${color.bg} ${color.text}`}
+                    >
+                      {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-gray-500 text-sm">
+                    {new Date(ticket.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        radius="sm"
+                        variant="bordered"
+                        size="sm"
+                        className="border-[#06574C] text-[#06574C]"
+                        startContent={<Eye size={18} />}
+                        onPress={() => handleViewOpen(ticket)}
+                      >
+                        View
+                      </Button>
+                      <Button
+                        radius="sm"
+                        size="sm"
+                        className="bg-[#06574C] text-white"
+                        startContent={<MessageSquare size={18} />}
+                        onPress={() => handleRespondOpen(ticket)}
+                      >
+                        Reply
+                      </Button>
+                      <Button
+                        isIconOnly
+                        radius="sm"
+                        size="sm"
+                        variant="light"
+                        color="danger"
+                        onPress={() => handleDelete(ticket.id)}
+                      >
+                        <Trash2 size={18} />
+                      </Button>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {classItem.issue}
-                </TableCell>
-                <TableCell>
-                  {/* <div>
-                    <Button
-                      startContent={
-                        classItem.delivery === "Email" ? (
-                          <Mail size={20} color="#06574C" />
-                        ) : (
-                          <BellRing size={20} color="#06574C" />
-                        )
-                      }
-                      className={`p-2 w-full text-center rounded-md bg-[#95C4BE33] text-[#06574C] `}
-                    >
-                      {classItem.delivery}
-                    </Button>
-                  </div> */}
-                  <div className="flex-col flex">
-                    <p
-                      className={`p-2 w-full text-center rounded-md bg-[#FBF4EC] text-[#D28E3D] `}
-                    >
-                      {classItem.sendto}
-                    </p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {/* <span>{classItem.time}</span> */}
-                  <p
-                      className={`p-2 w-full text-center rounded-md  ${classItem.status === "Pending" ? "bg-[#FBF4EC] text-[#D28E3D]" : classItem.status === "Open" ? "bg-[#E8F1FF] text-[#3F86F2]" : "bg-[#95C4BE33] text-[#06574C]"} `}
-                    >
-                      {classItem.status}
-                    </p>
-                </TableCell>
-                <TableCell>
-                  <span>{classItem.time}</span>
-                </TableCell>
-                <TableCell className="flex items-center gap-2">
-                  <Button
-                    radius="sm"
-                    variant="bordered"
-                    className="border-[#06574C] "
-                    startContent={<Eye size={20} color="#06574C" />}
-                  >
-                    View
-                  </Button>
-                  <Button
-                    radius="sm"
-                    className="bg-[#06574C] text-white"
-                    startContent={<MessageSquare size={20} color="white" />}
-                  >
-                    Reply
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
-      <div className="flex flex-wrap overflow-hidden items-center p-4 gap-2 justify-between">
-        <div className="flex text-sm items-center gap-1">
-          <span>Showing</span>
-          <Select
-            radius="sm"
-            className="w-[70px]"
-            defaultSelectedKeys={["10"]}
-            placeholder="1"
-          >
-            {limits.map((limit) => (
-              <SelectItem key={limit.key}>{limit.label}</SelectItem>
-            ))}
-          </Select>
-          <span className="min-w-56">Out of 58</span>
+
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center p-4">
+          <span className="text-sm text-gray-500">
+            Showing Page {page} of {totalPages}
+          </span>
+          <Pagination
+            showControls
+            variant="ghost"
+            page={page}
+            total={totalPages}
+            onChange={setPage}
+            classNames={{
+              item: "rounded-sm",
+              cursor: "bg-[#06574C] rounded-sm text-white",
+              prev: "rounded-sm bg-white/80",
+              next: "rounded-sm bg-white/80",
+            }}
+          />
         </div>
-        <Pagination
-          className=""
-          showControls
-          variant="ghost"
-          initialPage={1}
-          total={10}
-          classNames={{
-            item: "rounded-sm hover:bg-bg-[#06574C]/50",
-            cursor: "bg-[#06574C] rounded-sm text-white",
-            prev: "rounded-sm bg-white/80",
-            next: "rounded-sm bg-white/80",
-          }}
-        />
-      </div>
+      )}
+
+      {/* ── Respond Modal ── */}
+      <Modal isOpen={respondModal.isOpen} onOpenChange={respondModal.onOpenChange} size="lg">
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>Update Ticket Response</ModalHeader>
+              <ModalBody>
+                {selectedTicket && (
+                  <div className="space-y-4">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <p className="text-xs text-gray-400">User's Message</p>
+                      <p className="font-semibold text-gray-800">{selectedTicket.title}</p>
+                      <p className="text-sm text-gray-600 mt-2">{selectedTicket.description}</p>
+                    </div>
+
+                    <Select
+                      label="Update Status"
+                      radius="sm"
+                      selectedKeys={[ticketStatus]}
+                      onSelectionChange={(keys) => setTicketStatus([...keys][0])}
+                    >
+                      <SelectItem key="pending">Pending</SelectItem>
+                      <SelectItem key="open">Open</SelectItem>
+                      <SelectItem key="resolved">Resolved</SelectItem>
+                      <SelectItem key="cancelled">Cancelled</SelectItem>
+                    </Select>
+
+                    <Textarea
+                      label="Admin Response"
+                      placeholder="Write your response here..."
+                      radius="sm"
+                      minRows={4}
+                      value={responseMessage}
+                      onValueChange={setResponseMessage}
+                    />
+                  </div>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="bordered" radius="sm" onPress={onClose}>
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-[#06574C] text-white"
+                  radius="sm"
+                  isLoading={isResponding}
+                  onPress={handleSubmitResponse}
+                >
+                  Save Response
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* ── View Detail Modal ── */}
+      <Modal isOpen={viewModal.isOpen} onOpenChange={viewModal.onOpenChange} size="lg">
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex items-center gap-2">
+                <TicketIcon size={20} className="text-[#06574C]" />
+                Ticket Preview
+              </ModalHeader>
+              <ModalBody>
+                {selectedTicket && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                      <User
+                        name={`${selectedTicket.userName} ${selectedTicket.userLastName || ""}`}
+                        description={`${selectedTicket.userEmail} (${selectedTicket.userRole})`}
+                        avatarProps={{
+                          radius: "sm",
+                          name: selectedTicket.userName?.charAt(0),
+                          className: "bg-[#06574C] text-white",
+                        }}
+                      />
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          STATUS_COLORS[selectedTicket.status]?.bg
+                        } ${STATUS_COLORS[selectedTicket.status]?.text}`}
+                      >
+                        {selectedTicket.status}
+                      </span>
+                    </div>
+                    <hr className="border-gray-100" />
+                    <div>
+                      <p className="text-xs text-gray-400 mb-1">Issue</p>
+                      <p className="font-semibold text-gray-800">{selectedTicket.title}</p>
+                      <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded-lg">
+                        {selectedTicket.description}
+                      </p>
+                    </div>
+                    {selectedTicket.adminResponse && (
+                      <div className="bg-[#95C4BE20] border border-[#06574C30] rounded-lg p-3">
+                        <p className="text-xs text-[#06574C] font-bold mb-1">Response sent:</p>
+                        <p className="text-gray-800 text-sm italic">
+                          "{selectedTicket.adminResponse}"
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-2">
+                          At: {new Date(selectedTicket.adminResponseAt).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button className="bg-[#06574C] text-white" radius="sm" onPress={onClose}>
+                  Dismiss
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };
 
-export default SupportTickets;
+export default AdminSupportTickets;
