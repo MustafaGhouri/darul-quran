@@ -10,6 +10,7 @@ import {
   HomeIcon,
   MegaphoneIcon,
   TicketIcon,
+  TicketsIcon,
   UsersIcon,
   Video
 } from 'lucide-react';
@@ -88,6 +89,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     { name: 'Student Attendance', icon: <CalendarIcon />, link: '/teacher/student-attendance' },
     { name: 'Class Schedule', icon: <MegaphoneIcon />, link: '/teacher/class-scheduling', badge: 3 },
     { name: 'Chat Center', icon: <TicketIcon />, link: '/teacher/chat' },
+    { name: 'Support Tickets  ', icon: <TicketsIcon />, link: '/teacher/support-tickets' },
+    // { name: 'Announcements', icon: <MegaphoneIcon />, link: '/teacher/announcements' },
   ];
 
   const studentMenu = [
@@ -105,7 +108,9 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         // { name: 'Reviews', link: '/admin/help/reviews' },
         // { name: 'FAQs', link: '/admin/help/faqs' }
       ]
-    }
+    },
+    { name: 'Support Tickets  ', icon: <TicketsIcon />, link: '/student/support-tickets' },
+
   ];
 
   // Decide which menu to show based on role

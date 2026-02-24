@@ -35,6 +35,8 @@ import { showMessage } from "./lib/toast.config";
 import { clearUser, setUser } from "./redux/reducers/user";
 import Loader from "./components/Loader";
 import StudentLayout from "./components/layouts/Studentlayout";
+import SupportTicketsStudent from "./pages/student/supports-tickets/page";
+import SupportTicketsTeacher from "./pages/teacher/supports-tickets/page";
 
 const Home = lazy(() => import("./pages/Home"));
 const CourseManagement = lazy(() =>
@@ -401,6 +403,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/teacher/support-tickets"
+            element={
+              <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                <SupportTicketsTeacher />
+              </ProtectedRoute>
+            }
+          />
         </Route>
         <Route element={<StudentLayout />}>
 
@@ -474,6 +484,14 @@ function App() {
             element={
               <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                 <EnrollSuccess />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/support-tickets"
+            element={
+              <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                <SupportTicketsStudent />
               </ProtectedRoute>
             }
           />
