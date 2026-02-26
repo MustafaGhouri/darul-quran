@@ -63,10 +63,11 @@ const CoursePlayer = () => {
                 setCompletedLessons(cl);
                 const completedCount = data.enrollment.completedLessonsCount;
                 const percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
-                setExistingReview(data.review);
-                setReviewRating(data.review.rating);
-                setReviewDescription(data.review.description || '');
                 setProgress(data.enrollment.progressStatus !== "not_started" ? percentage : 0);
+                setExistingReview(data?.review);
+                setReviewRating(data.review?.rating);
+                setReviewDescription(data.review?.description || '');
+                
             }
         } catch (e) { console.error(e); }
     };
