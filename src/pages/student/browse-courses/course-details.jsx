@@ -328,7 +328,7 @@ const CourseDetails = () => {
                     onPress={handleEnroll}
                     isLoading={enrolling}
                   >
-                    Enroll Now
+                    {course?.type === 'one_time' ? "Enroll Now" : "Subscribe Now"}
                   </Button>
                 )}
               </div>

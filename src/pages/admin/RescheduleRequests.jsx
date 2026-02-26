@@ -37,12 +37,11 @@ const AdminRescheduleRequests = () => {
     const [adminResponse, setAdminResponse] = useState("");
     const [actionType, setActionType] = useState(null);
 
-    const { data, isLoading, refetch } = useGetRescheduleRequestsQuery({
+    const { data, isFetching: isLoading, refetch } = useGetRescheduleRequestsQuery({
         page: page.toString(),
         limit: "10",
         status: statusFilter,
     });
-
     useEffect(() => {
         if (data) {
             console.log("Reschedule Requests Data:", data);
@@ -173,7 +172,7 @@ const AdminRescheduleRequests = () => {
                         )}
                     </TableHeader>
                     <TableBody
-                        loloadingContent={<Spinner color="success" />}
+                        loadingContent={<Spinner color="success" />}
                         loadingState={isLoading ? 'loading' : 'idle'}
                         emptyContent={<div className="text-center py-20">
                             <CalendarIcon className="mx-auto mb-4 text-gray-400" size={48} />
@@ -184,7 +183,7 @@ const AdminRescheduleRequests = () => {
                                     : "Students haven't submitted any requests yet"}
                             </p>
                         </div>}
-                        items={data.requests || []}>
+                        items={data?.requests || []}>
                         {(request) => (
                             <TableRow key={request.id}>
                                 <TableCell>
@@ -271,7 +270,7 @@ const AdminRescheduleRequests = () => {
                     </TableBody>
                 </Table>
 
-                {data.totalPages > 1 && (
+                {data?.totalPages > 1 && (
                     <div className="flex justify-center mt-4 p-4">
                         <Pagination
                             total={data.totalPages}

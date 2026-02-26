@@ -57,8 +57,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
       ]
     },
     { name: 'User Management', icon: <UsersIcon />, link: '/admin/user-management' },
-    { name: 'Class Scheduling', icon: <CalendarIcon />, link: '/admin/scheduling', badge: 3 },
-    { name: 'Reschedule Requests', icon: <CalendarPlus />, link: '/admin/reschedule-requests', badge: 3 },
+    { name: 'Class Scheduling', icon: <CalendarIcon />, link: '/admin/scheduling'},
+    { name: 'Reschedule Requests', icon: <CalendarPlus />, link: '/admin/reschedule-requests' },
     { name: 'Announcements', icon: <MegaphoneIcon />, link: '/admin/announcements' },
     { name: 'Payments & Refunds', icon: <DollarSignIcon />, link: '/admin/payments' },
     { name: 'Support Tickets', icon: <TicketIcon />, link: '/admin/tickets' },
@@ -89,7 +89,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
       ]
     },
     { name: 'Student Attendance', icon: <CalendarIcon />, link: '/teacher/student-attendance' },
-    { name: 'Class Schedule', icon: <MegaphoneIcon />, link: '/teacher/class-scheduling', badge: 3 },
+    { name: 'Class Schedule', icon: <MegaphoneIcon />, link: '/teacher/class-scheduling' },
     { name: 'Chat Center', icon: <TicketIcon />, link: '/teacher/chat' },
     { name: 'Support Tickets  ', icon: <TicketsIcon />, link: '/teacher/support-tickets' },
     // { name: 'Announcements', icon: <MegaphoneIcon />, link: '/teacher/announcements' },

@@ -40,10 +40,10 @@ const CoursePlayer = () => {
         return null;
     }, [courseFromState, data]);
     const courseFiles = data?.results;
-    const totalLessons = courseFromState?.previousLesson || data?.course?.previousLesson || 0;
+    const totalLessons = courseFromState?.totalLesson || data?.course?.totalLesson || 0;
 
     useEffect(() => {
-        if (course?.id && totalLessons) {
+        if (course?.id) {
             fetchEnrollment();
         }
     }, [course?.id, totalLessons]);
