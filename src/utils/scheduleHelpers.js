@@ -3,6 +3,37 @@
  */
 
 /**
+ * Parse date from string (supports YYYY-MM-DD and DD-M-YY formats)
+ * @param {string} dateStr - Date string 
+ * @returns {Date|null} Parsed Date object or null if invalid
+ */
+const parseDateFromDB = (dateStr) => {
+    if (!dateStr) return null;
+    
+    // Try YYYY-MM-DD format first (from PostgreSQL date array)
+    if (dateStr.includes('-') && dateStr.length === 10) {
+        const parsed = new Date(dateStr);
+        return isNaN(parsed.getTime()) ? null : parsed;
+    }
+    
+    // Try DD-M-YY format (e.g., "26-2-5")
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+        let year = parseInt(parts[2], 10);
+        // Handle 2-digit years (assume 20xx for years < 100)
+        if (year < 100) year += 2000;
+        const parsed = new Date(year, month, day);
+        return isNaN(parsed.getTime()) ? null : parsed;
+    }
+    
+    // Fallback to standard Date parsing
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? null : parsed;
+};
+
+/**
  * Convert 24-hour time to 12-hour format with AM/PM
  * @param {string} time24 - Time in 24-hour format (HH:MM)
  * @returns {string} Time in 12-hour format (h:MM AM/PM)
@@ -26,8 +57,13 @@ export const formatTime12Hour = (time24) => {
 export const isClassLive = (schedule) => {
     if (!schedule) return false;
     const now = new Date();
-    const classDate = new Date(schedule.date || schedule.createdAt || new Date());
     
+    // Try parsing DD-M-YY format first, fallback to standard date parsing
+    let classDate = parseDateFromDB(schedule.date);
+    if (!classDate) {
+        classDate = new Date(schedule.date || schedule.createdAt || new Date());
+    }
+
     const startTimeStr = schedule.startTime || schedule.start_time;
     const endTimeStr = schedule.endTime || schedule.end_time;
 
@@ -53,8 +89,13 @@ export const isClassLive = (schedule) => {
 export const isClassExpired = (schedule) => {
     if (!schedule) return false;
     const now = new Date();
-    const classDate = new Date(schedule.date || schedule.createdAt || new Date());
     
+    // Try parsing DD-M-YY format first, fallback to standard date parsing
+    let classDate = parseDateFromDB(schedule.date);
+    if (!classDate) {
+        classDate = new Date(schedule.date || schedule.createdAt || new Date());
+    }
+
     const endTimeStr = schedule.endTime || schedule.end_time;
     if (!endTimeStr) return false;
 

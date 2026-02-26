@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import { Button, Divider, Select, SelectItem, Chip } from "@heroui/react";
 import { CiCalendar } from "react-icons/ci";
@@ -10,6 +10,32 @@ import { useNavigate } from "react-router-dom";
 
 import { formatTime12Hour, isClassLive, isClassExpired } from "../../../utils/scheduleHelpers";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
+
+// Helper function to parse date string (supports YYYY-MM-DD and DD-M-YY formats)
+const parseDateFromDB = (dateStr) => {
+    if (!dateStr) return null;
+    
+    // Try YYYY-MM-DD format first (from PostgreSQL date array)
+    if (dateStr.includes('-') && dateStr.length === 10) {
+        const parsed = new Date(dateStr);
+        return isNaN(parsed.getTime()) ? null : parsed;
+    }
+    
+    // Try DD-M-YY format (e.g., "26-2-5")
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        let year = parseInt(parts[2], 10);
+        if (year < 100) year += 2000;
+        const parsed = new Date(year, month, day);
+        return isNaN(parsed.getTime()) ? null : parsed;
+    }
+    
+    // Fallback to standard Date parsing
+    const parsed = new Date(dateStr);
+    return isNaN(parsed.getTime()) ? null : parsed;
+};
 
 const SheduleClass = () => {
   const navigate = useNavigate();
@@ -76,34 +102,81 @@ const SheduleClass = () => {
     }
   };
 
-  const groupSchedulesByDate = () => {
+  const groupSchedulesByDate = useMemo(() => {
     const grouped = {};
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     schedules.forEach(schedule => {
-      const scheduleDate = new Date(schedule.date);
-      scheduleDate.setHours(0, 0, 0, 0);
-      const dateKey = scheduleDate.toDateString();
+      // Use scheduleDates array instead of deprecated date field
+      const scheduleDates = schedule.scheduleDates || [];
+      if (!scheduleDates.length) return;
 
-      // Apply filter
-      if (filter !== "all") {
-        if (filter === "upcoming" && isClassExpired(schedule)) return;
-        if (filter === "live" && !isClassLive(schedule)) return;
-        if (filter === "completed" && !isClassExpired(schedule)) return;
-      }
+      scheduleDates.forEach((scheduleDate) => {
+        // Handle both string dates and object dates
+        const dateStr = typeof scheduleDate === 'string' ? scheduleDate : scheduleDate?.date;
+        const parsedDate = parseDateFromDB(dateStr);
+        if (!parsedDate) return;
 
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = [];
-      }
-      grouped[dateKey].push(schedule);
+        const dateKey = parsedDate.toDateString();
+
+        // Apply filter
+        if (filter !== "all") {
+          if (filter === "upcoming" && isClassExpired(schedule)) return;
+          if (filter === "live" && !isClassLive(schedule)) return;
+          if (filter === "completed" && !isClassExpired(schedule)) return;
+        }
+
+        if (!grouped[dateKey]) {
+          grouped[dateKey] = [];
+        }
+        grouped[dateKey].push({
+          ...schedule,
+          date: dateStr,
+          startTime: typeof scheduleDate === 'object' ? (scheduleDate.startTime || schedule.startTime) : schedule.startTime,
+          endTime: typeof scheduleDate === 'object' ? (scheduleDate.endTime || schedule.endTime) : schedule.endTime,
+        });
+      });
     });
 
     return grouped;
-  };
+  }, [schedules, filter]);
+  const groupedSchedules = groupSchedulesByDate;
+
+  // Sort dates: current date first, then upcoming dates, then past dates
+  const sortedDateKeys = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTime = today.getTime();
+
+    return Object.keys(groupedSchedules).sort((a, b) => {
+      const dateA = new Date(a);
+      const dateB = new Date(b);
+      const timeA = dateA.getTime();
+      const timeB = dateB.getTime();
+
+      const isTodayA = timeA === todayTime;
+      const isTodayB = timeB === todayTime;
+      const isFutureA = timeA > todayTime;
+      const isFutureB = timeB > todayTime;
+
+      // If both are same type, sort chronologically
+      if (isTodayA && isTodayB) return 0;
+      if (isTodayA) return -1; // Today first
+      if (isTodayB) return 1;
+
+      // If both are future or both are past, sort chronologically
+      if (isFutureA && isFutureB) return timeA - timeB;
+      if (!isFutureA && !isFutureB) return timeA - timeB;
+
+      // Future dates come before past dates
+      if (isFutureA) return -1;
+      return 1;
+    });
+  }, [groupedSchedules]);
 
   const getDateLabel = (dateStr) => {
-    const date = new Date(dateStr);
+    const date = parseDateFromDB(dateStr) || new Date(dateStr);
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -121,7 +194,6 @@ const SheduleClass = () => {
     }
   };
 
-  const groupedSchedules = groupSchedulesByDate();
 
   if (loading) {
     return (
@@ -142,7 +214,7 @@ const SheduleClass = () => {
 
       <div className="grid grid-cols-12 gap-3 items-start justify-between mb-3 w-full">
         <div className="col-span-12 md:col-span-8 ">
-          {Object.keys(groupedSchedules).length === 0 ? (
+          {sortedDateKeys.length === 0 ? (
             <div className="bg-white p-8 rounded-md text-center">
               <p className="text-gray-500">No classes scheduled</p>
               <Button
@@ -154,7 +226,7 @@ const SheduleClass = () => {
               </Button>
             </div>
           ) : (
-            Object.keys(groupedSchedules).sort((a, b) => new Date(a) - new Date(b)).map((dateKey) => (
+            sortedDateKeys.map((dateKey) => (
               <div key={dateKey} className="mb-6">
                 <h2 className="text-lg font-semibold text-[#06574C] mb-3">
                   {getDateLabel(dateKey)}
@@ -198,7 +270,9 @@ const SheduleClass = () => {
                         <div className="flex flex-row gap-4 my-3">
                           <div className="flex flex-row gap-1 items-center">
                             <CiCalendar color="#666666" size={22} />
-                            <p className="text-[#666666] text-sm">{new Date(item.date).toDateString()}</p>
+                            <p className="text-[#666666] text-sm">
+                              {(parseDateFromDB(item.date) || new Date(item.date)).toDateString()}
+                            </p>
                           </div>
                           <div className="flex flex-row gap-1 items-center">
                             <Clock color="#666666" size={19} />

@@ -90,12 +90,12 @@ export default function LessonFileViewer({
       ref={containerRef}
       className="relative w-full h-full bg-black"
     >
-      <button
+     {file.fileType!=='lesson_video'&& <button
         onClick={toggleFullscreen}
         className="absolute cursor-pointer hover:opacity-55 top-12 right-4 z-50 bg-black/60 text-white px-3 py-1 rounded-md text-sm"
       >
         {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
-      </button>
+      </button>}
 
       {renderContent()}
     </div>

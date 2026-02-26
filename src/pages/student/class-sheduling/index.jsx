@@ -55,6 +55,33 @@ const StudentClassSheduling = () => {
         return grouped;
     }, [scheduleData]);
 
+    // Helper function to parse date string (supports both YYYY-MM-DD and DD-M-YY formats)
+    const parseDateFromDB = (dateStr) => {
+        if (!dateStr) return null;
+        
+        // Try YYYY-MM-DD format first (from PostgreSQL date array)
+        if (dateStr.includes('-') && dateStr.length === 10) {
+            const parsed = new Date(dateStr);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
+        
+        // Try DD-M-YY format (e.g., "26-2-5")
+        const parts = dateStr.split("-");
+        if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+            let year = parseInt(parts[2], 10);
+            // Handle 2-digit years (assume 20xx for years < 100)
+            if (year < 100) year += 2000;
+            const parsed = new Date(year, month, day);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
+        
+        // Fallback to standard Date parsing
+        const parsed = new Date(dateStr);
+        return isNaN(parsed.getTime()) ? null : parsed;
+    };
+
     const schedulesByDate = useMemo(() => {
         if (!scheduleData?.schedules) return {};
 
@@ -65,17 +92,33 @@ const StudentClassSheduling = () => {
                 if (filterType === "video" && schedule.meetingLink) return;
             }
 
-            const dateKey = new Date(schedule.date).toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-                year: "numeric"
-            });
+            // Iterate through scheduleDates array instead of deprecated date field
+            if (!schedule.scheduleDates?.length) return;
 
-            if (!grouped[dateKey]) {
-                grouped[dateKey] = [];
-            }
-            grouped[dateKey].push(schedule);
+            schedule.scheduleDates.forEach((scheduleDate) => {
+                // Handle both string dates and object dates
+                const dateStr = typeof scheduleDate === 'string' ? scheduleDate : scheduleDate?.date;
+                const parsedDate = parseDateFromDB(dateStr);
+                if (!parsedDate || isNaN(parsedDate.getTime())) return;
+
+                const dateKey = parsedDate.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric"
+                });
+
+                if (!grouped[dateKey]) {
+                    grouped[dateKey] = [];
+                }
+                // Add schedule with its specific date info
+                grouped[dateKey].push({
+                    ...schedule,
+                    date: dateStr,
+                    startTime: typeof scheduleDate === 'object' ? (scheduleDate.startTime || schedule.startTime) : schedule.startTime,
+                    endTime: typeof scheduleDate === 'object' ? (scheduleDate.endTime || schedule.endTime) : schedule.endTime,
+                });
+            });
         });
 
         const sortedDates = Object.keys(grouped).sort((a, b) => {
@@ -156,14 +199,20 @@ const StudentClassSheduling = () => {
     };
 
     const canReschedule = (schedule) => {
-        const scheduleDateTime = new Date(`${schedule.date}T${schedule.startTime}`);
+        const parsedDate = parseDateFromDB(schedule.date);
+        const scheduleDateTime = parsedDate 
+            ? new Date(`${parsedDate.toISOString().split('T')[0]}T${schedule.startTime}`)
+            : new Date(`${schedule.date}T${schedule.startTime}`);
         const now = new Date();
         const hoursUntilClass = (scheduleDateTime - now) / (1000 * 60 * 60);
         return hoursUntilClass > 4;
     };
 
     const canCancel = (schedule) => {
-        const scheduleDateTime = new Date(`${schedule.date}T${schedule.startTime}`);
+        const parsedDate = parseDateFromDB(schedule.date);
+        const scheduleDateTime = parsedDate 
+            ? new Date(`${parsedDate.toISOString().split('T')[0]}T${schedule.startTime}`)
+            : new Date(`${schedule.date}T${schedule.startTime}`);
         const now = new Date();
         const hoursUntilClass = (scheduleDateTime - now) / (1000 * 60 * 60);
         return hoursUntilClass > 0; // Can cancel anytime before class starts
@@ -194,7 +243,10 @@ const StudentClassSheduling = () => {
             );
         }
 
-        const scheduleDateTime = new Date(`${schedule.date}T${schedule.startTime}`);
+        const parsedDate = parseDateFromDB(schedule.date);
+        const scheduleDateTime = parsedDate 
+            ? new Date(`${parsedDate.toISOString().split('T')[0]}T${schedule.startTime}`)
+            : new Date(`${schedule.date}T${schedule.startTime}`);
         const now = new Date();
         const hoursUntilClass = Math.floor((scheduleDateTime - now) / (1000 * 60 * 60));
 
@@ -225,6 +277,15 @@ const StudentClassSheduling = () => {
         const canResched = canReschedule(schedule);
         const canCanc = canCancel(schedule);
 
+        // Parse the schedule date (could be DD-M-YY format or standard date)
+        const scheduleDateObj = parseDateFromDB(schedule.date) || new Date(schedule.date);
+        const displayDate = scheduleDateObj.toLocaleDateString("en-US", {
+            weekday: "short",
+            month: "long",
+            day: "numeric",
+            year: "numeric"
+        });
+
         return (
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-3 hover:shadow-md transition-shadow">
                 <div className="flex flex-wrap gap-2 mb-3">
@@ -251,12 +312,7 @@ const StudentClassSheduling = () => {
                     <div className="flex items-center gap-2">
                         <CiCalendar color="#666666" size={20} />
                         <p className="text-[#666666] text-sm">
-                            {new Date(schedule.date).toLocaleDateString("en-US", {
-                                weekday: "short",
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric"
-                            })}
+                            {displayDate}
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -525,7 +581,7 @@ const StudentClassSheduling = () => {
                                 <div className="bg-gray-50 p-3 rounded-lg mt-3">
                                     <p className="font-semibold text-sm">{selectedSchedule.title}</p>
                                     <p className="text-sm text-gray-600">
-                                        {new Date(selectedSchedule.date).toLocaleDateString()} at{" "}
+                                        {(parseDateFromDB(selectedSchedule.date) || new Date(selectedSchedule.date)).toLocaleDateString()} at{" "}
                                         {formatTime12Hour(selectedSchedule.startTime)}
                                     </p>
                                 </div>

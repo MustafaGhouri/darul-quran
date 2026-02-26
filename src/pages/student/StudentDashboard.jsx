@@ -109,7 +109,7 @@ const StudentDashboard = () => {
     />
   }
   return (
-    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-full px-2 sm:px-3">
+    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-fsull px-2 sm:px-3">
       {/* banner */}
       <div className="space-y-4 mt-3 w-full bg-[url('/images/banner.png')] p-4 rounded-lg bg-center bg-no-repeat bg-cover">
         <div className="flex max-sm:flex-wrap gap-3 justify-between items-start">

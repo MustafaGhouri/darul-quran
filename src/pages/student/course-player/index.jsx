@@ -62,9 +62,11 @@ const CoursePlayer = () => {
                 } catch (e) { cl = []; }
                 setCompletedLessons(cl);
                 const completedCount = data.enrollment.completedLessonsCount;
-                const percentage = totalLessons > 0 ?(completedCount / totalLessons) * 100 : 0;
-                console.log(completedCount,totalLessons,percentage);
-                
+                const percentage =
+                    totalLessons > 0
+                        ? Math.min((completedCount / totalLessons) * 100, 100)
+                        : 0;
+
                 setProgress(percentage);
                 setExistingReview(data?.review);
                 setReviewRating(data.review?.rating);
@@ -88,7 +90,10 @@ const CoursePlayer = () => {
             if (data.success) {
                 setCompletedLessons(data.completedLessons);
                 const completedCount = data.completedCount;
-                const percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+                const percentage =
+                    totalLessons > 0
+                        ? Math.min((completedCount / totalLessons) * 100, 100)
+                        : 0;
                 setProgress(percentage);
                 successMessage("Lesson Completed!");
             }
@@ -174,7 +179,7 @@ const CoursePlayer = () => {
             </header>
             <div className="flex flex-1 overflow-hidden">
                 <div className="flex-1 flex flex-col overflow-y-auto bg-black/5">
-                    <div className="bg-black w-full aspect-video shrink-0 relative shadow-lg">
+                    <div className="bg-black w-full max-h-152 aspect-video shrink-0 relative shadow-lg">
                         {currentLesson ? (
                             <LessonFileViewer
                                 file={currentLesson}

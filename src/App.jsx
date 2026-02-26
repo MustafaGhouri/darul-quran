@@ -355,6 +355,8 @@ function App() {
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <ClassSheduling />
+                  <LiveSession isTeacher/>
+
                 </ProtectedRoute>
               }
             />

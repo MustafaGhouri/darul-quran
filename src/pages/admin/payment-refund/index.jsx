@@ -52,7 +52,6 @@ const PaymentsRefunds = () => {
     const confirm = window.confirm(`Are you sure you want to ${action} this request?`);
     if (!confirm) return;
 
-    const load = toast.loading("Processing...");
     try {
       const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/payment/admin/refund-action`, {
         method: 'POST',
@@ -61,7 +60,6 @@ const PaymentsRefunds = () => {
         body: JSON.stringify({ enrollmentId: id, action })
       });
       const data = await res.json();
-      toast.dismiss(load);
       if (data.success) {
         successMessage(data.message);
         fetchRefunds(); // Refresh requests
@@ -69,7 +67,7 @@ const PaymentsRefunds = () => {
       } else {
         errorMessage(data.message);
       }
-    } catch (e) { toast.dismiss(load); errorMessage("Error"); }
+    } catch (e) {  errorMessage("Error"); }
   };
 
   const refundHeader = [

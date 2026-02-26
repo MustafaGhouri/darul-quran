@@ -10,7 +10,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useGetSchedulesByMonthQuery } from '../../../redux/api/schedules';
 import QueryError from '../../../components/QueryError';
 
-const LiveSession = () => {
+const LiveSession = ({ isTeacher = false }) => {
     const [searchParams] = useSearchParams();
     const calendarRef = useRef(null);
     const [currentMonth, setCurrentMonth] = useState(() => {
@@ -18,7 +18,7 @@ const LiveSession = () => {
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     });
     const isCalenderView = searchParams.get('calender') === 'true';
-    const { data, isLoading, error ,refetch} = useGetSchedulesByMonthQuery(currentMonth, { skip: !isCalenderView });
+    const { data, isLoading, error, refetch } = useGetSchedulesByMonthQuery(currentMonth, { skip: !isCalenderView });
 
     const events = useMemo(() => {
         if (!data?.schedules) return [];
@@ -87,10 +87,10 @@ const LiveSession = () => {
             </div>
 
             <div className="bg-[#EBD4C9] max-md:flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex flex-col md:flex-row justify-between md:items-center">
-                <Button as={Link} color='success' variant='bordered' to={'/admin/scheduling'} radius="sm" startContent={<ArrowBigLeft size={15} />} >
+                <Button as={Link} color='success' variant='bordered' to={isTeacher ? '/teacher/class-scheduling' :'/admin/scheduling'} radius="sm" startContent={<ArrowBigLeft size={15} />} >
                     Back
                 </Button>
-                <Button as={Link} to={'/admin/scheduling?modal=true'} radius="sm" startContent={<Plus color="white" size={15} />} className="bg-[#06574C] text-white py-4 px-3 sm:px-8">
+                <Button as={Link} to={isTeacher ? '/teacher/class-scheduling?calender=true' : '/admin/scheduling?modal=true'} radius="sm" startContent={<Plus color="white" size={15} />} className="bg-[#06574C] text-white py-4 px-3 sm:px-8">
                     Schedule Session
                 </Button>
             </div>

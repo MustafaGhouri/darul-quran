@@ -248,7 +248,7 @@ const PaymentsInvoices = () => {
               <TableBody
                 emptyContent="No payments found"
                 loadingState={paymentsLoading ? "loading" : "idle"}
-                loadingContent={<Spinner color="primary" />}
+                loadingContent={<Spinner color="success" />}
               >
                 {invoices.map((item) => (
                   <TableRow key={item.id}>
@@ -408,7 +408,7 @@ const PaymentsInvoices = () => {
           <TableBody
             emptyContent="No refund requests found"
             loadingState={refundRequestsLoading ? "loading" : "idle"}
-            loadingContent={<Spinner color="primary" />}
+            loadingContent={<Spinner color="success" />}
           >
             {refundRequests.map((item) => (
               <TableRow key={item.id}>

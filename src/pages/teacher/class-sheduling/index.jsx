@@ -1,445 +1,636 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
   Button,
-  Checkbox,
-  CheckboxGroup,
-  DatePicker,
+  Calendar,
+  Chip,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
   Input,
+  Textarea,
   Select,
   SelectItem,
-  Textarea,
-  TimeInput,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  CheckboxGroup,
+  Checkbox,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  Spinner,
+  Pagination,
 } from "@heroui/react";
-import { Calendar } from "lucide-react";
-import { CiCircleAlert, CiVideoOn } from "react-icons/ci";
-import { FaWandMagicSparkles } from "react-icons/fa6";
-import { MdContentCopy } from "react-icons/md";
-import { IoIosSave } from "react-icons/io";
-import { useNavigate } from "react-router-dom";
+import { CalendarIcon, Copy, Trash2, PlusIcon } from "lucide-react";
 
+import { getStatusColor, getStatusText, formatTime12Hour } from "../../../utils/scheduleHelpers";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
+import { dateFormatter, limits } from "../../../lib/utils";
+import { useCreateScheduleMutation, useDeleteScheduleMutation, useGetScheduleQuery, useUpdateScheduleMutation } from "../../../redux/api/schedules";
+import Swal from "sweetalert2";
+import { Link, useSearchParams } from "react-router-dom";
 
 const ClassSheduling = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [courses, setCourses] = useState([]);
-  const [currentTeacher, setCurrentTeacher] = useState(null);
+  const [searchParams] = useSearchParams();
+  const [deleteLoading, setDeleteLoading] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
 
+  // Pagination & Filtering (Basic Implementation)
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState('');
+  const isCalenderView = searchParams.get('calender') === 'true';
+  const isOpenModalOnLoad = searchParams.get('modal') === 'true';
+
+  // Modal State
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [isEdit, setIsEdit] = useState(false);
+  const [startDate, setStartDate] = useState(false);
+  const [endDate, setEndDate] = useState(false);
   const [formData, setFormData] = useState({
-    courseId: "",
     title: "",
-    date: null,
-    startTime: null,
-    duration: 60,
-    customDuration: "",
     description: "",
-    meetingLink: "",
+    courseId: '',
+    // duration: 60,
+    // customDuration: "",
+
+    // common
+    startTime: "",
+    endTime: "",
+
+    // once
+    date: "",
+
+    // recurring
+    startDate: "",
+    endDate: "",
+    repeatInterval: 0,
+    weeklyDays: [],
+
+    // Zoom settings
+    settings: {
+      join_before_host: false,
+      auto_recording: false,
+    },
   });
 
-  const [settings, setSettings] = useState({
-    recordSession: false,
-    sendEmail: false,
-    allowEarlyJoin: false,
-  });
-
-  const durationOptions = [30, 45, 60, 90];
-
-  useEffect(() => {
-    fetchCurrentTeacher();
-  }, []);
+  const { data, isFetching } = useGetScheduleQuery({
+    page: page,
+    limit: limit,
+    search,
+    status: statusFilter
+  }, { skip: isCalenderView });
+  const [createSchedule, { isLoading: isSubmitting }] = useCreateScheduleMutation();
+  const [updateSchedule, { isLoading: isUpdating }] = useUpdateScheduleMutation();
+  const [deleteSchedule] = useDeleteScheduleMutation();
 
   useEffect(() => {
-    if (currentTeacher) {
-      fetchCourses();
+    if (isOpenModalOnLoad) {
+      openCreateModal();
     }
-  }, [currentTeacher]);
+  }, [isOpenModalOnLoad]);
 
-  const fetchCurrentTeacher = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/auth/me`, {
-        credentials: 'include'
-        
-      });
-      const data = await res.json();
-      if (data.user) {
-        setCurrentTeacher(data.user);
-      }
-    } catch (error) {
-      console.error("Failed to fetch teacher", error);
-    }
-  };
+  if (isCalenderView) return null;
 
-  const fetchCourses = async () => {
-    try {
-      if (!currentTeacher) return;
-
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/getAll?teacherId=${currentTeacher.id}`,
-       { credentials: 'include'}
-      );
-      const data = await res.json();
-      if (data.success) {
-        setCourses(data.courses || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch courses", error);
-    }
-  };
-
-  const handleGenerateZoomLink = async () => {
-    if (!formData.title || !formData.date || !formData.startTime) {
-      errorMessage("Please fill in Title, Date, and Start Time first");
+  const handleSubmit = async () => {
+    if (!formData.title || !formData.startTime) {
+      errorMessage("Please fill required fields (Title, Time)");
       return;
     }
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const dateArray = [];
+    let curr = new Date(start);
+    while (curr <= end) {
+      dateArray.push(curr.toISOString().split("T")[0]);
+      curr.setDate(curr.getDate() + 1);
+    }
 
-    setLoading(true);
     try {
-      const zoomSettings = {
-        join_before_host: settings.allowEarlyJoin,
-        auto_recording: settings.recordSession
-      };
+      const payload = { ...formData, dateArray }
+      let response;
 
-      const requestData = {
-        title: formData.title,
-        date: `${formData.date.year}-${String(formData.date.month).padStart(2, '0')}-${String(formData.date.day).padStart(2, '0')}`,
-        startTime: `${String(formData.startTime.hour).padStart(2, '0')}:${String(formData.startTime.minute).padStart(2, '0')}`,
-        description: formData.description,
-        settings: zoomSettings
-      };
-
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule/generate-zoom`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setFormData(prev => ({ ...prev, meetingLink: data.meetingLink }));
-        successMessage("Zoom link generated successfully!");
+      if (isEdit) {
+        response = await updateSchedule({ id: formData.id, data: payload });;
       } else {
-        errorMessage(data.message || "Failed to generate Zoom link");
+        response = await createSchedule(payload);
+      }
+
+      const data = response.data;
+
+      if (data.success) {
+        successMessage(isEdit ? "Session Updated" : "Session Scheduled!");
+        onOpenChange(false);
+        resetForm();
+      } else {
+        errorMessage(data.message || "Operation failed");
       }
     } catch (error) {
       console.error(error);
-      errorMessage("Error generating Zoom link");
-    } finally {
-      setLoading(false);
+      errorMessage("Error submitting form: " + error.message);
     }
   };
 
-  const handleScheduleClass = async () => {
-    if (!formData.title || !formData.date || !formData.startTime) {
-      errorMessage("Please fill in all required fields");
-      return;
-    }
-
-    if (!currentTeacher) {
-      errorMessage("Teacher information not found");
-      return;
-    }
-
-    setLoading(true);
+  const handleDelete = async (id) => {
+    const { isConfirmed } = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#06574C",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    })
+    if (!isConfirmed) return;
     try {
-      const duration = formData.customDuration || formData.duration;
-      const startHour = formData.startTime.hour;
-      const startMinute = formData.startTime.minute;
-
-      const endMinutes = startMinute + parseInt(duration);
-      const endHour = startHour + Math.floor(endMinutes / 60);
-      const endMinute = endMinutes % 60;
-
-      const zoomSettings = {
-        join_before_host: settings.allowEarlyJoin,
-        auto_recording: settings.recordSession
-      };
-
-      const scheduleData = {
-        title: formData.title,
-        date: `${formData.date.year}-${String(formData.date.month).padStart(2, '0')}-${String(formData.date.day).padStart(2, '0')}`,
-        startTime: `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`,
-        endTime: `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`,
-        description: formData.description,
-        teacherId: currentTeacher.id,
-        courseId: formData.courseId || null,
-        settings: zoomSettings
-      };
-
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(scheduleData),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        successMessage("Class scheduled successfully!");
-        setFormData({
-          courseId: "",
-          title: "",
-          date: null,
-          startTime: null,
-          duration: 60,
-          customDuration: "",
-          description: "",
-          meetingLink: "",
-        });
-        setTimeout(() => navigate("/teacher/class-scheduling/sheduled-class"), 1000);
-      } else {
-        errorMessage(data.message || "Failed to schedule class");
-      }
+      setDeleteLoading(id);
+      const res = await deleteSchedule(id);
+      if (res.data.success) {
+        successMessage(res.data.message || "Session deleted successfully");
+        return;
+      } else throw new Error(res.data.message);
     } catch (error) {
-      console.error(error);
-      errorMessage("Error scheduling class");
+      errorMessage("Error deleting session: " + error.message);
     } finally {
-      setLoading(false);
+      setDeleteLoading(null);
     }
   };
 
-  const copyToClipboard = () => {
-    if (formData.meetingLink) {
-      navigator.clipboard.writeText(formData.meetingLink);
-      successMessage("Link copied to clipboard!");
-    }
+  const resetForm = () => {
+    setFormData({
+      id: null,
+      title: '',
+      date: '',
+      startTime: '',
+      endTime: '',
+      description: '',
+      courseId: '',
+      // duration: 60,
+      // customDuration: "",
+      scheduleType: '',
+      repeatInterval: 0,
+      weeklyDays: [],
+      settings: {
+        join_before_host: false,
+        auto_recording: false,
+      },
+    });
+    setIsEdit(false);
   };
+
+  const openCreateModal = () => {
+    resetForm();
+    onOpen();
+  };
+
+  const openEditModal = (item) => {
+    setIsEdit(true);
+    const dateStr = new Date(item.date).toISOString().split('T')[0];
+    setFormData({
+      id: item.id,
+      title: item.title,
+      date: dateStr,
+      startTime: item.startTime,
+      endTime: item.endTime,
+      description: item.description,
+      courseId: item.courseId ? String(item.courseId) : '',
+      // duration: 60,
+      // customDuration: "",
+      scheduleType: item.scheduleType,
+      startDate: item?.scheduleDates[0],
+      endDate: item?.scheduleDates[1],
+      repeatInterval: item.repeatInterval,
+      weeklyDays: item.weeklyDays,
+      settings: {
+        join_before_host: item.settings?.join_before_host || false,
+        auto_recording: item.settings?.auto_recording || false,
+      },
+    });
+    onOpen();
+  };
+
+  const copyToClipboard = (text, id) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    successMessage("Link Copied!");
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const statuses = [
+    { key: "all", label: "All Status" },
+    { key: "upcoming", label: "Upcoming" },
+    { key: "completed", label: "Completed" },
+  ];
+
+
 
   return (
-    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-screen px-2 sm:px-3 overflow-y-auto pb-20">
-      <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center">
-        <DashHeading
-          title={"Class Scheduling"}
-          desc={"Fill in the details below to schedule your live class"}
-        />
-
-        <Button
-          radius="sm"
-          size="lg"
-          className="bg-[#06574C] text-white"
-          startContent={<Calendar size={20} />}
-          onPress={() => navigate("/teacher/class-scheduling/sheduled-class")}
-        >
-          View Scheduled Classes
-        </Button>
-      </div>
-
-      <div className="rounded-md bg-[#F1C2AC69] p-4 flex flex-col gap-3 md:flex-row items-center mb-3">
-        <div>
-          <CiCircleAlert size={60} color="#B7721F" />
-        </div>
-        <div>
-          <h1 className="text-[#B7721F] text-lg font-bold">
-            Important Scheduling Notice
-          </h1>
-          <p className="text-[#B7721F] text-sm">
-            Classes must be scheduled or changed at least 4 hours before the
-            start time to ensure proper notification to all enrolled students.
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-white p-4 rounded-md mb-3">
-        <h1 className="text-xl font-semibold">New Live Class Session</h1>
-        <div className="grid grid-cols-12 gap-3 py-3 md:space-y-2">
+    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 mins-h-screen">
+      <DashHeading
+        title={"Schedule Live Classes"}
+        desc={"Manage and organize your upcoming live sessions"}
+      />
+      <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
+        <div className="flex max-md:flex-wrap items-center gap-2">
           <Select
-            className="md:col-span-6 col-span-12"
+            className="min-w-[150px]"
             radius="sm"
-            label="Select Course (Optional)"
-            variant="bordered"
-            labelPlacement="outside"
-            placeholder="Select Course"
-            selectedKeys={formData.courseId ? [formData.courseId] : []}
-            onSelectionChange={(keys) => {
-              const selectedKey = Array.from(keys)[0];
-              setFormData(prev => ({ ...prev, courseId: selectedKey || "" }));
-            }}
+            selectedKeys={[statusFilter]}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            placeholder="Select status"
           >
-            {courses.map((course) => (
-              <SelectItem key={course.id}>
-                {course.courseName}
-              </SelectItem>
+            {statuses.map((status) => (
+              <SelectItem key={status.key}>{status.label}</SelectItem>
             ))}
           </Select>
-
           <Input
-            className="md:col-span-6 col-span-12"
+            type="search"
+            placeholder="Search by title or description"
             radius="sm"
-            label="Class Title *"
-            variant="bordered"
-            labelPlacement="outside"
-            placeholder="Enter Class Title"
-            value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-          />
-
-          <DatePicker
-            className="md:col-span-6 col-span-12"
-            radius="sm"
-            label="Date *"
-            variant="bordered"
-            labelPlacement="outside"
-            placeholder="Select Date"
-            showMonthAndYearPickers
-            value={formData.date}
-            onChange={(date) => setFormData(prev => ({ ...prev, date }))}
-          />
-
-          <TimeInput
-            className="md:col-span-6 col-span-12"
-            radius="sm"
-            variant="bordered"
-            labelPlacement="outside"
-            label="Start Time *"
-            value={formData.startTime}
-            onChange={(time) => setFormData(prev => ({ ...prev, startTime: time }))}
+            defaultValue={search}
+            onChange={(e) =>
+              debounce(() => {
+                setSearch(e.target.value);
+              }, 400)
+            }
           />
         </div>
+        <div className="flex items-center gap-2">
+          <Button
+            as={Link}
+            to={'/teacher/class-scheduling?calender=true'}
+            radius="sm"
+            size="md"
+            startContent={<CalendarIcon color="white" size={15} />}
+            color="success"
+          >
+            Calender View
+          </Button>
+          <Button
+            startContent={<PlusIcon />}
+            radius="sm"
+            size="md"
+            color="success"
+            onPress={openCreateModal}
+          >
+            Schedule New
+          </Button>
+        </div>
+      </div>
 
-        <div>
-          <h1 className="text-sm ">Duration</h1>
-          <div className="grid grid-cols-12 gap-3 py-3 md:space-y-2">
-            {durationOptions.map((minutes) => (
-              <Button
-                key={minutes}
-                radius="sm"
-                variant={formData.duration === minutes && !formData.customDuration ? "solid" : "bordered"}
-                className={`md:col-span-3 col-span-12 ${formData.duration === minutes && !formData.customDuration
-                  ? 'bg-[#06574C] text-white border-[#06574C]'
-                  : 'border-gray-300 text-gray-700'
-                  }`}
-                size="md"
-                onPress={() => setFormData(prev => ({ ...prev, duration: minutes, customDuration: "" }))}
-              >
-                {minutes} min
-              </Button>
+      <div className="">
+        <Table
+          removeWrapper
+          isHeaderSticky
+          aria-label="Example static collection table"
+          classNames={{
+            base: "w-full bg-white rounded-lg min-h-[50vh] overflow-x-scroll w-full no-scrollbar max-h-[500px] shadow-md",
+            th: "font-bold bg-[#EBD4C9] p-4 text-md text-[#333333] capitalize tracking-widest ",
+            td: "py-3 items-center whitespace-nowrap",
+            tr: "border-b border-default-200",
+          }}
+        >
+          <TableHeader>
+            <TableColumn>Details</TableColumn>
+            <TableColumn>Course</TableColumn>
+            <TableColumn>Dates</TableColumn>
+            <TableColumn>Time</TableColumn>
+            <TableColumn>Status</TableColumn>
+            {/* <TableColumn>Zoom Link</TableColumn> */}
+            <TableColumn>Actions</TableColumn>
+          </TableHeader>
+
+          <TableBody loadingContent={<Spinner color="success" />} loadingState={isFetching ? 'loading' : 'idle'} emptyContent={"No sessions scheduled."}>
+            {data?.schedules?.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>
+                  <div>
+                    <div className="font-medium text-gray-900">{item.title}</div>
+                    <div className="text-xs text-gray-500 mt-0.5 max-w-[200px] truncate">{item.description || 'No description'}</div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-gray-500 text-sm">{item.courseName || 'General Session'}</div>
+                </TableCell>
+                <TableCell>
+                  <Popover>
+                    <PopoverTrigger>
+                      <span className="cursor-pointer font-medium">{dateFormatter(item.scheduleDates[0])} - {dateFormatter(item?.scheduleDates[item.scheduleDates?.length - 1])}</span>
+                    </PopoverTrigger>
+                    <PopoverContent>
+                      <Calendar
+                        size="sm"
+                        className="w-full booking-inputs"
+                        variant="underlined"
+                        color='success'
+                        isReadOnly
+                        isDateUnavailable={(date) =>
+                          item.scheduleDates?.includes(date.toString())
+                        }
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </TableCell>
+                <TableCell>
+                  <div className="text-gray-500 text-sm">{formatTime12Hour(item.startTime)} - {formatTime12Hour(item.endTime)}</div>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    className="capitalize"
+                    color={getStatusColor(item)}
+                  >
+                    {getStatusText(item)}
+                  </Chip>
+                </TableCell>
+                {/* <TableCell>
+                  {item.meetingLink ? (
+                    <div className="flex gap-2 items-center cursor-pointer" onClick={() => copyToClipboard(item.meetingLink, item.id)}>
+                      <Copy color="#3F86F2" size={16} />
+                      <span className="text-[#3F86F2] hover:underline text-sm">
+                        {copiedId === item.id ? "Copied!" : "Copy link"}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-gray-400 text-sm">No Link</span>
+                  )}
+                </TableCell> */}
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      radius="sm"
+                      variant="bordered"
+                      className="border-[#06574C] text-[#06574C]"
+                      startContent={<CalendarIcon size={18} />}
+                      size="sm"
+                      onPress={() => openEditModal(item)}
+                    >
+                      Reschedule
+                    </Button>
+                    <Button
+                      radius="sm"
+                      className="bg-[#06574C] text-white"
+                      size="sm"
+                      isLoading={deleteLoading === item.id}
+                      isIconOnly
+                      onPress={() => handleDelete(item.id)}
+                    >
+                      <Trash2 size={18} />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
             ))}
-          </div>
-        </div>
-
-        <Input
-          radius="sm"
-          label="Custom Duration (Minutes)"
-          variant="bordered"
-          labelPlacement="outside"
-          type="number"
-          placeholder="Enter Custom Duration"
-          value={formData.customDuration}
-          onChange={(e) => setFormData(prev => ({ ...prev, customDuration: e.target.value, duration: "" }))}
-        />
-
-        <div className="p-4 bg-[#3F86F212] border-[#3F86F2] border-1 mt-3 rounded-md">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
-            <div className="flex flex-row gap-3 items-center">
-              <div className="h-15 w-15 bg-white rounded-full shadow-xl items-center flex justify-center">
-                <CiVideoOn color="#3F86F2" size={30} />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold">Meeting Link</h1>
-                <p className="text-sm text-[#666666]">
-                  Generate a Zoom meeting link automatically
-                </p>
-              </div>
-            </div>
-            <Button
+          </TableBody>
+        </Table>
+        <div className="flex flex-wrap items-center p-4 gap-2 justify-between overflow-hidden">
+          <div className="flex text-sm items-center gap-1">
+            <span>Limit</span>
+            <Select
               radius="sm"
-              variant="solid"
-              size="lg"
-              className="bg-[#3F86F2] text-white"
-              startContent={<FaWandMagicSparkles size={20} />}
-              onPress={handleGenerateZoomLink}
-              isLoading={loading}
+              className="w-[70px]"
+              defaultSelectedKeys={["10"]}
+              isDisabled={isFetching || data?.total < 7}
+              onSelectionChange={(k) => {
+                const keys = [...k];
+                setLimit(Number(keys[0]))
+              }}
+              placeholder="1"
             >
-              Auto-Generate
-            </Button>
+              {limits.map((limit) => (
+                <SelectItem key={limit.key}>{limit.label}</SelectItem>
+              ))}
+            </Select>
+            <span className="min-w-56">Out of {data?.total}</span>
           </div>
-          <div className="my-3 border-[#3F86F2] border-1 rounded-md p-3 mt-3 bg-white">
-            <Input
-              radius="sm"
-              label="Meeting URL"
-              variant="bordered"
-              labelPlacement="outside"
-              placeholder="Click Auto-Generate to create Zoom link"
-              value={formData.meetingLink}
-              readOnly
-              endContent={
-                <Button
-                  isIconOnly
-                  radius="sm"
-                  className="bg-[#95C4BE33]"
-                  onPress={copyToClipboard}
-                  isDisabled={!formData.meetingLink}
-                >
-                  <MdContentCopy color="#06574C" size={20} />
-                </Button>
-              }
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white p-4 rounded-md mb-3">
-        <h1 className="text-xl font-semibold">Additional Settings</h1>
-        <div className="py-3">
-          <CheckboxGroup>
-            <Checkbox
-              color="success"
-              size="sm"
-              isSelected={settings.recordSession}
-              onValueChange={(val) => setSettings(prev => ({ ...prev, recordSession: val }))}
-            >
-              Record session automatically
-            </Checkbox>
-            <Checkbox
-              color="success"
-              size="sm"
-              isSelected={settings.sendEmail}
-              onValueChange={(val) => setSettings(prev => ({ ...prev, sendEmail: val }))}
-            >
-              Send email notification to students
-            </Checkbox>
-            <Checkbox
-              color="success"
-              size="sm"
-              isSelected={settings.allowEarlyJoin}
-              onValueChange={(val) => setSettings(prev => ({ ...prev, allowEarlyJoin: val }))}
-            >
-              Allow students to join before host
-            </Checkbox>
-          </CheckboxGroup>
-        </div>
-        <div className="py-3">
-          <Textarea
-            label="Class Description (Optional)"
-            labelPlacement="outside"
-            placeholder="Add any additional information or instructions for students..."
-            variant="bordered"
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          <Pagination
+            className=""
+            showControls
+            variant="ghost"
+            initialPage={1}
+            total={data?.totalPages}
+            onChange={setPage}
+            classNames={{
+              item: "rounded-sm hover:bg-bg-[#06574C]/50",
+              cursor: "bg-[#06574C] rounded-sm text-white",
+              prev: "rounded-sm bg-white/80",
+              next: "rounded-sm bg-white/80",
+            }}
           />
         </div>
       </div>
 
-      <div className="p-3 my-5 flex flex-col md:flex-row md:justify-end gap-3">
-        <Button
-          variant="bordered"
-          size="lg"
-          radius="sm"
-          color="success"
-          startContent={<IoIosSave size={20} />}
-          onPress={() => successMessage("Draft saved!")}
-        >
-          Save Draft
-        </Button>
-        <Button
-          size="lg"
-          radius="sm"
-          variant="flat"
-          className="bg-[#06574C] text-white"
-          onPress={handleScheduleClass}
-          isLoading={loading}
-        >
-          Schedule Class
-        </Button>
-      </div>
+      {/* Schedule / Edit Modal */}
+      <Modal isOpen={isOpen} scrollBehavior="inside" onOpenChange={onOpenChange} placement="center" backdrop="blur" size="lg">
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1 text-[#06574C]">
+                {isEdit ? "Reschedule Session" : "Schedule New Session"}
+              </ModalHeader>
+              <ModalBody>
+                <Input
+                  label="Session Title"
+                  variant="bordered"
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
+                />
+                <Select
+                  label="Schedule Type"
+                  variant="bordered"
+                  selectedKeys={formData?.scheduleType ? new Set([formData?.scheduleType]) : new Set([])}
+                  onChange={(e) =>
+                    setFormData({ ...formData, scheduleType: e.target.value })
+                  }
+                >
+                  <SelectItem key="once">One Time</SelectItem>
+                  <SelectItem key="daily">Daily</SelectItem>
+                  <SelectItem key="weekly">Weekly</SelectItem>
+                </Select>
+
+                {formData.scheduleType === "once" && (
+                  <Input
+                    type="date"
+                    label="Session Date"
+                    variant="bordered"
+                    value={formData.date}
+                    onChange={(e) =>
+                      setFormData({ ...formData, date: e.target.value })
+                    }
+                  />
+                )}
+
+                {formData.scheduleType === "daily" && (
+                  <>
+                    <div className="flex gap-3">
+                      <Input
+                        type="date"
+                        label="Start Date"
+                        variant="bordered"
+                        value={formData.startDate}
+                        onChange={(e) =>
+                          setFormData({ ...formData, startDate: e.target.value })
+                        }
+                      />
+                      <Input
+                        type="date"
+                        label="End Date"
+                        variant="bordered"
+                        value={formData.endDate}
+                        onChange={(e) =>
+                          setFormData({ ...formData, endDate: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <Input
+                      type="number"
+                      label="Repeat Every (Days)"
+                      min={1}
+                      variant="bordered"
+                      value={formData.repeatInterval}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          repeatInterval: Number(e.target.value),
+                        })
+                      }
+                    />
+                  </>
+                )}
+
+                {formData.scheduleType === "weekly" && (
+                  <>
+                    <div className="flex gap-3">
+                      <Input
+                        type="date"
+                        label="Start Date"
+                        variant="bordered"
+                        value={formData.startDate}
+                        onChange={(e) =>
+                          setFormData({ ...formData, startDate: e.target.value })
+                        }
+                      />
+                      <Input
+                        type="date"
+                        label="End Date"
+                        variant="bordered"
+                        value={formData.endDate}
+                        onChange={(e) =>
+                          setFormData({ ...formData, endDate: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <Input
+                      type="number"
+                      label="Repeat Every (Weeks)"
+                      min={1}
+                      variant="bordered"
+                      value={formData.repeatInterval}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          repeatInterval: Number(e.target.value),
+                        })
+                      }
+                    />
+
+                    <CheckboxGroup
+                      label="Select Days"
+                      value={formData?.weeklyDays}
+                      orientation="horizontal"
+                      color="success"
+                      onChange={(val) =>
+                        setFormData({ ...formData, weeklyDays: val })
+                      }
+                    >
+                      <Checkbox value="1">Sunday</Checkbox>
+                      <Checkbox value="2">Monday</Checkbox>
+                      <Checkbox value="3">Tuesday</Checkbox>
+                      <Checkbox value="4">Wednesday</Checkbox>
+                      <Checkbox value="5">Thursday</Checkbox>
+                      <Checkbox value="6">Friday</Checkbox>
+                      <Checkbox value="7">Saturday</Checkbox>
+                    </CheckboxGroup>
+                  </>
+                )}
+
+                <div className="flex gap-3">
+                  <Input
+                    type="time"
+                    label="Start Time"
+                    variant="bordered"
+                    value={formData.startTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, startTime: e.target.value })
+                    }
+                  />
+                  <Input
+                    type="time"
+                    label="End Time"
+                    variant="bordered"
+                    value={formData.endTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, endTime: e.target.value })
+                    }
+                  />
+                </div>
+                <Textarea
+                  label="Description"
+                  variant="bordered"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                />
+                <div className="py-3 border-t pt-4">
+                  <h3 className="text-sm font-semibold mb-2 text-[#06574C]">Zoom Meeting Settings</h3>
+                  <CheckboxGroup
+                    orientation="vertical"
+                    color="success"
+                    value={[
+                      ...(formData.settings?.join_before_host ? ['join_before_host'] : []),
+                      ...(formData.settings?.auto_recording ? ['auto_recording'] : []),
+                    ]}
+                    onChange={(values) => {
+                      setFormData({
+                        ...formData,
+                        settings: {
+                          join_before_host: values.includes('join_before_host'),
+                          auto_recording: values.includes('auto_recording'),
+                        },
+                      });
+                    }}
+                  >
+                    <Checkbox value="join_before_host">Allow students to join before host</Checkbox>
+                    <Checkbox value="auto_recording">Record session automatically</Checkbox>
+                  </CheckboxGroup>
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="flat" onPress={onClose}>
+                  Cancel
+                </Button>
+                <Button className="bg-[#06574C] text-white" onPress={handleSubmit} isLoading={isSubmitting || isUpdating}>
+                  {isEdit ? "Update Schedule" : "Schedule Session"}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };
