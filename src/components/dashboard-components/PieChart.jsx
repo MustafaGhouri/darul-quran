@@ -1,39 +1,35 @@
-import { useState } from "react";
 import ReactApexChart from "react-apexcharts";
 
-const PieChart = () => {
-  const [state] = useState({
-    series: [44, 55, 13, 43],
-    options: {
-      chart: {
-        type: "pie",
-      },
-      colors: ["#06574C", "#95C4BE", "#EBD4C9", "#F1C2AC"],
-      labels: ["Upcoming", "Cancelled", "Missed", "In Progress"],
-      legend: { show: false },
-      dataLabels: {
-        enabled: true,
-        formatter: (val) => `${val.toFixed(1)}%`,
-        style: {
-          fontSize: "12px",
-          fontWeight: "600",
-        },
-      },
-      responsive: [
-        {
-          breakpoint: 640,
-          options: {
-            chart: { width: 300 },
-            legend: { position: "bottom" },
-          },
-        },
-      ],
+const PieChart = ({ data = [0, 0, 0, 0] }) => {
+  const options = {
+    chart: {
+      type: "pie",
     },
-  });
+    colors: ["#06574C", "#95C4BE", "#EBD4C9", "#F1C2AC"],
+    labels: ["Upcoming", "Cancelled", "Missed", "In Progress"],
+    legend: { show: false },
+    dataLabels: {
+      enabled: true,
+      formatter: (val) => `${val.toFixed(1)}%`,
+      style: {
+        fontSize: "12px",
+        fontWeight: "600",
+      },
+    },
+    responsive: [
+      {
+        breakpoint: 640,
+        options: {
+          chart: { width: 300 },
+          legend: { position: "bottom" },
+        },
+      },
+    ],
+  };
 
-  const { series } = state;
-  const labels = state.options.labels;
-  const colors = state.options.colors;
+  const series = data;
+  const labels = options.labels;
+  const colors = options.colors;
   const total = series.reduce((s, v) => s + v, 0);
 
   return (
@@ -70,8 +66,8 @@ const PieChart = () => {
         {/* RIGHT chart */}
         <div className="w-full md:w-1/2 flex justify-center">
           <ReactApexChart
-            options={state.options}
-            series={state.series}
+            options={options}
+            series={series}
             type="pie"
             width={280}
           />

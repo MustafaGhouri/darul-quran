@@ -156,17 +156,11 @@ const Analytics = () => {
     { key: "40", label: "40" },
     { key: "50", label: "50" },
   ];
-  const progressbar = [
-    // Left Side
-    { title: "Python", value: 36, color: "#EBD4C9" },
-    { title: "HTML", value: 24, color: "#EBD4C9" },
-    { title: "React", value: 310, color: "#EBD4C9" },
-
-    // Right Side
-    { title: "JavaScript", value: 19, color: "#95C4BE" },
-    { title: "Urdu", value: 32, color: "#95C4BE" },
-    { title: "CSS", value: 270, color: "#95C4BE" },
-  ];
+  const progressbar = data?.data?.coursePerformance?.map((item, index) => ({
+    title: item.title,
+    value: item.value,
+    color: index % 2 === 0 ? "#EBD4C9" : "#95C4BE",
+  })) || [];
 
   return (
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
@@ -258,7 +252,7 @@ const Analytics = () => {
         <div className="col-span-12 md:col-span-6 bg-white px-3 py-5 rounded-lg">
           <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center">
             <h1 className="text-2xl font-bold">Course Performance Analytics</h1>
-            <Select
+            {/* <Select
               radius="sm"
               className="w-50"
               variant="bordered"
@@ -274,7 +268,7 @@ const Analytics = () => {
               {Datefilters.map((filter) => (
                 <SelectItem key={filter.key}>{filter.label}</SelectItem>
               ))}
-            </Select>
+            </Select> */}
           </div>
           <div className="flex justify-between mt-6">
             <div className="w-[48%]">
@@ -295,6 +289,7 @@ const Analytics = () => {
                       }}
                       size="md"
                       value={item.value}
+                      maxValue={Math.max(...progressbar.map(p => p.value), 100)}
                     />
                   </div>
                 ))}
@@ -306,7 +301,7 @@ const Analytics = () => {
                   <div key={index} className="mb-4">
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-600">{item.value}</span>
-                      <span className="font-medium">{item.title}</span>
+                      <span className="font-medium text-right flex-1">{item.title}</span>
                     </div>
                     <Progress
                       aria-label="Loading..."
@@ -317,6 +312,7 @@ const Analytics = () => {
                       }}
                       size="md"
                       value={item.value}
+                      maxValue={Math.max(...progressbar.map(p => p.value), 100)}
                     />
                   </div>
                 ))}
@@ -324,7 +320,7 @@ const Analytics = () => {
           </div>
         </div>
         <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
-          <PieChart />
+          <PieChart data={data?.data?.classStatusOverview} />
         </div>
         <div className="col-span-12 bg-white px-3 py-6 rounded-lg">
           <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
