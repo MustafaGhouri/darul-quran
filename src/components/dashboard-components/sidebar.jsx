@@ -92,7 +92,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     { name: 'Class Schedule', icon: <MegaphoneIcon />, link: '/teacher/class-scheduling', badge: 3 },
     { name: 'Chat Center', icon: <TicketIcon />, link: '/teacher/chat' },
     { name: 'Support Tickets  ', icon: <TicketsIcon />, link: '/teacher/support-tickets' },
-    // { name: 'Announcements', icon: <MegaphoneIcon />, link: '/teacher/announcements' },
+    { name: 'Announcements', icon: <MegaphoneIcon />, link: '/teacher/announcements' },
   ];
 
   const studentMenu = [

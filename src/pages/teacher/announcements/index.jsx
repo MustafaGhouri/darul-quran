@@ -23,7 +23,7 @@ const Announcements = () => {
 
   return (
     <div className="p-4 md:p-8 bg-gray-50/50 min-h-screen">
-      <div className="max-w-4xl mx-auto">
+      <div className=" ">
         <h1 className="text-2xl font-bold text-[#06574C] mb-6">
           All Announcements
         </h1>

@@ -12,6 +12,7 @@ import {
   SelectItem,
   Textarea,
   Skeleton,
+  Spinner,
 } from "@heroui/react";
 import {
   BookIcon,
@@ -100,6 +101,7 @@ const TeachersDashboard = () => {
   const [announcement, setAnnouncement] = useState("");
   const [course, setCourse] = useState("");
   const [description, setDescription] = useState("");
+  const [delivery, setDelivery] = useState("");
  const handleAnnouncement = async (onClose) => {
   if (!course || !announcement || !description) {
     errorMessage("Please fill all fields");
@@ -112,12 +114,12 @@ const TeachersDashboard = () => {
     formData.append("title", announcement);
     formData.append("description", description);
     formData.append("type", announcement);
-    formData.append("delivery", "Both"); // Changed to "Both" so it sends push notification
+    formData.append("delivery", delivery); // Changed to "Both" so it sends push notification
     formData.append("isFeatured", false);
     formData.append("sendTo", "students");
     formData.append("courseId", course);
     formData.append("senderName", `${currentUser.firstName} ${currentUser.lastName}`);
-    formData.append("createdBy", currentUser.id);
+    formData.append("createdBy", currentUser.role);
     formData.append("date", new Date().toISOString());
 
     files.forEach((file) => {
@@ -522,7 +524,9 @@ const TeachersDashboard = () => {
                 <DrawerBody className="!px-0">
                   <Form className="bg-[#95C4BE47] p-3">
                     <CourseSelect label="Select Course" onChange={(val) => setCourse(val)} />
-                     <Select
+                     <div className="flex gap-3 w-full">
+                      <Select
+                      className="w-1/2 min-w-[150px]"
                       radius="sm"
                       label="Announcement Type"
                       name="Announcement Type"
@@ -542,6 +546,21 @@ const TeachersDashboard = () => {
                       <SelectItem key={"Information"}>Information</SelectItem>
                       <SelectItem key={"Important Notice"}>Important Notice</SelectItem>
                     </Select>
+                    <Select
+                      className="w-1/2 min-w-[150px]"
+                      radius="sm"
+                      label="Delivery"
+                      name="Delivery"
+                      variant="bordered"
+                      defaultSelectedKeys={delivery ? [delivery] : undefined}
+                      onChange={(e) => setDelivery(e.target.value)}
+                      labelPlacement="outside"
+                      placeholder="Select Delivery"
+                    >
+                      <SelectItem key={"Email"}>Email</SelectItem>
+                      <SelectItem key={"Notification"}>Notification</SelectItem>
+                    </Select>
+                    </div>
                   </Form>
                   <div className="overflow-y-auto no-scrollbar pb-10">
                     <div className="flex justify-between items-center px-4 pt-2">
