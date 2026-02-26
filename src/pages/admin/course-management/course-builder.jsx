@@ -608,6 +608,7 @@ const CourseBuilder = () => {
                       <div className="pt-6">
                         <TeacherSelect
                           onChange={(id) => handleChange("teacher_id", id)}
+                          initialValue={formData.teacher_id}
                         />
                       </div>
                       <div className="pt-6">

@@ -71,6 +71,7 @@ const BrowseCourses = () => {
 
 
   const viewCourseDetails = (courseData) => {
+    window.scroll(0, 0);
     navigate(`/student/browse-courses/course-details/${courseData.id}?teacher=${courseData?.teacherId || courseData?.teacher_id}`, {
       state: courseData
     });

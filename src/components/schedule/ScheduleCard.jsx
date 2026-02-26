@@ -25,13 +25,16 @@ export const ScheduleCard = ({
     const user = useSelector((state) => state.user);
     // console.log(user, "user");
     const handleSubscribe = async (schedule) => {
-        const res = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/payment/live-subscriptions", {
+        const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/payment/create-checkout-session`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             credentials: 'include',
-            body: JSON.stringify({ liveScheduleId: schedule.id })
+            body: JSON.stringify({ 
+                courseId: schedule.courseId,
+                liveScheduleId: schedule.id 
+            })
         });
         const data = await res.json();
         console.log(data, "res");

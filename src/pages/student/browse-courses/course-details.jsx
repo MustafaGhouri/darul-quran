@@ -99,42 +99,37 @@ const CourseDetails = () => {
   const handleEnroll = async () => {
     try {
       setEnrolling(true);
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/enroll`, {
+
+      const paymentRes = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/payment/create-checkout-session`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ courseId: course.id })
+        body: JSON.stringify({
+          courseId: course.id,
+          liveScheduleId: course?.liveScheduleId
+        })
       });
-      const data = await res.json();
-      if (data.success) {
-        successMessage("Successfully enrolled!");
-        setIsEnrolled(true);
-        navigate("/student/dashboard");
-      } else if (data.requiresPayment) {
-        successMessage("Redirecting to payment...");
-        const paymentRes = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/payment/create-checkout-session`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ courseId: course.id })
-        });
-        const paymentData = await paymentRes.json();
-        if (paymentData.success && paymentData.url) {
-          window.location.href = paymentData.url;
-        } else {
-          // toast.dismiss();
-          errorMessage("Payment setup failed: " + paymentData.message);
-        }
-      } else {
-        if (data.message === "Already enrolled") {
-          setIsEnrolled(true);
-          successMessage("You are already enrolled!");
-        } else {
-          errorMessage(data.message || "Enrollment failed");
-        }
+
+      const paymentData = await paymentRes.json();
+
+      if (!paymentData.success) {
+        errorMessage("Payment setup failed: " + paymentData.message);
+        return;
       }
+
+      if (!paymentData.requiresPayment && paymentData.isEnrolled) {
+        successMessage(paymentData.message || "Enrolled successfully!");
+        setIsEnrolled(true);
+        return;
+      }
+
+      if (paymentData.url) {
+        successMessage("Redirecting to payment...");
+        window.location.href = paymentData.url;
+      } else {
+        errorMessage("Payment setup failed: No checkout URL received");
+      }
+
     } catch (error) {
       console.error(error);
       errorMessage("Something went wrong");
@@ -204,9 +199,20 @@ const CourseDetails = () => {
         >
           <div className="grid grid-cols-12 gap-3">
             <div className="col-span-12 md:col-span-8 space-y-3">
-              <h1 className="text-3xl font-bold">
-                {course?.courseName}
-              </h1>
+              <div className="flex items-center gap-2 justify-between">
+                <h1 className="text-3xl font-bold">
+                  {course?.courseName}
+                </h1>
+                <Button
+                  size="sm"
+                  radius="sm"
+                  color="success"
+                  variant="bordered"
+                  className="capitalize"
+                >
+                  {course?.type?.replace("_", "")} Course
+                </Button>
+              </div>
               <div className="bg-white rounded-xl p-4 space-y-4 shadow-sm">
                 {/* Instructor Row */}
                 <div className="flex justify-between items-center">
@@ -223,7 +229,6 @@ const CourseDetails = () => {
                     </div>
                   </div>
 
-                  {/* Category Badge */}
                   <Button
                     size="sm"
                     radius="sm"
