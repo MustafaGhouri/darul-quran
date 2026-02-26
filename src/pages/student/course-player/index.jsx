@@ -31,7 +31,7 @@ const CoursePlayer = () => {
 
     const { user } = useSelector((state) => state.user);
 
-    const { data, error, isLoading, isError,refetch } = useGetCourseFilesQuery({ courseId: id, page, search, includeCourse: !courseFromState?.id }, { skip: !id });
+    const { data, error, isLoading, isError, refetch } = useGetCourseFilesQuery({ courseId: id, page, search, includeCourse: !courseFromState?.id }, { skip: !id });
     const [addReview, { isLoading: isAddingReview }] = useAddRevieworUpdateMutation();
 
     const course = useMemo(() => {
@@ -62,12 +62,14 @@ const CoursePlayer = () => {
                 } catch (e) { cl = []; }
                 setCompletedLessons(cl);
                 const completedCount = data.enrollment.completedLessonsCount;
-                const percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
-                setProgress(data.enrollment.progressStatus !== "not_started" ? percentage : 0);
+                const percentage = totalLessons > 0 ?(completedCount / totalLessons) * 100 : 0;
+                console.log(completedCount,totalLessons,percentage);
+                
+                setProgress(percentage);
                 setExistingReview(data?.review);
                 setReviewRating(data.review?.rating);
                 setReviewDescription(data.review?.description || '');
-                
+
             }
         } catch (e) { console.error(e); }
     };
@@ -86,7 +88,7 @@ const CoursePlayer = () => {
             if (data.success) {
                 setCompletedLessons(data.completedLessons);
                 const completedCount = data.completedCount;
-                const percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0
+                const percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
                 setProgress(percentage);
                 successMessage("Lesson Completed!");
             }

@@ -20,7 +20,7 @@ const UploadMaterial = () => {
   const courseIdFromQuery = searchParams.get("courseId");
   const [files, setFiles] = useState([]);
   const [courseId, setCourseId] = useState(courseIdFromQuery || null);
-  const { data, error, isLoading, refetch } = useGetCourseFilesQuery({ courseId, page: 1, search: "", includeCourse: false }, { skip: (!courseId || !courseIdFromQuery) });
+  const { data, error, isLoading, refetch } = useGetCourseFilesQuery({ courseId, page: 1, search: "", includeCourse: false }, { skip: !courseId  });
   useEffect(() => {
     if (data?.results) {
       setFiles(data?.results);
