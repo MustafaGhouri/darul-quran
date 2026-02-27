@@ -655,6 +655,7 @@ const CourseBuilder = () => {
                           initialValue={formData?.interval}
                           onUpdate={(interval) => handleChange("interval", interval)}
                           releasedImmediately={false}
+                          units={["day", "month"]}
                         />
                       }
                     </div>
@@ -1036,10 +1037,10 @@ const CourseBuilder = () => {
                       <div className="p-3 bg-[#EBD4C982] rounded-lg flex justify-between items-center">
                         <div>
                           <h1 className="text-[#333333] font-bold text-lg">
-                            Current Status: Draft
+                            Current Status: {formData.status === "published" ? "Public" : "Draft"}
                           </h1>
                           <h1 className="text-[#666666] font-medium text-sm">
-                            Your course is not visible to students yet
+                            {formData.status === "published" ? "Your course is visible to students yet" : "Your course is not visible to students yet"}
                           </h1>
                         </div>
 

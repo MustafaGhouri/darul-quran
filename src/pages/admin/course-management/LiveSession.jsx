@@ -9,6 +9,7 @@ import { errorMessage } from '../../../lib/toast.config';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useGetSchedulesByMonthQuery } from '../../../redux/api/schedules';
 import QueryError from '../../../components/QueryError';
+import { formatTime12Hour } from '../../../utils/scheduleHelpers';
 
 const LiveSession = ({ isTeacher = false }) => {
     const [searchParams] = useSearchParams();
@@ -30,15 +31,17 @@ const LiveSession = ({ isTeacher = false }) => {
 
             return schedule.scheduleDates.map(date => ({
                 id: `${schedule.id}-${date}`,
-                title: schedule.title,
+                title: `${formatTime12Hour(schedule.startTime)} - ${formatTime12Hour(schedule.endTime)} ● ${schedule.title}`,
                 start: date,
+                // startTime: schedule.startTime,
+                // endTime: schedule.endTime,
                 backgroundColor: '#dcd0ff',
                 borderColor: '#dcd0ff',
                 textColor: '#06574C',
                 extendedProps: {
                     description: schedule.description,
                     courseName: schedule.courseName,
-                    scheduleId: schedule.id
+                    scheduleId: schedule.id,
                 }
             }));
         });
@@ -72,7 +75,7 @@ const LiveSession = ({ isTeacher = false }) => {
     }
 
     return (
-        <div className='bg-white min-h-screen sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5 '>
+        <div className='bg-white   sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5 '>
             <div className="flex justify-between items-center py-4">
                 <DashHeading
                     title={"Scheduled Live Classes Calendar"}
@@ -87,7 +90,7 @@ const LiveSession = ({ isTeacher = false }) => {
             </div>
 
             <div className="bg-[#EBD4C9] max-md:flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex flex-col md:flex-row justify-between md:items-center">
-                <Button as={Link} color='success' variant='bordered' to={isTeacher ? '/teacher/class-scheduling' :'/admin/scheduling'} radius="sm" startContent={<ArrowBigLeft size={15} />} >
+                <Button as={Link} color='success' variant='bordered' to={isTeacher ? '/teacher/class-scheduling' : '/admin/scheduling'} radius="sm" startContent={<ArrowBigLeft size={15} />} >
                     Back
                 </Button>
                 <Button as={Link} to={isTeacher ? '/teacher/class-scheduling?calender=true' : '/admin/scheduling?modal=true'} radius="sm" startContent={<Plus color="white" size={15} />} className="bg-[#06574C] text-white py-4 px-3 sm:px-8">

@@ -1,5 +1,14 @@
 import { errorMessage } from "./toast.config";
 
+export const parseDateForArray = (input) => {
+  console.log("INPUT:", input, typeof input);
+      const [month, day, year] = input.split(/[-/]/);
+
+      const fullYear = year.length === 2 ? `20${year}` : year;
+
+      return new Date(`${fullYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`);
+    };
+
 export const dateFormatter = (date, isTime = false) => {
   if (!date) return '';
   const formatterUS = new Intl.DateTimeFormat('en-US', {

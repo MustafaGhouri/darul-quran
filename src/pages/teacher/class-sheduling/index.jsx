@@ -36,6 +36,7 @@ import { dateFormatter, limits } from "../../../lib/utils";
 import { useCreateScheduleMutation, useDeleteScheduleMutation, useGetScheduleQuery, useUpdateScheduleMutation } from "../../../redux/api/schedules";
 import Swal from "sweetalert2";
 import { Link, useSearchParams } from "react-router-dom";
+import CourseSelect from "../../../components/select/CourseSelect";
 
 const ClassSheduling = () => {
   const [searchParams] = useSearchParams();
@@ -446,6 +447,13 @@ const ClassSheduling = () => {
                     setFormData({ ...formData, title: e.target.value })
                   }
                 />
+                {!isEdit && <CourseSelect
+                  initialValue={formData.courseId}
+                  onChange={(courseId) => setFormData({ ...formData, courseId })}
+                  status="published"
+                  type="live"
+                  isDisabled={isEdit}
+                />}
                 <Select
                   label="Schedule Type"
                   variant="bordered"

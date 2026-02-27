@@ -32,7 +32,7 @@ import { CalendarIcon, Copy, Trash2, PlusIcon } from "lucide-react";
 
 import { getStatusColor, getStatusText, formatTime12Hour } from "../../../utils/scheduleHelpers";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
-import { dateFormatter, limits } from "../../../lib/utils";
+import { dateFormatter, limits, parseDateForArray } from "../../../lib/utils";
 import TeacherSelect from "../../../components/select/TeacherSelect";
 import { useCreateScheduleMutation, useDeleteScheduleMutation, useGetScheduleQuery, useUpdateScheduleMutation } from "../../../redux/api/schedules";
 import CourseSelect from "../../../components/select/CourseSelect";
@@ -55,8 +55,8 @@ const Scheduling = () => {
   // Modal State
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isEdit, setIsEdit] = useState(false);
-  const [startDate, setStartDate] = useState(false);
-  const [endDate, setEndDate] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -109,18 +109,8 @@ const Scheduling = () => {
       errorMessage("Please fill required fields (Title,  Time, Teacher)");
       return;
     }
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const dateArray = [];
-    let curr = new Date(start);
-    while (curr <= end) {
-      dateArray.push(curr.toISOString().split("T")[0]);
-      curr.setDate(curr.getDate() + 1);
-    }
-
     try {
-
-      const payload = { ...formData, dateArray }
+      const payload = { ...formData }
       let response;
 
       if (isEdit) {
@@ -130,14 +120,14 @@ const Scheduling = () => {
       }
 
       const data = response.data;
+      const error = response?.error?.data;
 
-      if (data.success) {
-        successMessage(isEdit ? "Session Updated" : "Session Scheduled & Zoom Generated!");
-        onOpenChange(false);
-        resetForm();
-      } else {
-        errorMessage(data.message || "Operation failed");
+      if (error) {
+        throw new Error(error.message || "Operation failed");
       }
+      successMessage(data?.message);
+      onOpenChange(false);
+      resetForm();
     } catch (error) {
       console.error(error);
       errorMessage("Error submitting form: " + error.message);
@@ -463,6 +453,7 @@ const Scheduling = () => {
                   onChange={(courseId) => setFormData({ ...formData, courseId })}
                   status="published"
                   type="live"
+                  isDisabled={isEdit}
                 />
                 {/* Schedule Type */}
                 <Select
