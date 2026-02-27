@@ -8,6 +8,7 @@ import {
   Progress,
   Select,
   SelectItem,
+  Skeleton,
   Table,
   TableBody,
   TableCell,
@@ -237,7 +238,11 @@ const Analytics = () => {
       </div>
       <AnalyticsCards data={cardsData} isLoading={isLoading} />
       <div className="grid grid-cols-12 gap-3 my-3 px-3 md:px-0">
-        <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
+         {isLoading ? (
+                    <Skeleton
+                      className="col-span-12 md:col-span-6 w-full h-[400px] bg-white rounded-lg p-4 shadow-sm"
+                    />
+                  ) : (<div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
           <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center mb-4">
             <h1 className="text-2xl font-bold">Revenue Analytics</h1>
             <Select
@@ -259,10 +264,16 @@ const Analytics = () => {
               ))}
             </Select>
           </div>
-          <ApexChart data={data?.data?.revenueAnalytics}  isLoading={isLoading}/>
-        </div>
-        <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
-          <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center mb-4">
+         
+            <ApexChart data={data?.data?.revenueAnalytics}  isLoading={isLoading}/>
+        </div>)}
+         {isLoading ? (
+                    <Skeleton
+                      className="col-span-12 md:col-span-6 w-full h-[400px] bg-white rounded-lg p-4 shadow-sm"
+                    />
+                  ) : (
+                    <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
+                  <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center mb-4">
             <h1 className="text-2xl font-bold">Enrollment Trends</h1>
             <Select
               radius="sm"
@@ -284,7 +295,12 @@ const Analytics = () => {
             </Select>
           </div>
           <BarChart data={data?.data?.enrollmentTrends} isLoading={isLoading}/>
-        </div>
+       
+        </div> 
+        )}  
+        {isLoading ? (
+          <Skeleton className="col-span-12 md:col-span-6 w-full h-[400px] bg-white rounded-lg p-4 shadow-sm" />
+        ) : (
         <div className="col-span-12 md:col-span-6 bg-white px-3 py-5 rounded-lg">
           <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center">
             <h1 className="text-2xl font-bold">Course Performance Analytics</h1>
@@ -355,9 +371,17 @@ const Analytics = () => {
             </div>
           </div>
         </div>
+        )}
+        {isLoading ? (
+          <Skeleton className="col-span-12 md:col-span-6 w-full h-[400px] bg-white rounded-lg p-4 shadow-sm" />
+        ) : (
         <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
           <PieChart data={data?.data?.classStatusOverview} />
         </div>
+        )}
+        {isLoading ? (
+          <Skeleton className="col-span-12 w-full h-[400px] bg-white rounded-lg p-4 shadow-sm" />
+        ) : (
         <div className="col-span-12 bg-white px-3 py-6 rounded-lg">
           <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
             <div>
@@ -483,6 +507,7 @@ const Analytics = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
