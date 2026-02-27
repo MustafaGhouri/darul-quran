@@ -12,6 +12,7 @@ import { rescheduleApi } from "./api/reschedule";
 import { supportTicketApi } from "./api/supportTickets";
 import { paymentApi } from "./api/payments";
 import { analyticsApi } from "./api/analytics";
+import chatReducer from "./reducers/chat";
 
 
 export const store = configureStore({
@@ -29,6 +30,7 @@ export const store = configureStore({
     [paymentApi.reducerPath]: paymentApi.reducer,
     [analyticsApi.reducerPath]: analyticsApi.reducer,
     user: userReducer,
+    chat: chatReducer,
   },
   middleware: (mid) => [
     ...mid(),

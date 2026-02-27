@@ -8,6 +8,7 @@ import {
   HeroUIProvider,
   Spinner,
   ToastProvider,
+  addToast,
 } from "@heroui/react";
 import { lazy, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -33,6 +34,7 @@ import AddUser from "./pages/admin/user-management/add-user";
 import EditUser from "./pages/admin/user-management/add-user/edituser";
 import { showMessage } from "./lib/toast.config";
 import { clearUser, setUser } from "./redux/reducers/user";
+import { setOnlineUsers, setIncomingMessage } from "./redux/reducers/chat";
 import Loader from "./components/Loader";
 import StudentLayout from "./components/layouts/Studentlayout";
 import SupportTicketsStudent from "./pages/student/supports-tickets/page";
@@ -91,7 +93,29 @@ function App() {
 
   const { user, loading, shouldFetch, isAuthenticated } = useSelector(
     (state) => state?.user
-  )
+  );
+  const { incomingMessage, activeChatId } = useSelector((state) => state?.chat ?? {});
+
+  // Toast when new message arrives and user is not viewing that chat
+  useEffect(() => {
+    if (!incomingMessage?.message) return;
+    const isOnChatScreen = pathname.includes("/help/messages") || pathname === "/teacher/chat" || pathname.includes("/help/chat");
+    const isViewingThisChat = isOnChatScreen && activeChatId === incomingMessage.chatId;
+    if (isViewingThisChat) return;
+
+    const msg = incomingMessage.message;
+    const senderName = msg.sender
+      ? [msg.sender.firstName, msg.sender.lastName].filter(Boolean).join(" ").trim() || msg.sender.email || "Someone"
+      : "Someone";
+    const text = (msg.text || "").slice(0, 80);
+    addToast({
+      title: `New message from ${senderName}`,
+      description: text ? (text.length >= 80 ? `${text}…` : text) : "New message",
+      color: "primary",
+      variant: "solid",
+      placement: "bottom-right",
+    });
+  }, [incomingMessage, pathname, activeChatId]);
 
   useEffect(() => {
     async function loadUser() {
@@ -136,28 +160,18 @@ function App() {
   }, [shouldFetch, user]);
 
   useEffect(() => {
-    if (user) {
-      connectSocket(user.id);
-    }
+    if (!user?.id) return;
+    socket.emit("user-online", user.id);
+    const onOnlineUsers = (users) => dispatch(setOnlineUsers(users));
+    const onReceiveMessage = (payload) => dispatch(setIncomingMessage(payload));
+    socket.on("update-online-users", onOnlineUsers);
+    socket.on("receive-message", onReceiveMessage);
     return () => {
+      socket.off("update-online-users", onOnlineUsers);
+      socket.off("receive-message", onReceiveMessage);
       socket.disconnect();
     };
-  }, [user]);
-  const connectSocket = (userId) => {
-    console.log("Connecting socket for users:", userId);
-    socket.emit("user-online", userId);
-    socket.on("update-online-users", (users) => {
-      console.log("Online Users:", users);
-      dispatch(setOnlineUsers(users));
-    });
-
-    socket.on('receive-message', (msg) => {
-      console.log("Received message:", msg);
-      dispatch(setMessages(msg));
-      // socket.auth.serverOffset = serverOffset;
-
-    });
-  };
+  }, [user?.id]);
   if (loading) return (
     <div className="h-screen flex flex-col items-center justify-center">
       <img

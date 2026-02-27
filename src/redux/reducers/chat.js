@@ -10,7 +10,9 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
     onlineUsers: [],
-    messages: [],
+    incomingMessage: null,
+    /** Chat ID the user is currently viewing (null if not on chat or no chat selected). Used to avoid toasting when they're in that chat. */
+    activeChatId: null,
     loading: true,
 };
 
@@ -21,9 +23,16 @@ const chatReducer = createSlice({
         setOnlineUsers(state, action) {
             state.onlineUsers = action.payload;
         },
-
-        setMessages(state, action) {
-            state.messages = action.payload;
+        /** Payload: { chatId, message, chat } from socket receive-message */
+        setIncomingMessage(state, action) {
+            state.incomingMessage = action.payload;
+        },
+        clearIncomingMessage(state) {
+            state.incomingMessage = null;
+        },
+        /** Set when user opens a chat; clear when they leave or close. Used for toast: don't toast if activeChatId === incomingMessage.chatId */
+        setActiveChatId(state, action) {
+            state.activeChatId = action.payload;
         },
         setLoading(state, action) {
             state.loading = action.payload;
@@ -33,7 +42,9 @@ const chatReducer = createSlice({
 
 export const {
     setOnlineUsers,
-    setMessages,
+    setIncomingMessage,
+    clearIncomingMessage,
+    setActiveChatId,
     setLoading,
 } = chatReducer.actions;
 
