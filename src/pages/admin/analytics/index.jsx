@@ -39,7 +39,7 @@ import ApexChart from "../../../components/dashboard-components/AnalyticsChat";
 import BarChart from "../../../components/dashboard-components/BarChart";
 import PieChart from "../../../components/dashboard-components/PieChart";
 import { useGetAnalyticsQuery } from "../../../redux/api/analytics";
-import QueryError from "../../../components/QueryError"; 
+import QueryError from "../../../components/QueryError";
 
 const Analytics = () => {
   const statuses = [
@@ -76,14 +76,15 @@ const Analytics = () => {
   });
 
   if (error) {
-    return <QueryError
-      height="300px"
-      error={error.message}
-      onRetry={refetch}
-      showLogo={false}
-
-    />
-    }
+    return (
+      <QueryError
+        height="300px"
+        error={error.message}
+        onRetry={refetch}
+        showLogo={false}
+      />
+    );
+  }
 
   const analyticsData = data?.data;
 
@@ -93,21 +94,30 @@ const Analytics = () => {
       value: analyticsData?.activeCourses?.toLocaleString() || "0",
       icon: <Album size={26} color="#06574C" />,
       changeText: `${Number(analyticsData?.activeCoursesChange) >= 0 ? "+" : ""}${analyticsData?.activeCoursesChange || "0.0"}% from last month`,
-      changeColor: Number(analyticsData?.activeCoursesChange) >= 0 ? "text-[#38A100]" : "text-[#E8505B]",
+      changeColor:
+        Number(analyticsData?.activeCoursesChange) >= 0
+          ? "text-[#38A100]"
+          : "text-[#E8505B]",
     },
     {
       title: "Revenue",
       value: `$${(analyticsData?.revenueToday || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       icon: <ChartLine size={26} color="#06574C" />,
       changeText: `${Number(analyticsData?.revenueChange) >= 0 ? "+" : ""}${analyticsData?.revenueChange || "0.0"}% from yesterday`,
-      changeColor: Number(analyticsData?.revenueChange) >= 0 ? "text-[#38A100]" : "text-[#E8505B]",
+      changeColor:
+        Number(analyticsData?.revenueChange) >= 0
+          ? "text-[#38A100]"
+          : "text-[#E8505B]",
     },
     {
       title: "Active Users",
       value: analyticsData?.totalUsers?.toLocaleString() || "0",
       icon: <UsersRound size={26} color="#06574C" />,
       changeText: `${Number(analyticsData?.activeUsersChange) >= 0 ? "+" : ""}${analyticsData?.activeUsersChange || "0.0"}% from last week`,
-      changeColor: Number(analyticsData?.activeUsersChange) >= 0 ? "text-[#38A100]" : "text-[#E8505B]",
+      changeColor:
+        Number(analyticsData?.activeUsersChange) >= 0
+          ? "text-[#38A100]"
+          : "text-[#E8505B]",
     },
   ];
 
@@ -191,120 +201,215 @@ const Analytics = () => {
     { key: "40", label: "40" },
     { key: "50", label: "50" },
   ];
-  const progressbar = data?.data?.coursePerformance?.map((item, index) => ({
-    title: item.title,
-    value: item.value,
-    color: index % 2 === 0 ? "#EBD4C9" : "#95C4BE",
-  })) || [];
+  const progressbar =
+    data?.data?.coursePerformance?.map((item, index) => ({
+      title: item.title,
+      value: item.value,
+      color: index % 2 === 0 ? "#EBD4C9" : "#95C4BE",
+    })) || [];
+
+  const handleExport = () => {
+    // Basic cards data
+    const overviewData = [
+      ["Metric", "Value", "Change"],
+      ...cardsData.map((c) => [
+        `"${c.title}"`,
+        `"${c.value.replace(/\$/g, "")}"`, // Remove $ for clean numbers
+        `"${c.changeText}"`,
+      ]),
+      [],
+    ];
+
+    // Revenue Analytics
+    const revenueData = [
+      ["Revenue Analytics"],
+      ["Week/Period", "Revenue"],
+      ...(data?.data?.revenueAnalytics || []).map((item) => [
+        `"${item.week_label || ""}"`,
+        `"${item.revenue || "0"}"`,
+      ]),
+      [],
+    ];
+
+    // Enrollment Trends
+    const enrollmentData = [
+      ["Enrollment Trends"],
+      ["Period", "Enrollments"],
+      ...(data?.data?.enrollmentTrends || []).map((item) => [
+        `"${item.x || ""}"`,
+        `"${item.y || "0"}"`,
+      ]),
+      [],
+    ];
+
+    // Course Performance Analytics
+    const coursePerformanceData = [
+      ["Course Performance Analytics"],
+      ["Course Title", "Value"],
+      ...progressbar.map((item) => [
+        `"${item.title || ""}"`,
+        `"${item.value || "0"}"`,
+      ]),
+      [],
+    ];
+
+    // Class Status Overview
+    const classStatusLabels = ["Upcoming", "Cancelled", "Missed", "In Progress"];
+    const classStatusData = [
+      ["Class Status Overview"],
+      ["Status", "Value"],
+      ...(data?.data?.classStatusOverview || []).map((item, index) => [
+        `"${classStatusLabels[index] || ""}"`,
+        `"${item || "0"}"`,
+      ]),
+      [],
+    ];
+
+    // Activity Logs data
+    const logsHeader = [
+      ["User Activity Logs"],
+      [
+        "Student Name",
+        "Email",
+        "Role",
+        "Details",
+        "Action",
+        "Date",
+        "Time",
+        "Status",
+      ]
+    ];
+
+    const logsData = PaymentTable.map((item) => [
+      `"${item.student_name}"`,
+      `"${item.email}"`,
+      `"${item.role}"`,
+      `"${item.details}"`,
+      `"${item.action}"`,
+      `"${item.date}"`,
+      `"${item.time}"`,
+      `"${item.status}"`,
+    ]);
+
+    const csvContent = [
+      ...overviewData,
+      ...revenueData,
+      ...enrollmentData,
+      ...coursePerformanceData,
+      ...classStatusData,
+      ...logsHeader,
+      ...logsData,
+    ].map(row => row.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `analytics_export_${formatDate(today).replace(/ /g, "_")}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
+      <div className="flex justify-between items-center">
       <DashHeading
         title={"Logs & Analytics"}
         desc={"Monitor platform activity and performance metrics"}
       />
-      <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
-        <div className="flex  items-center gap-2">
-          <Select
-            className="min-w-[130px]"
-            radius="sm"
-            defaultSelectedKeys={["all"]}
-            placeholder="Select status"
-          >
-            {statuses.map((status) => (
-              <SelectItem key={status.key}>{status.label}</SelectItem>
-            ))}
-          </Select>
-          <Select
-            radius="sm"
-            className="min-w-[120px]"
-            defaultSelectedKeys={["all"]}
-            selectorIcon={<ListFilterIcon />}
-            placeholder="Filter"
-          >
-            {filters.map((filter) => (
-              <SelectItem key={filter.key}>{filter.label}</SelectItem>
-            ))}
-          </Select>
-        </div>
-        <Button
+      <Button
+          onPress={handleExport}
           startContent={<Download size={20} />}
           size="lg"
           radius="sm"
           className="bg-[#06574C] text-white"
         >
           Export
-        </Button>
-      </div>
+        </Button></div>
+      {/* <div> */}
       <AnalyticsCards data={cardsData} isLoading={isLoading} />
       <div className="grid grid-cols-12 gap-3 my-3 px-3 md:px-0">
-         {isLoading ? (
-                    <Skeleton
-                      className="col-span-12 md:col-span-6 w-full h-[400px] bg-white rounded-lg p-4 shadow-sm"
-                    />
-                  ) : (<div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
-          <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center mb-4">
-            <h1 className="text-2xl font-bold">Revenue Analytics</h1>
-            <Select
-              radius="sm"
-              className="w-50 "
-              variant="bordered"
-              selectedKeys={[revenueFilter]}
-              onSelectionChange={(keys) => setRevenueFilter(Array.from(keys)[0])}
-              placeholder="Select Filtered Date"
-              classNames={{
-                value: "!text-gray-400",
-                trigger: "!text-gray-400",
-                listbox: "!text-gray-400",
-                item: "!data-[selected=true]:text-gray-400",
-              }}
-            >
-              {Datefilters.map((filter) => (
-                <SelectItem key={filter.key}>{filter.label}</SelectItem>
-              ))}
-            </Select>
-          </div>
-         
-            <ApexChart data={data?.data?.revenueAnalytics}  isLoading={isLoading}/>
-        </div>)}
-         {isLoading ? (
-                    <Skeleton
-                      className="col-span-12 md:col-span-6 w-full h-[400px] bg-white rounded-lg p-4 shadow-sm"
-                    />
-                  ) : (
-                    <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
-                  <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center mb-4">
-            <h1 className="text-2xl font-bold">Enrollment Trends</h1>
-            <Select
-              radius="sm"
-              className="w-50"
-              variant="bordered"
-              selectedKeys={[enrollmentFilter]}
-              onSelectionChange={(keys) => setEnrollmentFilter(Array.from(keys)[0])}
-              placeholder="Select Filtered Date"
-              classNames={{
-                value: "!text-gray-400",
-                trigger: "!text-gray-400",
-                listbox: "!text-gray-400",
-                item: "!data-[selected=true]:text-gray-400",
-              }}
-            >
-              {Datefilters.map((filter) => (
-                <SelectItem key={filter.key}>{filter.label}</SelectItem>
-              ))}
-            </Select>
-          </div>
-          <BarChart data={data?.data?.enrollmentTrends} isLoading={isLoading}/>
-       
-        </div> 
-        )}  
         {isLoading ? (
           <Skeleton className="col-span-12 md:col-span-6 w-full h-[400px] bg-white rounded-lg p-4 shadow-sm" />
         ) : (
-        <div className="col-span-12 md:col-span-6 bg-white px-3 py-5 rounded-lg">
-          <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center">
-            <h1 className="text-2xl font-bold">Course Performance Analytics</h1>
-            {/* <Select
+          <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
+            <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center mb-4">
+              <h1 className="text-2xl font-bold">Revenue Analytics</h1>
+              <Select
+                radius="sm"
+                className="w-50 "
+                variant="bordered"
+                selectedKeys={[revenueFilter]}
+                onSelectionChange={(keys) =>
+                  setRevenueFilter(Array.from(keys)[0])
+                }
+                placeholder="Select Filtered Date"
+                classNames={{
+                  value: "!text-gray-400",
+                  trigger: "!text-gray-400",
+                  listbox: "!text-gray-400",
+                  item: "!data-[selected=true]:text-gray-400",
+                }}
+              >
+                {Datefilters.map((filter) => (
+                  <SelectItem key={filter.key}>{filter.label}</SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            <ApexChart
+              data={data?.data?.revenueAnalytics}
+              isLoading={isLoading}
+            />
+          </div>
+        )}
+        {isLoading ? (
+          <Skeleton className="col-span-12 md:col-span-6 w-full h-[400px] bg-white rounded-lg p-4 shadow-sm" />
+        ) : (
+          <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
+            <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center mb-4">
+              <h1 className="text-2xl font-bold">Enrollment Trends</h1>
+              <Select
+                radius="sm"
+                className="w-50"
+                variant="bordered"
+                selectedKeys={[enrollmentFilter]}
+                onSelectionChange={(keys) =>
+                  setEnrollmentFilter(Array.from(keys)[0])
+                }
+                placeholder="Select Filtered Date"
+                classNames={{
+                  value: "!text-gray-400",
+                  trigger: "!text-gray-400",
+                  listbox: "!text-gray-400",
+                  item: "!data-[selected=true]:text-gray-400",
+                }}
+              >
+                {Datefilters.map((filter) => (
+                  <SelectItem key={filter.key}>{filter.label}</SelectItem>
+                ))}
+              </Select>
+            </div>
+            <BarChart
+              data={data?.data?.enrollmentTrends}
+              isLoading={isLoading}
+            />
+          </div>
+        )}
+        {isLoading ? (
+          <Skeleton className="col-span-12 md:col-span-6 w-full h-[400px] bg-white rounded-lg p-4 shadow-sm" />
+        ) : (
+          <div className="col-span-12 md:col-span-6 bg-white px-3 py-5 rounded-lg">
+            <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center">
+              <h1 className="text-2xl font-bold">
+                Course Performance Analytics
+              </h1>
+              {/* <Select
               radius="sm"
               className="w-50"
               variant="bordered"
@@ -321,192 +426,202 @@ const Analytics = () => {
                 <SelectItem key={filter.key}>{filter.label}</SelectItem>
               ))}
             </Select> */}
-          </div>
-          <div className="flex justify-between mt-6">
-            <div className="w-[48%]">
-              {progressbar
-                .slice(0, Math.ceil(progressbar.length / 2))
-                .map((item, index) => (
-                  <div key={index} className="mb-4">
-                    <div className="flex justify-between items-center py-1">
-                      <span className="font-medium">{item.title}</span>
-                      <span className="text-gray-600">{item.value}</span>
-                    </div>
-                    <Progress
-                      aria-label="Loading..."
-                      className="w-full"
-                      classNames={{
-                        track: "bg-gray-200", // Background color
-                        indicator: `bg-[${item.color}]`, // Fill color
-                      }}
-                      size="md"
-                      value={item.value}
-                      maxValue={Math.max(...progressbar.map(p => p.value), 100)}
-                    />
-                  </div>
-                ))}
             </div>
-            <div className="w-[48%]">
-              {progressbar
-                .slice(Math.ceil(progressbar.length / 2))
-                .map((item, index) => (
-                  <div key={index} className="mb-4">
-                    <div className="flex justify-between items-center py-1">
-                      <span className="text-gray-600">{item.value}</span>
-                      <span className="font-medium text-right flex-1">{item.title}</span>
+            <div className="flex justify-between mt-6">
+              <div className="w-[48%]">
+                {progressbar
+                  .slice(0, Math.ceil(progressbar.length / 2))
+                  .map((item, index) => (
+                    <div key={index} className="mb-4">
+                      <div className="flex justify-between items-center py-1">
+                        <span className="font-medium">{item.title}</span>
+                        <span className="text-gray-600">{item.value}</span>
+                      </div>
+                      <Progress
+                        aria-label="Loading..."
+                        className="w-full"
+                        classNames={{
+                          track: "bg-gray-200", // Background color
+                          indicator: `bg-[${item.color}]`, // Fill color
+                        }}
+                        size="md"
+                        value={item.value}
+                        maxValue={Math.max(
+                          ...progressbar.map((p) => p.value),
+                          100,
+                        )}
+                      />
                     </div>
-                    <Progress
-                      aria-label="Loading..."
-                      className="w-full "
-                      classNames={{
-                        track: "bg-gray-200", // Background color
-                        indicator: `bg-[${item.color}]`, // Fill color
-                      }}
-                      size="md"
-                      value={item.value}
-                      maxValue={Math.max(...progressbar.map(p => p.value), 100)}
-                    />
-                  </div>
-                ))}
+                  ))}
+              </div>
+              <div className="w-[48%]">
+                {progressbar
+                  .slice(Math.ceil(progressbar.length / 2))
+                  .map((item, index) => (
+                    <div key={index} className="mb-4">
+                      <div className="flex justify-between items-center py-1">
+                        <span className="text-gray-600">{item.value}</span>
+                        <span className="font-medium text-right flex-1">
+                          {item.title}
+                        </span>
+                      </div>
+                      <Progress
+                        aria-label="Loading..."
+                        className="w-full "
+                        classNames={{
+                          track: "bg-gray-200", // Background color
+                          indicator: `bg-[${item.color}]`, // Fill color
+                        }}
+                        size="md"
+                        value={item.value}
+                        maxValue={Math.max(
+                          ...progressbar.map((p) => p.value),
+                          100,
+                        )}
+                      />
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
-        </div>
         )}
         {isLoading ? (
           <Skeleton className="col-span-12 md:col-span-6 w-full h-[400px] bg-white rounded-lg p-4 shadow-sm" />
         ) : (
-        <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
-          <PieChart data={data?.data?.classStatusOverview} />
-        </div>
+          <div className="col-span-12 md:col-span-6 bg-white p-3 rounded-lg">
+            <PieChart data={data?.data?.classStatusOverview} />
+          </div>
         )}
         {isLoading ? (
           <Skeleton className="col-span-12 w-full h-[400px] bg-white rounded-lg p-4 shadow-sm" />
         ) : (
-        <div className="col-span-12 bg-white px-3 py-6 rounded-lg">
-          <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
-            <div>
-              <h1 className="text-xl font-bold">User Activity Logs</h1>
-            </div>
-            <div className="flex flex-wrap gap-3 items-center">
-              <Select
-                radius="sm"
-                className="w-full md:w-60 !border-[#06574C] "
-                variant="bordered"
-                defaultSelectedKeys={["all"]}
-                placeholder="Filter"
-              >
-                {statuses.map((items) => (
-                  <SelectItem key={items.key}>{items.label}</SelectItem>
-                ))}
-              </Select>
-              <DatePicker
-                radius="sm"
-                className="w-full md:w-50"
-                variant="bordered"
-                showMonthAndYearPickers
-              />
-              <Input
-                className="w-full md:w-60"
-                radius="sm"
-                variant="bordered"
-                placeholder="Search user activities..."
-                endContent={<SearchIcon size={20} />}
-              />
-            </div>
-          </div>
-          <div className="mt-3">
-            <Table
-              //    isHeaderSticky
-              aria-label="Pending approvals table"
-              removeWrapper
-              classNames={{
-                base: "bg-white rounded-lg overflow-x-scroll no-scrollbar",
-                th: "font-bold text-sm p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936] border-t border-default-200",
-                td: "py-3 items-center whitespace-nowrap",
-                tr: "border-b border-default-200",
-              }}
-            >
-              <TableHeader>
-                {refundheader.map((item) => (
-                  <TableColumn key={item.key}>{item.label}</TableColumn>
-                ))}
-              </TableHeader>
-
-              <TableBody>
-                {PaymentTable.map((classItem) => (
-                  <TableRow key={classItem.id}>
-                    <TableCell className="px-4">
-                      <h1 className="font-semibold text-sm">
-                        {classItem.student_name}
-                      </h1>
-                      <h1 className="text-xs text-[#9A9A9A]">{classItem.email}</h1>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        className="bg-[#95C4BE33] text-[#06574C] w-30"
-                      >
-                        {classItem.role}
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <span>{classItem.details}</span>
-                    </TableCell>
-
-                    <TableCell>
-                      <div className="p-2 bg-[#FBF4EC] text-[#D28E3D] text-xs text-center rounded-md">
-                        {classItem.action}
-                      </div>
-                    </TableCell>
-                    <TableCell>{classItem.date}</TableCell>
-                    <TableCell>{classItem.time}</TableCell>
-
-                    <TableCell>
-                      <div
-                        className={`p-2 ${
-                          classItem.status === "Failed"
-                            ? "bg-[#FFEAEC] text-[#E8505B]"
-                            : "bg-[#95C4BE33] text-[#06574C]"
-                        } text-xs text-center rounded-md font-semibold`}
-                      >
-                        {classItem.status}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <div className="flex flex-wrap overflow-hidden items-center p-4 gap-2 justify-between">
-              <div className="flex text-sm items-center gap-1">
-                <span>Showing</span>
+          <div className="col-span-12 bg-white px-3 py-6 rounded-lg">
+            <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
+              <div>
+                <h1 className="text-xl font-bold">User Activity Logs</h1>
+              </div>
+              <div className="flex flex-wrap gap-3 items-center">
                 <Select
                   radius="sm"
-                  className="w-[70px]"
-                  defaultSelectedKeys={["10"]}
-                  placeholder="1"
+                  className="w-full md:w-60 !border-[#06574C] "
+                  variant="bordered"
+                  defaultSelectedKeys={["all"]}
+                  placeholder="Filter"
                 >
-                  {limits.map((limit) => (
-                    <SelectItem key={limit.key}>{limit.label}</SelectItem>
+                  {statuses.map((items) => (
+                    <SelectItem key={items.key}>{items.label}</SelectItem>
                   ))}
                 </Select>
-                <span className="min-w-56">Out of 58</span>
+                <DatePicker
+                  radius="sm"
+                  className="w-full md:w-50"
+                  variant="bordered"
+                  showMonthAndYearPickers
+                />
+                <Input
+                  className="w-full md:w-60"
+                  radius="sm"
+                  variant="bordered"
+                  placeholder="Search user activities..."
+                  endContent={<SearchIcon size={20} />}
+                />
               </div>
-              <Pagination
-                className=""
-                showControls
-                variant="ghost"
-                initialPage={1}
-                total={10}
+            </div>
+            <div className="mt-3">
+              <Table
+                //    isHeaderSticky
+                aria-label="Pending approvals table"
+                removeWrapper
                 classNames={{
-                  item: "rounded-sm hover:bg-bg-[#06574C]/50",
-                  cursor: "bg-[#06574C] rounded-sm text-white",
-                  prev: "rounded-sm bg-white/80",
-                  next: "rounded-sm bg-white/80",
+                  base: "bg-white rounded-lg overflow-x-scroll no-scrollbar",
+                  th: "font-bold text-sm p-4  text-[#333333] capitalize tracking-widest bg-[#EBD4C936] border-t border-default-200",
+                  td: "py-3 items-center whitespace-nowrap",
+                  tr: "border-b border-default-200",
                 }}
-              />
+              >
+                <TableHeader>
+                  {refundheader.map((item) => (
+                    <TableColumn key={item.key}>{item.label}</TableColumn>
+                  ))}
+                </TableHeader>
+
+                <TableBody>
+                  {PaymentTable.map((classItem) => (
+                    <TableRow key={classItem.id}>
+                      <TableCell className="px-4">
+                        <h1 className="font-semibold text-sm">
+                          {classItem.student_name}
+                        </h1>
+                        <h1 className="text-xs text-[#9A9A9A]">
+                          {classItem.email}
+                        </h1>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          className="bg-[#95C4BE33] text-[#06574C] w-30"
+                        >
+                          {classItem.role}
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        <span>{classItem.details}</span>
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="p-2 bg-[#FBF4EC] text-[#D28E3D] text-xs text-center rounded-md">
+                          {classItem.action}
+                        </div>
+                      </TableCell>
+                      <TableCell>{classItem.date}</TableCell>
+                      <TableCell>{classItem.time}</TableCell>
+
+                      <TableCell>
+                        <div
+                          className={`p-2 ${
+                            classItem.status === "Failed"
+                              ? "bg-[#FFEAEC] text-[#E8505B]"
+                              : "bg-[#95C4BE33] text-[#06574C]"
+                          } text-xs text-center rounded-md font-semibold`}
+                        >
+                          {classItem.status}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="flex flex-wrap overflow-hidden items-center p-4 gap-2 justify-between">
+                <div className="flex text-sm items-center gap-1">
+                  <span>Showing</span>
+                  <Select
+                    radius="sm"
+                    className="w-[70px]"
+                    defaultSelectedKeys={["10"]}
+                    placeholder="1"
+                  >
+                    {limits.map((limit) => (
+                      <SelectItem key={limit.key}>{limit.label}</SelectItem>
+                    ))}
+                  </Select>
+                  <span className="min-w-56">Out of 58</span>
+                </div>
+                <Pagination
+                  className=""
+                  showControls
+                  variant="ghost"
+                  initialPage={1}
+                  total={10}
+                  classNames={{
+                    item: "rounded-sm hover:bg-bg-[#06574C]/50",
+                    cursor: "bg-[#06574C] rounded-sm text-white",
+                    prev: "rounded-sm bg-white/80",
+                    next: "rounded-sm bg-white/80",
+                  }}
+                />
+              </div>
             </div>
           </div>
-        </div>
         )}
       </div>
     </div>
