@@ -102,43 +102,43 @@ const TeachersDashboard = () => {
   const [course, setCourse] = useState("");
   const [description, setDescription] = useState("");
   const [delivery, setDelivery] = useState("");
- const handleAnnouncement = async (onClose) => {
-  if (!course || !announcement || !description) {
-    errorMessage("Please fill all fields");
-    return;
-  }
+  const handleAnnouncement = async (onClose) => {
+    if (!course || !announcement || !description) {
+      errorMessage("Please fill all fields");
+      return;
+    }
 
-  try {
-    const formData = new FormData();
-    formData.append("userId", currentUser.id);
-    formData.append("title", announcement);
-    formData.append("description", description);
-    formData.append("type", announcement);
-    formData.append("delivery", delivery); // Changed to "Both" so it sends push notification
-    formData.append("isFeatured", false);
-    formData.append("sendTo", "students");
-    formData.append("courseId", course);
-    formData.append("senderName", `${currentUser.firstName} ${currentUser.lastName}`);
-    formData.append("createdBy", currentUser.role);
-    formData.append("date", new Date().toISOString());
+    try {
+      const formData = new FormData();
+      formData.append("userId", currentUser.id);
+      formData.append("title", announcement);
+      formData.append("description", description);
+      formData.append("type", announcement);
+      formData.append("delivery", delivery); // Changed to "Both" so it sends push notification
+      formData.append("isFeatured", false);
+      formData.append("sendTo", "students");
+      formData.append("courseId", course);
+      formData.append("senderName", `${currentUser.firstName} ${currentUser.lastName}`);
+      formData.append("createdBy", currentUser.role);
+      formData.append("date", new Date().toISOString());
 
-    files.forEach((file) => {
-      formData.append("files", file);
-    });
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
 
-    await createAnnouncement(formData).unwrap();
+      await createAnnouncement(formData).unwrap();
 
-    // reset
-    setCourse("");
-    setAnnouncement("");
-    setDescription("");
-    setFiles([]);
+      // reset
+      setCourse("");
+      setAnnouncement("");
+      setDescription("");
+      setFiles([]);
 
-    onClose();
-  } catch (err) {
-    errorMessage(err?.data?.message || "Failed to send");
-  }
-};
+      onClose();
+    } catch (err) {
+      errorMessage(err?.data?.message || "Failed to send");
+    }
+  };
   const cardsData = [
     {
       title: "Total Courses ",
@@ -334,7 +334,7 @@ const TeachersDashboard = () => {
       </div>
 
       <div className=" bg-white rounded-lg mb-3 ">
-        <h1 className="p-3 text-xl text-[#333333]">Today's Classes</h1>
+        <h1 className="p-3 text-xl text-[#333333]">Today's Upcomming Classes</h1>
         <div className="flex flex-col gap-3">
           {loading ? (
             // 🔥 Skeleton Loader (3 dummy rows)
@@ -369,8 +369,7 @@ const TeachersDashboard = () => {
               No today classes found.
             </div>
           ) : upcomingClasses.map((item, index) => {
-            const dateObj = new Date(item.date);
-            const day = dateObj.getDate();
+            const day = (new Date()).getDate();
             const month = dateObj.toLocaleString('default', { month: 'short' });
             return (
               <div
@@ -524,50 +523,50 @@ const TeachersDashboard = () => {
                 <DrawerBody className="!px-0">
                   <Form className="bg-[#95C4BE47] p-3">
                     <CourseSelect label="Select Course" onChange={(val) => setCourse(val)} />
-                     <div className="flex gap-3 w-full">
+                    <div className="flex gap-3 w-full">
                       <Select
-                      className="w-1/2 min-w-[150px]"
-                      radius="sm"
-                      label="Announcement Type"
-                      name="Announcement Type"
-                      variant="bordered"
-                      defaultSelectedKeys={announcement ? [announcement] : undefined}
-                      onChange={(e) => setAnnouncement(e.target.value)}
-                      labelPlacement="outside"
-                      placeholder="Select Announcement Type"
-                    >
-                      <SelectItem key={"Live Class"}>Live Class</SelectItem>
-                      <SelectItem key={"Assignment"}>Assignment</SelectItem>
-                      <SelectItem key={"Exam"}>Exam</SelectItem>
-                      <SelectItem key={"Other"}>Other</SelectItem>
-                      <SelectItem key={"Holiday"}>Holiday</SelectItem>
-                      <SelectItem key={"Fee"}>Fee</SelectItem>
-                      <SelectItem key={"Result"}>Result</SelectItem>   
-                      <SelectItem key={"Information"}>Information</SelectItem>
-                      <SelectItem key={"Important Notice"}>Important Notice</SelectItem>
-                    </Select>
-                    <Select
-                      className="w-1/2 min-w-[150px]"
-                      radius="sm"
-                      label="Delivery"
-                      name="Delivery"
-                      variant="bordered"
-                      defaultSelectedKeys={delivery ? [delivery] : undefined}
-                      onChange={(e) => setDelivery(e.target.value)}
-                      labelPlacement="outside"
-                      placeholder="Select Delivery"
-                    >
-                      <SelectItem key={"Email"}>Email</SelectItem>
-                      <SelectItem key={"Notification"}>Notification</SelectItem>
-                    </Select>
+                        className="w-1/2 min-w-[150px]"
+                        radius="sm"
+                        label="Announcement Type"
+                        name="Announcement Type"
+                        variant="bordered"
+                        defaultSelectedKeys={announcement ? [announcement] : undefined}
+                        onChange={(e) => setAnnouncement(e.target.value)}
+                        labelPlacement="outside"
+                        placeholder="Select Announcement Type"
+                      >
+                        <SelectItem key={"Live Class"}>Live Class</SelectItem>
+                        <SelectItem key={"Assignment"}>Assignment</SelectItem>
+                        <SelectItem key={"Exam"}>Exam</SelectItem>
+                        <SelectItem key={"Other"}>Other</SelectItem>
+                        <SelectItem key={"Holiday"}>Holiday</SelectItem>
+                        <SelectItem key={"Fee"}>Fee</SelectItem>
+                        <SelectItem key={"Result"}>Result</SelectItem>
+                        <SelectItem key={"Information"}>Information</SelectItem>
+                        <SelectItem key={"Important Notice"}>Important Notice</SelectItem>
+                      </Select>
+                      <Select
+                        className="w-1/2 min-w-[150px]"
+                        radius="sm"
+                        label="Delivery"
+                        name="Delivery"
+                        variant="bordered"
+                        defaultSelectedKeys={delivery ? [delivery] : undefined}
+                        onChange={(e) => setDelivery(e.target.value)}
+                        labelPlacement="outside"
+                        placeholder="Select Delivery"
+                      >
+                        <SelectItem key={"Email"}>Email</SelectItem>
+                        <SelectItem key={"Notification"}>Notification</SelectItem>
+                      </Select>
                     </div>
                   </Form>
                   <div className="overflow-y-auto no-scrollbar pb-10">
                     <div className="flex justify-between items-center px-4 pt-2">
-                       <h3 className="font-semibold text-sm text-[#06574C]">Recent Announcements</h3>
-                       <Link to="/teacher/announcements" className="text-xs text-[#D28E3D] hover:underline" onClick={onClose}>
-                          View All
-                       </Link>
+                      <h3 className="font-semibold text-sm text-[#06574C]">Recent Announcements</h3>
+                      <Link to="/teacher/announcements" className="text-xs text-[#D28E3D] hover:underline" onClick={onClose}>
+                        View All
+                      </Link>
                     </div>
                     {announcementsLoading ? (
                       <div className="flex justify-center p-6"><Spinner color="success" size="md" /></div>
@@ -675,7 +674,7 @@ const TeachersDashboard = () => {
                     <input
                       type="file"
                       ref={fileInputRef}
-                      className="hidden" 
+                      className="hidden"
                       onChange={handleFileChange}
                     />
                   </div>

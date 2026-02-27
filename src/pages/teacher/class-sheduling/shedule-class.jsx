@@ -10,40 +10,40 @@ import { useNavigate } from "react-router-dom";
 
 import { formatTime12Hour, isClassLive, isClassExpired } from "../../../utils/scheduleHelpers";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
+import { useSelector } from "react-redux";
 
 // Helper function to parse date string (supports YYYY-MM-DD and DD-M-YY formats)
 const parseDateFromDB = (dateStr) => {
-    if (!dateStr) return null;
-    
-    // Try YYYY-MM-DD format first (from PostgreSQL date array)
-    if (dateStr.includes('-') && dateStr.length === 10) {
-        const parsed = new Date(dateStr);
-        return isNaN(parsed.getTime()) ? null : parsed;
-    }
-    
-    // Try DD-M-YY format (e.g., "26-2-5")
-    const parts = dateStr.split("-");
-    if (parts.length === 3) {
-        const day = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        let year = parseInt(parts[2], 10);
-        if (year < 100) year += 2000;
-        const parsed = new Date(year, month, day);
-        return isNaN(parsed.getTime()) ? null : parsed;
-    }
-    
-    // Fallback to standard Date parsing
+  if (!dateStr) return null;
+
+  // Try YYYY-MM-DD format first (from PostgreSQL date array)
+  if (dateStr.includes('-') && dateStr.length === 10) {
     const parsed = new Date(dateStr);
     return isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  // Try DD-M-YY format (e.g., "26-2-5")
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    let year = parseInt(parts[2], 10);
+    if (year < 100) year += 2000;
+    const parsed = new Date(year, month, day);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  // Fallback to standard Date parsing
+  const parsed = new Date(dateStr);
+  return isNaN(parsed.getTime()) ? null : parsed;
 };
 
 const SheduleClass = () => {
   const navigate = useNavigate();
   const [schedules, setSchedules] = useState([]);
-  const [currentTeacher, setCurrentTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
-
+  const { user: currentTeacher } = useSelector((state) => state.user);
   const filters = [
     { key: "all", label: "All Status" },
     { key: "upcoming", label: "Upcoming" },
@@ -57,16 +57,8 @@ const SheduleClass = () => {
 
   const fetchData = async () => {
     try {
-      // Get current teacher
-      const meRes = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/auth/me`, {
-        credentials: 'include'
-      });
-      const meData = await meRes.json();
+      if (currentTeacher) {
 
-      if (meData.user) {
-        setCurrentTeacher(meData.user);
-
-        // Fetch schedules for this teacher
         const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule/getAll?teacherId=${meData.user.id}`);
         const data = await res.json();
 
@@ -83,7 +75,15 @@ const SheduleClass = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to cancel this class?")) return;
+    const { isConfirmed } = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#06574C",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, Canceled/Deleted it!",
+    })
 
     try {
       const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule/delete/${id}`, {
