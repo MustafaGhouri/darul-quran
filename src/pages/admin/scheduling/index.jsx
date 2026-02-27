@@ -78,6 +78,12 @@ const Scheduling = () => {
     endDate: "",
     repeatInterval: 0,
     weeklyDays: [],
+
+    // Zoom settings
+    settings: {
+      join_before_host: false,
+      auto_recording: false,
+    },
   });
 
   const { data, isFetching } = useGetScheduleQuery({
@@ -177,6 +183,10 @@ const Scheduling = () => {
       scheduleType: '',
       repeatInterval: 0,
       weeklyDays: [],
+      settings: {
+        join_before_host: false,
+        auto_recording: false,
+      },
     });
     setIsEdit(false);
   };
@@ -204,6 +214,10 @@ const Scheduling = () => {
       endDate: item?.scheduleDates[1],
       repeatInterval: item.repeatInterval,
       weeklyDays: item.weeklyDays,
+      settings: {
+        join_before_host: item.settings?.join_before_host || false,
+        auto_recording: item.settings?.auto_recording || false,
+      },
     });
     onOpen();
   };
@@ -604,6 +618,29 @@ const Scheduling = () => {
                     setFormData({ ...formData, description: e.target.value })
                   }
                 />
+                <div className="py-3 border-t pt-4">
+                  <h3 className="text-sm font-semibold mb-2 text-[#06574C]">Zoom Meeting Settings</h3>
+                  <CheckboxGroup
+                    orientation="vertical"
+                    color="success"
+                    value={[
+                      ...(formData.settings?.join_before_host ? ['join_before_host'] : []),
+                      ...(formData.settings?.auto_recording ? ['auto_recording'] : []),
+                    ]}
+                    onChange={(values) => {
+                      setFormData({
+                        ...formData,
+                        settings: {
+                          join_before_host: values.includes('join_before_host'),
+                          auto_recording: values.includes('auto_recording'),
+                        },
+                      });
+                    }}
+                  >
+                    <Checkbox value="join_before_host">Allow students to join before host</Checkbox>
+                    <Checkbox value="auto_recording">Record session automatically</Checkbox>
+                  </CheckboxGroup>
+                </div>
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="flat" onPress={onClose}>
