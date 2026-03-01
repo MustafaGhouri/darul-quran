@@ -177,6 +177,9 @@ const AdminSupportTickets = () => {
                     <div className="max-w-[200px] truncate font-medium">
                       {ticket.title}
                     </div>
+                    <div className="max-w-[200px] text-sm truncate text-gray-500">
+                      {ticket.description}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Chip
