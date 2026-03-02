@@ -381,7 +381,7 @@ const Announcements = () => {
         <Table
           removeWrapper
           classNames={{
-            base: "w-full bg-white rounded-lg overflow-x-scroll w-full no-scrollbar min-h-[calc(100vh-350px)] items-center",
+            base: "w-full bg-white rounded-lg overflow-y-scroll overflow-x-scroll w-full no-scrollbar min-h-[calc(100vh-350px)] items-center",
             th: "font-bold p-4 text-md  text-[#333333] capitalize tracking-widest  bg-[#EBD4C936]",
             td: "py-3 items-center",
             tr: "border-b border-default-200 ",
