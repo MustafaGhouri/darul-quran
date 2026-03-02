@@ -35,7 +35,7 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedPermissions, setSelectedPermissions] = useState([]);
 
-  const [createOrUpdateUser, { isLoading, error }] = useCreateOrUpdateUserMutation();
+  const [createOrUpdateUser] = useCreateOrUpdateUserMutation();
 
   useEffect(() => {
     if (userData?.permissions) {
@@ -62,28 +62,12 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
 
   // Get all countries from country-state-city
   const allCountries = useMemo(() => Country.getAllCountries(), []);
-
-  // Filtered countries based on search input
-  const filteredCountries = useMemo(() => {
-    if (!countryInputValue) return allCountries;
-    return allCountries.filter((country) =>
-      country.name.toLowerCase().includes(countryInputValue.toLowerCase())
-    );
-  }, [countryInputValue, allCountries]);
-
   // Get cities based on selected country
   const availableCities = useMemo(() => {
     if (!selectedCountry?.isoCode) return [];
     return City.getCitiesOfCountry(selectedCountry.isoCode);
   }, [selectedCountry]);
 
-  // Filtered cities based on search input
-  const filteredCities = useMemo(() => {
-    if (!cityInputValue) return availableCities;
-    return availableCities.filter((city) =>
-      city.name.toLowerCase().includes(cityInputValue.toLowerCase())
-    );
-  }, [cityInputValue, availableCities]);
 
   // Convert Set to string for form submission
   const selectedRoleValue = useMemo(() => {
@@ -381,8 +365,7 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
                 labelPlacement="outside"
                 placeholder="Select Country"
                 allowsCustomValue={false}
-                menuTrigger="input"
-                items={filteredCountries}
+                defaultItems={allCountries}
                 selectedKey={selectedCountry?.isoCode || null}
                 inputValue={countryInputValue}
                 onInputChange={setCountryInputValue}
@@ -409,9 +392,8 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
                 labelPlacement="outside"
                 placeholder="Select City"
                 allowsCustomValue={false}
-                menuTrigger="input"
                 isDisabled={!selectedCountry}
-                items={filteredCities}
+                defaultItems={availableCities}
                 selectedKey={selectedCity?.name || null} // Use name for city key as we search by name
                 inputValue={cityInputValue}
                 onInputChange={setCityInputValue}

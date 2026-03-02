@@ -120,7 +120,7 @@ const CourseBuilder = () => {
           difficulty_level: course.difficultyLevel || "",
           description: course.description || "",
           course_price: course.coursePrice || "",
-          teacher_id: Number(course.teacherId) || "",
+          teacher_id: Number(course.teacherId) || null,
           access_duration: course.accessDuration || "",
           previous_lesson: course?.previous_lesson || course?.previousLesson|| "",
           enroll_number: course.enrollNumber || "",
@@ -204,7 +204,7 @@ const CourseBuilder = () => {
     category_name: "",
     course_price: "",
     type: "one_time",
-    teacher_id: "",
+    teacher_id: null,
     access_duration: "",
     previous_lesson: 0,
     enroll_number: "",
@@ -415,7 +415,7 @@ const CourseBuilder = () => {
 
   return (
     <div className="h-full relative bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full no-scrollbar top-0 bottom-0 overflow-auto">
-      <FormOverlayLoader loading={isLoading || !!loadingAction} loadingText={loadingAction ? 'Saving...' : "Fetching Data..."} />
+      {/* <FormOverlayLoader loading={isLoading || !!loadingAction} loadingText={loadingAction ? 'Saving...' : "Fetching Data..."} /> */}
       <DashHeading
         title={"Course Builder"}
         desc={"Create a new course step by step"}

@@ -364,14 +364,14 @@ const UserManagement = () => {
                         >
                           Edit
                         </Button>
-                        <Button
+                        {classItem?.email!==import.meta.env.VITE_PUBLIC_ADMIN_EMAIL && <Button
                           radius="sm"
                           className="bg-[#06574C] text-white"
                           startContent={<Trash2 size={18} color="white" />}
                           onPress={() => openDeleteModal(classItem.id)}
                         >
                           Delete
-                        </Button>
+                        </Button>}
                       </TableCell>
                     </TableRow>
                   )}

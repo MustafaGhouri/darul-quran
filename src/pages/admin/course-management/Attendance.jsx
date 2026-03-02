@@ -33,6 +33,7 @@ import {
 } from "../../../redux/api/attendance";
 import { useGetTopPerformingStudentsQuery } from "../../../redux/api/enrollmentAdmin";
 import { dateFormatter } from "../../../lib/utils";
+import { errorMessage, successMessage } from "../../../lib/toast.config";
 
 const Attendance = () => {
   const [page, setPage] = useState(1);
@@ -110,6 +111,116 @@ const Attendance = () => {
     }
   };
 
+  const exportCourseAttendance = () => {
+    if (!attendanceData?.courses || attendanceData.courses.length === 0) {
+     errorMessage("No data to export");
+      return;
+    }
+
+    const headers = [
+      "Course Name",
+      "Type",
+      "Status",
+      "Created At",
+      "Category",
+      "Total Enrollments",
+      "Attended Count",
+      "Attendance Rate (%)",
+      "Total Completed Lessons",
+      "Avg Progress Rate (%)",
+    ];
+
+    const rows = attendanceData.courses.map((course) => [
+      course.courseName,
+      course.type,
+      course.status,
+      course.createdAt,
+      course.categoryName || "N/A",
+      course.totalEnrollments,
+      course.attendedCount,
+      course.attendanceRate,
+      course.totalCompletedLessons,
+      course.avgProgressRate,
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ].join("\n");
+
+    downloadCSV(csvContent, "course_attendance_summary.csv");
+    successMessage("Course attendance data exported successfully");
+  };
+
+  const exportTopStudents = () => {
+    if (!topStudentsData?.students || topStudentsData.students.length === 0) {
+      errorMessage("No data to export");
+      return;
+    }
+
+    const headers = [
+      "Student ID",
+      "First Name",
+      "Last Name",
+      "Email",
+      "Enrollment ID",
+      "Course ID",
+      "Course Name",
+      "Enrolled At",
+      "Payment Status",
+      "Progress Status",
+      "Completed Lessons",
+      "Total Lessons",
+      "Progress Rate (%)",
+      "Is Completed",
+    ];
+
+    const rows = topStudentsData.students.map((student) => [
+      student.studentId,
+      student.firstName,
+      student.lastName,
+      student.email,
+      student.enrollmentId,
+      student.courseId,
+      student.courseName,
+      student.enrolledAt,
+      student.paymentStatus,
+      student.progressStatus,
+      student.completedLessonsCount,
+      student.totalLessons,
+      student.progressRate,
+      student.isCompleted,
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row
+          .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ].join("\n");
+
+    downloadCSV(csvContent, "top_performing_students.csv");
+   successMessage("Top performing students data exported successfully");
+  };
+
+  const downloadCSV = (csvContent, filename) => {
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5">
       <DashHeading
@@ -128,7 +239,7 @@ const Attendance = () => {
             className="min-w-[200px] flex-1"
             radius="sm"
           />
-          <Select
+          {/* <Select
             className="min-w-[130px]  flex-1"
             radius="sm"
             selectedKeys={[status]}
@@ -138,7 +249,7 @@ const Attendance = () => {
             {statuses.map((statusOption) => (
               <SelectItem key={statusOption.key}>{statusOption.label}</SelectItem>
             ))}
-          </Select>
+          </Select> */}
           <Select
             radius="sm"
             className="min-w-[150px]  flex-1"
@@ -180,8 +291,9 @@ const Attendance = () => {
           size="md"
           startContent={<Download color="white" size={15} />}
           color="success"
+          onPress={exportCourseAttendance}
         >
-          Export
+          Export Courses
         </Button>
       </div>
 
@@ -304,7 +416,18 @@ const Attendance = () => {
         </div>
       )}
       <div className="bg-white px-4 py-3 rounded-lg my-3">
-        <h1 className="text-xl font-bold mb-4">Top Performing Students</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-xl font-bold">Top Performing Students</h1>
+          <Button
+            radius="sm"
+            size="sm"
+            startContent={<Download color="white" size={15} />}
+            color="success"
+            onPress={exportTopStudents}
+          >
+            Export Attendence
+          </Button>
+        </div>
 
         {topStudentsData?.students?.length === 0 ? (
           <p className="text-gray-500 text-center py-8">No students found</p>

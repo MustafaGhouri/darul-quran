@@ -385,7 +385,7 @@ const CoursePlayer = () => {
                                         placeholder="What did you like or dislike about this course? How has it helped you?"
                                         value={reviewDescription}
                                         onChange={(e) => setReviewDescription(e.target.value)}
-                                        minRows={5}
+                                        minRows={3}
                                         maxRows={8}
                                         variant="bordered"
                                         classNames={{
