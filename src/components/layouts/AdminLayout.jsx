@@ -56,7 +56,11 @@ export default function AdminLayout() {
         return <Navigate to={route} replace />;
     }
 
-    if (user?.permissions?.includes(pathname) === false) {
+    const hasPermission = user?.permissions?.some(permission =>
+        pathname.startsWith(permission)
+    );
+
+    if (!hasPermission) {
         return <Navigate to="/no-permissions" replace />;
     }
 
