@@ -54,6 +54,7 @@ const NotificationPermission = () => {
             errorMessage("Failed to unsubscribe from notifications");
         } finally {
             setLoading(false);
+            location.reload();
         }
     };
 

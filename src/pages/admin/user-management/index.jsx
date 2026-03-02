@@ -151,6 +151,67 @@ const UserManagement = () => {
     return selection.size;
   };
 
+  const handleExportCSV = () => {
+    if (!data?.users || data.users.length === 0) {
+      errorMessage("No users to export");
+      return;
+    }
+
+    const headers = [
+      "ID",
+      "First Name",
+      "Last Name",
+      "Role",
+      "Email",
+      "Phone Number",
+      "City",
+      "Country",
+      "Status",
+      "Join Date",
+      "Last Active",
+      "Experience (Years)",
+      "Tagline",
+      "Bio"
+    ];
+
+    const csvRows = [headers.join(",")];
+
+    data.users.forEach(user => {
+      const row = [
+        user.id,
+        `"${(user.firstName || "").replace(/"/g, '""')}"`,
+        `"${(user.lastName || "").replace(/"/g, '""')}"`,
+        `"${(user.role || "").replace(/"/g, '""')}"`,
+        `"${(user.email || "").replace(/"/g, '""')}"`,
+        `"${(user.phoneNumber || "").replace(/"/g, '""')}"`,
+        `"${(user.city || "").replace(/"/g, '""')}"`,
+        `"${(user.country || "").replace(/"/g, '""')}"`,
+        user.isActive ? "Active" : "Inactive",
+        `"${user.createdAt || ""}"`,
+        user.lastActive ? `"${user.lastActive}"` : "N/A",
+        user.experience_years ?? "N/A",
+        `"${(user.tagline || "").replace(/"/g, '""')}"`,
+        `"${(user.bio || "").replace(/"/g, '""')}"`
+      ];
+      csvRows.push(row.join(","));
+    });
+
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `users_${role}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    successMessage("Users exported successfully!");
+  };
+
 
   return (
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5 h-screen max:md:absolute top-0 bottom-0 right-0 left-0 overflow-y-auto pb-5">
@@ -220,7 +281,7 @@ const UserManagement = () => {
             radius="sm"
             startContent={<Plus color="#06574C" size={15} />}
             className="border-[#06574C] text-[#06574C] py-4 px-3 sm:px-8 max-md:w-full"
-          //   onPress={()=>{router.push("/admin/user-management/add-user")}}
+            onPress={handleExportCSV}
           >
             Export
           </Button>
