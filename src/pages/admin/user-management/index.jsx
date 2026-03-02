@@ -178,17 +178,6 @@ const UserManagement = () => {
               <SelectItem key={status.key}>{status.label}</SelectItem>
             ))}
           </Select>
-          <Select
-            radius="sm"
-            className="min-w-[120px]"
-            defaultSelectedKeys={["all"]}
-            selectorIcon={<ListFilterPlusIcon />}
-            placeholder="Select Filter"
-          >
-            {filters.map((filter) => (
-              <SelectItem key={filter.key}>{filter.label}</SelectItem>
-            ))}
-          </Select>
           <Input
             type="search"
             placeholder="Search..."
@@ -308,7 +297,7 @@ const UserManagement = () => {
                 aria-label="Pending approvals table"
                 removeWrapper
                 classNames={{
-                  base: "w-full bg-white my-3 rounded-lg overflow-x-scroll w-full no-scrollbar",
+                  base: "w-full bg-white my-3 rounded-lg overflow-x-scroll w-full no-scrollbar h-[calc(100vh-380px)]",
                   th: "font-bold p-4 text-md  text-[#333333] capitalize tracking-widest  bg-white",
                   tbody: "overflow-y-scroll no-scrollbar",
                   td: "py-3 items-center whitespace-nowrap",

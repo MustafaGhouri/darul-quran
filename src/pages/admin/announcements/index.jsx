@@ -22,6 +22,7 @@ import {
   Switch,
   Tooltip,
   Form,
+  Spinner,
 } from "@heroui/react";
 import { useSelector } from "react-redux";
 import {
@@ -189,6 +190,7 @@ const Announcements = () => {
   const [loading, setLoading] = useState(false);
   const fetchAnnouncements = async () => {
     try {
+      setLoading(true);
       const queryParams = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -217,6 +219,8 @@ const Announcements = () => {
     } catch (error) {
       console.error(error);
       errorMessage("Failed to fetch announcements");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -393,7 +397,7 @@ const Announcements = () => {
             <TableColumn width={220} className="bg-[#EBD4C9]/30">Actions</TableColumn>
           </TableHeader>
 
-          <TableBody emptyContent={"No Announcements Found"} isLoading={loading}>
+          <TableBody emptyContent={"No Announcements Found"} loadingState={loading ? "loading" : "idle"} loadingContent={<Spinner color="success" size="lg" />}>
             {announcements.map((announcement) => (
               <TableRow key={announcement.id}>
                 <TableCell>
