@@ -120,10 +120,12 @@ const CourseBuilder = () => {
           category_id: Number(course.category) || "",
           difficulty_level: course.difficultyLevel || "",
           description: course.description || "",
-          course_price: course.coursePrice || "",
+          // course_price: course.coursePrice || "",
           teacher_id: Number(course.teacherId) || null,
           access_duration: course.accessDuration || "",
           previous_lesson: course?.previous_lesson || course?.previousLesson || "",
+          base_price: course?.basePrice,
+          discount_percentage: course?.discountPercentage,
           enroll_number: course.enrollNumber || "",
           status: course.status || "draft",
           videoDuration: course.videoDuration || "",
@@ -203,7 +205,8 @@ const CourseBuilder = () => {
     difficulty_level: "",
     description: "",
     category_name: "",
-    course_price: "",
+    base_price: 0,
+    discount_percentage: 0,
     type: "one_time",
     teacher_id: null,
     access_duration: "",
@@ -223,7 +226,7 @@ const CourseBuilder = () => {
       { title: "Title:", desc: formData?.course_name || "Add Tittle" },
       { title: "Category:", desc: categoriesData?.categories?.find((category) => category.id === formData?.category_id)?.categoryName || formData?.category_name || "Add Category" },
       { title: "Difficulty Level:", desc: formData?.difficulty_level || "Add Difficulty Level" },
-      { title: "Price:", desc: formData?.course_price || "Add Price" },
+      { title: "Price:", desc: (formData?.base_price - ((formData?.discount_percentage * formData?.base_price) / 100)) || "Add Price" },
       { title: "Type:", desc: formData?.type?.replace("_", " ") || "Add Type" },
       { title: "Duration:", desc: `${parseInterval(formData?.duration).number} ${parseInterval(formData?.duration).unit}` || "Add Duration" },
       formData?.type === "live" && { title: "Subscription - Interval:", desc: `${parseInterval(formData?.interval).number} ${parseInterval(formData?.interval).unit}` || "Add Subscription - Interval" },
@@ -246,7 +249,6 @@ const CourseBuilder = () => {
       const filesToUpload = [];
       if (video.length > 0) filesToUpload.push({ file: video[0], type: "video" });
       if (thumbnail.length > 0) filesToUpload.push({ file: thumbnail[0], type: "thumbnail" });
-      console.log(thumbnail);
 
       try {
         const uploadedUrls = await uploadFilesToServer(filesToUpload.map(f => f.file));
@@ -275,8 +277,9 @@ const CourseBuilder = () => {
         ? parseInt(formData.enroll_number)
         : null,
       status: formData.status,
-      videoUrl: urlMap.video,
-      thumbnailurl: urlMap.thumbnail,
+      course_price: (formData?.base_price - ((formData?.discount_percentage * formData?.base_price) / 100)),
+      videoUrl: urlMap.video ?? videoUrl ?? null,
+      thumbnailurl: urlMap.thumbnail ?? thumbnailUrl ?? null,
       teacher_id: Number(formData.teacher_id),
       is_free: formData.is_free,
     };
@@ -292,7 +295,7 @@ const CourseBuilder = () => {
 
       const data = response.data;
 
-      if (data.success) {
+      if (data?.success) {
         successMessage(courseId ? "Course Updated!" : "Course Created!");
 
         if (!courseId && data.courseId) {
@@ -301,11 +304,11 @@ const CourseBuilder = () => {
           handleSelected("content");
         }
       } else {
-        errorMessage(data.message || "Something went wrong");
+        errorMessage(response?.error?.data?.message||response?.error?.data?.error || "Something went wrong");
       }
     } catch (error) {
       console.error(error);
-      errorMessage("An error occurred");
+      errorMessage(error.message);
     } finally {
       setLoadingAction(null);
       setPendingAction(null);
@@ -586,7 +589,7 @@ const CourseBuilder = () => {
                           placeholder="Enter course description"
                         />
                       </div>
-                      <Input
+                      {/* <Input
                         size="lg"
                         variant="bordered"
                         label="Course Price ($)"
@@ -599,6 +602,37 @@ const CourseBuilder = () => {
                         value={formData.course_price}
                         onChange={(e) =>
                           handleChange("course_price", e.target.value)
+                        }
+                      /> */}
+                      <Input
+                        size="lg"
+                        variant="bordered"
+                        label="Base Course Price ($)"
+                        type="number"
+                        labelPlacement="outside"
+                        placeholder="$  0.00"
+                        isRequired
+                        errorMessage="BaseCourse Price is required"
+                        className="w-full"
+                        value={formData.base_price}
+                        onChange={(e) =>
+                          handleChange("base_price", e.target.value)
+                        }
+                      />
+                      <Input
+                        size="lg"
+                        variant="bordered"
+                        label="Discount Percentage"
+                        type="number"
+                        labelPlacement="outside"
+                        placeholder="15%"
+                        endContent={'%'}
+                        max={100}
+                        errorMessage="Discount Percentage is must be between 0 and 100"
+                        className="w-full"
+                        value={formData.discount_percentage}
+                        onChange={(e) =>
+                          handleChange("discount_percentage", e.target.value)
                         }
                       />
                       <div className="pt-6">
