@@ -112,11 +112,17 @@ const Scheduling = () => {
     }
     try {
       let response;
+      const payload = {
+        ...formData,
+      }
 
+      if (user?.role === "teacher") {
+        payload.teacherId = user.id
+      }
       if (isEdit) {
-        response = await updateSchedule({ id: formData.id, data: formData });;
+        response = await updateSchedule({ id: formData.id, data: payload });;
       } else {
-        response = await createSchedule(formData);
+        response = await createSchedule(payload);
       }
 
       const data = response.data;
@@ -643,10 +649,10 @@ const Scheduling = () => {
                     }
                   />
                 </div>
-                <TeacherSelect
+                {user?.role!== "teacher" && <TeacherSelect
                   initialValue={formData.teacherId}
                   onChange={(teacherId) => setFormData({ ...formData, teacherId })}
-                />
+                />}
                 {formData.sessionMode === "one-on-one" && (
                   <UserSelect
                     courseId={formData.courseId}
