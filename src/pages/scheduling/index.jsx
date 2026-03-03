@@ -106,7 +106,7 @@ const Scheduling = () => {
   if (isCalenderView) return null;
 
   const handleSubmit = async () => {
-    if (!formData.title || !formData.startTime || !formData.teacherId) {
+    if (!formData.title || !formData.startTime) {
       errorMessage("Please fill required fields (Title,  Time, Teacher)");
       return;
     }

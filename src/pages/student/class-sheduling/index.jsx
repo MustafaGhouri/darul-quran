@@ -377,7 +377,7 @@ const StudentClassSheduling = () => {
                             </Button>
                         )}
 
-                        {canCanc && !isExpired && (
+                        {/* {canCanc && !isExpired && (
                             <Button
                                 radius="sm"
                                 size="md"
@@ -387,7 +387,7 @@ const StudentClassSheduling = () => {
                             >
                                 Cancel
                             </Button>
-                        )}
+                        )} */}
                     </div>
                 </div>
             </div>
@@ -519,7 +519,7 @@ const StudentClassSheduling = () => {
                             </Select>
                         </div>
 
-                        <div>
+                        {/* <div>
                             <label className="text-sm font-semibold text-gray-700 mb-2 block">
                                 Class Type
                             </label>
@@ -542,7 +542,7 @@ const StudentClassSheduling = () => {
                                     </Button>
                                 ))}
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

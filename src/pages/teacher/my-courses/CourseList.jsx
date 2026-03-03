@@ -71,7 +71,7 @@ const CourseList = () => {
 
 
     const viewCourseDetails = (courseData) => {
-        navigate(`/student/browse-courses/course-details/${courseData.id}?teacher=${courseData?.teacherId || courseData?.teacher_id}`, {
+        navigate(`/teacher/courses/${courseData.id}?teacher=${courseData?.teacherId || courseData?.teacher_id}`, {
             state: courseData
         });
     };
