@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { DashHeading } from "../../components/dashboard-components/DashHeading";
 import {
   Button,
@@ -15,9 +15,18 @@ import { useGetNotificationsQuery, useMarkAsReadMutation } from "../../redux/api
 import { Link } from "react-router-dom";
 
 const NotificationsPage = () => {
-  const [search, setSearch] = React.useState("");
-  const [markLoading, setMarkLoading] = React.useState(null);
-  const { data: notificationData, isLoading, refetch } = useGetNotificationsQuery();
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [markLoading, setMarkLoading] = useState(null);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const { data: notificationData, isLoading, refetch } = useGetNotificationsQuery({ search: debouncedSearch });
   const [markAsRead, { isLoading: isLoading2 }] = useMarkAsReadMutation();
 
   const notifications = notificationData?.data || [];
@@ -35,9 +44,12 @@ const NotificationsPage = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
+      setMarkLoading(true);
       await markAsRead({ is_read: true }).unwrap();
     } catch (error) {
       console.error("Failed to mark all as read:", error);
+    } finally {
+      setMarkLoading(false);
     }
   };
 
@@ -63,8 +75,8 @@ const NotificationsPage = () => {
 
 
   return (
-    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
-      <div className="max-w-7xl mx-auto">
+    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 h-[calc(100vh)]">
+      <div className="">
         <div className="mb-2">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <DashHeading
@@ -85,6 +97,7 @@ const NotificationsPage = () => {
                 className="border-gray-200 text-gray-500 font-medium"
                 startContent={<Check size={18} className="text-green-500" />}
                 onPress={handleMarkAllAsRead}
+                isLoading={isLoading2}
               >
                 Mark All Read
               </Button>
@@ -97,7 +110,7 @@ const NotificationsPage = () => {
           </div>
         </div>
 
-        <div className="mt-6 mb-6">
+        {/* <div className="mt-6 mb-6">
           <Select
             defaultSelectedKeys={["latest"]}
             className="w-32"
@@ -107,7 +120,7 @@ const NotificationsPage = () => {
             <SelectItem key="latest" value="latest">Latest</SelectItem>
             <SelectItem key="oldest" value="oldest">Oldest</SelectItem>
           </Select>
-        </div>
+        </div> */}
 
         <div className="space-y-4">
           {isLoading ? (

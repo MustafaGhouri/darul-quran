@@ -49,7 +49,10 @@ export const notificationApi = createApi({
 
         // Get user notifications
         getNotifications: builder.query({
-            query: () => "/list",
+            query: (params) => {
+                const search = params?.search ? `&search=${params.search}` : "";
+                return `/list?${search}`;
+            },
             providesTags: ["Notification"],
         }),
 
