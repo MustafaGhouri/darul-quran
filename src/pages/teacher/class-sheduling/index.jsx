@@ -25,7 +25,7 @@ import {
 } from "../../../redux/api/schedules";
 import { useCreateRescheduleRequestMutation } from "../../../redux/api/reschedule";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
-import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatusText, getStatusTextForSingleDate } from "../../../utils/scheduleHelpers";
+import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatusText, getStatusTextForSingleDate, getHoursUntilClass } from "../../../utils/scheduleHelpers";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { dateFormatter } from "../../../lib/utils";
@@ -216,10 +216,28 @@ const TeacherClassSheduling = () => {
 
     const getClassStatusBadge = (schedule, type = 'single') => {
         let status = '';
+        let hoursUntil = null;
+        let isExpired = false;
+
         if (type === 'single') {
             status = getStatusTextForSingleDate(schedule.date, schedule.startTime, schedule.endTime);
+            hoursUntil = getHoursUntilClass(schedule.date, schedule.startTime);
+            const todayStr = new Date().toISOString().split('T')[0];
+            isExpired = schedule.date < todayStr || (schedule.date === todayStr && hoursUntil !== null && hoursUntil < 0);
         } else {
             status = getStatusText(schedule);
+            const scheduleDates = schedule.scheduleDates || [];
+            const todayStr = new Date().toISOString().split('T')[0];
+            const upcomingDates = scheduleDates.filter(d => d >= todayStr);
+
+            if (upcomingDates.length > 0) {
+                const nextDate = upcomingDates.sort()[0];
+                hoursUntil = getHoursUntilClass(nextDate, schedule.startTime);
+            } else if (scheduleDates.length > 0) {
+                const lastDate = scheduleDates[scheduleDates.length - 1];
+                hoursUntil = getHoursUntilClass(lastDate, schedule.startTime);
+            }
+            isExpired = isClassExpired(schedule);
         }
 
         if (status === "live") {
@@ -235,7 +253,7 @@ const TeacherClassSheduling = () => {
             );
         }
 
-        if (isClassExpired(schedule)) {
+        if (isExpired) {
             return (
                 <Chip size="sm" variant="flat" color="default">
                     Completed
@@ -243,14 +261,7 @@ const TeacherClassSheduling = () => {
             );
         }
 
-        const parsedDate = parseDateFromDB(schedule.date);
-        const scheduleDateTime = parsedDate
-            ? new Date(`${parsedDate.toISOString().split('T')[0]}T${schedule.startTime}`)
-            : new Date(`${schedule.date}T${schedule.startTime}`);
-        const now = new Date();
-        const hoursUntilClass = Math.floor((scheduleDateTime - now) / (1000 * 60 * 60));
-
-        if (hoursUntilClass < 3) {
+        if (hoursUntil !== null && hoursUntil > 0 && hoursUntil < 3) {
             return (
                 <Button
                     size="sm"
@@ -258,7 +269,7 @@ const TeacherClassSheduling = () => {
                     radius="sm"
                     startContent={<Lock size={14} />}
                 >
-                    Starts in {hoursUntilClass}h
+                    Starts in {(hoursUntil)?.toFixed(1)} hr
                 </Button>
             );
         }
@@ -439,7 +450,7 @@ const TeacherClassSheduling = () => {
                     View Schedule By Date
                 </Button>
             </div>
-            <div className="grid grid-cols-12 gap-4 items-start mt-4">
+          <div className="grid grid-cols-12 gap-4 items-start mt-4">
                 {viewType === 'allDates' ? <div className="col-span-12 lg:col-span-8">
                     {isLoading ? (
                         <div className="flex justify-center items-center py-20">
@@ -482,7 +493,7 @@ const TeacherClassSheduling = () => {
                                 <div key={i.id} className="mb-6">
                                     <DashHeading
                                         title={i.scheduleDates?.length === 1 ? new Date(i.scheduleDates[0]).toDateString() : (new Date(i.scheduleDates[0]).toDateString()
-                                            + ' ' +
+                                            + ' to ' +
                                             new Date(i.scheduleDates[i.scheduleDates?.length - 1]).toDateString())}
                                     />
                                     <div className="mt-3">
@@ -493,25 +504,72 @@ const TeacherClassSheduling = () => {
                         )}
                     </div>
                 }
+
                 {/* Sidebar - Calendar & Filters */}
                 <div className="col-span-12 lg:col-span-4 space-y-4">
                     {/* Quick Stats Card */}
                     <div className="bg-white p-4 rounded-lg shadow-sm">
                         <h3 className="text-sm font-semibold text-gray-700 mb-3">Schedule Overview</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-[#95C4BE33] p-3 rounded-lg text-center">
-                                <p className="text-2xl font-bold text-[#06574C]">
-                                    {scheduleData?.schedules?.filter(s => getStatusText(s) === "upcoming").length || 0}
-                                </p>
-                                <p className="text-xs text-gray-600">Upcoming</p>
+                        {viewType === 'normal' ?
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-[#95C4BE33] p-3 rounded-lg text-center">
+                                    <p className="text-2xl font-bold text-[#06574C]">
+                                        {scheduleData?.schedules?.filter(s => getStatusText(s) === "upcoming").length || 0}
+                                    </p>
+                                    <p className="text-xs text-gray-600">Upcoming</p>
+                                </div>
+                                <div className="bg-[#E8F1FF] p-3 rounded-lg text-center">
+                                    <p className="text-2xl font-bold text-[#3F86F2]">
+                                        {scheduleData?.schedules?.filter(s => getStatusText(s) === "live").length || 0}
+                                    </p>
+                                    <p className="text-xs text-gray-600">Live</p>
+                                </div>
                             </div>
-                            <div className="bg-[#E8F1FF] p-3 rounded-lg text-center">
-                                <p className="text-2xl font-bold text-[#3F86F2]">
-                                    {scheduleData?.schedules?.filter(s => getStatusText(s) === "live").length || 0}
-                                </p>
-                                <p className="text-xs text-gray-600">Live</p>
+                            :
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-[#95C4BE33] p-3 rounded-lg text-center">
+                                    <p className="text-2xl font-bold text-[#06574C]">
+                                        {(() => {
+                                            const todayStr = new Date().toISOString().split('T')[0];
+                                            let count = 0;
+                                            scheduleData?.schedules?.forEach(s => {
+                                                const scheduleDates = s.scheduleDates || [];
+                                                // Count each upcoming date individually
+                                                const upcomingDates = scheduleDates.filter(d => d >= todayStr);
+                                                count += upcomingDates.length;
+                                            });
+                                            return count;
+                                        })()}
+                                    </p>
+                                    <p className="text-xs text-gray-600">Upcoming</p>
+                                </div>
+                                <div className="bg-[#E8F1FF] p-3 rounded-lg text-center">
+                                    <p className="text-2xl font-bold text-[#3F86F2]">
+                                        {(() => {
+                                            const todayStr = new Date().toISOString().split('T')[0];
+                                            let count = 0;
+                                            scheduleData?.schedules?.forEach(s => {
+                                                const scheduleDates = s.scheduleDates || [];
+                                                // Count today's dates that are currently live
+                                                if (scheduleDates.includes(todayStr)) {
+                                                    const [startHour, startMin] = (s.startTime || "").split(":").map(Number);
+                                                    const [endHour, endMin] = (s.endTime || "").split(":").map(Number);
+                                                    const now = new Date();
+                                                    const [year, month, day] = todayStr.split("-").map(Number);
+                                                    const startTime = new Date(year, month - 1, day, startHour, startMin);
+                                                    const endTime = new Date(year, month - 1, day, endHour, endMin);
+                                                    if (now >= startTime && now <= endTime) {
+                                                        count++;
+                                                    }
+                                                }
+                                            });
+                                            return count;
+                                        })()}
+                                    </p>
+                                    <p className="text-xs text-gray-600">Live</p>
+                                </div>
                             </div>
-                        </div>
+                        }
                     </div>
 
                     {/* Calendar */}
@@ -571,8 +629,6 @@ const TeacherClassSheduling = () => {
                     </div>
                 </div>
             </div>
-
-
             <Modal
                 isOpen={isOpen}
                 onClose={() => {

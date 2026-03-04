@@ -92,7 +92,20 @@ const getNextScheduleDate = (scheduleDates) => {
 export const isClassLive = (schedule) => {
     if (!schedule) return false;
 
-    const scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
+    let scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
+    
+    // If no scheduleDates array, check if there's a single date field
+    if (!scheduleDates || scheduleDates.length === 0) {
+        const singleDate = schedule.date;
+        if (singleDate) {
+            // Convert ISO date or YYYY-MM-DD to date string
+            const dateStr = singleDate.includes('T') ? singleDate.split('T')[0] : singleDate;
+            scheduleDates = [dateStr];
+        } else {
+            return false;
+        }
+    }
+    
     if (!isTodayInSchedule(scheduleDates)) return false;
 
     const startTimeStr = schedule.startTime || schedule.start_time;
@@ -120,7 +133,20 @@ export const isClassLive = (schedule) => {
 export const isClassExpired = (schedule) => {
     if (!schedule) return false;
 
-    const scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
+    let scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
+    
+    // If no scheduleDates array, check if there's a single date field
+    if (!scheduleDates || scheduleDates.length === 0) {
+        const singleDate = schedule.date;
+        if (singleDate) {
+            // Convert ISO date or YYYY-MM-DD to date string
+            const dateStr = singleDate.includes('T') ? singleDate.split('T')[0] : singleDate;
+            scheduleDates = [dateStr];
+        } else {
+            return true;
+        }
+    }
+    
     if (!scheduleDates || scheduleDates.length === 0) return true;
 
     const todayStr = getTodayStr();

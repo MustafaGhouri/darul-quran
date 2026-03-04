@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Pagination, Skeleton } from "@heroui/react";
-import { Clock, Video, VideoIcon } from "lucide-react";
+import { Clock, Video, VideoIcon, Check, Lock } from "lucide-react";
 import { AiOutlineEye } from "react-icons/ai";
 import { FaRegAddressCard } from "react-icons/fa";
 import { BiGroup } from "react-icons/bi";
@@ -17,7 +17,7 @@ import { useGetAllAnnouncementQuery } from "../../redux/api/announcements";
 import { errorMessage } from "../../lib/toast.config";
 import { dateFormatter } from "../../lib/utils";
 import QueryError from "../../components/QueryError";
-import { formatTime12Hour, isClassExpired, isClassLive } from "../../utils/scheduleHelpers";
+import { formatTime12Hour, isClassExpired, isClassLive, getHoursUntilClass, getStatusText } from "../../utils/scheduleHelpers";
 import { useGetStudentDashboardQuery } from "../../redux/api/dashboard";
 
 const StudentDashboard = () => {
@@ -259,10 +259,20 @@ const StudentDashboard = () => {
                 <div className="flex flex-col md:flex-row gap-4 md:justify-between p-4 md:items-center">
                   <div className="flex flex-col md:flex-row gap-3 md:items-center justify-center">
                     <div className="h-20 w-20 rounded-full shadow-xl flex flex-col items-center justify-center bg-white">
-                      <p className="text-[16px] text-[#06574C] font-semibold">
-                        {dateFormatter(today)?.split(",")[0]} <br />
-                        {dateFormatter(today)?.split(",")[1]?.split("20")[0]}
-                      </p>
+                      {(() => {
+                        // Get the next upcoming class date for display
+                        const allDates = item.schedule_dates || item.scheduleDates || [];
+                        const todayStr = new Date().toISOString().split('T')[0];
+                        const upcomingDates = allDates.filter(d => d >= todayStr);
+                        const nextClassDate = upcomingDates.length > 0 ? upcomingDates.sort()[0] : (allDates[0] || item.date);
+                        const classDateObj = nextClassDate ? new Date(nextClassDate) : today;
+                        return (
+                          <p className="text-[16px] text-[#06574C] font-semibold">
+                            {dateFormatter(classDateObj)?.split(",")[0]} <br />
+                            {dateFormatter(classDateObj)?.split(",")[1]?.split("20")[0]}
+                          </p>
+                        );
+                      })()}
                     </div>
                     <div>
                       <div className="text-lg text-[#06574C] font-semibold">
@@ -290,6 +300,14 @@ const StudentDashboard = () => {
                       const live = isClassLive(item);
                       const expired = isClassExpired(item);
 
+                      // Get the next upcoming class date
+                      const allDates = item.schedule_dates || item.scheduleDates || [];
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      const upcomingDates = allDates.filter(d => d >= todayStr);
+                      const nextClassDate = upcomingDates.length > 0 ? upcomingDates.sort()[0] : (allDates[0] || item.date);
+                      const dateStr = nextClassDate?.includes('T') ? nextClassDate.split('T')[0] : nextClassDate;
+                      const hoursUntil = getHoursUntilClass(dateStr, item.start_time || item.startTime);
+
                       if (expired) {
                         return (
                           <Button
@@ -306,7 +324,7 @@ const StudentDashboard = () => {
                           <Button
                             startContent={<Video size={20} />}
                             size="sm"
-                            className="bg-green-600 w-32 text-white rounded-md"
+                            className="bg-green-600 w-32 text-white rounded-md animate-pulse"
                             as={Link}
                             to={item.meeting_link}
                             target="_blank"
@@ -315,9 +333,21 @@ const StudentDashboard = () => {
                           </Button>
                         );
                       } else if (item.meeting_link) {
+                        if (hoursUntil !== null && hoursUntil < 3 && hoursUntil > 0) {
+                          return (
+                            <Button
+                              startContent={<Clock size={20} />}
+                              size="sm"
+                              className="bg-[#95C4BE33] text-[#06574C] w-32 rounded-md"
+                            >
+                              Starts in {Math.floor(hoursUntil)}h
+                            </Button>
+                          );
+                        }
+                        
                         return (
                           <Button
-                            startContent={<Clock size={20} />}
+                            startContent={<Lock size={20} />}
                             size="sm"
                             className="bg-[#06574C] w-32 text-white rounded-md"
                             isDisabled
