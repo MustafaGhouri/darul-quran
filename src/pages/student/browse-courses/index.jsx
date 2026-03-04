@@ -11,16 +11,19 @@ import {
   tv,
   Pagination,
   Spinner,
-  Tooltip, // ✅ IMPORTANT IMPORT
+  Tooltip, 
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
 } from "@heroui/react";
 
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import { RiGroupLine } from "react-icons/ri";
 import { AiOutlineEye } from "react-icons/ai";
-import { CheckIcon, Clock } from "lucide-react";
+import { CheckIcon, Clock, X } from "lucide-react";
 import { FaIdCard } from "react-icons/fa";
 import { IoSearchOutline, IoStarSharp } from "react-icons/io5";
-import { MdKeyboardArrowDown } from "react-icons/md";
+import { MdKeyboardArrowDown, MdOutlineFilterList } from "react-icons/md";
 import { useState } from "react";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -78,6 +81,16 @@ const BrowseCourses = () => {
     });
   };
 
+  const handleClearFilters = () => {
+    setSearch("");
+    setSort("latest");
+    setIsFree("all");
+    setDifficultys([]);
+    setCategoryIds([]);
+    setType("all");
+    setPage(1);
+  };
+
   const Sort = [
     { key: "a-z", label: "A-Z" },
     { key: "z-a", label: "Z-A" },
@@ -104,151 +117,166 @@ const BrowseCourses = () => {
     { key: "50", label: "50" },
   ];
   return (
-    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 min-h-screen flex flex-col">
+    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 flex flex-col">
       <DashHeading
         title={"Browse Courses"}
         desc={"Discover your next learning adventure from 2,847 courses"}
       />
 
-      <div className="bg-white p-3  rounded-lg mb-3">
+
+      <div className="bg-white p-3 rounded-lg mb-3">
         <div className="flex flex-col md:flex-row gap-3 items-center w-full">
           <Input
             placeholder="Search for a course"
             size="sm"
             radius="md"
-            className="max-w-sm"
-            onChange={(e) =>
-              debounce(() => {
-                setSearch(e.target.value);
-              }, 400)
-            }
+            value={search}
+            className="w-full md:max-w-md"
+            onChange={(e) => setSearch(e.target.value)}
             endContent={<IoSearchOutline size={20} color="#06574C" />}
           />
-          <div className="flex gap-1 items-center w-fit">
-            <span className="text-sm text-nowrap">Sort by:</span>
-            <Select 
-              placeholder="Sort" 
-              size="sm"
-              radius="md"
-              className="w-100"
-              onSelectionChange={(k) => {
-                const keys = [...k];
-                setSort(keys[0]);
-              }}
-              defaultSelectedKeys={["Most Popular"]}
-            >
-              {Sort.map((item) => (
-                <SelectItem
-                  key={item.key}
-                  value={item.key}
-                  className="capitalize"
+          <div className="flex gap-2 items-center w-full md:w-fit">
+            <Popover placement="bottom-end" showArrow offset={10}>
+              <PopoverTrigger>
+                <Button
+                  variant="bordered"
+                  startContent={<MdOutlineFilterList size={20} />}
+                  endContent={<MdKeyboardArrowDown size={20} />}
+                  size="sm"
+                  className="border-[#06574C] text-[#06574C] font-medium"
                 >
-                  {item.label}
-                </SelectItem>
-              ))}
-            </Select>
-            <Select
-              placeholder="Payment type"
-              title="Payment type"
-              size="sm"
-              radius="md"
-              className="w-100"
-              onSelectionChange={(k) => {
-                const keys = [...k];
-                setIsFree(keys[0]);
-              }}
-              defaultSelectedKeys={["all"]}
-            >
-              {Subscription.map((item) => (
-                <SelectItem
-                  key={item.key}
-                  value={item.key}
-                  className="capitalize"
-                >
-                  {item.label}
-                </SelectItem>
-              ))}
-            </Select>
-             <Select
-          placeholder="Select Course Type"
-          title="Select Course Type"
-          size="sm"
-          radius="md"
-          className=" "
-          onSelectionChange={(k) => {
-            const keys = [...k];
-            setSort(keys[0]);
-          }}
-        // defaultSelectedKeys={["all"]}
-        >
-          <SelectItem key="all" value="all" className="capitalize">
-            All Courses
-          </SelectItem>
+                  All Filters
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-4">
+                <div className="flex flex-col gap-4 w-full">
+                  <div className="flex justify-between items-center ">
+                    <h3 className="font-semibold text-lg">Filters</h3>
+                  </div>
 
-          <SelectItem description={<span title=" Pay once and get lifetime access to all course materials. Includes course player, files, and progress tracking." className="block text-xs text-gray-500">
-            Pay once and get lifetime access to all course materials. Includes course player, files, and progress tracking.
-          </span>} key="one_time" value="one_time" className="capitalize">
-            One Time Paid
-          </SelectItem>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase">Sort by</label>
+                      <Select
+                        placeholder="Sort"
+                        size="sm"
+                        radius="md"
+                        variant="bordered"
+                        className="mt-1"
+                        selectedKeys={sort ? [sort] : ["latest"]}
+                        onSelectionChange={(k) => {
+                          const keys = [...k];
+                          setSort(keys[0]);
+                        }}
+                      >
+                        {Sort.map((item) => (
+                          <SelectItem key={item.key} value={item.key} className="capitalize">
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
 
-          <SelectItem description={<span title="Scheduled live sessions requiring subscription. Access course player, files, and track progress for each live class." className="block text-xs text-gray-500">
-            Scheduled live sessions requiring subscription. Access course player, files, and track progress for each live class.
-          </span>} key="live" value="live" className="capitalize">
-            Live Classes
-          </SelectItem>
-        </Select>
-          </div>
-        </div>
-       
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase">Payment type</label>
+                      <Select
+                        placeholder="Payment type"
+                        size="sm"
+                        radius="md"
+                        variant="bordered"
+                        className="mt-1"
+                        selectedKeys={isFree ? [isFree] : ["all"]}
+                        onSelectionChange={(k) => {
+                          const keys = [...k];
+                          setIsFree(keys[0]);
+                        }}
+                      >
+                        {Subscription.map((item) => (
+                          <SelectItem key={item.key} value={item.key} className="capitalize">
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
 
-        <div className="mt-4">
-          <div className="flex gap-2 items-center ">
-            
-          </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase">Course Type</label>
+                      <Select
+                        placeholder="Select Type"
+                        size="sm"
+                        radius="md"
+                        variant="bordered"
+                        className="mt-1"
+                        selectedKeys={[type]}
+                        onSelectionChange={(k) => {
+                          const keys = [...k];
+                          setType(keys[0]);
+                        }}
+                      >
+                        <SelectItem key="all" value="all" className="capitalize">All Courses</SelectItem>
+                        <SelectItem key="one_time" value="one_time" className="capitalize">One Time Paid</SelectItem>
+                        <SelectItem key="live" value="live" className="capitalize">Live Classes</SelectItem>
+                      </Select>
+                    </div>
 
-          <div className="mt-5">
-            <h1 className="text-sm font-semibold text-[#666666] mb-1">
-              Difficulty Level
-            </h1>
-            <Select
-              placeholder="Select Difficulty"
-              size="sm"
-              radius="md"
-              selectionMode="multiple"
-              className="max-w-md"
-              selectedKeys={new Set(difficultys)}
-              onSelectionChange={(k) => {
-                setDifficultys([...k]);
-              }}
-            >
-              {difficultyOptions.map((item) => (
-                <SelectItem key={item.key} value={item.key} className="capitalize">
-                  {item.label}
-                </SelectItem>
-              ))}
-            </Select>
-          </div>
-          <div className="mt-5">
-            <h1 className="text-sm font-semibold text-[#666666] mb-1">
-              Categories
-            </h1>
-            <Select
-              placeholder="Select Categories"
-              size="sm"
-              radius="md"
-              selectionMode="multiple"
-              className="max-w-md"
-              selectedKeys={new Set(categoryIds)}
-              onSelectionChange={(k) => {
-                setCategoryIds([...k]);
-              }}
-            >
-              {categories.map((item) => (
-                <SelectItem key={item.id} value={item.id} className="capitalize">
-                  {item.categoryName}
-                </SelectItem>
-              ))}
-            </Select>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase block mb-1">Difficulty Level</label>
+                      <Select
+                        placeholder="Difficulty Level"
+                        size="sm"
+                        radius="md"
+                        variant="bordered"
+                        selectionMode="multiple"
+                        className="mt-1"
+                        selectedKeys={new Set(difficultys)}
+                        onSelectionChange={(k) => {
+                          setDifficultys([...k]);
+                        }}
+                      >
+                        {difficultyOptions.map((item) => (
+                          <SelectItem key={item.key} value={item.key} className="capitalize">
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase block mb-1">Categories</label>
+                      <Select
+                        placeholder="Categories"
+                        size="sm"
+                        variant="bordered"
+                        radius="md"
+                        selectionMode="multiple"
+                        className="mt-1"
+                        selectedKeys={new Set(categoryIds)}
+                        onSelectionChange={(k) => {
+                          setCategoryIds([...k]);
+                        }}
+                      >
+                        {categories.map((item) => (
+                          <SelectItem key={item.id} value={item.id} className="capitalize">
+                            {item.categoryName}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Button
+                    color="primary"
+                    variant="flat"
+                    size="sm"
+                    className="w-full mt-2"
+                    onPress={handleClearFilters}
+                    startContent={<X size={16} />}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </div>
