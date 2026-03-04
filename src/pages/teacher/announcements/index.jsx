@@ -109,10 +109,9 @@ const Announcements = () => {
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-[#06574C]">All Announcements</h1>
         <Button
-          color="primary"
+          color="success"
           size="md"
           startContent={<GrAdd size={20} />}
-          variant="flat"
           onPress={() => handleOpen()}
         >
           Create Announcement

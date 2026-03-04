@@ -223,7 +223,8 @@ const MyCourses = () => {
           </p>
         </div>
         <Button
-          className="bg-[#1570E8] text-white max-md:w-full"
+          className=" max-md:w-full"
+          color="success"
           size="lg"
           radius="sm"
           startContent={<LuSquareArrowOutUpRight size={20} color="white" />}
