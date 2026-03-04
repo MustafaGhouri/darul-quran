@@ -425,12 +425,12 @@ const BrowseCourses = () => {
             ))}
           </div>}
       </div>
-      <div className="md:flex md:flex-row items-center pb-4 gap-2 justify-between overflow-hidden ">
-        <div className="flex text-sm items-center gap-1">
+      <div className="flex flex-row md:flex-row items-center pb-4 gap-2 justify-between overflow-hidden w-full">
+        <div className="flex text-sm items-center gap-1 w-full">
           <span>Limit</span>
           <Select
             radius="sm"
-            className="w-[70px]"
+            className="w-full sm:w-[70px]"
             defaultSelectedKeys={["10"]}
             onSelectionChange={(k) => {
               const keys = [...k];
@@ -442,12 +442,14 @@ const BrowseCourses = () => {
               <SelectItem key={limit.key}>{limit.label}</SelectItem>
             ))}
           </Select>
-          <span className="min-w-56">Out of {data?.total}</span>
+          <span className="w-full">Out of {data?.total}</span>
         </div>
         <Pagination
-          className=""
+          className="max-sm:w-full flex justify-end"
           showControls
           variant="ghost"
+          size="sm"
+
           initialPage={1}
           onChange={(page) => setPage(page)}
           total={data?.totalPages || 1}
