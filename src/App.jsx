@@ -37,6 +37,8 @@ import SupportTicketsTeacher from "./pages/teacher/supports-tickets/page";
 import useDynamicMeta from "./hooks/useDynamicMetadata";
 import CourseList from "./pages/teacher/my-courses/CourseList";
 import ErrorBoundary from "./components/globalError";
+import TeacherClassSheduling from "./pages/teacher/class-sheduling";
+import CreaterOrUpdateSchedule from "./pages/teacher/class-sheduling/CreaterOrUpdate";
 
 const Home = lazy(() => import("./pages/Home"));
 const CourseManagement = lazy(() =>
@@ -52,7 +54,7 @@ const UserManagement = lazy(() => import("./pages/admin/user-management"));
 const UserDetails = lazy(() =>
   import("./pages/admin/user-management/users-details")
 );
-const Scheduling = lazy(() => import("./pages/scheduling"));
+const Scheduling = lazy(() => import("./pages/admin/scheduling"));
 const Announcements = lazy(() => import("./pages/admin/announcements"));
 const TeacherAnnouncements = lazy(() => import("./pages/teacher/announcements"));
 const StudentAnnouncements = lazy(() => import("./pages/student/announcements"));
@@ -370,8 +372,15 @@ function App() {
               path="/teacher/class-scheduling"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
-                  <Scheduling />
-                  <LiveSession isTeacher />
+                  <TeacherClassSheduling />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/class-scheduling/manage"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <CreaterOrUpdateSchedule />
                 </ProtectedRoute>
               }
             />

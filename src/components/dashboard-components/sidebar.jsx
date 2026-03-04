@@ -53,8 +53,9 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     .filter(Boolean);
 
   // Decide which menu to show based on role
+  const finalAdminMenu = user?.email === import.meta.env.VITE_PUBLIC_ADMIN_EMAIL ? adminMenu : filteredAdminMenu
   const menuItems =
-    role === 'admin' ? filteredAdminMenu : role === 'teacher' ? teacherMenu : studentMenu;
+    role === 'admin' ? finalAdminMenu : role === 'teacher' ? teacherMenu : studentMenu;
 
   // If a child route is active, auto expand that parent
   useEffect(() => {
@@ -128,6 +129,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
 
       successMessage(data?.message || "Logout successful");
       dispatch(clearUser());
+      location.href = '/'
     } catch (error) {
       console.log(error);
       errorMessage(error.message);

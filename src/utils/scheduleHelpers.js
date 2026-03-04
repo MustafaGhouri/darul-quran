@@ -9,13 +9,13 @@
  */
 const parseDateFromDB = (dateStr) => {
     if (!dateStr) return null;
-    
+
     // Try YYYY-MM-DD format first (from PostgreSQL date array)
     if (dateStr.includes('-') && dateStr.length === 10) {
         const parsed = new Date(dateStr);
         return isNaN(parsed.getTime()) ? null : parsed;
     }
-    
+
     // Try DD-M-YY format (e.g., "26-2-5")
     const parts = dateStr.split("-");
     if (parts.length === 3) {
@@ -27,7 +27,7 @@ const parseDateFromDB = (dateStr) => {
         const parsed = new Date(year, month, day);
         return isNaN(parsed.getTime()) ? null : parsed;
     }
-    
+
     // Fallback to standard Date parsing
     const parsed = new Date(dateStr);
     return isNaN(parsed.getTime()) ? null : parsed;
@@ -57,7 +57,7 @@ export const formatTime12Hour = (time24) => {
 export const isClassLive = (schedule) => {
     if (!schedule) return false;
     const now = new Date();
-    
+
     // Try parsing DD-M-YY format first, fallback to standard date parsing
     let classDate = parseDateFromDB(schedule.date);
     if (!classDate) {
@@ -89,7 +89,7 @@ export const isClassLive = (schedule) => {
 export const isClassExpired = (schedule) => {
     if (!schedule) return false;
     const now = new Date();
-    
+
     // Try parsing DD-M-YY format first, fallback to standard date parsing
     let classDate = parseDateFromDB(schedule.date);
     if (!classDate) {
@@ -128,7 +128,7 @@ export const getStatusText = (schedule) => {
     if (!scheduleDates.length) return "completed";
 
     const now = new Date();
-    const todayStr = now.toLocaleDateString("en-CA"); 
+    const todayStr = now.toLocaleDateString("en-CA");
 
     const [startHour, startMin] = schedule.startTime.split(":").map(Number);
     const [endHour, endMin] = schedule.endTime.split(":").map(Number);
@@ -152,6 +152,50 @@ export const getStatusText = (schedule) => {
     }
 
     if (todayStr < lastDateStr) {
+        return "upcoming";
+    }
+
+    return "completed";
+};
+
+/**
+ * Get status text for single date schedule
+ * @param {string} date - "YYYY-MM-DD"
+ * @param {string} startTime - "HH:mm"
+ * @param {string} endTime - "HH:mm"
+ * @return {string}
+ */
+export const getStatusTextForSingleDate = (date, startTime, endTime) => {
+    const now = new Date();
+
+    // Get LOCAL today (not UTC)
+    const todayStr =
+        now.getFullYear() +
+        "-" +
+        String(now.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(now.getDate()).padStart(2, "0");
+
+    // If today is not the schedule date
+    if (date !== todayStr) {
+        return todayStr < date ? "upcoming" : "completed";
+    }
+
+    // Parse time
+    const [startHour, startMin] = startTime.split(":").map(Number);
+    const [endHour, endMin] = endTime.split(":").map(Number);
+
+    // Create LOCAL date objects correctly
+    const [year, month, day] = date.split("-").map(Number);
+
+    const start = new Date(year, month - 1, day, startHour, startMin);
+    const end = new Date(year, month - 1, day, endHour, endMin);
+
+    if (now >= start && now <= end) {
+        return "live";
+    }
+
+    if (now < start) {
         return "upcoming";
     }
 

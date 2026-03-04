@@ -12,40 +12,41 @@ import {
     ModalHeader,
     ModalBody,
     ModalFooter,
+    useDisclosure,
 } from "@heroui/react";
 import { CiCalendar } from "react-icons/ci";
-import { Clock, Lock, Video, Calendar as CalendarIcon, User, MapPin } from "lucide-react";
+import { Clock, Lock, Video, Calendar as CalendarIcon, User, MapPin, PlusIcon } from "lucide-react";
 import { FaRegAddressCard } from "react-icons/fa";
 import { LuSquareArrowOutUpRight } from "react-icons/lu";
 import { Calendar } from "@heroui/react";
-import { today, getLocalTimeZone, parseDate } from "@internationalized/date";
 import {
     useGetScheduleQuery,
     useDeleteScheduleMutation,
 } from "../../../redux/api/schedules";
 import { useCreateRescheduleRequestMutation } from "../../../redux/api/reschedule";
-import { RescheduleRequestModal } from "../../../components/schedule/RescheduleRequestModal";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
 import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatusText, getStatusTextForSingleDate } from "../../../utils/scheduleHelpers";
 import { useSelector } from "react-redux";
-import { s } from "framer-motion/client";
+import { Link, useNavigate } from "react-router-dom";
 import { dateFormatter } from "../../../lib/utils";
 
-const StudentClassSheduling = () => {
+const TeacherClassSheduling = () => {
+    const navigate = useNavigate();
     const [filterStatus, setFilterStatus] = useState("all");
     const [filterType, setFilterType] = useState("all");
     const [selectedSchedule, setSelectedSchedule] = useState(null);
-    const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
-    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [isMarking, setIsMarking] = useState(false);
-    const [viewType, setViewType] = useState('allDates');
+    const [viewType, setViewType] = useState('normal');
+
+    const { onOpenChange, isOpen } = useDisclosure()
+
     const { data: scheduleData, isLoading } = useGetScheduleQuery({
         page: "1",
         limit: "100",
         status: filterStatus === "all" ? undefined : filterStatus,
     });
 
-    const [createRescheduleRequest, { isLoading: isRescheduling }] = useCreateRescheduleRequestMutation();
+    const [deleteSchedule, { isLoading: isCancelling }] = useDeleteScheduleMutation();
 
     const { user: currentUser } = useSelector((state) => state.user);
 
@@ -81,7 +82,23 @@ const StudentClassSheduling = () => {
         const parsed = new Date(dateStr);
         return isNaN(parsed.getTime()) ? null : parsed;
     };
-
+    const handleDelete = async (id) => {
+        try {
+            if (!id) {
+                errorMessage('Schedule not selected');
+                return;
+            }
+            const res = await deleteSchedule(id);
+            const error = res?.error?.data;
+            if (error) {
+                throw new Error(error.message || "Operation failed");
+            }
+            successMessage(res.data.message || "Course deleted successfully");
+            onOpenChange(false);
+        } catch (error) {
+            errorMessage("Error deleting session: " + error.message);
+        }
+    };
     const schedulesByDate = useMemo(() => {
         if (!scheduleData?.schedules) return {};
 
@@ -167,36 +184,15 @@ const StudentClassSheduling = () => {
         }
     };
 
-    const handleRequestReschedule = (schedule) => {
-        setSelectedSchedule(schedule);
-        setIsRescheduleModalOpen(true);
-    };
 
-    const handleSubmitRescheduleRequest = async (requestData) => {
-        try {
-            await createRescheduleRequest(requestData).unwrap();
-            successMessage("Reschedule request submitted successfully! You will be notified once admin reviews your request.");
-            setIsRescheduleModalOpen(false);
-            setSelectedSchedule(null);
-        } catch (error) {
-            errorMessage(error?.data?.message || "Failed to submit reschedule request");
-        }
-    };
+
+
 
     const handleCancelClass = (schedule) => {
         setSelectedSchedule(schedule);
-        setIsCancelModalOpen(true);
+        onOpenChange(true);
     };
 
-    const confirmCancelClass = async () => {
-        try {
-            successMessage("Class cancellation request submitted. Admin will be notified.");
-            setIsCancelModalOpen(false);
-            setSelectedSchedule(null);
-        } catch (error) {
-            errorMessage(error?.data?.message || "Failed to cancel class");
-        }
-    };
 
     const canReschedule = (schedule) => {
         const parsedDate = parseDateFromDB(schedule.date);
@@ -278,11 +274,6 @@ const StudentClassSheduling = () => {
         const isLive = isClassLive(schedule);
         const isExpired = isClassExpired(schedule);
         const canJoin = isLive && schedule.meetingLink;
-        const canResched = canReschedule(schedule);
-        const canCanc = canCancel(schedule);
-
-
-
         return (
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-3 hover:shadow-md transition-shadow">
                 <div className="flex flex-wrap gap-2 mb-3">
@@ -330,6 +321,7 @@ const StudentClassSheduling = () => {
                         }
                     />
                 }
+
                 <Divider className="my-4" />
 
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
@@ -371,20 +363,17 @@ const StudentClassSheduling = () => {
                                 {isExpired ? "Ended" : "Locked"}
                             </Button>
                         )}
+                        <Button
+                            radius="sm"
+                            size="md"
+                            variant="bordered"
+                            color="success"
+                            onPress={() => navigate('/teacher/class-scheduling/manage', { state: schedule })}
+                        >
+                            Reschedule
+                        </Button>
 
-                        {canResched && (
-                            <Button
-                                radius="sm"
-                                size="md"
-                                variant="bordered"
-                                color="success"
-                                onPress={() => handleRequestReschedule(schedule)}
-                            >
-                                Reschedule
-                            </Button>
-                        )}
-
-                        {/* {canCanc && !isExpired && (
+                        {type === 'normal' && (
                             <Button
                                 radius="sm"
                                 size="md"
@@ -392,9 +381,9 @@ const StudentClassSheduling = () => {
                                 color="danger"
                                 onPress={() => handleCancelClass(schedule)}
                             >
-                                Cancel
+                                Delete
                             </Button>
-                        )} */}
+                        )}
                     </div>
                 </div>
             </div>
@@ -408,19 +397,46 @@ const StudentClassSheduling = () => {
         { key: "completed", label: "Completed" },
     ];
 
-    const classTypes = [
-        { key: "all", label: "All Classes" },
-        { key: "zoom", label: "Live Zoom" },
-        { key: "video", label: "Video Lesson" },
-    ];
 
     return (
-        <div className="h-full relative bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full no-scsrollbar top-0 bottom-0 overflow-auto">
-            <DashHeading
-                title="My Class Schedule"
-                desc="View and manage your upcoming live classes"
-            />
-
+        <div className="h-full relative bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full nddo-scrollbar top-0 bottom-0 overflow-auto">
+            <div className="flex items-center max-sm:flex-wrap justify-between gap-2">
+                <DashHeading
+                    title="My Course's Schedules"
+                    desc="View and manage your upcoming live course's schedules"
+                />
+                <Button
+                    startContent={<PlusIcon />}
+                    radius="sm"
+                    size="md"
+                    color="success"
+                    as={Link}
+                    // onPress={() => navigate('/teacher/class-scheduling/manage',{state:})}
+                    to="/teacher/class-scheduling/manage"
+                >
+                    Schedule New
+                </Button>
+            </div>
+            <div className="flex items-center max-sm:flex-wrap gap-2">
+                <Button
+                    radius="sm"
+                    size="md"
+                    onPress={() => setViewType('normal')}
+                    variant={viewType === 'normal' ? 'solid' : 'bordered'}
+                    color="success"
+                >
+                    View Schedule By Course
+                </Button>
+                <Button
+                    radius="sm"
+                    size="md"
+                    variant={viewType === 'allDates' ? 'solid' : 'bordered'}
+                    color="success"
+                    onPress={() => setViewType('allDates')}
+                >
+                    View Schedule By Date
+                </Button>
+            </div>
             <div className="grid grid-cols-12 gap-4 items-start mt-4">
                 {viewType === 'allDates' ? <div className="col-span-12 lg:col-span-8">
                     {isLoading ? (
@@ -464,7 +480,7 @@ const StudentClassSheduling = () => {
                                 <div key={i.id} className="mb-6">
                                     <DashHeading
                                         title={i.scheduleDates?.length === 1 ? new Date(i.scheduleDates[0]).toDateString() : (new Date(i.scheduleDates[0]).toDateString()
-                                            + ' to ' +
+                                            + ' ' +
                                             new Date(i.scheduleDates[i.scheduleDates?.length - 1]).toDateString())}
                                     />
                                     <div className="mt-3">
@@ -475,7 +491,6 @@ const StudentClassSheduling = () => {
                         )}
                     </div>
                 }
-
                 {/* Sidebar - Calendar & Filters */}
                 <div className="col-span-12 lg:col-span-4 space-y-4">
                     {/* Quick Stats Card */}
@@ -551,65 +566,28 @@ const StudentClassSheduling = () => {
                                 ))}
                             </Select>
                         </div>
-
-                        {/* <div>
-                            <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                                Class Type
-                            </label>
-                            <div className="flex flex-col gap-2">
-                                {classTypes.map((type) => (
-                                    <Button
-                                        key={type.key}
-                                        size="sm"
-                                        radius="sm"
-                                        className={`justify-start ${filterType === type.key
-                                            ? "bg-[#06574C] text-white"
-                                            : "bg-gray-100 text-gray-700"
-                                            }`}
-                                        onPress={() => setFilterType(type.key)}
-                                        variant={filterType === type.key ? "solid" : "flat"}
-                                    >
-                                        {type.key === "zoom" && <Video size={16} className="mr-2" />}
-                                        {type.key === "video" && <Lock size={16} className="mr-2" />}
-                                        {type.label}
-                                    </Button>
-                                ))}
-                            </div>
-                        </div> */}
                     </div>
                 </div>
             </div>
 
-            {/* Reschedule Request Modal */}
-            <RescheduleRequestModal
-                isOpen={isRescheduleModalOpen}
-                onClose={() => {
-                    setIsRescheduleModalOpen(false);
-                    setSelectedSchedule(null);
-                }}
-                schedule={selectedSchedule}
-                onSubmit={handleSubmitRescheduleRequest}
-                isSubmitting={isRescheduling}
-            />
 
-            {/* Cancel Confirmation Modal */}
             <Modal
-                isOpen={isCancelModalOpen}
+                isOpen={isOpen}
                 onClose={() => {
-                    setIsCancelModalOpen(false);
+                    onOpenChange(false);
                     setSelectedSchedule(null);
                 }}
                 size="md"
             >
                 <ModalContent>
                     <ModalHeader>
-                        <h2 className="text-lg font-semibold text-[#06574C]">Cancel Class</h2>
+                        <h2 className="text-lg font-semibold text-[#06574C]">Delete Schdule</h2>
                     </ModalHeader>
                     <ModalBody>
                         {selectedSchedule && (
                             <>
                                 <p className="text-gray-700">
-                                    Are you sure you want to cancel your enrollment for this class?
+                                    Are you sure you want to cancel this schdule?
                                 </p>
                                 <div className="bg-gray-50 p-3 rounded-lg mt-3">
                                     <p className="font-semibold text-sm">{selectedSchedule.title}</p>
@@ -620,7 +598,7 @@ const StudentClassSheduling = () => {
                                 </div>
                                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
                                     <p className="text-sm text-amber-800">
-                                        <strong>⚠️ Note:</strong> This action will notify the admin. You may lose your spot in this class.
+                                        <strong>⚠️ Note:</strong> This action will notify the admin and students.
                                     </p>
                                 </div>
                             </>
@@ -630,25 +608,25 @@ const StudentClassSheduling = () => {
                         <Button
                             variant="flat"
                             onPress={() => {
-                                setIsCancelModalOpen(false);
+                                onOpenChange(false);
                                 setSelectedSchedule(null);
                             }}
-                        // isDisabled={isCancelling}
+                            isDisabled={isCancelling}
                         >
                             No, Keep It
                         </Button>
                         <Button
                             color="danger"
-                            onPress={confirmCancelClass}
-                        // isLoading={isCancelling}
+                            onPress={() => handleDelete(selectedSchedule?.id)}
+                            isLoading={isCancelling}
                         >
-                            Yes, Cancel
+                            Yes, Delete
                         </Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
-        </div>
+        </div >
     );
 };
 
-export default StudentClassSheduling;
+export default TeacherClassSheduling;
