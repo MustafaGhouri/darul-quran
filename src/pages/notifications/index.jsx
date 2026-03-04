@@ -75,7 +75,7 @@ const NotificationsPage = () => {
 
 
   return (
-    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 h-[calc(100vh)]">
+    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 pb-6 ">
       <div className="">
         <div className="mb-2">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -115,8 +115,8 @@ const NotificationsPage = () => {
 
         <div className="space-y-4">
           {isLoading ? (
-            [1, 2, 3].map((i) => (
-              <Skeleton key={i} className="w-full h-24 rounded-xl" />
+            [1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="w-full bg-white shadow-sm h-30 rounded-xl" />
             ))
           ) : notifications.length > 0 ? (
             notifications.map((notif) => (
@@ -135,7 +135,7 @@ const NotificationsPage = () => {
                           <h3 className={`text-xl ${!notif.is_read ? 'font-bold' : 'font-semibold'} text-gray-900 truncate`}>
                             {notif.title}
                           </h3>
-                          <p className="text-gray-500 text-base mt-1 line-clamp-2">
+                          <p className="text-gray-500 text-base line-clamp-2">
                             {notif.description}
                           </p>
 

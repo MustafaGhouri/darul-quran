@@ -104,7 +104,7 @@ const BrowseCourses = () => {
     { key: "50", label: "50" },
   ];
   return (
-    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
+    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 min-h-screen flex flex-col">
       <DashHeading
         title={"Browse Courses"}
         desc={"Discover your next learning adventure from 2,847 courses"}
@@ -116,7 +116,7 @@ const BrowseCourses = () => {
             placeholder="Search for a course"
             size="sm"
             radius="md"
-            className="w-full"
+            className="max-w-sm"
             onChange={(e) =>
               debounce(() => {
                 setSearch(e.target.value);
@@ -126,11 +126,11 @@ const BrowseCourses = () => {
           />
           <div className="flex gap-1 items-center w-fit">
             <span className="text-sm text-nowrap">Sort by:</span>
-            <Select
-              placeholder="Sort "
+            <Select 
+              placeholder="Sort" 
               size="sm"
               radius="md"
-              className="w-35"
+              className="w-100"
               onSelectionChange={(k) => {
                 const keys = [...k];
                 setSort(keys[0]);
@@ -152,7 +152,7 @@ const BrowseCourses = () => {
               title="Payment type"
               size="sm"
               radius="md"
-              className="w-20"
+              className="w-100"
               onSelectionChange={(k) => {
                 const keys = [...k];
                 setIsFree(keys[0]);
@@ -169,14 +169,12 @@ const BrowseCourses = () => {
                 </SelectItem>
               ))}
             </Select>
-          </div>
-        </div>
-        <Select
-          placeholder="Select Type"
-          title="Select Type"
+             <Select
+          placeholder="Select Course Type"
+          title="Select Course Type"
           size="sm"
           radius="md"
-          className="max-w-xl mt-2"
+          className=" "
           onSelectionChange={(k) => {
             const keys = [...k];
             setSort(keys[0]);
@@ -199,196 +197,206 @@ const BrowseCourses = () => {
             Live Classes
           </SelectItem>
         </Select>
+          </div>
+        </div>
+       
 
         <div className="mt-4">
           <div className="flex gap-2 items-center ">
-            <h1 className="text-lg font-semibold"> Filters</h1>
-            <MdKeyboardArrowDown size={22} />
+            
           </div>
 
           <div className="mt-5">
-            <h1 className="text-sm font-semibold text-[#666666]  mt-3">
+            <h1 className="text-sm font-semibold text-[#666666] mb-1">
               Difficulty Level
             </h1>
-
-            <CheckboxGroup onChange={(e) => setDifficultys(e)} orientation="horizontal" className="gap-2">
+            <Select
+              placeholder="Select Difficulty"
+              size="sm"
+              radius="md"
+              selectionMode="multiple"
+              className="max-w-md"
+              selectedKeys={new Set(difficultys)}
+              onSelectionChange={(k) => {
+                setDifficultys([...k]);
+              }}
+            >
               {difficultyOptions.map((item) => (
-                <CustomCheckbox
-                  key={item.key}
-                  value={item.key}
-                  className="capitalize"
-                >
+                <SelectItem key={item.key} value={item.key} className="capitalize">
                   {item.label}
-                </CustomCheckbox>
+                </SelectItem>
               ))}
-            </CheckboxGroup>
+            </Select>
           </div>
           <div className="mt-5">
-            <h1 className="text-sm font-semibold text-[#666666]  mt-3">
+            <h1 className="text-sm font-semibold text-[#666666] mb-1">
               Categories
             </h1>
-
-
-            <CheckboxGroup
-              onChange={(e) => setCategoryIds(e)}
-              orientation="horizontal"
-              className="gap-2">
+            <Select
+              placeholder="Select Categories"
+              size="sm"
+              radius="md"
+              selectionMode="multiple"
+              className="max-w-md"
+              selectedKeys={new Set(categoryIds)}
+              onSelectionChange={(k) => {
+                setCategoryIds([...k]);
+              }}
+            >
               {categories.map((item) => (
-                <CustomCheckbox
-                  key={item.id}
-                  value={item.id}
-                  className="capitalize"
-                >
+                <SelectItem key={item.id} value={item.id} className="capitalize">
                   {item.categoryName}
-                </CustomCheckbox>
+                </SelectItem>
               ))}
-            </CheckboxGroup>
+            </Select>
           </div>
         </div>
       </div>
-      {isLoading ? <Loader height={50} /> :
-        <div className="grid min-h-[45vh] grid-cols-12 gap-3 pb-4">
-          {course.map((item, index) => (
-            <div key={index} className="col-span-12 md:col-span-6 lg:col-span-4">
-              <div className="w-full bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
-                {item.thumbnail && (
-                  <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
-                    <img
-                      src={item.thumbnail}
-                      alt={item.courseName}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-2 left-2 flex gap-2">
-                      <Button
-                        size="sm"
-                        radius="sm"
-                        className={`bg-white px-3 font-bold text-xs ${item.coursePrice === "0" || item.coursePrice === "00" ? "text-[#D28E3D]" : "text-[#34A853]"}`}
-                      >
-                        {item.coursePrice === "0" || item.coursePrice === "00" ? "Free" : "Paid"}
-                      </Button>
-                      {item.isFree && (
-                        <span className="bg-[#34A853] text-white px-2 py-1 rounded text-xs font-semibold">
-                          Free
-                        </span>
-                      )}
-                    </div>
-                    {item.rating > 0 && <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/60 px-2 py-1 rounded">
-                      <IoStarSharp size={16} color="#FDD835" />
-                      <p className="text-white text-xs font-medium">
-                        {item.rating?.toFixed(1) || "0.0"}
-                      </p>
-                    </div>}
-                  </div>
-                )}
-
-                <div className={`p-3 ${!item.thumbnail ? "bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)] rounded-t-lg" : ""}`}>
-                  {!item.thumbnail && (
-                    <div className="flex justify-between items-center mb-2">
-                      <Button
-                        size="sm"
-                        radius="sm"
-                        className={`bg-white px-4 font-bold text-xs ${item.coursePrice === "0" || item.coursePrice === "00" ? "text-[#D28E3D]" : "text-[#34A853]"}`}
-                      >
-                        {item.coursePrice === "0" || item.coursePrice === "00" ? "Free" : "Paid"}
-                      </Button>
-                      <div className="flex items-center gap-1">
-                        <IoStarSharp size={18} color="#FDD835" />
-                        <p className="text-[#060606] text-xs font-medium">
+      <div className="flex-grow flex flex-col justify-center py-4">
+        {isLoading ? <Loader height={50} /> :
+          <div className="grid grid-cols-12 gap-3 pb-4">
+            {course.map((item, index) => (
+              <div key={index} className="col-span-12 md:col-span-6 lg:col-span-4">
+                <div className="w-full bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+                  {item.thumbnail && (
+                    <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
+                      <img
+                        src={item.thumbnail}
+                        alt={item.courseName}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-2 left-2 flex gap-2">
+                        <Button
+                          size="sm"
+                          radius="sm"
+                          className={`bg-white px-3 font-bold text-xs ${item.coursePrice === "0" || item.coursePrice === "00" ? "text-[#D28E3D]" : "text-[#34A853]"}`}
+                        >
+                          {item.coursePrice === "0" || item.coursePrice === "00" ? "Free" : "Paid"}
+                        </Button>
+                        {item.isFree && (
+                          <span className="bg-[#34A853] text-white px-2 py-1 rounded text-xs font-semibold">
+                            Free
+                          </span>
+                        )}
+                      </div>
+                      {item.rating > 0 && <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/60 px-2 py-1 rounded">
+                        <IoStarSharp size={16} color="#FDD835" />
+                        <p className="text-white text-xs font-medium">
                           {item.rating?.toFixed(1) || "0.0"}
                         </p>
-                      </div>
+                      </div>}
                     </div>
                   )}
 
-                  <h3 title={item.courseName} className="text-base font-semibold text-[#060606] line-clamp-2 min-h-[2.5rem]">
-                    {item.courseName}
-                  </h3>
-
-                  {item.description && (
-                    <p title={item.description} className="text-xs text-[#666666] mt-2 line-clamp-2">
-                      {item.description}
-                    </p>
-                  )}
-                </div>
-
-                <div className="p-3 pt-0 space-y-3 flex-grow flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-[#95C4BE33] flex items-center justify-center text-[#06574C] font-bold text-xs shrink-0">
-                          {item.first_name?.charAt(0) || item.teacherId?.toString().charAt(0)}
-                        </div>
-                        <div>
-                          <p className="font-medium text-[#06574C] text-xs">
-                            {item.first_name} {item.last_name}
+                  <div className={`p-3 ${!item.thumbnail ? "bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)] rounded-t-lg" : ""}`}>
+                    {!item.thumbnail && (
+                      <div className="flex justify-between items-center mb-2">
+                        <Button
+                          size="sm"
+                          radius="sm"
+                          className={`bg-white px-4 font-bold text-xs ${item.coursePrice === "0" || item.coursePrice === "00" ? "text-[#D28E3D]" : "text-[#34A853]"}`}
+                        >
+                          {item.coursePrice === "0" || item.coursePrice === "00" ? "Free" : "Paid"}
+                        </Button>
+                        <div className="flex items-center gap-1">
+                          <IoStarSharp size={18} color="#FDD835" />
+                          <p className="text-[#060606] text-xs font-medium">
+                            {item.rating?.toFixed(1) || "0.0"}
                           </p>
-                          <p className="text-[#666666] text-[10px]">Instructor</p>
                         </div>
                       </div>
-                      <div className="text-end">
-                        <p className={`font-bold text-lg ${item.coursePrice === "0" || item.coursePrice === "00" ? "text-[#34A853]" : "text-[#D28E3D]"}`}>
-                          {item.coursePrice === "0" || item.coursePrice === "00" ? "Free" : `$${item.coursePrice}`}
-                        </p>
-                      </div>
-                    </div>
+                    )}
 
-                    <div className="flex flex-wrap gap-2 text-xs text-[#6B7280] mt-3">
-                      {item.studentCourseCount > 0 && (
-                        <div className="flex items-center gap-1">
-                          <RiGroupLine size={16} color="#06574C" />
-                          <span>{item.studentCourseCount} enrolled</span>
-                        </div>
-                      )}
-                      {item.totalLesson > 0 && (
-                        <div className="flex items-center gap-1">
-                          <AiOutlineEye size={16} color="#06574C" />
-                          <span>{item.totalLesson} Lesson{item.totalLesson > 1 ? 's' : ""}</span>
-                        </div>
-                      )}
+                    <h3 title={item.courseName} className="text-base font-semibold text-[#060606] line-clamp-2 min-h-[2.5rem]">
+                      {item.courseName}
+                    </h3>
 
-                      {item.duration && (
-                        <div className="flex items-center gap-1">
-                          <Clock size={16} color="#6B7280" />
-                          <span>{item.duration}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {item.category_name && (
-                        <span className="text-xs px-2 py-1 rounded-md bg-[#95C4BE33] text-[#06574C]">
-                          {item.category_name}
-                        </span>
-                      )}
-                      {item.difficultyLevel && (
-                        <span className="text-xs px-2 py-1 rounded-md bg-[#F1C2AC33] text-[#D28E3D]">
-                          {item.difficultyLevel}
-                        </span>
-                      )}
-                      <Tooltip color="success" content={item.type === 'live' ? 'Contains Live Class, requires subscription' : 'Contains Recorded Lessons, requires onetime payment'}>
-                        <span
-                          title={item.type === 'live' ? 'Contains Live Class, requires subscription' : 'Contains Recorded Lessons, requires onetime payment'}
-                          className="cursor-pointer text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-600 capitalize">
-                          {item.type.replace('_', ' ')}
-                        </span>
-                      </Tooltip>
-                    </div>
+                    {item.description && (
+                      <p title={item.description} className="text-xs text-[#666666] mt-2 line-clamp-2">
+                        {item.description}
+                      </p>
+                    )}
                   </div>
 
-                  <Button
-                    radius="sm"
-                    size="sm"
-                    className="bg-[#06574C] text-white rounded-md w-full mt-3"
-                    startContent={<AiOutlineEye size={18} />}
-                    onPress={() => viewCourseDetails(item)}
-                  >
-                    View Course
-                  </Button>
+                  <div className="p-3 pt-0 space-y-3 flex-grow flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-[#95C4BE33] flex items-center justify-center text-[#06574C] font-bold text-xs shrink-0">
+                            {item.first_name?.charAt(0) || item.teacherId?.toString().charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-medium text-[#06574C] text-xs">
+                              {item.first_name} {item.last_name}
+                            </p>
+                            <p className="text-[#666666] text-[10px]">Instructor</p>
+                          </div>
+                        </div>
+                        <div className="text-end">
+                          <p className={`font-bold text-lg ${item.coursePrice === "0" || item.coursePrice === "00" ? "text-[#34A853]" : "text-[#D28E3D]"}`}>
+                            {item.coursePrice === "0" || item.coursePrice === "00" ? "Free" : `$${item.coursePrice}`}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 text-xs text-[#6B7280] mt-3">
+                        {item.studentCourseCount > 0 && (
+                          <div className="flex items-center gap-1">
+                            <RiGroupLine size={16} color="#06574C" />
+                            <span>{item.studentCourseCount} enrolled</span>
+                          </div>
+                        )}
+                        {item.totalLesson > 0 && (
+                          <div className="flex items-center gap-1">
+                            <AiOutlineEye size={16} color="#06574C" />
+                            <span>{item.totalLesson} Lesson{item.totalLesson > 1 ? 's' : ""}</span>
+                          </div>
+                        )}
+
+                        {item.duration && (
+                          <div className="flex items-center gap-1">
+                            <Clock size={16} color="#6B7280" />
+                            <span>{item.duration}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {item.category_name && (
+                          <span className="text-xs px-2 py-1 rounded-md bg-[#95C4BE33] text-[#06574C]">
+                            {item.category_name}
+                          </span>
+                        )}
+                        {item.difficultyLevel && (
+                          <span className="text-xs px-2 py-1 rounded-md bg-[#F1C2AC33] text-[#D28E3D]">
+                            {item.difficultyLevel}
+                          </span>
+                        )}
+                        <Tooltip color="success" content={item.type === 'live' ? 'Contains Live Class, requires subscription' : 'Contains Recorded Lessons, requires onetime payment'}>
+                          <span
+                            title={item.type === 'live' ? 'Contains Live Class, requires subscription' : 'Contains Recorded Lessons, requires onetime payment'}
+                            className="cursor-pointer text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-600 capitalize">
+                            {item.type.replace('_', ' ')}
+                          </span>
+                        </Tooltip>
+                      </div>
+                    </div>
+
+                    <Button
+                      radius="sm"
+                      size="sm"
+                      className="bg-[#06574C] text-white rounded-md w-full mt-3"
+                      startContent={<AiOutlineEye size={18} />}
+                      onPress={() => viewCourseDetails(item)}
+                    >
+                      View Course
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>}
+            ))}
+          </div>}
+      </div>
       <div className="md:flex md:flex-row items-center pb-4 gap-2 justify-between overflow-hidden ">
         <div className="flex text-sm items-center gap-1">
           <span>Limit</span>
@@ -428,44 +436,4 @@ const BrowseCourses = () => {
 };
 
 export default BrowseCourses;
-const CustomCheckbox = (props) => {
-  const checkbox = tv({
-    slots: {
-      base: "border-0 bg-transparent",
-      content: "text-default-500",
-    },
-    variants: {
-      isSelected: {
-        true: {
-          base: "bg-success text-white rounded-md",
-          content: "text-primary-foreground ",
-        },
-      },
-    },
-  });
 
-  const { children, isSelected, getBaseProps, getLabelProps, getInputProps } =
-    useCheckbox(props);
-
-  const styles = checkbox({ isSelected });
-
-  return (
-    <label {...getBaseProps()}>
-      <VisuallyHidden>
-        <input {...getInputProps()} />
-      </VisuallyHidden>
-
-      <Chip
-        classNames={{
-          base: styles.base(),
-          content: styles.content(),
-        }}
-        startContent={isSelected ? <CheckIcon size={20} color="white" /> : null}
-        variant="faded"
-        {...getLabelProps()}
-      >
-        {children}
-      </Chip>
-    </label>
-  );
-};
