@@ -24,6 +24,13 @@ export const userAPI = createApi({
             }),
             providesTags: ["user"],
         }),
+        getUserById: builder.query({
+            query: (id) => ({
+                url: `/userByID/${id}`,
+                method: "GET",
+            }),
+            providesTags: ["user"],
+        }),
         createOrUpdateUser: builder.mutation({
             query: (data) => ({
                 url: `/create-user`,
@@ -49,6 +56,13 @@ export const userAPI = createApi({
             }),
             invalidatesTags: ["user"],
         }),
+        syncUserWithZoom: builder.mutation({
+            query: (id) => ({
+                url: `/sync-zoom-user/${id}`,
+                method: "POST",
+            }),
+            invalidatesTags: ["user"],
+        }),
         getAllUserForSelect: builder.query({
             query: ({ page, limit, search, courseId }) => ({
                 url: "/getAllUserForSelect",
@@ -65,8 +79,10 @@ export const userAPI = createApi({
 export const {
     useGetAllUsersQuery,
     useGetAllTeachersQuery,
+    useGetUserByIdQuery,
     useCreateOrUpdateUserMutation,
     useDeleteUserMutation,
     useBulkDeleteUserMutation,
+    useSyncUserWithZoomMutation,
     useGetAllUserForSelectQuery,
 } = userAPI;

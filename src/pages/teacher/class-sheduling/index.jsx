@@ -307,7 +307,7 @@ const TeacherClassSheduling = () => {
     };
 
     const ScheduleCard = ({ schedule, type = 'allDates' }) => {
-        const isLive = isClassLive(schedule);
+        const isLive = isClassLive(schedule,(type === 'normal' ? 'multiple' : 'single'));
         const isExpired = isClassExpired(schedule);
         const canJoin = isLive && schedule.meetingLink;
         return (

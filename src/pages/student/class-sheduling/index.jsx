@@ -169,6 +169,7 @@ const StudentClassSheduling = () => {
         try {
             const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/attendance/mark`, {
                 method: "POST",
+                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     scheduleId: schedule.id,
@@ -176,16 +177,16 @@ const StudentClassSheduling = () => {
                     courseId: schedule.courseId,
                 })
             });
-
+            const data = await res.json();
             if (res.ok) {
-                window.open(schedule.meetingLink, '_blank');
+                window.open(data?.link, '_blank');
                 successMessage("Joined class! Attendance marked.");
             } else {
-                window.open(schedule.meetingLink, '_blank');
+                throw new Error(data.message);
             }
         } catch (error) {
             console.error("Failed to mark attendance", error);
-            window.open(schedule.meetingLink, '_blank');
+            errorMessage(error.message);
         } finally {
             setIsMarking(null);
         }
@@ -316,13 +317,11 @@ const StudentClassSheduling = () => {
     };
 
     const ScheduleCard = ({ schedule, type = 'allDates' }) => {
-        const isLive = isClassLive(schedule);
+        const isLive = isClassLive(schedule,(type === 'normal' ? 'multiple' : 'single'));
         const isExpired = isClassExpired(schedule);
         const canJoin = isLive && schedule.meetingLink;
         const canResched = canReschedule(schedule);
         const canCanc = canCancel(schedule);
-
-
 
         return (
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-3 hover:shadow-md transition-shadow">

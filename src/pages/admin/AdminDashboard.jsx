@@ -214,6 +214,7 @@ const AdminDashboard = () => {
                     Class
                   </TableColumn>
                   <TableColumn className="bg-[#EBD4C9]/30">Time</TableColumn>
+                  <TableColumn className="bg-[#EBD4C9]/30">Enrolled</TableColumn>
                   <TableColumn className="bg-[#EBD4C9]/30">Status</TableColumn>
                 </TableHeader>
 
@@ -235,6 +236,9 @@ const AdminDashboard = () => {
                           {convertTo12hrsFormat(classItem.start_time)} -{" "}
                           {convertTo12hrsFormat(classItem.end_time)} UTC
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">{classItem.totalEnrolled}/{classItem.enrollmentLimit}</span>
                       </TableCell>
                       <TableCell>
                         <p className="p-2 w-full text-center rounded-md text-[#06574C] bg-[#95C4BE]/20">
