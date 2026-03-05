@@ -19,14 +19,14 @@ import {
     TableHeader,
     TableRow,
 } from "@heroui/react";
-import { DashHeading } from "../../components/dashboard-components/DashHeading";
+import { DashHeading } from "../components/dashboard-components/DashHeading";
 import {
     useGetRescheduleRequestsQuery,
     useApproveRescheduleRequestMutation,
     useRejectRescheduleRequestMutation,
-} from "../../redux/api/reschedule";
-import { errorMessage, successMessage } from "../../lib/toast.config";
-import { formatTime12Hour } from "../../utils/scheduleHelpers";
+} from "../redux/api/reschedule";
+import { errorMessage, successMessage } from "../lib/toast.config";
+import { formatTime12Hour } from "../utils/scheduleHelpers";
 import { Calendar as CalendarIcon } from "lucide-react";
 
 const AdminRescheduleRequests = () => {
@@ -107,7 +107,7 @@ const AdminRescheduleRequests = () => {
 
     const columns = [
         { key: "student", label: "Student" },
-        { key: "class", label: "Class" },
+        { key: "class", label: "Class", width: 200 },
         { key: "originalSchedule", label: "Original Schedule" },
         { key: "requestedSchedule", label: "Requested Schedule" },
         { key: "reason", label: "Reason" },
@@ -192,11 +192,11 @@ const AdminRescheduleRequests = () => {
                                         <p className="text-xs text-gray-500">{request.studentEmail}</p>
                                     </div>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="max-w-80">
                                     <div>
                                         <p className="font-medium text-sm">{request.scheduleTitle}</p>
-                                        <p className="text-xs text-gray-500">
-                                            {new Date(request.scheduleDate).toLocaleDateString()}
+                                        <p title={request.courseName} className="text-xs line-clamp-3 text-gray-500">
+                                            <strong>Course: </strong> {request.courseName}
                                         </p>
                                     </div>
                                 </TableCell>

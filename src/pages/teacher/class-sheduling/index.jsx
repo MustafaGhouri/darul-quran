@@ -306,7 +306,11 @@ const TeacherClassSheduling = () => {
                         {schedule.description}
                     </p>
                 )}
-
+                <p className="text-[#666666] text-sm mb-4 line-clamp-2">
+                    {schedule.scheduleDates?.length === 1 ? new Date(schedule.scheduleDates[0]).toDateString() : (new Date(schedule.scheduleDates[0]).toDateString()
+                        + ' - to - ' +
+                        new Date(schedule.scheduleDates[schedule.scheduleDates?.length - 1]).toDateString())}
+                </p>
                 <div className="flex flex-wrap gap-4 mb-4">
                     <div className="flex text-[#666666] text-sm items-center gap-2">
                         {type === 'normal' ? "CreatedAt: " : <CiCalendar color="#666666" size={20} />}
@@ -321,7 +325,7 @@ const TeacherClassSheduling = () => {
                         </p>
                     </div>
                 </div>
-                {type === 'normal' &&
+                {/* {type === 'normal' &&
                     <Calendar
                         size="sm"
                         variant="underlined"
@@ -331,7 +335,7 @@ const TeacherClassSheduling = () => {
                             schedule?.scheduleDates?.includes(date.toString())
                         }
                     />
-                }
+                } */}
 
                 <Divider className="my-4" />
 
@@ -450,7 +454,7 @@ const TeacherClassSheduling = () => {
                     View Schedule By Date
                 </Button>
             </div>
-          <div className="grid grid-cols-12 gap-4 items-start mt-4">
+            <div className="grid grid-cols-12 gap-4 items-start mt-4">
                 {viewType === 'allDates' ? <div className="col-span-12 lg:col-span-8">
                     {isLoading ? (
                         <div className="flex justify-center items-center py-20">
@@ -493,7 +497,7 @@ const TeacherClassSheduling = () => {
                                 <div key={i.id} className="mb-6">
                                     <DashHeading
                                         title={i.scheduleDates?.length === 1 ? new Date(i.scheduleDates[0]).toDateString() : (new Date(i.scheduleDates[0]).toDateString()
-                                            + ' to ' +
+                                            + ' - to - ' +
                                             new Date(i.scheduleDates[i.scheduleDates?.length - 1]).toDateString())}
                                     />
                                     <div className="mt-3">

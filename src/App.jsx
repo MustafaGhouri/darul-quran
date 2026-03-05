@@ -74,8 +74,7 @@ const Review = lazy(() => import("./pages/admin/help/review"));
 const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 const EnrollSuccess = lazy(() => import("./pages/student/enroll-success"));
 const CoursePlayer = lazy(() => import("./pages/student/course-player"));
-const AdminRescheduleRequests = lazy(() => import("./pages/admin/RescheduleRequests"));
-const TeacherRescheduleRequests = lazy(() => import("./pages/teacher/RescheduleRequests"));
+const RescheduleRequests = lazy(() => import("./pages/RescheduleRequests"));
 const StudentRescheduleRequests = lazy(() => import("./pages/student/RescheduleRequests"));
 const Notifications = lazy(() => import("./pages/notifications"));
 
@@ -311,7 +310,7 @@ function App() {
               path="/admin/reschedule-requests"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
-                  <AdminRescheduleRequests />
+                  <RescheduleRequests />
                 </ProtectedRoute>
               }
             />
@@ -412,7 +411,7 @@ function App() {
               path="/teacher/reschedule-requests"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
-                  <TeacherRescheduleRequests />
+                  <RescheduleRequests />
                 </ProtectedRoute>
               }
             />

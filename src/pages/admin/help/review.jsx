@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
-import { Avatar, Button, Pagination, Progress, Spinner, User } from "@heroui/react";
-import { useSearchParams } from "react-router-dom";
+import { Avatar, Button, Chip, Pagination, Progress, Spinner, User } from "@heroui/react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useGetReviewsQuery, useDeleteReviewMutation } from "../../../redux/api/courses";
 import { Trash2 } from "lucide-react";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
@@ -9,7 +9,7 @@ import RatingStars from "../../../components/RatingStar";
 import { useEffect } from "react";
 
 const Review = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const id = searchParams.get("id") || '';
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
@@ -20,22 +20,22 @@ const Review = () => {
 
   const { data, isFetching, isError, error } = useGetReviewsQuery(
     {
-      courseId: id,
+      courseId: (id !== 'null' && id !== 'undefined') ? id : '',
       page,
       limit,
       includeOverview: shouldFetchOverview,
-      rating: ratingForSearch,
+      rating: ratingForSearch ? ratingForSearch : undefined,
     }
   );
-  
+
   useEffect(() => {
     if (data?.agg && shouldFetchOverview) {
       setOverview(data.agg);
-      setShouldFetchOverview(false); 
+      setShouldFetchOverview(false);
     }
   }, [data, shouldFetchOverview]);
   const [deleteReview] = useDeleteReviewMutation();
-  
+
   const handleDelete = async (reviewId) => {
     if (!window.confirm("Are you sure you want to delete this review?")) return;
 
@@ -65,7 +65,7 @@ const Review = () => {
   const totalReviews = data?.total || 0;
 
   return (
-    <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 min-h-screen">
+    <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 py-6">
       <DashHeading
         title={"Reviews"}
         desc={"See what students are saying about this course"}
@@ -118,20 +118,33 @@ const Review = () => {
           </div>
         </div>
       </div>
-      {isFetching && !reviews.length ? (
-        <div className="flex justify-center items-center py-12">
+      {(id || ratingForSearch) &&
+        <Chip
+          color="success"
+          onClick={() => {
+            setSearchParams({ id: '' });
+            setRatingForSearch(null);
+          }}
+          endContent={<>&times;</>}
+          className="mb-3 pr-2 cursor-pointer"
+          variant="flat">
+          Clear Filters
+        </Chip>
+      }
+      {isFetching ? (
+        <div className="flex min-h-[50vh] justify-center items-center py-12">
           <Spinner size="lg" color="success" />
         </div>
       ) : reviews.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg">
+        <div className="text-center py-12 min-h-[50vh] bg-white rounded-lg">
           <p className="text-gray-500 text-lg">No reviews found for this course.</p>
         </div>
       ) : (
         <>
-          <div className="space-y-4">
+          <div className="space-y-4  min-h-[48vh]">
             {reviews.map((item) => (
               <div
-                className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+                className="p-4 bg-white  rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
                 key={item.id}
               >
                 <div className="flex justify-between items-start gap-3">
@@ -147,7 +160,7 @@ const Review = () => {
                           {item.username || "Anonymous"}
                         </h1>
                         <RatingStars rating={item.rating || 0} /> ({item.rating || 0})
-                        {item?.courseName && <p className="text-sm text-gray-600"><strong>Course:</strong> {item?.courseName}</p>}
+                        {item?.courseName && <Link to={'/admin/help/reviews?id=' + item?.courseId?.toString()} className="text-sm text-gray-600"><strong>Course:</strong> {item?.courseName}</Link>}
                       </div>
                       <p className="text-sm text-gray-500">{item.email}</p>
                     </div>
