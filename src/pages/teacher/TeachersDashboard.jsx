@@ -103,7 +103,7 @@ const TeachersDashboard = () => {
   const [description, setDescription] = useState("");
   const [delivery, setDelivery] = useState("");
   const handleAnnouncement = async (onClose) => {
-    if (!course || !announcement || !description) {
+    if (!course || !announcement || !description || !delivery) {
       errorMessage("Please fill all fields");
       return;
     }

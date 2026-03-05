@@ -230,9 +230,13 @@ const Announcements = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
-
+    if (!data.description || !data.delivery || !data.sendTo || !data.title) {
+      errorMessage("Please fill all fields");
+      return;
+    }
     const payload = {
       ...data,
       userId: user?.id,

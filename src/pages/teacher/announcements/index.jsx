@@ -102,7 +102,7 @@ const Announcements = () => {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     
-    if (!course || !announcementType || !description) {
+    if (!course || !announcementType || !description || !delivery)  {
       errorMessage("Please fill all required fields");
       return;
     }
