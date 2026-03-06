@@ -89,40 +89,87 @@ const getNextScheduleDate = (scheduleDates) => {
  * @param {Object} schedule - Schedule object with scheduleDates, startTime, endTime
  * @returns {boolean}
  */
-export const isClassLive = (schedule) => {
+export const isClassLive = (schedule, type = 'multiple') => {
     if (!schedule) return false;
+    if (type === 'multiple') {
+        let scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
 
-    let scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
-    
-    // If no scheduleDates array, check if there's a single date field
-    if (!scheduleDates || scheduleDates.length === 0) {
-        const singleDate = schedule.date;
-        if (singleDate) {
-            // Convert ISO date or YYYY-MM-DD to date string
-            const dateStr = singleDate.includes('T') ? singleDate.split('T')[0] : singleDate;
-            scheduleDates = [dateStr];
-        } else {
-            return false;
+        // If no scheduleDates array, check if there's a single date field
+        if (!scheduleDates || scheduleDates.length === 0) {
+            const singleDate = schedule.date;
+            if (singleDate) {
+                // Convert ISO date or YYYY-MM-DD to date string
+                const dateStr = singleDate.includes('T') ? singleDate.split('T')[0] : singleDate;
+                scheduleDates = [dateStr];
+            } else {
+                return false;
+            }
         }
+
+        if (!isTodayInSchedule(scheduleDates)) return false;
+
+        const startTimeStr = schedule.startTime || schedule.start_time;
+        const endTimeStr = schedule.endTime || schedule.end_time;
+
+        if (!startTimeStr || !endTimeStr) return false;
+
+        const today = getTodayStr();
+
+        const [startHour, startMin] = startTimeStr.split(":");
+        const [endHour, endMin] = endTimeStr.split(":");
+
+        const startTime = new Date(`${today}T${startHour}:${startMin}:00`);
+        const endTime = new Date(`${today}T${endHour}:${endMin}:00`);
+
+        const now = new Date();
+        return now >= startTime && now <= endTime;
+    } else {
+        if (!schedule) return false;
+
+        // If schedule has a specific date property (for grouped schedules), use that
+        if (schedule.date) {
+            const todayStr = getTodayStr();
+            // Normalize the schedule date to YYYY-MM-DD format
+            const scheduleDateStr = schedule.date.includes('T') ? schedule.date.split('T')[0] : schedule.date;
+
+            // If the schedule date is not today, it can't be live
+            if (scheduleDateStr !== todayStr) return false;
+        }
+
+        let scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
+
+        // If no scheduleDates array, check if there's a single date field
+        if (!scheduleDates || scheduleDates.length === 0) {
+            const singleDate = schedule.date;
+            if (singleDate) {
+                // Convert ISO date or YYYY-MM-DD to date string
+                const dateStr = singleDate.includes('T') ? singleDate.split('T')[0] : singleDate;
+                scheduleDates = [dateStr];
+            } else {
+                return false;
+            }
+        }
+
+        if (!isTodayInSchedule(scheduleDates)) return false;
+
+        const startTimeStr = schedule.startTime || schedule.start_time;
+        const endTimeStr = schedule.endTime || schedule.end_time;
+
+        if (!startTimeStr || !endTimeStr) return false;
+
+        const today = getTodayStr();
+
+        const [startHour, startMin] = startTimeStr.split(":");
+        const [endHour, endMin] = endTimeStr.split(":");
+
+        // Create date objects using the actual schedule date (today) and the time
+        const [year, month, day] = today.split("-").map(Number);
+        const startTime = new Date(year, month - 1, day, parseInt(startHour), parseInt(startMin));
+        const endTime = new Date(year, month - 1, day, parseInt(endHour), parseInt(endMin));
+
+        const now = new Date();
+        return now >= startTime && now <= endTime;
     }
-    
-    if (!isTodayInSchedule(scheduleDates)) return false;
-
-    const startTimeStr = schedule.startTime || schedule.start_time;
-    const endTimeStr = schedule.endTime || schedule.end_time;
-
-    if (!startTimeStr || !endTimeStr) return false;
-
-    const today = getTodayStr();
-
-    const [startHour, startMin] = startTimeStr.split(":");
-    const [endHour, endMin] = endTimeStr.split(":");
-
-    const startTime = new Date(`${today}T${startHour}:${startMin}:00`);
-    const endTime = new Date(`${today}T${endHour}:${endMin}:00`);
-
-    const now = new Date();
-    return now >= startTime && now <= endTime;
 };
 
 /**
@@ -134,7 +181,7 @@ export const isClassExpired = (schedule) => {
     if (!schedule) return false;
 
     let scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
-    
+
     // If no scheduleDates array, check if there's a single date field
     if (!scheduleDates || scheduleDates.length === 0) {
         const singleDate = schedule.date;
@@ -146,7 +193,7 @@ export const isClassExpired = (schedule) => {
             return true;
         }
     }
-    
+
     if (!scheduleDates || scheduleDates.length === 0) return true;
 
     const todayStr = getTodayStr();

@@ -29,6 +29,7 @@ import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatu
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { dateFormatter } from "../../../lib/utils";
+import QueryError from "../../../components/QueryError";
 
 const TeacherClassSheduling = () => {
     const navigate = useNavigate();
@@ -43,7 +44,7 @@ const TeacherClassSheduling = () => {
     const { onOpenChange, isOpen } = useDisclosure()
     const { isOpen: isDateModalOpen, onOpen: openDateModal, onOpenChange: closeDateModal } = useDisclosure();
 
-    const { data: scheduleData, isLoading } = useGetScheduleQuery({
+    const { data: scheduleData, isLoading ,isFetching ,error,refetch} = useGetScheduleQuery({
         page: "1",
         limit: "100",
         status: filterStatus === "all" ? undefined : filterStatus,
@@ -307,7 +308,7 @@ const TeacherClassSheduling = () => {
     };
 
     const ScheduleCard = ({ schedule, type = 'allDates' }) => {
-        const isLive = isClassLive(schedule);
+        const isLive = isClassLive(schedule, (type === 'normal' ? 'multiple' : 'single'));
         const isExpired = isClassExpired(schedule);
         const canJoin = isLive && schedule.meetingLink;
         return (
@@ -331,7 +332,7 @@ const TeacherClassSheduling = () => {
                         {schedule.description}
                     </p>
                 )}
-                {type === 'normal' &&<p className="text-[#666666] text-sm mb-4 line-clamp-2">
+                {type === 'normal' && <p className="text-[#666666] text-sm mb-4 line-clamp-2">
                     {schedule.scheduleDates?.length === 1 ? new Date(schedule.scheduleDates[0]).toDateString() : (new Date(schedule.scheduleDates[0]).toDateString()
                         + ' - to - ' +
                         new Date(schedule.scheduleDates[schedule.scheduleDates?.length - 1]).toDateString())}
@@ -439,6 +440,16 @@ const TeacherClassSheduling = () => {
         { key: "completed", label: "Completed" },
     ];
 
+    if (error) {
+        return <QueryError
+            height="300px"
+            error={error}
+            onRetry={refetch}
+            showLogo={false}
+            isLoading={isFetching}
+        />
+    }
+
     return (
         <div className="h-full relative bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full nddo-scrollbar top-0 bottom-0 overflow-auto">
             <DashHeading
@@ -507,7 +518,7 @@ const TeacherClassSheduling = () => {
                             scheduleData?.schedules?.map((i) => (
                                 <div key={i.id} className="mdb-6">
                                     <DashHeading
-                                        title={"Course: "+i.courseName}
+                                        title={"Course: " + i.courseName}
                                         desc={i.scheduleDates?.length === 1 ? new Date(i.scheduleDates[0]).toDateString() : (new Date(i.scheduleDates[0]).toDateString()
                                             + ' - to - ' +
                                             new Date(i.scheduleDates[i.scheduleDates?.length - 1]).toDateString())}
@@ -522,7 +533,7 @@ const TeacherClassSheduling = () => {
                 }
 
                 {/* Sidebar - Calendar & Filters */}
-                <div className="col-span-12 lg:col-span-4 space-y-4 mb-4">
+                <div className="col-span-12 sm:sticky top-2 lg:col-span-4 space-y-4 mb-4">
                     {/* Quick Stats Card */}
                     {/* <div className="bg-white p-4 rounded-lg shadow-sm">
                         <h3 className="text-sm font-semibold text-gray-700 mb-3">Schedule Overview</h3>
@@ -650,7 +661,7 @@ const TeacherClassSheduling = () => {
                                         month: "long",
                                         day: "numeric",
                                         year: "numeric"
-                                    })} 
+                                    })}
                                 </p>
                             )}
                         </div>
@@ -719,7 +730,7 @@ const TeacherClassSheduling = () => {
 
                                         <Divider className="my-3" />
 
-                                        <div className="flex flex-wrap gap-2">
+                                        {/* <div className="flex flex-wrap gap-2">
                                             {schedule.meetingLink && isClassLive({ ...schedule, scheduleDates: [schedule.date] }) ? (
                                                 <Button
                                                     size="sm"
@@ -766,7 +777,7 @@ const TeacherClassSheduling = () => {
                                                     Cancel
                                                 </Button>
                                             )}
-                                        </div>
+                                        </div> */}
                                     </div>
                                 ))}
                             </div>

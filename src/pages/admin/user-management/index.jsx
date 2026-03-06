@@ -35,7 +35,8 @@ import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-client";
 import { dateFormatter, debounce } from "../../../lib/utils";
 import { errorMessage, showMessage, successMessage } from "../../../lib/toast.config";
-import { useBulkDeleteUserMutation, useDeleteUserMutation, useGetAllUsersQuery } from "../../../redux/api/user";
+import { useBulkDeleteUserMutation, useDeleteUserMutation, useGetAllUsersQuery, useSyncUserWithZoomMutation } from "../../../redux/api/user";
+import { Video } from "lucide-react";
 
 const UserManagement = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -51,7 +52,7 @@ const UserManagement = () => {
     { key: "Role", label: "Role" },
     { key: "Date", label: "Join Date" },
     { key: "Status", label: "Status" },
-    { key: "Active", label: "Last Active" },
+    { key: "Zoom", label: "Zoom" },
     { key: "Action", label: "Action" },
   ];
 
@@ -79,6 +80,7 @@ const UserManagement = () => {
   const { data, isError, error, isFetching } = useGetAllUsersQuery({ page, limit, status, role, search });
   const [deleteUser] = useDeleteUserMutation()
   const [bulkDeleteUser] = useBulkDeleteUserMutation()
+  const [syncUserWithZoom, { isLoading: isSyncing }] = useSyncUserWithZoomMutation();
 
   useEffect(() => {
     if (isError) {
@@ -115,6 +117,20 @@ const UserManagement = () => {
   const handleCancelDelete = () => {
     setUserToDelete(null);
     onClose();
+  };
+
+  // Sync user with Zoom
+  const handleSyncZoom = async (userId, userZoomId, userEmail) => {
+    try {
+      const res = await syncUserWithZoom(userId);
+      if (res.error) {
+        throw new Error(res.error.message || "Failed to sync with Zoom");
+      }
+      successMessage(userZoomId ? "Zoom user updated successfully!" : "Zoom user created successfully!");
+    } catch (error) {
+      console.error("Error syncing with Zoom:", error);
+      errorMessage(error.message);
+    }
   };
 
   // Bulk delete handler
@@ -200,15 +216,15 @@ const UserManagement = () => {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute("href", url);
     link.setAttribute("download", `users_${role}_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = "hidden";
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     successMessage("Users exported successfully!");
   };
 
@@ -401,7 +417,42 @@ const UserManagement = () => {
                           {classItem.isActive == true ? "Active" : "Inactive"}
                         </Button>
                       </TableCell>
-                      <TableCell>{classItem.lastActive ? dateFormatter(classItem.lastActive, true) : "N/A"}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {(role === 'teacher' || role === 'admin') ? (
+                            <>
+                              {classItem.zoomUserId ? (
+                                <Chip
+                                  size="sm"
+                                  variant="flat"
+                                  className="bg-[#95C4BE33] text-[#06574C]"
+                                  startContent={<Video size={14} />}
+                                >
+                                  Connected
+                                </Chip>
+                              ) : (
+                                <Chip
+                                  size="sm"
+                                  variant="flat"
+                                  className="bg-gray-200 text-gray-600"
+                                >
+                                  Not Synced
+                                </Chip>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="light"
+                                className="text-[#06574C] p-0 min-w-auto w-8 h-8"
+                                onPress={() => handleSyncZoom(classItem.id, classItem.zoomUserId, classItem.email)}
+                                isLoading={isSyncing}
+                                title="Sync with Zoom"
+                              >
+                                <Video size={16} />
+                              </Button>
+                            </>
+                          ) : '---'}
+                        </div>
+                      </TableCell>
                       <TableCell className="flex gap-2">
                         <Button
                           variant="bordered"
@@ -414,7 +465,7 @@ const UserManagement = () => {
                         >
                           Edit
                         </Button>
-                        {classItem?.email!==import.meta.env.VITE_PUBLIC_ADMIN_EMAIL && <Button
+                        {classItem?.email !== import.meta.env.VITE_PUBLIC_ADMIN_EMAIL && <Button
                           radius="sm"
                           className="bg-[#06574C] text-white"
                           startContent={<Trash2 size={18} color="white" />}

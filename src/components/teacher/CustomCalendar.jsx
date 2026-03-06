@@ -142,7 +142,7 @@ const CustomCalendar = ({
                             key={day}
                             onClick={() => onDateClick(date)}
                             className={`
-                                py-3 px-2 cursor-pointer rounded-full text-sm font-medium
+                                size-8 shrink-0 cursor-pointer rounded-full text-sm font-medium
                                 transition-all duration-200
                                 hover:bg-[#95C4BE33] hover:text-[#06574C]
                                 ${selected 

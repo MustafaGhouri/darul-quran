@@ -29,6 +29,7 @@ import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatu
 import { useSelector } from "react-redux";
 import { dateFormatter } from "../../../lib/utils";
 import CustomCalendar from "../../../components/teacher/CustomCalendar";
+import QueryError from "../../../components/QueryError";
 
 const StudentClassSheduling = () => {
     const [filterStatus, setFilterStatus] = useState("all");
@@ -40,7 +41,7 @@ const StudentClassSheduling = () => {
     const [viewType, setViewType] = useState('allDates');
     const [selectedDate, setSelectedDate] = useState(null);
     const [schedulesForSelectedDate, setSchedulesForSelectedDate] = useState([]);
-    const { data: scheduleData, isLoading } = useGetScheduleQuery({
+    const { data: scheduleData, isLoading,isFetching, refetch, error } = useGetScheduleQuery({
         page: "1",
         limit: "100",
         status: filterStatus === "all" ? undefined : filterStatus,
@@ -169,23 +170,25 @@ const StudentClassSheduling = () => {
         try {
             const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/attendance/mark`, {
                 method: "POST",
+                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     scheduleId: schedule.id,
                     studentId: currentUser.id,
                     courseId: schedule.courseId,
+                    date: schedule.date
                 })
             });
-
+            const data = await res.json();
             if (res.ok) {
-                window.open(schedule.meetingLink, '_blank');
+                window.open(data?.link, '_blank');
                 successMessage("Joined class! Attendance marked.");
             } else {
-                window.open(schedule.meetingLink, '_blank');
+                throw new Error(data.message);
             }
         } catch (error) {
             console.error("Failed to mark attendance", error);
-            window.open(schedule.meetingLink, '_blank');
+            errorMessage(error.message);
         } finally {
             setIsMarking(null);
         }
@@ -248,6 +251,48 @@ const StudentClassSheduling = () => {
         return hoursUntil > 0; // Can cancel anytime before class starts
     };
 
+    const getClassStatus = (schedule, type = 'single') => {
+        let status = '';
+        let hoursUntil = null;
+        let isExpired = false;
+
+        if (type === 'single') {
+            status = getStatusTextForSingleDate(schedule.date, schedule.startTime, schedule.endTime);
+            hoursUntil = getHoursUntilClass(schedule.date, schedule.startTime);
+            const todayStr = new Date().toISOString().split('T')[0];
+            isExpired = schedule.date < todayStr || (schedule.date === todayStr && hoursUntil !== null && hoursUntil < 0);
+        } else {
+            status = getStatusText(schedule);
+            const scheduleDates = schedule.scheduleDates || [];
+            const todayStr = new Date().toISOString().split('T')[0];
+            const upcomingDates = scheduleDates.filter(d => d >= todayStr);
+
+            if (upcomingDates.length > 0) {
+                const nextDate = upcomingDates.sort()[0];
+                hoursUntil = getHoursUntilClass(nextDate, schedule.startTime);
+            } else if (scheduleDates.length > 0) {
+                const lastDate = scheduleDates[scheduleDates.length - 1];
+                hoursUntil = getHoursUntilClass(lastDate, schedule.startTime);
+            }
+            isExpired = isClassExpired(schedule);
+        }
+
+        if (status === "live") {
+            return 'Live Now';
+        }
+
+        if (isExpired) {
+            return "Completed";
+        }
+
+        if (hoursUntil !== null && hoursUntil > 0 && hoursUntil < 3) {
+            return `Starts in ${(hoursUntil)?.toFixed(1)} hr`;
+        }
+
+        return "Upcoming";
+
+    };
+
     const getClassStatusBadge = (schedule, type = 'single') => {
         let status = '';
         let hoursUntil = null;
@@ -278,8 +323,10 @@ const StudentClassSheduling = () => {
             return (
                 <Button
                     size="sm"
-                    className="bg-[#E8F1FF] text-[#3F86F2] animate-pulse"
+                    className="animate-pulse"
+                    color="primary"
                     radius="sm"
+                    variant="flat"
                     startContent={<Video size={14} />}
                 >
                     Live Now
@@ -289,9 +336,9 @@ const StudentClassSheduling = () => {
 
         if (isExpired) {
             return (
-                <Chip size="sm" variant="flat" color="default">
+                <Button size="sm" variant="flat" color="default">
                     Completed
-                </Chip>
+                </Button>
             );
         }
 
@@ -309,25 +356,32 @@ const StudentClassSheduling = () => {
         }
 
         return (
-            <Chip size="sm" variant="flat" color="warning">
+            <Button size="sm" variant="flat" color="warning">
                 Upcoming
-            </Chip>
+            </Button>
         );
     };
 
     const ScheduleCard = ({ schedule, type = 'allDates' }) => {
-        const isLive = isClassLive(schedule);
+        const isLive = isClassLive(schedule, (type === 'normal' ? 'multiple' : 'single'));
         const isExpired = isClassExpired(schedule);
         const canJoin = isLive && schedule.meetingLink;
         const canResched = canReschedule(schedule);
         const canCanc = canCancel(schedule);
 
-
-
         return (
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-3 hover:shadow-md transition-shadow">
                 <div className="flex flex-wrap gap-2 mb-3">
                     {getClassStatusBadge(schedule, (type === 'normal' ? 'multiple' : 'single'))}
+                    {type === 'allDates' && (getClassStatus(schedule, 'single') === 'Completed') && (
+                        <Button
+                            size="sm"
+                            variant="flat"
+                            color={schedule?.attendance?.includes(schedule.date) ? 'success' : 'danger'}
+                        >
+                            Attendance: {schedule?.attendance?.includes(schedule.date) ? 'Present' : 'Absent'}
+                        </Button>
+                    )}
                     {schedule.courseName && (
                         <Button
                             size="sm"
@@ -428,30 +482,31 @@ const StudentClassSheduling = () => {
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {canJoin ? (
-                            <Button
-                                radius="sm"
-                                size="md"
-                                variant="solid"
-                                className="bg-[#1570E8] text-white"
-                                startContent={<LuSquareArrowOutUpRight size={18} />}
-                                onPress={() => handleJoinClass(schedule)}
-                                isLoading={isMarking === schedule.id}
-                            >
-                                Join Zoom
-                            </Button>
-                        ) : (
-                            <Button
-                                radius="sm"
-                                size="md"
-                                variant="solid"
-                                className="bg-[#9A9A9A] text-white"
-                                startContent={<Lock size={18} />}
-                                isDisabled={!isExpired}
-                            >
-                                {isExpired ? "Ended" : "Locked"}
-                            </Button>
-                        )}
+                        {/* {canJoin ? ( */}
+                        <Button
+                            radius="sm"
+                            size="md"
+                            variant="solid"
+                            className="bg-[#1570E8] text-white"
+                            startContent={<LuSquareArrowOutUpRight size={18} />}
+                            onPress={() => handleJoinClass(schedule)}
+                            isLoading={isMarking === schedule.id}
+                            isDisabled={isMarking === schedule.id}
+                        >
+                            Join Zoom
+                        </Button>
+                        {/* ) : ( */}
+                        <Button
+                            radius="sm"
+                            size="md"
+                            variant="solid"
+                            className="bg-[#9A9A9A] text-white"
+                            startContent={<Lock size={18} />}
+                            isDisabled={!isExpired}
+                        >
+                            {isExpired ? "Ended" : "Locked"}
+                        </Button>
+                        {/* )} */}
 
                         {canResched && (
                             <Button
@@ -489,11 +544,15 @@ const StudentClassSheduling = () => {
         { key: "completed", label: "Completed" },
     ];
 
-    const classTypes = [
-        { key: "all", label: "All Classes" },
-        { key: "zoom", label: "Live Zoom" },
-        { key: "video", label: "Video Lesson" },
-    ];
+    if (error) {
+        return <QueryError
+            height="300px"
+            error={error}
+            onRetry={refetch}
+            showLogo={false}
+            isLoading={isFetching}
+        />
+    }
 
     return (
         <div className="h-full relative bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full no-scsrollbar top-0 bottom-0 overflow-auto">
@@ -558,7 +617,7 @@ const StudentClassSheduling = () => {
                 }
 
                 {/* Sidebar - Calendar & Filters */}
-                <div className="col-span-12 lg:col-span-4 space-y-4 mb-4">
+                <div className="col-span-12 sm:sticky top-2  lg:col-span-4 space-y-4 mb-4">
                     {/* Quick Stats Card */}
                     {/* <div className="bg-white p-4 rounded-lg shadow-sm">
                         <h3 className="text-sm font-semibold text-gray-700 mb-3">Schedule Overview</h3>
@@ -695,14 +754,23 @@ const StudentClassSheduling = () => {
                                     >
                                         <div className="flex flex-wrap gap-2 mb-3">
                                             {getClassStatusBadge(schedule, 'single')}
-                                            {schedule.courseName && (
-                                                <Chip
+                                            {getClassStatus(schedule, 'single') === 'Completed' && (
+                                                <Button
                                                     size="sm"
                                                     variant="flat"
-                                                    className="bg-[#95C4BE33] text-[#06574C]"
+                                                    color={schedule?.attendance?.includes(schedule.date) ? 'secondary' : 'danger'}
+                                                >
+                                                    Attendance: {schedule?.attendance?.includes(schedule.date) ? 'Present' : 'Absent'}
+                                                </Button>
+                                            )}
+                                            {schedule.courseName && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="flat"
+                                                    color="success"
                                                 >
                                                     Course: {schedule.courseName}
-                                                </Chip>
+                                                </Button>
                                             )}
                                         </div>
                                         <h3 className="text-lg font-bold text-gray-800 mb-2">
@@ -744,7 +812,7 @@ const StudentClassSheduling = () => {
 
                                         <Divider className="my-3" />
 
-                                        <div className="flex flex-wrap gap-2">
+                                        {/* <div className="flex flex-wrap gap-2">
                                             {schedule.meetingLink && isClassLive({ ...schedule, scheduleDates: [schedule.date] }) ? (
                                                 <Button
                                                     size="sm"
@@ -791,7 +859,7 @@ const StudentClassSheduling = () => {
                                                     Cancel
                                                 </Button>
                                             )}
-                                        </div>
+                                        </div> */}
                                     </div>
                                 ))}
                             </div>
