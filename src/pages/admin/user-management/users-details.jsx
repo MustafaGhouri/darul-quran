@@ -13,6 +13,12 @@ import {
   Pagination,
   Spinner,
   Input,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
 } from "@heroui/react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
@@ -29,6 +35,7 @@ import {
   SquarePen,
   Upload,
   Search,
+  X,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { showMessage } from "../../../lib/toast.config";
@@ -36,16 +43,21 @@ import {
   useGetUserDetailsQuery,
   useGetUserEnrollmentsQuery,
   useGetUserInvoicesQuery,
+  useGetEnrollmentDetailsQuery,
+  useExportInvoicesToCsvMutation,
 } from "../../../redux/api/user";
+import { debounce } from "../../../lib/utils";
 
 const UsersDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isOpen: isOpenEnrollment, onOpen: onOpenEnrollment, onOpenChange: onOpenChangeEnrollment } = useDisclosure();
 
   // Pagination states
   const [enrollmentPage, setEnrollmentPage] = useState(1);
   const [enrollmentLimit, setEnrollmentLimit] = useState(10);
   const [enrollmentSearch, setEnrollmentSearch] = useState("");
+  const [selectedEnrollmentId, setSelectedEnrollmentId] = useState(null);
 
   const [invoicePage, setInvoicePage] = useState(1);
   const [invoiceLimit, setInvoiceLimit] = useState(10);
@@ -68,9 +80,19 @@ const UsersDetails = () => {
     { skip: !id }
   );
 
+  // Fetch enrollment details
+  const { data: enrollmentDetailsData, isLoading: isEnrollmentDetailsLoading } = useGetEnrollmentDetailsQuery(
+    { id, enrollmentId: selectedEnrollmentId },
+    { skip: !selectedEnrollmentId }
+  );
+
+  // Export invoices mutation
+  const [exportInvoices] = useExportInvoicesToCsvMutation();
+
   const user = userDetailsData?.user;
   const enrollments = enrollmentsData?.enrollments || [];
   const invoices = invoicesData?.invoices || [];
+  const enrollmentDetails = enrollmentDetailsData?.enrollment;
 
   const filters = [
     { key: "all", label: "All" },
@@ -94,6 +116,28 @@ const UsersDetails = () => {
     } else {
       showMessage("Invoice not available");
     }
+  };
+
+  const handleExportToCsv = async () => {
+    try {
+      const blob = await exportInvoices(id).unwrap();
+      const csvBlob = new Blob([blob], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(csvBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `payment_history_user_${id}.csv`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      showMessage("Payment history exported successfully!", "success");
+    } catch (error) {
+      console.error("Export error:", error);
+      showMessage("Failed to export payment history", "error");
+    }
+  };
+
+  const handleViewEnrollmentDetail = (enrollmentId) => {
+    setSelectedEnrollmentId(enrollmentId);
+    onOpenEnrollment();
   };
 
   const getStatusColor = (status) => {
@@ -312,18 +356,13 @@ const UsersDetails = () => {
               startContent={<Search size={16} />}
               value={enrollmentSearch}
               onChange={(e) => {
-                setEnrollmentSearch(e.target.value);
-                setEnrollmentPage(1);
+                debounce(() => {
+                  setEnrollmentSearch(e.target.value);
+                  setEnrollmentPage(1);
+                }, 500);
               }}
               className="w-64"
             />
-            <Button
-              radius="sm"
-              className="bg-[#06574C] text-white"
-              startContent={<Plus size={20} />}
-            >
-              Enroll Course
-            </Button>
           </div>
         </div>
         <div className="mt-3">
@@ -372,9 +411,14 @@ const UsersDetails = () => {
                             value={enrollment.attendanceRate || 0}
                             size="sm"
                           />
-                          <h1 className="font-semibold text-sm">
-                            {enrollment.attendanceRate || 0}%
-                          </h1>
+                          <div className="flex flex-col">
+                            <h1 className="font-semibold text-sm">
+                              {enrollment.attendanceRate || 0}%
+                            </h1>
+                            <span className="text-xs text-gray-500">
+                              {enrollment.attendanceCount || 0}/{enrollment.scheduleCount || 0} classes
+                            </span>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="flex flex-col">
@@ -397,7 +441,7 @@ const UsersDetails = () => {
                           radius="sm"
                           className="bg-[#06574C] text-white"
                           startContent={<Eye size={18} color="white" />}
-                          onPress={() => showMessage("View course detail coming soon")}
+                          onPress={() => handleViewEnrollmentDetail(enrollment.id)}
                         >
                           View Detail
                         </Button>
@@ -459,10 +503,10 @@ const UsersDetails = () => {
               size="md"
               radius="sm"
               className="bg-[#06574C] text-white"
-              startContent={<Upload size={20} />}
-              onPress={() => showMessage("Export functionality coming soon")}
+              startContent={<Download size={20} />}
+              onPress={handleExportToCsv}
             >
-              Export
+              Export to CSV
             </Button>
           </div>
         </div>

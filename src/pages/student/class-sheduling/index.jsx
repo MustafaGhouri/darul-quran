@@ -482,7 +482,7 @@ const StudentClassSheduling = () => {
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {/* {canJoin ? ( */}
+                        {canJoin ? (
                         <Button
                             radius="sm"
                             size="md"
@@ -495,7 +495,7 @@ const StudentClassSheduling = () => {
                         >
                             Join Zoom
                         </Button>
-                        {/* ) : ( */}
+                        ) : ( 
                         <Button
                             radius="sm"
                             size="md"
@@ -506,7 +506,7 @@ const StudentClassSheduling = () => {
                         >
                             {isExpired ? "Ended" : "Locked"}
                         </Button>
-                        {/* )} */}
+                         )} 
 
                         {canResched && (
                             <Button

@@ -98,6 +98,20 @@ export const userAPI = createApi({
             }),
             providesTags: (result, error, { id }) => [{ type: "userInvoices", id }],
         }),
+        getEnrollmentDetails: builder.query({
+            query: ({ id, enrollmentId }) => ({
+                url: `/enrollments/${id}/details/${enrollmentId}`,
+                method: "GET",
+            }),
+            providesTags: (result, error, { id }) => [{ type: "userEnrollments", id }],
+        }),
+        exportInvoicesToCsv: builder.mutation({
+            query: (id) => ({
+                url: `/invoices/${id}/export`,
+                method: "GET",
+                responseHandler: (response) => response.text(),
+            }),
+        }),
     })
 })
 
@@ -113,4 +127,6 @@ export const {
     useGetUserDetailsQuery,
     useGetUserEnrollmentsQuery,
     useGetUserInvoicesQuery,
+    useGetEnrollmentDetailsQuery,
+    useExportInvoicesToCsvMutation,
 } = userAPI;
