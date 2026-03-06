@@ -369,7 +369,7 @@ function App() {
               }
             />
             <Route
-              path="/teacher/student-attendance-list"
+              path="/teacher/attendance-list"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <StudentAttendanceList />

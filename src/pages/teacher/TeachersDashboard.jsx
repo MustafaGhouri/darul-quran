@@ -268,7 +268,12 @@ const TeachersDashboard = () => {
               return (
                 <div key={item.id} className="col-span-12 md:col-span-6 lg:col-span-4 ">
                   <div className="w-full bg-white rounded-lg shadow-sm border border-gray-100/50">
-                    <div className="bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)]  rounded-lg p-3 ">
+                    <div className={`rounded-lg  `}>
+                      <img
+                        src={item.thumbnail}
+                        alt={item.courseName}
+                        className="w-full h-full object-cover rounded-lg  "
+                      />
                       <Button
                         size="sm"
                         radius="sm"
@@ -276,11 +281,11 @@ const TeachersDashboard = () => {
                       >
                         {item.status}
                       </Button>
-                      <div className="">
+                      {/* <div className="">
                         <span className=" flex justify-center items-center py-6 text-2xl font-semibold text-[#333333]">
                           {item.courseName}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
                     <div className="p-3 space-y-3">
                       <div className="flex justify-between items-center ">

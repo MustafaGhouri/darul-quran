@@ -11,7 +11,8 @@ import {
     TicketsIcon,
     UsersIcon,
     Video,
-    BellRing
+    BellRing,
+    Users2Icon
 } from 'lucide-react';
 import { FaChalkboardTeacher } from 'react-icons/fa';
 
@@ -60,6 +61,7 @@ export const teacherMenu = [
         ]
     },
     { name: 'Student Attendance', icon: <CalendarIcon />, link: '/teacher/student-attendance' },
+    { name: 'Student Attendance List', icon: <Users2Icon />, link: '/teacher/attendance-list' },
     { name: 'Class Schedule', icon: <MegaphoneIcon />, link: '/teacher/class-scheduling' },
     { name: 'Reschedule Requests', icon: <CalendarPlus />, link: '/teacher/reschedule-requests' },
     { name: 'Chat Center', icon: <TicketIcon />, link: '/teacher/chat' },

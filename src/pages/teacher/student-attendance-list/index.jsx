@@ -74,23 +74,22 @@ const StudentAttendanceList = () => {
         desc={"Comprehensive view of student attendance across courses"}
       /> 
       
-      <div className="bg-[#EBD4C9] p-4 rounded-lg my-4 flex flex-wrap gap-4 items-end shadow-sm">
-        <div className="flex-1 min-w-[250px]">
+      <div className="bg-[#EBD4C9] p-4 rounded-lg my-4 flex flex-wrap gap-4 items-end shadow-sm w-full">
+        
           <Input
             label="Search Student"
             placeholder="Search by name, email or course..."
             labelPlacement="outside"
-            radius="sm"
-            variant="bordered"
-            className="bg-white rounded-md"
+            size="lg"
+            radius="lg"  
+            className="w-full sm:max-w-[350px]"
             startContent={<IoSearchOutline className="text-gray-400" size={20} />}
             value={search}
             onValueChange={setSearch}
-          />
-        </div>
+          /> 
 
-        <div className="flex-1 min-w-[200px]">
-          <CourseSelect 
+        <div className="">
+          <CourseSelect   
             label="Course" 
             onChange={(id) => {
               setCourseId(id);
@@ -105,7 +104,7 @@ const StudentAttendanceList = () => {
           aria-label="Student Attendance Table"
           removeWrapper
           classNames={{
-            base: "w-full overflow-x-auto",
+            base: "w-full overflow-x-auto h-[calc(100vh-300px)] no-scrollbar",
             th: "bg-[#FBF4EC] text-black font-bold py-4 px-6 text-sm uppercase tracking-wider",
             td: "py-4 px-6 border-b border-gray-50",
             tr: "hover:bg-gray-50/50 transition-colors",
