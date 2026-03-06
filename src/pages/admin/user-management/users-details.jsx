@@ -623,6 +623,135 @@ const UsersDetails = () => {
           )}
         </div>
       </div>
+
+      {/* Enrollment Details Modal */}
+      <Modal
+        isOpen={isOpenEnrollment}
+        onOpenChange={onOpenChangeEnrollment}
+        size="2xl"
+        classNames={{
+          backdrop: "bg-black/50",
+          base: "bg-white",
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                <h2 className="text-2xl font-bold text-[#06574C]">Enrollment Details</h2>
+              </ModalHeader>
+              <ModalBody>
+                {isEnrollmentDetailsLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Spinner color="success" />
+                  </div>
+                ) : enrollmentDetails ? (
+                  <div className="space-y-4">
+                    {/* Course Information */}
+                    <div className="bg-[#EBD4C936] p-4 rounded-lg">
+                      <h3 className="text-lg font-bold text-[#06574C] mb-2">Course Information</h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-sm text-gray-600">Course Name</p>
+                          <p className="font-semibold">{enrollmentDetails.courseName || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Course Description</p>
+                          <p className="font-semibold">{enrollmentDetails.courseDescription || "N/A"}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Enrollment Information */}
+                    <div className="bg-[#95C4BE33] p-4 rounded-lg">
+                      <h3 className="text-lg font-bold text-[#06574C] mb-2">Enrollment Information</h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-sm text-gray-600">Enrollment Date</p>
+                          <p className="font-semibold">
+                            {enrollmentDetails.enrolledAt
+                              ? new Date(enrollmentDetails.enrolledAt).toLocaleDateString()
+                              : "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Status</p>
+                          <Button
+                            size="sm"
+                            className={`${getStatusColor(enrollmentDetails.progressStatus)} w-fit`}
+                          >
+                            {enrollmentDetails.progressStatus?.replace("_", " ") || "N/A"}
+                          </Button>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Teacher</p>
+                          <p className="font-semibold">{enrollmentDetails.teacherName || "TBD"}</p>
+                        </div>
+                        {enrollmentDetails.completedAt && (
+                          <div>
+                            <p className="text-sm text-gray-600">Completed At</p>
+                            <p className="font-semibold">
+                              {new Date(enrollmentDetails.completedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Attendance Information */}
+                    <div className="bg-[#FBF4EC] p-4 rounded-lg">
+                      <h3 className="text-lg font-bold text-[#D28E3D] mb-2">Attendance Details</h3>
+                      <div className="grid grid-cols-3 gap-4 mb-3">
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-[#06574C]">
+                            {enrollmentDetails.attendanceCount || 0}
+                          </div>
+                          <p className="text-sm text-gray-600">Classes Attended</p>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-[#06574C]">
+                            {enrollmentDetails.scheduleCount || 0}
+                          </div>
+                          <p className="text-sm text-gray-600">Total Classes</p>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-[#06574C]">
+                            {enrollmentDetails.attendanceRate || 0}%
+                          </div>
+                          <p className="text-sm text-gray-600">Attendance Rate</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Progress
+                          classNames={{ indicator: "bg-[#95C4BE]" }}
+                          value={enrollmentDetails.attendanceRate || 0}
+                          size="md"
+                          className="flex-1"
+                        />
+                        <span className="font-semibold text-lg min-w-[60px] text-right">
+                          {enrollmentDetails.attendanceRate || 0}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-8">No enrollment details available</p>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  size="sm"
+                  variant="light"
+                  onPress={onClose}
+                  startContent={<X size={16} />}
+                >
+                  Close
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

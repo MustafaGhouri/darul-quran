@@ -163,7 +163,7 @@ export default function TeachersLayout() {
                                                         onClick={() => !notif.is_read && markAsRead({ id: notif.id })}
                                                         className="w-full border-b border-gray-50 last:border-none"
                                                     >
-                                                        <Link to={(notif.url || "#").replace("ROLE", user.role)}  className="block w-full p-2 hover:bg-gray-50 transition-colors">
+                                                        <Link to={(notif.url || "#").replace("ROLE", user?.role)}  className="block w-full p-2 hover:bg-gray-50 transition-colors">
                                                             <div className={`p-3 rounded-lg flex flex-col gap-1 ${!notif.is_read ? 'bg-green-50/50 border-l-4 border-l-[#06574C]' : 'bg-white'}`}>
                                                                 <div className="text-sm font-bold text-gray-900 leading-tight break-words">
                                                                     {notif.title}
