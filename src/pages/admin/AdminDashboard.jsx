@@ -15,6 +15,8 @@ import AreaCharts from "../../components/charts/AreaChart";
 import {
   BookIcon,
   ChartPie,
+  Check,
+  Clock,
   MegaphoneIcon,
   PlusIcon,
   UsersIcon,
@@ -29,6 +31,8 @@ import { useGetAdminDashboardQuery } from "../../redux/api/dashboard";
 import { convertTo12hrsFormat } from "../../lib/utils";
 import { useSelector } from "react-redux";
 import QueryError from "../../components/QueryError";
+import { isClassExpired, isClassLive } from "../../utils/scheduleHelpers";
+import { AiOutlineEye } from "react-icons/ai";
 
 const AdminDashboard = () => {
   const { data: dashboardData, isLoading, error, refetch } = useGetAdminDashboardQuery();
@@ -227,23 +231,71 @@ const AdminDashboard = () => {
                             {classItem.title}
                           </div>
                           <div className="text-xs text-gray-500 mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
-                           Course: {classItem.courseName}
+                            Course: {classItem.courseName}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <span className="font-medium">
                           {convertTo12hrsFormat(classItem.start_time)} -{" "}
-                          {convertTo12hrsFormat(classItem.end_time)} UTC
+                          {convertTo12hrsFormat(classItem.end_time)} 
                         </span>
                       </TableCell>
                       <TableCell>
                         <span className="font-medium">{classItem.totalEnrolled}/{classItem.enrollmentLimit}</span>
                       </TableCell>
                       <TableCell>
-                        <p className="p-2 w-full text-center rounded-md text-[#06574C] bg-[#95C4BE]/20">
-                          {classItem.status || "Scheduled"}
-                        </p>
+                        {(() => {
+                          const live = isClassLive(classItem);
+                          const expired = isClassExpired(classItem);
+
+                          if (expired) {
+                            return (
+                              <Button
+                                startContent={<Check size={20} />}
+                                size="sm"
+                                className="bg-gray-400 w-32 text-white rounded-md"
+                                isDisabled
+                              >
+                                Completed
+                              </Button>
+                            );
+                          } else if (live && classItem.meeting_link) {
+                            return (
+                              <Button
+                                startContent={<Video size={20} />}
+                                size="sm"
+                                color="success"
+                                as={Link}
+                                to={classItem.meeting_link}
+                                target="_blank"
+                              >
+                                Start Class
+                              </Button>
+                            );
+                          } else if (classItem.meeting_link) {
+                            return (
+                              <Button
+                                startContent={<Clock size={20} />}
+                                size="sm"
+                                className="bg-[#06574C] w-32 text-white rounded-md"
+                                isDisabled
+                              >
+                                Locked
+                              </Button>
+                            );
+                          } else {
+                            return (
+                              <Button
+                                startContent={<AiOutlineEye size={22} />}
+                                size="sm"
+                                className="bg-[#06574C] w-32 text-white rounded-md"
+                              >
+                                Details
+                              </Button>
+                            );
+                          }
+                        })()}
                       </TableCell>
                     </TableRow>
                   ))}

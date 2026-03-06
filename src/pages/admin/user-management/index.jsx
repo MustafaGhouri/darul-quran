@@ -124,7 +124,7 @@ const UserManagement = () => {
     try {
       const res = await syncUserWithZoom(userId);
       if (res.error) {
-        throw new Error(res.error.message || "Failed to sync with Zoom");
+        throw new Error(res.error.data.message || res.error.data.error || "Failed to sync with Zoom");
       }
       successMessage(userZoomId ? "Zoom user updated successfully!" : "Zoom user created successfully!");
     } catch (error) {
@@ -419,7 +419,7 @@ const UserManagement = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {(role === 'teacher' || role === 'admin') ? (
+                          {(role === 'teacher') ? (
                             <>
                               {classItem.zoomUserId ? (
                                 <Chip
@@ -454,6 +454,13 @@ const UserManagement = () => {
                         </div>
                       </TableCell>
                       <TableCell className="flex gap-2">
+                        <Button
+                          radius="sm"
+                          className="bg-[#06574C] text-white"
+                          onPress={() => { router(`/admin/user-management/users-details/${classItem.id}`) }}
+                        >
+                          View Details
+                        </Button>
                         <Button
                           variant="bordered"
                           radius="sm"

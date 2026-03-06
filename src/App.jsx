@@ -226,7 +226,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/user-management/users-details"
+              path="/admin/user-management/users-details/:id"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <UserDetails />

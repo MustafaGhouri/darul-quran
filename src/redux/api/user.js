@@ -6,7 +6,7 @@ export const userAPI = createApi({
         baseUrl: `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/user`,
         credentials: "include",
     }),
-    tagTypes: ["userApi"],
+    tagTypes: ["userApi", "userDetails", "userEnrollments", "userInvoices"],
     endpoints: (builder) => ({
         getAllUsers: builder.query({
             query: ({ page, limit, search, status, role }) => ({
@@ -61,7 +61,8 @@ export const userAPI = createApi({
                 url: `/sync-zoom-user/${id}`,
                 method: "POST",
             }),
-            invalidatesTags: ["user"],
+            invalidatesTags: (result, error, arg) =>
+                error ? [] : ['user']
         }),
         getAllUserForSelect: builder.query({
             query: ({ page, limit, search, courseId }) => ({
@@ -72,6 +73,30 @@ export const userAPI = createApi({
                 },
             }),
             providesTags: ["user"],
+        }),
+        // User details page endpoints
+        getUserDetails: builder.query({
+            query: (id) => ({
+                url: `/details/${id}`,
+                method: "GET",
+            }),
+            providesTags: (result, error, id) => [{ type: "userDetails", id }],
+        }),
+        getUserEnrollments: builder.query({
+            query: ({ id, page, limit, search }) => ({
+                url: `/enrollments/${id}`,
+                method: "GET",
+                params: { page, limit, search }
+            }),
+            providesTags: (result, error, { id }) => [{ type: "userEnrollments", id }],
+        }),
+        getUserInvoices: builder.query({
+            query: ({ id, page, limit, status }) => ({
+                url: `/invoices/${id}`,
+                method: "GET",
+                params: { page, limit, status }
+            }),
+            providesTags: (result, error, { id }) => [{ type: "userInvoices", id }],
         }),
     })
 })
@@ -85,4 +110,7 @@ export const {
     useBulkDeleteUserMutation,
     useSyncUserWithZoomMutation,
     useGetAllUserForSelectQuery,
+    useGetUserDetailsQuery,
+    useGetUserEnrollmentsQuery,
+    useGetUserInvoicesQuery,
 } = userAPI;
