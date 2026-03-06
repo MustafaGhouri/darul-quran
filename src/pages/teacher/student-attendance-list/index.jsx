@@ -25,7 +25,7 @@ import { IoSearchOutline } from "react-icons/io5";
 import { useSelector } from "react-redux";
 import { Eye } from "lucide-react";
 import CourseSelect from "../../../components/select/CourseSelect";
-import { useGetIndividualStudentAttendanceHistoryQuery, useGetStudentAttendanceListQuery } from "../../../redux/api/attendance";
+import { useGetIndividualStudentAttendanceHistoryQuery, useGetStudentAttendanceListQuery, useGetStudentsForFilterQuery } from "../../../redux/api/attendance";
 import { dateFormatter } from "../../../lib/utils";
 import { formatTime12Hour } from "../../../utils/scheduleHelpers";
 
@@ -33,6 +33,7 @@ const StudentAttendanceList = () => {
   const { user } = useSelector((state) => state.user);
   const [search, setSearch] = useState("");
   const [courseId, setCourseId] = useState(null);
+  const [studentId, setStudentId] = useState(null);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   
@@ -44,7 +45,11 @@ const StudentAttendanceList = () => {
     limit,
     search,
     courseId,
+    studentId,
   });
+
+  const { data: studentsData } = useGetStudentsForFilterQuery({ courseId });
+  const filterStudents = studentsData?.students || [];
 
   const attendanceData = data?.data || [];
   const totalPages = data?.totalPages || 1;
@@ -93,10 +98,31 @@ const StudentAttendanceList = () => {
             label="Course" 
             onChange={(id) => {
               setCourseId(id);
+              setStudentId(null);
               setPage(1);
             }} 
           />
         </div>
+        <Select
+          label="Student"
+          placeholder="Select Student"
+          labelPlacement="outside"
+          size="lg"
+          radius="lg"
+          className="w-full sm:max-w-[200px]"
+          selectedKeys={studentId ? [String(studentId)] : []}
+          onSelectionChange={(keys) => {
+            const val = Array.from(keys)[0];
+            setStudentId(val);
+            setPage(1);
+          }}
+        >
+          {filterStudents.map((s) => (
+            <SelectItem key={String(s.id)} textValue={s.name}>
+              {s.name}
+            </SelectItem>
+          ))}
+        </Select>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
