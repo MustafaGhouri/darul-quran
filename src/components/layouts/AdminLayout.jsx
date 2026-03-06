@@ -42,7 +42,9 @@ export default function AdminLayout() {
 
     const shouldHeaderOnRoutes = pathname.includes("help") || pathname.includes("chat");
     if (loading) return <Loader />;
-
+    if (!user) {
+        return <Navigate to={'/'} replace />;
+    }
     if (user && user.role?.toLowerCase() !== "admin") {
         let route = '/';
         const role = user.role?.toLowerCase();
@@ -60,7 +62,7 @@ export default function AdminLayout() {
         pathname.startsWith(permission)
     );
 
-    if (!hasPermission && user?.email === import.meta.env.VITE_PUBLIC_ADMIN_EMAIL) {
+    if (!hasPermission) {
         return <Navigate to="/no-permissions" replace />;
     }
 
@@ -165,7 +167,7 @@ export default function AdminLayout() {
                                                     onClick={() => !notif.is_read && markAsRead({ id: notif.id })}
                                                     className="w-full border-b border-gray-50 last:border-none"
                                                 >
-                                                    <Link to={(notif.url || "#").replace("ROLE", user.role)} className="block w-full p-2 hover:bg-gray-50 transition-colors">
+                                                    <Link to={(notif.url || "#").replace("ROLE", user?.role)} className="block w-full p-2 hover:bg-gray-50 transition-colors">
                                                         <div className={`p-3 rounded-lg flex flex-col gap-1 ${!notif.is_read ? 'bg-green-50/50 border-l-4 border-l-[#06574C]' : 'bg-white'}`}>
                                                             <div className="text-sm font-bold text-gray-900 leading-tight wrap-break-word">
                                                                 {notif.title}
