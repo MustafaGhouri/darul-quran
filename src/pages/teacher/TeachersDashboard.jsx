@@ -268,7 +268,7 @@ const TeachersDashboard = () => {
               return (
                 <div key={item.id} className="col-span-12 md:col-span-6 lg:col-span-4 ">
                   <div className="w-full bg-white rounded-lg shadow-sm border border-gray-100/50">
-                    <div className={`rounded-lg  `}>
+                    <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
                       <img
                         src={item.thumbnail}
                         alt={item.courseName}
@@ -277,17 +277,18 @@ const TeachersDashboard = () => {
                       <Button
                         size="sm"
                         radius="sm"
-                        className="bg-white text-[#06574C] px-4 font-medium capitalize"
+                        color="success"
+                        className=" px-4 font-medium capitalize absolute top-2 right-2"
                       >
                         {item.status}
                       </Button>
-                      {/* <div className="">
-                        <span className=" flex justify-center items-center py-6 text-2xl font-semibold text-[#333333]">
-                          {item.courseName}
-                        </span>
-                      </div> */}
                     </div>
+
                     <div className="p-3 space-y-3">
+                      <h3 title={item.courseName} className="text-base font-semibold text-[#060606] line-clamp-2 min-h-[2rem]">
+                        {item.courseName}
+                      </h3>
+                      <p className="text-sm text-[#666666] line-clamp-2">{item.description}</p>
                       <div className="flex justify-between items-center ">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-full bg-[#95C4BE33] flex items-center justify-center text-white font-bold text-sm  shrink-0">
