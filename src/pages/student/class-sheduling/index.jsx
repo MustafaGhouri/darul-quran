@@ -686,6 +686,7 @@ const StudentClassSheduling = () => {
                         <CustomCalendar
                             selectedDates={schedulesDates}
                             onDateClick={handleDateClick}
+                            className="max-w-[330px] mx-auto"
                         />
                     </div>
 

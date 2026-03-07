@@ -206,7 +206,13 @@ const CoursePlayer = () => {
                             <p className="whitespace-pre-wrap">
                                 {currentLesson && currentLesson?.description ? currentLesson?.description : !currentLesson?.id ? course?.description : 'No description available for this lesson.'}</p>
                             {currentLesson?.id &&
-                                <Button className="my-3" isLoading={isMarking} size="sm" color="success" onPress={handleVideoEnd}>
+                                <Button
+                                    isDisabled={completedLessons.includes(currentLesson?.id)}
+                                    className="my-3"
+                                    isLoading={isMarking}
+                                    size="sm"
+                                    color="success"
+                                    onPress={handleVideoEnd}>
                                     {completedLessons.includes(currentLesson?.id) ? "Mark Uncomplete" : " Mark Complete"}
                                 </Button>
                             }

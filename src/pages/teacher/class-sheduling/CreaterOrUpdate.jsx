@@ -65,8 +65,16 @@ const CreaterOrUpdateSchedule = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.title || !formData.startTime) {
-            errorMessage("Please fill required fields (Title,  Time, Teacher)");
+        if (!formData.title || !formData.startTime || !formData.endTime || !formData.courseId) {
+            errorMessage("Please fill required fields (Title,  Time, Course)");
+            return;
+        }
+        if (formData.scheduleType === 'daily' && (!formData.startDate || !formData.endDate)) {
+            errorMessage("Please fill required fields (Start Date, End Date)");
+            return;
+        }
+        if (formData.scheduleType === 'once' && !formData.date) {
+            errorMessage("Please fill required fields (Date)");
             return;
         }
         try {
@@ -91,6 +99,7 @@ const CreaterOrUpdateSchedule = () => {
             }
             successMessage(data?.message);
             resetForm();
+            navigate("/teacher/class-scheduling");
         } catch (error) {
             console.error(error);
             errorMessage("Error submitting form: " + error.message);
@@ -187,10 +196,10 @@ const CreaterOrUpdateSchedule = () => {
         setTimeout(() => setCopiedId(null), 2000);
     };
 
-    if (!scheduleFromState) {
-        navigate("/student/browse-courses");
-        return null;
-    }
+    // if (!scheduleFromState) {
+    //     navigate("/student/browse-courses");
+    //     return null;
+    // }
 
 
     return (
@@ -461,8 +470,8 @@ const CreaterOrUpdateSchedule = () => {
                             });
                         }}
                     >
-                        <Checkbox value="join_before_host">Allow students to join before host</Checkbox>
-                        <Checkbox value="auto_recording">Record session automatically</Checkbox>
+                        {/* <Checkbox value="join_before_host">Allow students to join before host</Checkbox> */}
+                        <Checkbox value="auto_recording">Record session automatically (cloud)</Checkbox>
                         <Checkbox value="waiting_room">Participants must be admitted by the host before joining.</Checkbox>
                     </CheckboxGroup>
                 </div>

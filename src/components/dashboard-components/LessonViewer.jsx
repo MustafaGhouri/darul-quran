@@ -1,3 +1,4 @@
+import { Fullscreen } from "lucide-react";
 import { useRef, useState } from "react";
 
 
@@ -79,7 +80,7 @@ export default function LessonFileViewer({
           target="_blank"
           className="px-4 py-2 bg-primary text-white rounded-md"
         >
-         Open in new tab
+          Open in new tab
         </a>
       </div>
     );
@@ -90,11 +91,14 @@ export default function LessonFileViewer({
       ref={containerRef}
       className="relative w-full h-full bg-black"
     >
-     {file.fileType!=='lesson_video'&& <button
+      {file.fileType !== 'lesson_video' &&
+       <button
         onClick={toggleFullscreen}
+        title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
         className="absolute cursor-pointer hover:opacity-55 top-12 right-4 z-50 bg-black/60 text-white px-3 py-1 rounded-md text-sm"
       >
-        {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+
+         <Fullscreen/> 
       </button>}
 
       {renderContent()}

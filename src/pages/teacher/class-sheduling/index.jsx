@@ -44,7 +44,7 @@ const TeacherClassSheduling = () => {
     const { onOpenChange, isOpen } = useDisclosure()
     const { isOpen: isDateModalOpen, onOpen: openDateModal, onOpenChange: closeDateModal } = useDisclosure();
 
-    const { data: scheduleData, isLoading ,isFetching ,error,refetch} = useGetScheduleQuery({
+    const { data: scheduleData, isLoading, isFetching, error, refetch } = useGetScheduleQuery({
         page: "1",
         limit: "100",
         status: filterStatus === "all" ? undefined : filterStatus,
@@ -156,41 +156,6 @@ const TeacherClassSheduling = () => {
 
     //formatted dates
     const scheduleDates = Object.keys(schedulesByDate);
-
-    const handleJoinClass = async (schedule) => {
-        if (!currentUser) {
-            errorMessage("Please login first");
-            return;
-        }
-        setIsMarking(schedule.id);
-        try {
-            const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/attendance/mark`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    scheduleId: schedule.id,
-                    studentId: currentUser.id,
-                    courseId: schedule.courseId,
-                })
-            });
-
-            if (res.ok) {
-                window.open(schedule.meetingLink, '_blank');
-                successMessage("Joined class! Attendance marked.");
-            } else {
-                window.open(schedule.meetingLink, '_blank');
-            }
-        } catch (error) {
-            console.error("Failed to mark attendance", error);
-            window.open(schedule.meetingLink, '_blank');
-        } finally {
-            setIsMarking(null);
-        }
-    };
-
-
-
-
 
     const handleCancelClass = (schedule) => {
         setSelectedSchedule(schedule);
@@ -387,7 +352,9 @@ const TeacherClassSheduling = () => {
                                 variant="solid"
                                 className="bg-[#1570E8] text-white"
                                 startContent={<LuSquareArrowOutUpRight size={18} />}
-                                onPress={() => handleJoinClass(schedule)}
+                                as={Link}
+                                to={schedule.meetingLink}
+                                target="_blank"
                                 isLoading={isMarking === schedule.id}
                             >
                                 Join Zoom
@@ -534,70 +501,6 @@ const TeacherClassSheduling = () => {
 
                 {/* Sidebar - Calendar & Filters */}
                 <div className="col-span-12 sm:sticky top-2 lg:col-span-4 space-y-4 mb-4">
-                    {/* Quick Stats Card */}
-                    {/* <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <h3 className="text-sm font-semibold text-gray-700 mb-3">Schedule Overview</h3>
-                        {viewType === 'normal' ?
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-[#95C4BE33] p-3 rounded-lg text-center">
-                                    <p className="text-2xl font-bold text-[#06574C]">
-                                        {scheduleData?.schedules?.filter(s => getStatusText(s) === "upcoming").length || 0}
-                                    </p>
-                                    <p className="text-xs text-gray-600">Upcoming</p>
-                                </div>
-                                <div className="bg-[#E8F1FF] p-3 rounded-lg text-center">
-                                    <p className="text-2xl font-bold text-[#3F86F2]">
-                                        {scheduleData?.schedules?.filter(s => getStatusText(s) === "live").length || 0}
-                                    </p>
-                                    <p className="text-xs text-gray-600">Live</p>
-                                </div>
-                            </div>
-                            :
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-[#95C4BE33] p-3 rounded-lg text-center">
-                                    <p className="text-2xl font-bold text-[#06574C]">
-                                        {(() => {
-                                            const todayStr = new Date().toISOString().split('T')[0];
-                                            let count = 0;
-                                            scheduleData?.schedules?.forEach(s => {
-                                                const scheduleDates = s.scheduleDates || [];
-                                                // Count each upcoming date individually
-                                                const upcomingDates = scheduleDates.filter(d => d >= todayStr);
-                                                count += upcomingDates.length;
-                                            });
-                                            return count;
-                                        })()}
-                                    </p>
-                                    <p className="text-xs text-gray-600">Upcoming</p>
-                                </div>
-                                <div className="bg-[#E8F1FF] p-3 rounded-lg text-center">
-                                    <p className="text-2xl font-bold text-[#3F86F2]">
-                                        {(() => {
-                                            const todayStr = new Date().toISOString().split('T')[0];
-                                            let count = 0;
-                                            scheduleData?.schedules?.forEach(s => {
-                                                const scheduleDates = s.scheduleDates || [];
-                                                // Count today's dates that are currently live
-                                                if (scheduleDates.includes(todayStr)) {
-                                                    const [startHour, startMin] = (s.startTime || "").split(":").map(Number);
-                                                    const [endHour, endMin] = (s.endTime || "").split(":").map(Number);
-                                                    const now = new Date();
-                                                    const [year, month, day] = todayStr.split("-").map(Number);
-                                                    const startTime = new Date(year, month - 1, day, startHour, startMin);
-                                                    const endTime = new Date(year, month - 1, day, endHour, endMin);
-                                                    if (now >= startTime && now <= endTime) {
-                                                        count++;
-                                                    }
-                                                }
-                                            });
-                                            return count;
-                                        })()}
-                                    </p>
-                                    <p className="text-xs text-gray-600">Live</p>
-                                </div>
-                            </div>
-                        }
-                    </div> */}
 
                     <div className="bg-white w-full space-y-4 p-4 rounded-lg shadow-sm">
                         <Button
@@ -614,6 +517,7 @@ const TeacherClassSheduling = () => {
                         <CustomCalendar
                             selectedDates={schedulesDates}
                             onDateClick={handleDateClick}
+                            className="max-w-[330px] mx-auto"
                         />
                     </div>
 

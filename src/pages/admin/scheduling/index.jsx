@@ -692,8 +692,8 @@ const Scheduling = () => {
                       });
                     }}
                   >
-                    <Checkbox value="join_before_host">Allow students to join before host</Checkbox>
-                    <Checkbox value="auto_recording">Record session automatically</Checkbox>
+                    {/* <Checkbox value="join_before_host">Allow students to join before host</Checkbox> */}
+                    <Checkbox value="auto_recording">Record session automatically (cloud)</Checkbox>
                     <Checkbox value="waiting_room">Participants must be admitted by the host before joining.</Checkbox>
                   </CheckboxGroup>
                 </div>
