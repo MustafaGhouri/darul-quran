@@ -32,6 +32,7 @@ import {
   useGetMyRefundRequestsQuery,
   useGetMySubscriptionsQuery,
   useRequestRefundMutation,
+  useCancelSubscriptionMutation,
 } from "../../../redux/api/payments";
 import { dateFormatter, debounce } from "../../../lib/utils";
 
@@ -57,13 +58,21 @@ const PaymentsInvoices = () => {
   });
   const [requestRefund, { isLoading: refundLoading }] =
     useRequestRefundMutation();
+  const [cancelSubscription, { isLoading: cancelLoading }] =
+    useCancelSubscriptionMutation();
   const { data: subscriptionData, isFetching: subscriptionLoading } =
     useGetMySubscriptionsQuery({ search: subSearchQuery });
 
   // Refund Modal State
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen: isCancelOpen, onOpen: onCancelOpen, onOpenChange: onCancelOpenChange } = useDisclosure();
   const [refundReason, setRefundReason] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  // Cancellation Modal State
+  const [selectedSubscription, setSelectedSubscription] = useState(null);
+  const [cancelType, setCancelType] = useState("period_end"); // 'period_end' or 'immediate'
+  const [cancelReason, setCancelReason] = useState("");
 
   // Extract data from Redux responses
   const invoices = paymentData?.invoices || [];
@@ -105,6 +114,37 @@ const PaymentsInvoices = () => {
     }
   };
 
+  const openCancelModal = (subscription) => {
+    setSelectedSubscription(subscription);
+    setCancelType("period_end");
+    setCancelReason("");
+    onCancelOpen();
+  };
+
+  const submitCancel = async (onClose) => {
+    if (!cancelReason.trim()) {
+      errorMessage("Please enter a reason for cancellation");
+      return;
+    }
+
+    try {
+      const res = await cancelSubscription({
+        subscriptionId: selectedSubscription.id,
+        cancelAtPeriodEnd: cancelType === "period_end",
+        refundReason: cancelType === "immediate" ? cancelReason : null,
+        refundType: cancelType,
+      });
+
+      if (res.error) {
+        throw new Error(res?.error?.data?.message);
+      }
+      successMessage(res.data.message);
+      onClose();
+    } catch (error) {
+      errorMessage(error?.message);
+    }
+  };
+
   const statuses = [
     { key: "all", label: "All Status" },
     { key: "draft", label: "Draft" },
@@ -127,8 +167,10 @@ const PaymentsInvoices = () => {
     { key: "courseName", label: "Course Name" },
     { key: "status", label: "Status" },
     { key: "periodStart", label: "Start Date" },
-    // { key: "periodEnd", label: "End Date" },
+    { key: "periodEnd", label: "End Date" },
+    { key: "nextBilling", label: "Next Billing" },
     { key: "createdAt", label: "Created At" },
+    { key: "action", label: "Action" },
   ];
 
   const refundHeader = [
@@ -302,31 +344,29 @@ const PaymentsInvoices = () => {
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <Button
-                          className={`text-sm p-2 rounded-md capitalize h-8 ${
-                            item.status === "paid" ||
-                            item.status === "completed"
+                          className={`text-sm p-2 rounded-md capitalize h-8 ${item.status === "paid" ||
+                              item.status === "completed"
                               ? "bg-[#95C4BE33] text-[#06574C]"
                               : item.status === "pending" ||
-                                  item.status === "open"
+                                item.status === "open"
                                 ? "bg-[#F1C2AC33] text-[#D28E3D]"
                                 : "bg-[#FFEAEC] text-[#E8505B]"
-                          }`}
+                            }`}
                         >
                           {item.status || "Unknown"}
                         </Button>
                         {item.refundStatus && item.refundStatus !== "none" && (
                           <span
-                            className={`text-[10px] font-medium px-1.5 py-0.5 rounded w-fit ${
-                              item.refundStatus === "refunded"
+                            className={`text-[10px] font-medium px-1.5 py-0.5 rounded w-fit ${item.refundStatus === "refunded"
                                 ? "bg-[#95C4BE33] text-[#06574C]"
                                 : item.refundStatus === "rejected" ||
-                                    item.refundStatus === "failed"
+                                  item.refundStatus === "failed"
                                   ? "bg-[#FFEAEC] text-[#E8505B]"
                                   : item.refundStatus === "processing" ||
-                                      item.refundStatus === "pending_refund"
+                                    item.refundStatus === "pending_refund"
                                     ? "bg-[#FDEBD0] text-[#D68910]"
                                     : "bg-[#F1C2AC33] text-[#D28E3D]"
-                            }`}
+                              }`}
                           >
                             Refund: {getRefundStatusText(item.refundStatus)}
                           </span>
@@ -340,16 +380,16 @@ const PaymentsInvoices = () => {
                     </TableCell>
                     <TableCell className="flex gap-2">
                       {item.hostedInvoiceUrl ||
-                      item.invoicePdf ||
-                      item.receiptUrl ? (
+                        item.invoicePdf ||
+                        item.receiptUrl ? (
                         <Button
                           radius="sm"
                           className="bg-[#06574C] text-white"
                           onPress={() =>
                             window.open(
                               item.hostedInvoiceUrl ||
-                                item.invoicePdf ||
-                                item.receiptUrl,
+                              item.invoicePdf ||
+                              item.receiptUrl,
                               "_blank",
                             )
                           }
@@ -592,13 +632,12 @@ const PaymentsInvoices = () => {
                     </TableCell>
                     <TableCell>
                       <Button
-                        className={`text-sm p-2 rounded-md capitalize h-8 ${
-                          item.status === "active"
+                        className={`text-sm p-2 rounded-md capitalize h-8 ${item.status === "active"
                             ? "bg-[#95C4BE33] text-[#06574C]"
                             : item.status === "past_due" || item.status === "unpaid"
                               ? "bg-[#F1C2AC33] text-[#D28E3D]"
                               : "bg-[#FFEAEC] text-[#E8505B]"
-                        }`}
+                          }`}
                       >
                         {item.status || "Unknown"}
                       </Button>
@@ -606,11 +645,51 @@ const PaymentsInvoices = () => {
                     <TableCell>
                       {item.currentPeriodStart ? (dateFormatter(item.currentPeriodStart)) : "N/A"}
                     </TableCell>
-                    {/* <TableCell>
+                    <TableCell>
                       {item.currentPeriodEnd ? (dateFormatter(item.currentPeriodEnd)) : "N/A"}
-                    </TableCell> */}
+                    </TableCell>
+                    <TableCell>
+                      {item.currentPeriodEnd ? (dateFormatter(item.currentPeriodEnd)) : "N/A"}
+                    </TableCell>
                     <TableCell>
                       {item.createdAt ? (dateFormatter(item.createdAt)) : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        {item.status === "active" && !item.cancelAtPeriodEnd && (
+                          <Button
+                            radius="sm"
+                            variant="flat"
+                            color="danger"
+                            size="sm"
+                            onPress={() => openCancelModal(item)}
+                          >
+                            Cancel
+                          </Button>
+                        )}
+                        {item.cancelAtPeriodEnd && (
+                          <Button
+                            radius="sm"
+                            variant="flat"
+                            color="warning"
+                            size="sm"
+                            isDisabled
+                          >
+                            Cancels at Period End
+                          </Button>
+                        )}
+                        {item.status === "canceled" && (
+                          <Button
+                            radius="sm"
+                            variant="flat"
+                            color="default"
+                            size="sm"
+                            isDisabled
+                          >
+                            Canceled
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -692,6 +771,93 @@ const PaymentsInvoices = () => {
                   onPress={() => submitRefund(onClose)}
                 >
                   Submit Request
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Subscription Cancellation Modal */}
+      <Modal isOpen={isCancelOpen} onOpenChange={onCancelOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                Cancel Subscription
+              </ModalHeader>
+              <ModalBody>
+                <p className="text-sm text-gray-700 mb-3">
+                  You are canceling subscription for:{" "}
+                  <span className="font-semibold">
+                    {selectedSubscription?.courseName || selectedSubscription?.scheduleName}
+                  </span>
+                </p>
+
+                <div className="mb-4">
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Cancellation Type
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-start gap-3 p-3 rounded-lg border border-default-200 cursor-pointer hover:bg-default-50">
+                      <input
+                        type="radio"
+                        name="cancelType"
+                        value="period_end"
+                        checked={cancelType === "period_end"}
+                        onChange={(e) => setCancelType(e.target.value)}
+                        className="mt-1"
+                      />
+                      <div>
+                        <p className="font-medium text-sm text-gray-800">
+                          Cancel at Period End
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Continue using until the end of current billing period, then automatically cancel. No refunds.
+                        </p>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start gap-3 p-3 rounded-lg border border-default-200 cursor-pointer hover:bg-default-50">
+                      <input
+                        type="radio"
+                        name="cancelType"
+                        value="immediate"
+                        checked={cancelType === "immediate"}
+                        onChange={(e) => setCancelType(e.target.value)}
+                        className="mt-1"
+                      />
+                      <div>
+                        <p className="font-medium text-sm text-gray-800">
+                          Cancel Immediately (Request Refund)
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Stop access now and submit a refund request for admin review. Refund approval is subject to our refund policy.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <Textarea
+                  label="Reason for Cancellation"
+                  placeholder="Please let us know why you're canceling..."
+                  value={cancelReason}
+                  onValueChange={setCancelReason}
+                  minRows={3}
+                  isRequired
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Go Back
+                </Button>
+                <Button
+                  color={cancelType === "immediate" ? "warning" : "danger"}
+                  isLoading={cancelLoading}
+                  onPress={() => submitCancel(onClose)}
+                >
+                  {cancelType === "immediate" ? "Cancel & Request Refund" : "Cancel at Period End"}
                 </Button>
               </ModalFooter>
             </>

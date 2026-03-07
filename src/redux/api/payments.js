@@ -87,6 +87,17 @@ export const paymentApi = createApi({
             }),
             providesTags: ["Payment"],
         }),
+
+        // Student: Cancel subscription
+        cancelSubscription: builder.mutation({
+            query: (data) => ({
+                url: "/subscriptions/cancel",
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: data,
+            }),
+            invalidatesTags: ["Payment"],
+        }),
     })
 });
 
@@ -98,5 +109,6 @@ export const {
     useRequestRefundMutation,
     useProcessRefundActionMutation,
     useGetAdminRefundRequestsQuery,
-    useGetAdminPaymentHistoryQuery
+    useGetAdminPaymentHistoryQuery,
+    useCancelSubscriptionMutation
 } = paymentApi;
