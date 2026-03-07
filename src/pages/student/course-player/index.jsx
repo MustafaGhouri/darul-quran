@@ -162,7 +162,7 @@ const CoursePlayer = () => {
             {/* Header */}
             <header className="h-16 bg-white border-b flex items-center px-4 justify-between shrink-0 z-10 shadow-sm">
                 <div className="flex items-center gap-3">
-                    <Button variant="light" isIconOnly onPress={() =>  navigate(-1)}>
+                    <Button variant="light" isIconOnly onPress={() => navigate(-1)}>
                         <ArrowLeft size={20} />
                     </Button>
                     <div className="flex flex-col">
@@ -294,8 +294,8 @@ const CoursePlayer = () => {
                                                 <span className="capitalize">
                                                     Type: {lesson?.fileType?.replace("_", " ") || "Video Lesson"}
                                                 </span>
-                                                {lesson?.file?.pages && <span>pages: {lesson.file.pages}</span>}
-                                                {lesson?.file?.duration && lesson?.file?.duration !== "0" && (
+                                                {lesson?.file?.pages > 0 && <span>pages: {lesson.file.pages}</span>}
+                                                {lesson?.file?.duration > 0 && (
                                                     <span>duration: {lesson.file.duration} mins</span>
                                                 )}
                                             </div>
