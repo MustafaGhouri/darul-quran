@@ -37,7 +37,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { showMessage } from "../../../lib/toast.config";
 import {
   useGetUserDetailsQuery,
@@ -255,7 +255,7 @@ const UsersDetails = () => {
         <div className="grid col-span-12 md:col-span-4 bg-white rounded-lg px-4 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold">Personal Details</h1>
-            <SquarePen size={22} color="#06574C" />
+            <Link to={`/admin/user-management/edit-user/${user.id}`}>  <SquarePen size={22} color="#06574C" /></Link>
           </div>
           <div className="my-2">
             <h1 className="text-md text-[#333333]">Email Address</h1>
