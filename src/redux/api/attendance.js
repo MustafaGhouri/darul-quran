@@ -44,8 +44,9 @@ export const attendanceApi = createApi({
             providesTags: ["attendance"],
         }),
         getIndividualStudentAttendanceHistory: builder.query({
-            query: ({ studentId, courseId }) => ({
-                url: `/history/${studentId}/${courseId}`,
+            query: ({ studentId, courseId, startDate, endDate }) => ({
+                url: `/history/${studentId}`,
+                params: { courseId, startDate, endDate },
             }),
             providesTags: ["attendance"],
         }),
