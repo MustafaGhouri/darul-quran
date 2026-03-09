@@ -129,6 +129,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
 
       successMessage(data?.message || "Logout successful");
       dispatch(clearUser());
+      localStorage.removeItem("token");
       // location.href = '/'
     } catch (error) {
       console.log(error);

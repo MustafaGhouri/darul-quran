@@ -82,8 +82,8 @@ const Login = () => {
       }
 
       window.history.replaceState({}, document.title, window.location.pathname);
-      navigate(route, { replace: true });
-
+      // navigate(route, { replace: true });
+      location.replace(route)
     } catch (error) {
       // Toast is already handled by api.js interceptor for message
       setModalType("error");
