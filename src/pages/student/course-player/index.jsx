@@ -32,7 +32,7 @@ const CoursePlayer = () => {
 
     const { user } = useSelector((state) => state.user);
 
-    const { data, error, isLoading, isError, refetch } = useGetCourseFilesQuery({ courseId: id, page, search, includeCourse: !courseFromState?.id }, { skip: !id });
+    const { data, error, isLoading, isError, refetch } = useGetCourseFilesQuery({ courseId: id, page, search, includeCourse: !courseFromState?.id, includeQuizeQuestions: true }, { skip: !id });
     const [addReview, { isLoading: isAddingReview }] = useAddRevieworUpdateMutation();
 
     const course = useMemo(() => {
@@ -182,9 +182,9 @@ const CoursePlayer = () => {
                 <div className="flex-1 flex flex-col overflow-y-auto bg-black/5">
                     <div className="bg-black w-full max-h-152 aspect-video shrink-0 relative shadow-lg">
                         {currentLesson?.fileType === "quiz" ? (
-                             <div className="absolute inset-0 bg-gray-100 overflow-y-auto">
-                                <QuizPlayer 
-                                    quiz={currentLesson} 
+                            <div className="absolute inset-0 bg-gray-100 overflow-y-auto">
+                                <QuizPlayer
+                                    quiz={currentLesson}
                                     courseId={id}
                                     onComplete={(result) => {
                                         if (result.passed) {
@@ -192,7 +192,7 @@ const CoursePlayer = () => {
                                         }
                                     }}
                                 />
-                             </div>
+                            </div>
                         ) : currentLesson ? (
                             <LessonFileViewer
                                 file={currentLesson}

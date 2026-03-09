@@ -47,10 +47,10 @@ export const courseApi = createApi({
             providesTags: ["course"],
         }),
         getCourseFiles: builder.query({
-            query: ({ courseId, page, limit, search, includeCourse }) => ({
+            query: ({ courseId, page, limit, search, includeCourse, includeQuizeQuestions }) => ({
                 url: "/course-files/" + courseId,
                 method: "GET",
-                params: { page, limit, search, includeCourse }
+                params: { page, limit, search, includeCourse, includeQuizeQuestions }
             }),
             providesTags: ["course"],
         }),
