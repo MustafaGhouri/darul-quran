@@ -9,9 +9,9 @@ export const attendanceApi = createApi({
     tagTypes: ["attendance"],
     endpoints: (builder) => ({
         getCourseAttendanceSummary: builder.query({
-            query: ({ page, limit, search, sort, status ,type}) => ({
+            query: ({ page, limit, search, sort, status, type }) => ({
                 url: "/courses",
-                params: { page, limit, search, sort, status ,type},
+                params: { page, limit, search, sort, status, type },
             }),
             providesTags: ["attendance"],
         }),
@@ -46,7 +46,7 @@ export const attendanceApi = createApi({
         getIndividualStudentAttendanceHistory: builder.query({
             query: ({ studentId, courseId, startDate, endDate }) => ({
                 url: `/history/${studentId}`,
-                params: { courseId, startDate, endDate },
+                params: { courseId: courseId || '', startDate: startDate || '', endDate: endDate || '' },
             }),
             providesTags: ["attendance"],
         }),

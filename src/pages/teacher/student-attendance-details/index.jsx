@@ -26,7 +26,7 @@ const StudentAttendanceDetails = () => {
     const navigate = useNavigate();
     const { user } = useSelector((state) => state.user);
 
-    const [courseId, setCourseId] = useState(null);
+    const [courseId, setCourseId] = useState('');
     const [dateRange, setDateRange] = useState(null);
 
     // Formatting date helper for API
@@ -38,7 +38,7 @@ const StudentAttendanceDetails = () => {
     const startDate = formatDateForApi(dateRange?.start);
     const endDate = formatDateForApi(dateRange?.end);
 
-    const { data, isLoading } = useGetIndividualStudentAttendanceHistoryQuery({
+    const { data, isLoading, isFetching } = useGetIndividualStudentAttendanceHistoryQuery({
         studentId,
         courseId,
         startDate,
@@ -50,8 +50,8 @@ const StudentAttendanceDetails = () => {
     return (
         <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-5 pb-8 min-h-screen">
             <div className="pt-4 mb-4">
-                <Button 
-                    variant="light" 
+                <Button
+                    variant="light"
                     startContent={<ArrowLeft size={18} />}
                     onPress={() => navigate(-1)}
                     className="font-medium text-gray-600 hover:text-[#06574C] transition-colors"
@@ -59,7 +59,7 @@ const StudentAttendanceDetails = () => {
                     Back to Students List
                 </Button>
             </div>
-            
+
             <DashHeading
                 title={"Student Attendance Details"}
                 desc={"Detailed view of the student's attendance history"}
@@ -72,7 +72,7 @@ const StudentAttendanceDetails = () => {
                         onChange={(id) => setCourseId(id ? id : null)}
                     />
                 </div>
-                
+
                 <DateRangePicker
                     label="Date Range"
                     labelPlacement="outside"
@@ -103,10 +103,10 @@ const StudentAttendanceDetails = () => {
                         <TableColumn>NOTES</TableColumn>
                     </TableHeader>
                     <TableBody
-                        items={history}
-                        isLoading={isLoading}
+                        items={history||[]}
+                        loadingState={isFetching ? 'loading' : 'idle'}
                         loadingContent={<Spinner color="success" size="lg" />}
-                        emptyContent={isLoading ? " " : "No attendance records found"}
+                        emptyContent={"No attendance records found"}
                     >
                         {(item) => {
                             // Determine status formatting
@@ -116,13 +116,13 @@ const StudentAttendanceDetails = () => {
 
                             if (item.status === 'Attended') {
                                 statusColor = "success";
-                                
+
                                 // Simple late logic: if joined at is more than 5 mins after start time
                                 if (item.joinedAt && item.startTime) {
                                     const joinedTime = new Date(item.joinedAt);
                                     const scheduleDateString = item.date.split('T')[0];
                                     const expectedStart = new Date(`${scheduleDateString}T${item.startTime}`);
-                                    
+
                                     // Add 15 mins grace period
                                     const gracePeriod = 15 * 60 * 1000;
                                     if (joinedTime.getTime() > expectedStart.getTime() + gracePeriod) {

@@ -53,8 +53,8 @@ const TeacherSelect = ({ onChange, initialValue, label = undefined }) => {
             endContent={total > 10 && `+${total - 10}`}
         >
             {(item) => (
-                <AutocompleteItem key={String(item.id)}>
-                    {`${item.firstName} ${item.lastName}`}
+                <AutocompleteItem description={item.email} key={String(item.id)}>
+                    {`${item.firstName} ${item.lastName}`+(item.zoomUserId ? ' (Conneted with Zoom)' : '')}
                 </AutocompleteItem>
             )}
         </Autocomplete>
