@@ -11,8 +11,9 @@ import { useGetAllCoursesForSelectQuery } from "../../redux/api/courses";
  * @param {String} props.label
  * @param {'published'|'draft'|'all'} props.status 
  * @param {'live'|'one_time'|'all'} props.type 
+ * @param {Boolean} props.isDisabled 
  */
-const CourseSelect = ({ initialValue, onChange, label = undefined, status = 'all' ,type = 'all' }) => {
+const CourseSelect = ({ isDisabled = false, initialValue, onChange, label = undefined, status = 'all', type = 'all' }) => {
     const [searchValue, setSearchValue] = useState("");
     const [selectedId, setSelectedId] = useState(String(initialValue) || "");
     const [total, setTotal] = useState(0);
@@ -45,6 +46,7 @@ const CourseSelect = ({ initialValue, onChange, label = undefined, status = 'all
             defaultSelectedKey={selectedId}
             // value={searchValue}
             isLoading={isLoading}
+            isDisabled={isDisabled}
             onInputChange={total > 10 ? onInputChange : undefined}
             onSelectionChange={onSelectionChange}
             defaultItems={data.courses}

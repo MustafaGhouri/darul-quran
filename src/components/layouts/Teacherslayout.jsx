@@ -7,6 +7,7 @@ import { MenuIcon, Plus, Search, SidebarClose, SidebarOpen } from "lucide-react"
 import { TbBell } from "react-icons/tb";
 import { useSelector } from "react-redux";
 import Loader from "../Loader";
+import { useGetNotificationsQuery, useMarkAsReadMutation } from "../../redux/api/notifications";
 
 export default function TeachersLayout() {
     const { user, loading } = useSelector((s) => s?.user);
@@ -21,6 +22,12 @@ export default function TeachersLayout() {
 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+
+    const { data: notificationData, isLoading: notificationsLoading } = useGetNotificationsQuery();
+    const [markAsRead] = useMarkAsReadMutation();
+
+    const notifications = notificationData?.data || [];
+    const unreadNotifications = notifications.filter(n => !n.is_read);
 
     useEffect(() => {
         localStorage.setItem("sidebarOpen", isSidebarOpen);
@@ -50,6 +57,9 @@ export default function TeachersLayout() {
         }
         return <Navigate to={route} replace />;
     }
+
+
+
     return (
         <>
             <main className="flex h-screen w-screen overflow-hidden bg-gray-50">
@@ -121,60 +131,65 @@ export default function TeachersLayout() {
                                     <PopoverTrigger >
                                         <button
                                             type="button"
-                                            className="relative inline-flex items-center justify-center p-3 border-[#CBD5E1] border-[1px] bg-white rounded-full shadow-sm hover:shadow-md"
+                                            className="relative inline-flex items-center justify-center p-3 border-[#CBD5E1] border bg-white rounded-full shadow-sm hover:shadow-md"
                                             aria-label="Notifications"
                                         >
                                             <TbBell size={20} />
-                                            <span className="pointer-events-none absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#06574C] text-white text-[10px] font-semibold leading-none ring-2 ring-white z-10">
-                                                3
-                                            </span>
+                                            {unreadNotifications.length > 0 && (
+                                                <span className="pointer-events-none absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full bg-[#06574C] text-white text-[10px] font-semibold leading-none ring-2 ring-white z-10">
+                                                    {unreadNotifications.length}
+                                                </span>
+                                            )}
                                         </button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="absosht-0 mt-3 w-56 sm:w-80 bg-white rounded-xl shadow-lg ring-opacity-5 z-20">
-                                        <div className=" py-3 px-2  flex w-full  justify-between">
-                                            <div>
-                                                <h4 className="text-sm font-semibold text-gray-800">
-                                                    Notifications
-                                                </h4>
-                                            </div>
-                                            <div className="flex justify-between ml-2">
-                                                <Chip
-                                                    size="sm"
-                                                    variant="flat"
-                                                    className="font-bold bg-[#06574C] text-white"
-                                                >
-                                                    3  {/* {unreadNotifications.length} */}
-                                                </Chip>
-                                            </div>
+                                    <PopoverContent className="p-0 mt-3 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden">
+                                        <div className="py-3 px-4 flex w-full justify-between items-center bg-gray-50/50">
+                                            <h4 className="text-sm font-bold text-gray-800">
+                                                Notifications
+                                            </h4>
+                                            <Chip
+                                                size="sm"
+                                                variant="flat"
+                                                className="font-bold bg-[#06574C] text-white"
+                                            >
+                                                {unreadNotifications.length}
+                                            </Chip>
                                         </div>
-                                        <div className=" py-2 border-t border-gray-100 h-[300px] overflow-scroll no-scrollbar">
-                                            <div>
-                                                <div>
-                                                    <Link to={'#'} className="block w-full">
-                                                        <div className="flex items-center gap-4 py-3 justify-center w-full cursor-pointer">
-                                                            <div className="flex items-center gap-3 shadow-md hover:bg-gray-100 p-3 rounded-lg w-[95%] transition-colors">
-                                                                <div className="flex flex-col px-2">
-                                                                    <div className="text-sm font-semibold">
-                                                                        anything
-                                                                    </div>
-                                                                    <div className="text-xs text-gray-500">
-                                                                        anything  anything anything anything anythin ganything anything
-                                                                    </div>
+                                        <div className="py-2 border-t border-gray-100 h-[350px] overflow-y-auto no-scrollbar w-full">
+                                            {notifications.length > 0 ? (
+                                                notifications.map((notif) => (
+                                                    <div 
+                                                        key={notif.id} 
+                                                        onClick={() => !notif.is_read && markAsRead({ id: notif.id })}
+                                                        className="w-full border-b border-gray-50 last:border-none"
+                                                    >
+                                                        <Link to={(notif.url || "#").replace("ROLE", user?.role)}  className="block w-full p-2 hover:bg-gray-50 transition-colors">
+                                                            <div className={`p-3 rounded-lg flex flex-col gap-1 ${!notif.is_read ? 'bg-green-50/50 border-l-4 border-l-[#06574C]' : 'bg-white'}`}>
+                                                                <div className="text-sm font-bold text-gray-900 leading-tight wrap-break-words">
+                                                                    {notif.title}
+                                                                </div>
+                                                                <div className="text-xs text-gray-600 line-clamp-2 leading-relaxed wrap-break-words">
+                                                                    {notif.description}
+                                                                </div>
+                                                                <div className="text-[10px] text-gray-400 mt-1 font-medium">
+                                                                    {new Date(notif.created_at).toLocaleString()}
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    </Link>
+                                                        </Link>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="flex items-center justify-center h-full text-gray-400 text-sm italic">
+                                                    No notifications
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                         <div className=" py-3 border-t border-gray-100  w-full px-4">
                                             <Button
+                                                as={Link}
+                                                to="/teacher/notifications"
                                                 variant="bordered"
-                                                // color="success"
-                                                className="w-full border-[#06574C]"
-                                                onPress={() => {
-                                                    // router.push("/admin/notifications-center");
-                                                }}
+                                                className="w-full border-[#06574C] text-[#06574C] font-semibold"
                                             >
                                                 View all
                                             </Button>

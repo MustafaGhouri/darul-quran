@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Pagination, Skeleton } from "@heroui/react";
-import { Clock, VideoIcon } from "lucide-react";
+import { Clock, Video, VideoIcon, Check, Lock } from "lucide-react";
 import { AiOutlineEye } from "react-icons/ai";
 import { FaRegAddressCard } from "react-icons/fa";
 import { BiGroup } from "react-icons/bi";
@@ -17,110 +17,50 @@ import { useGetAllAnnouncementQuery } from "../../redux/api/announcements";
 import { errorMessage } from "../../lib/toast.config";
 import { dateFormatter } from "../../lib/utils";
 import QueryError from "../../components/QueryError";
+import { formatTime12Hour, isClassExpired, isClassLive, getHoursUntilClass, getStatusText } from "../../utils/scheduleHelpers";
+import { useGetStudentDashboardQuery } from "../../redux/api/dashboard";
 
 const StudentDashboard = () => {
   const { user } = useSelector((state) => state.user);
   const navigate = useNavigate();
-  const [courses, setCourses] = useState([]);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [featured, setFeatured] = useState([]);
-  const { data, error, isLoading, refetch } = useGetEnrolledCoursesQuery({
+  const { data, error, isLoading, isFetching, refetch } = useGetEnrolledCoursesQuery({
     page,
   });
+
   const {
-    data: announcementsData,
-    error: announcementsError,
-    isLoading: announcementsLoading,
-  } = useGetAllAnnouncementQuery({ limit: 5 });
+    data: dashboardData,
+    error: dashboardError,
+    isLoading: dashboardLoading,
+    refetch: dashboardRefetch
+  } = useGetStudentDashboardQuery()
 
-  useEffect(() => {
-    const fetchFeatured = async () => {
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/dashboard/student`,
-          { credentials: "include" },
-        );
-        const data = await res.json();
-        if (data.success && data.data?.featured) {
-          setFeatured(data.data.featured);
-        }
-      } catch (error) {
-        console.error("Error fetching featured announcement:", error);
-      }
-    };
-    fetchFeatured();
-  }, []);
+  const featured = dashboardData?.data?.announcements[0];
+  const upcomingClasses = dashboardData?.data?.upcomingClasses || [];
+  const announcements = dashboardData?.data?.announcements?.slice(1, 5) || [];
 
-  // Handle announcement error
-  if (announcementsError) {
-    errorMessage(
-      announcementsError?.data?.message ||
-      announcementsError?.message ||
-      "Failed to fetch announcements",
-    );
-  }
-
-  const upcomingClasses = [
-    {
-      id: 1,
-      day: "11",
-      month: "Nov",
-      time: "2:00",
-      Title: "Advanced Web Development",
-      students: "32",
-      role: "Student",
-      status: "Online",
-      course: "Python",
-      location: "Join Zoom",
-      minutes: "60 minutes",
-    },
-    {
-      id: 2,
-      day: "11",
-      month: "Nov",
-      time: "2:00",
-      Title: "Advanced Web Development",
-      students: "32",
-      role: "Student",
-      status: "Online",
-      course: "Python",
-      minutes: "Due Today",
-    },
-    {
-      id: 3,
-      day: "11",
-      month: "Nov",
-      time: "2:00",
-      Title: "Advanced Web Development",
-      role: "Student",
-      status: "Online",
-      course: "Python",
-      location: "Join Zoom",
-      minutes: "30 minutes",
-    },
-  ];
-  if (error) {
+  if (dashboardError) {
     return <QueryError
       height="300px"
-      error={error}
-      onRetry={refetch}
+      error={dashboardError}
+      onRetry={dashboardRefetch}
       showLogo={false}
+      isLoading={dashboardLoading}
     />
   }
   return (
-    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-full px-2 sm:px-3">
+    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-fsull px-2 sm:px-3">
       {/* banner */}
       <div className="space-y-4 mt-3 w-full bg-[url('/images/banner.png')] p-4 rounded-lg bg-center bg-no-repeat bg-cover">
         <div className="flex max-sm:flex-wrap gap-3 justify-between items-start">
           <div>
-            {featured.length > 0 ? (
+            {featured ? (
               <div>
                 <h1 className="text-xl sm:text-3xl text-white font-semibold capitalize">
-                  {featured[0]?.title}
+                  {featured?.title}
                 </h1>
                 <p className="text-white text-lg sm:text-xl overflow-hidden line-clamp-2">
-                  {featured[0]?.description}
+                  {featured?.description}
                 </p>
               </div>
             ) : (
@@ -148,8 +88,18 @@ const StudentDashboard = () => {
           </div>
         </div>
       </div>
-      <div>
+      <div> 
+         {error &&
+            <QueryError
+              height="300px"
+              error={error}
+              onRetry={refetch}
+              showLogo={false}
+              isLoading={isFetching}
+            />
+          }
         <div className="grid grid-cols-12 gap-3 py-4">
+        
           {isLoading ? (
             Array.from({ length: 3 }).map((_, index) => (
               <div
@@ -265,67 +215,164 @@ const StudentDashboard = () => {
       </div>
 
       <div className=" bg-white rounded-lg mb-3 ">
-        <h1 className="p-3 text-xl font-medium text-[#333333]">
-          Today's Schedule
-        </h1>
+        <h1 className="p-3 text-xl text-[#333333]">Today's Upcomming Classes</h1>
         <div className="flex flex-col gap-3">
-          {upcomingClasses.map((item, index) => (
-            <div
-              key={item.id}
-              className={`${item.location === "Join Zoom" ? "bg-[#EAF3F2]" : "bg-[#F5E3DA]"
-                } `}
-            >
-              <div className="flex flex-col md:flex-row gap-4 md:justify-between p-4 md:items-center">
-                <div className="flex flex-col md:flex-row gap-3 md:items-center justify-center">
-                  <div className="h-20 w-20 rounded-full shadow-xl flex flex-col items-center justify-center bg-white">
-                    <p className="text-xl text-[#06574C] font-semibold">
-                      {item.time}
-                    </p>
-                    <p className="text-sm text-[#06574C] font-semibold">PM</p>
-                  </div>
-                  <div>
-                    <div className="text-lg text-[#06574C] font-semibold">
-                      {item.Title}
-                    </div>
-                    <div className="flex flex-wrap max-md:my-3 md:items-center mb-2 gap-5 text-sm text-[#666666]">
-                      <div className="flex items-center gap-1 ">
-                        <Clock size={20} />
-                        {item.minutes}
-                      </div>
-                      {item.students && (
-                        <div className="flex items-center gap-1 ">
-                          <BiGroup size={20} />
-                          {item.students} {item.role}
-                        </div>
-                      )}
-                      <div className="flex items-center gap-1 ">
-                        <VideoIcon size={20} />
-                        {item.status}
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <Button size="sm" className="bg-white text-[#06574C]">
-                        {item.course}
-                      </Button>
-                      <Button size="sm" className="bg-white text-[#D28E3D]">
-                        Starting Soon
-                      </Button>
+          {dashboardLoading ? (
+            // 🔥 Skeleton Loader (3 dummy rows)
+            Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className="rounded-md p-4 bg-gray-100 animate-pulse"
+              >
+                <div className="flex flex-col md:flex-row gap-4 md:justify-between md:items-center">
+
+                  {/* Left Section */}
+                  <div className="flex flex-col md:flex-row gap-3 md:items-center">
+
+                    {/* Date Circle Skeleton */}
+                    <div className="h-20 w-20 rounded-full bg-gray-300"></div>
+
+                    {/* Text Content */}
+                    <div className="space-y-3">
+                      <div className="h-4 w-48 bg-gray-300 rounded"></div>
+                      <div className="h-3 w-64 bg-gray-200 rounded"></div>
+                      <div className="h-3 w-32 bg-gray-200 rounded"></div>
                     </div>
                   </div>
-                </div>
-                <div>
-                  {item.id === 1 && (
-                    <Button
-                      size="sm"
-                      className={` bg-[#06574C]  w-32 text-white rounded-md`}
-                    >
-                      Join class
-                    </Button>
-                  )}
+
+                  {/* Button Skeleton */}
+                  <div className="h-10 w-32 bg-gray-300 rounded-md"></div>
                 </div>
               </div>
+            ))
+          ) : upcomingClasses.length === 0 ? (
+            <div className="p-4 text-gray-500 text-center bg-[#F5E3DA]/20 rounded-lg">
+              No today classes found.
             </div>
-          ))}
+          ) : upcomingClasses.map((item, index) => {
+            const today = new Date();
+            return (
+              <div
+                key={index}
+                className={`${item.meeting_link ? "bg-[#EAF3F2]" : "bg-[#F5E3DA]"
+                  } rounded-md`}
+              >
+                <div className="flex flex-col md:flex-row gap-4 md:justify-between p-4 md:items-center">
+                  <div className="flex flex-col md:flex-row gap-3 md:items-center justify-center">
+                    <div className="h-20 w-20 rounded-full shadow-xl flex flex-col items-center justify-center bg-white">
+                      {(() => {
+                        // Get the next upcoming class date for display
+                        const allDates = item.schedule_dates || item.scheduleDates || [];
+                        const todayStr = new Date().toISOString().split('T')[0];
+                        const upcomingDates = allDates.filter(d => d >= todayStr);
+                        const nextClassDate = upcomingDates.length > 0 ? upcomingDates.sort()[0] : (allDates[0] || item.date);
+                        const classDateObj = nextClassDate ? new Date(nextClassDate) : today;
+                        return (
+                          <p className="text-[16px] text-[#06574C] font-semibold">
+                            {dateFormatter(classDateObj)?.split(",")[0]} <br />
+                            {dateFormatter(classDateObj)?.split(",")[1]?.split("20")[0]}
+                          </p>
+                        );
+                      })()}
+                    </div>
+                    <div>
+                      <div className="text-lg text-[#06574C] font-semibold">
+                        {item.title}
+                      </div>
+                      <div className="flex flex-wrap max-md:my-3 md:items-center mb-2 gap-5 text-sm text-[#666666]">
+                        <div className="flex items-center gap-1 ">
+                          <Clock size={20} />
+                          {formatTime12Hour(item.start_time)} - {formatTime12Hour(item.end_time)}
+                        </div>
+                        <div className="flex items-center gap-1 ">
+                          <Video size={20} />
+                          {item.meeting_link ? "Online (Zoom)" : "Pending"}
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <Button size="sm" className="bg-white text-[#06574C]">
+                          {item.course_name || "General Class"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    {(() => {
+                      const live = isClassLive(item);
+                      const expired = isClassExpired(item);
+
+                      // Get the next upcoming class date
+                      const allDates = item.schedule_dates || item.scheduleDates || [];
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      const upcomingDates = allDates.filter(d => d >= todayStr);
+                      const nextClassDate = upcomingDates.length > 0 ? upcomingDates.sort()[0] : (allDates[0] || item.date);
+                      const dateStr = nextClassDate?.includes('T') ? nextClassDate.split('T')[0] : nextClassDate;
+                      const hoursUntil = getHoursUntilClass(dateStr, item.start_time || item.startTime);
+
+                      if (expired) {
+                        return (
+                          <Button
+                            startContent={<Check size={20} />}
+                            size="sm"
+                            className="bg-gray-400 w-32 text-white rounded-md"
+                            isDisabled
+                          >
+                            Completed
+                          </Button>
+                        );
+                      } else if (live && item.meeting_link) {
+                        return (
+                          <Button
+                            startContent={<Video size={20} />}
+                            size="sm"
+                            className="bg-green-600 w-32 text-white rounded-md animate-pulse"
+                            as={Link}
+                            to={item.meeting_link}
+                            target="_blank"
+                          >
+                            Start Class
+                          </Button>
+                        );
+                      } else if (item.meeting_link) {
+                        if (hoursUntil !== null && hoursUntil < 3 && hoursUntil > 0) {
+                          return (
+                            <Button
+                              startContent={<Clock size={20} />}
+                              size="sm"
+                              className="bg-[#95C4BE33] text-[#06574C] w-32 rounded-md"
+                            >
+                              Starts in {Math.floor(hoursUntil)}h
+                            </Button>
+                          );
+                        }
+                        
+                        return (
+                          <Button
+                            startContent={<Lock size={20} />}
+                            size="sm"
+                            className="bg-[#06574C] w-32 text-white rounded-md"
+                            isDisabled
+                          >
+                            Locked
+                          </Button>
+                        );
+                      } else {
+                        return (
+                          <Button
+                            startContent={<AiOutlineEye size={22} />}
+                            size="sm"
+                            className="bg-[#06574C] w-32 text-white rounded-md"
+                          >
+                            Details
+                          </Button>
+                        );
+                      }
+                    })()}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
       <div className=" bg-white rounded-lg mb-3 ">
@@ -333,20 +380,20 @@ const StudentDashboard = () => {
           Recent Announcements
         </h1>
         <div className="flex flex-col gap-3">
-          {announcementsLoading ? (
+          {dashboardLoading ? (
             <div className="flex justify-center py-10">
               <Spinner color="success" size="lg" />
             </div>
-          ) : !announcementsData?.data ||
-            announcementsData.data.length === 0 ? (
+          ) : !announcements ||
+            announcements?.length <= 0 ? (
             <div className="text-center py-10 text-gray-500">
               No announcements found
             </div>
           ) : (
-            announcementsData.data.map((item, index) => (
+            announcements.map((item, index) => (
               <div
                 key={item.id}
-                className={`${item.createdBy === "teacher" ||
+                className={`${item.created_by === "teacher" ||
                   item.description?.toLowerCase()?.includes("schedule")
                   ? "bg-[#F5E3DA]"
                   : "bg-[#EAF3F2]"
@@ -355,7 +402,7 @@ const StudentDashboard = () => {
                 <div className="flex flex-col md:flex-row gap-4 md:justify-between p-4 md:items-start">
                   <div className="flex flex-col md:flex-row gap-3 md:items-center justify-center">
                     <div className="h-20 shrink-0 w-20 rounded-full shadow-xl flex flex-col items-center justify-center bg-white">
-                      {item.createdBy === "teacher" ||
+                      {item.created_by === "teacher" ||
                         item.description?.toLowerCase()?.includes("schedule") ? (
                         <CiCalendar color="#D28E3D" size={30} />
                       ) : (
@@ -364,7 +411,7 @@ const StudentDashboard = () => {
                     </div>
                     <div>
                       <div
-                        className={`${item.createdBy === "teacher" ||
+                        className={`${item.created_by === "teacher" ||
                           item.description?.toLowerCase()?.includes("schedule")
                           ? "text-[#B7721F]"
                           : "text-[#06574C]"
@@ -382,7 +429,7 @@ const StudentDashboard = () => {
                   </div>
                   <div>
                     <p className="font-medium text-sm text-[#666666]">
-                      {item.senderName || "Admin"}
+                      {item.sender_name || "Admin"}
                     </p>
                   </div>
                 </div>

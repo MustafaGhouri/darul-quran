@@ -2,34 +2,24 @@ import {
   Button,
   Form,
   Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
   Select,
   SelectItem,
-  useDisclosure,
 } from "@heroui/react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { setUser } from "../../redux/reducers/user";
 import { useDispatch } from "react-redux";
 import { api } from "../../services/api";
 import { successMessage } from "../../lib/toast.config";
 const Login = () => {
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  // };
-
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const [email, setEmail] = useState("admin@admin.com");
   const [password, setPassword] = useState("password123");
   const [showPassword, setShowPassword] = useState(false);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  // const { isOpen, onOpen, onClose } = useDisclosure();
   const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
@@ -37,8 +27,8 @@ const Login = () => {
 
   const rolesWithEmail = [
     { label: "Admin", key: "admin@admin.com" },
-    { label: "Teacher", key: "legenddevelop@gmail.com" },
-    { label: "Student", key: "ahmedarslan599@gmail.com" }
+    { label: "Teacher", key: "teacher@teacher.com" },
+    { label: "Student", key: "student@student.com" }
   ];
 
   const handleLogin = async (e) => {
@@ -64,17 +54,6 @@ const Login = () => {
         route = "/student/dashboard"
       }
 
-      // Store token if returned (assuming the backend returns a token in data.token or similar, 
-      // but the original code relies on cookies? Wait, the original code had credentials: 'include'.
-      // If the backend sets a cookie, it will be handled automatically by browser. 
-      // HOWEVER, my api.js checks localStorage for a token. 
-      // If the backend returns a token in the body, I should save it.
-      // Checking the Login.jsx response handling... it just says `dispatch(setUser(data.user))`.
-      // It doesn't seem to save a token to localStorage. 
-      // But my api.js EXPECTS a token in localStorage. 
-      // If the app relies ONLY on cookies, I might need to adjust api.js or ensure the backend sends a token.
-      // Let's assume for now we might need to save it if present.
-
       if (data.token) {
         localStorage.setItem("token", data.token);
       } else if (data.user?.token) {
@@ -82,12 +61,11 @@ const Login = () => {
       }
 
       window.history.replaceState({}, document.title, window.location.pathname);
-      navigate(route, { replace: true });
-
+      // navigate(route, { replace: true });
+      location.replace(route)
     } catch (error) {
-      // Toast is already handled by api.js interceptor for message
       setModalType("error");
-      onOpen();
+      // onOpen();
     } finally {
       setLoading(false);
     }
@@ -95,13 +73,13 @@ const Login = () => {
 
   return (
     <main className="flex flex-col lg:flex-row w-full min-h-screen">
+      {/* <img src="/icons/login-line.png" alt="Darul Quran" className='  absolute top-1/7 left-1/8 -translate-x-1/2 -translate-y-1/2' /> */}
       <div className="lg:h-screen w-full lg:max-w-[400px] xl:max-w-[400px] p-6 lg:p-8 flex flex-col items-center justify-between bg-[#06574C]  relative ovexrflow-hidden max-lg:hidden lg:rounded-r-lg">
-        {/* <img src="/icons/login-line.png" alt="Darul Quran" className='  absolute top-1/7 left-1/8 -translate-x-1/2 -translate-y-1/2' /> */}
         <img
           src="/icons/logo.png"
           alt="Darul Quran"
           className=" w-56 h-56 top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 absolute"
-        />
+          />
       </div>
       <div className="flex-1 flex flex-col max-sm:items-center items-start md:justify-center bg-[#E9E0D6] ml-0! px-6 sm:px-12 md:px-16 lg:px-24 py-8 lg:py-0 m-0 lg:m-6 lg:rounded-r-lg ">
         <img

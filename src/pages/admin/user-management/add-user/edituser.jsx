@@ -17,6 +17,8 @@ const EditUser = () => {
     if (!id) {
       return;
     }
+    console.log(id);
+    
     const fetchUserById = async () => {
       try {
         const res = await fetch(
@@ -24,6 +26,7 @@ const EditUser = () => {
           {
             method: "GET",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
           }
         );
         const data = await res.json();

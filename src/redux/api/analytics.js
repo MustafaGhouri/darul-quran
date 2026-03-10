@@ -9,7 +9,10 @@ export const analyticsApi = createApi({
     tagTypes: ["Analytics"],
     endpoints: (builder) => ({
         getAnalytics: builder.query({
-            query: () => "/analytics",
+            query: (params) => ({
+                url: "/analytics",
+                params,
+            }),
             providesTags: ["Analytics"],
         }),
     }),

@@ -12,48 +12,78 @@ import {
     ModalHeader,
     ModalBody,
     ModalFooter,
+    useDisclosure,
 } from "@heroui/react";
 import { CiCalendar } from "react-icons/ci";
 import { Clock, Lock, Video, Calendar as CalendarIcon, User, MapPin } from "lucide-react";
 import { FaRegAddressCard } from "react-icons/fa";
 import { LuSquareArrowOutUpRight } from "react-icons/lu";
 import { Calendar } from "@heroui/react";
-import { today, getLocalTimeZone, parseDate } from "@internationalized/date";
 import {
     useGetScheduleQuery,
-    useDeleteScheduleMutation,
 } from "../../../redux/api/schedules";
 import { useCreateRescheduleRequestMutation } from "../../../redux/api/reschedule";
 import { RescheduleRequestModal } from "../../../components/schedule/RescheduleRequestModal";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
-import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatusText } from "../../../utils/scheduleHelpers";
+import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatusText, getStatusTextForSingleDate, getHoursUntilClass } from "../../../utils/scheduleHelpers";
 import { useSelector } from "react-redux";
+import { dateFormatter } from "../../../lib/utils";
+import CustomCalendar from "../../../components/teacher/CustomCalendar";
+import QueryError from "../../../components/QueryError";
 
 const StudentClassSheduling = () => {
-    const [selectedDate, setSelectedDate] = useState(today(getLocalTimeZone()));
     const [filterStatus, setFilterStatus] = useState("all");
     const [filterType, setFilterType] = useState("all");
     const [selectedSchedule, setSelectedSchedule] = useState(null);
     const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [isMarking, setIsMarking] = useState(false);
-
-    const { data: scheduleData, isLoading, refetch } = useGetScheduleQuery({
+    const [viewType, setViewType] = useState('allDates');
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [schedulesForSelectedDate, setSchedulesForSelectedDate] = useState([]);
+    const { data: scheduleData, isLoading,isFetching, refetch, error } = useGetScheduleQuery({
         page: "1",
         limit: "100",
         status: filterStatus === "all" ? undefined : filterStatus,
     });
 
     const [createRescheduleRequest, { isLoading: isRescheduling }] = useCreateRescheduleRequestMutation();
-    const [deleteSchedule, { isLoading: isCancelling }] = useDeleteScheduleMutation();
 
     const { user: currentUser } = useSelector((state) => state.user);
+    const { isOpen: isDateModalOpen, onOpen: openDateModal, onOpenChange: closeDateModal } = useDisclosure();
 
     const schedulesDates = useMemo(() => {
         if (!scheduleData?.schedules) return [];
         const grouped = scheduleData?.schedules.flatMap(schedule => schedule?.scheduleDates);
         return grouped;
     }, [scheduleData]);
+
+    // Helper function to parse date string (supports both YYYY-MM-DD and DD-M-YY formats)
+    const parseDateFromDB = (dateStr) => {
+        if (!dateStr) return null;
+
+        // Try YYYY-MM-DD format first (from PostgreSQL date array)
+        if (dateStr.includes('-') && dateStr.length === 10) {
+            const parsed = new Date(dateStr);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        // Try DD-M-YY format (e.g., "26-2-5")
+        const parts = dateStr.split("-");
+        if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+            let year = parseInt(parts[2], 10);
+            // Handle 2-digit years (assume 20xx for years < 100)
+            if (year < 100) year += 2000;
+            const parsed = new Date(year, month, day);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        // Fallback to standard Date parsing
+        const parsed = new Date(dateStr);
+        return isNaN(parsed.getTime()) ? null : parsed;
+    };
 
     const schedulesByDate = useMemo(() => {
         if (!scheduleData?.schedules) return {};
@@ -65,17 +95,33 @@ const StudentClassSheduling = () => {
                 if (filterType === "video" && schedule.meetingLink) return;
             }
 
-            const dateKey = new Date(schedule.date).toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-                year: "numeric"
-            });
+            // Iterate through scheduleDates array instead of deprecated date field
+            if (!schedule.scheduleDates?.length) return;
 
-            if (!grouped[dateKey]) {
-                grouped[dateKey] = [];
-            }
-            grouped[dateKey].push(schedule);
+            schedule.scheduleDates.forEach((scheduleDate) => {
+                // Handle both string dates and object dates
+                const dateStr = scheduleDate;
+                const parsedDate = parseDateFromDB(dateStr);
+                if (!parsedDate || isNaN(parsedDate.getTime())) return;
+
+                const dateKey = parsedDate.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric"
+                });
+
+                if (!grouped[dateKey]) {
+                    grouped[dateKey] = [];
+                }
+                // Add schedule with its specific date info
+                grouped[dateKey].push({
+                    ...schedule,
+                    date: dateStr,
+                    startTime: typeof scheduleDate === 'object' ? (scheduleDate.startTime || schedule.startTime) : schedule.startTime,
+                    endTime: typeof scheduleDate === 'object' ? (scheduleDate.endTime || schedule.endTime) : schedule.endTime,
+                });
+            });
         });
 
         const sortedDates = Object.keys(grouped).sort((a, b) => {
@@ -93,6 +139,28 @@ const StudentClassSheduling = () => {
     //formatted dates
     const scheduleDates = Object.keys(schedulesByDate);
 
+    const handleDateClick = (date) => {
+        // date is a JavaScript Date object from CustomCalendar
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const dateStr = `${year}-${month}-${day}`;
+
+        setSelectedDate(date);
+
+        // Find schedules for this date
+        const dateKey = date.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric"
+        });
+
+        const schedules = schedulesByDate[dateKey] || [];
+        setSchedulesForSelectedDate(schedules);
+        openDateModal();
+    };
+
     const handleJoinClass = async (schedule) => {
         if (!currentUser) {
             errorMessage("Please login first");
@@ -102,23 +170,25 @@ const StudentClassSheduling = () => {
         try {
             const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/attendance/mark`, {
                 method: "POST",
+                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     scheduleId: schedule.id,
                     studentId: currentUser.id,
                     courseId: schedule.courseId,
+                    date: schedule.date
                 })
             });
-
+            const data = await res.json();
             if (res.ok) {
-                window.open(schedule.meetingLink, '_blank');
+                window.open(data?.link, '_blank');
                 successMessage("Joined class! Attendance marked.");
             } else {
-                window.open(schedule.meetingLink, '_blank');
+                throw new Error(data.message);
             }
         } catch (error) {
             console.error("Failed to mark attendance", error);
-            window.open(schedule.meetingLink, '_blank');
+            errorMessage(error.message);
         } finally {
             setIsMarking(null);
         }
@@ -156,29 +226,107 @@ const StudentClassSheduling = () => {
     };
 
     const canReschedule = (schedule) => {
-        const scheduleDateTime = new Date(`${schedule.date}T${schedule.startTime}`);
-        const now = new Date();
-        const hoursUntilClass = (scheduleDateTime - now) / (1000 * 60 * 60);
-        return hoursUntilClass > 4;
+        const scheduleDates = schedule.scheduleDates || [];
+        const todayStr = new Date().toISOString().split('T')[0];
+        const upcomingDates = scheduleDates.filter(d => d >= todayStr);
+
+        if (upcomingDates.length === 0) return false;
+
+        // Use the next upcoming date
+        const nextDate = upcomingDates.sort()[0];
+        const hoursUntil = getHoursUntilClass(nextDate, schedule.startTime);
+        return hoursUntil > 4;
     };
 
     const canCancel = (schedule) => {
-        const scheduleDateTime = new Date(`${schedule.date}T${schedule.startTime}`);
-        const now = new Date();
-        const hoursUntilClass = (scheduleDateTime - now) / (1000 * 60 * 60);
-        return hoursUntilClass > 0; // Can cancel anytime before class starts
+        const scheduleDates = schedule.scheduleDates || [];
+        const todayStr = new Date().toISOString().split('T')[0];
+        const upcomingDates = scheduleDates.filter(d => d >= todayStr);
+
+        if (upcomingDates.length === 0) return false;
+
+        // Use the next upcoming date
+        const nextDate = upcomingDates.sort()[0];
+        const hoursUntil = getHoursUntilClass(nextDate, schedule.startTime);
+        return hoursUntil > 0; // Can cancel anytime before class starts
     };
 
-    const getClassStatusBadge = (schedule) => {
-        const status = getStatusText(schedule);
-        const color = getStatusColor(schedule);
+    const getClassStatus = (schedule, type = 'single') => {
+        let status = '';
+        let hoursUntil = null;
+        let isExpired = false;
+
+        if (type === 'single') {
+            status = getStatusTextForSingleDate(schedule.date, schedule.startTime, schedule.endTime);
+            hoursUntil = getHoursUntilClass(schedule.date, schedule.startTime);
+            const todayStr = new Date().toISOString().split('T')[0];
+            isExpired = schedule.date < todayStr || (schedule.date === todayStr && hoursUntil !== null && hoursUntil < 0);
+        } else {
+            status = getStatusText(schedule);
+            const scheduleDates = schedule.scheduleDates || [];
+            const todayStr = new Date().toISOString().split('T')[0];
+            const upcomingDates = scheduleDates.filter(d => d >= todayStr);
+
+            if (upcomingDates.length > 0) {
+                const nextDate = upcomingDates.sort()[0];
+                hoursUntil = getHoursUntilClass(nextDate, schedule.startTime);
+            } else if (scheduleDates.length > 0) {
+                const lastDate = scheduleDates[scheduleDates.length - 1];
+                hoursUntil = getHoursUntilClass(lastDate, schedule.startTime);
+            }
+            isExpired = isClassExpired(schedule);
+        }
+
+        if (status === "live") {
+            return 'Live Now';
+        }
+
+        if (isExpired) {
+            return "Completed";
+        }
+
+        if (hoursUntil !== null && hoursUntil > 0 && hoursUntil < 3) {
+            return `Starts in ${(hoursUntil)?.toFixed(1)} hr`;
+        }
+
+        return "Upcoming";
+
+    };
+
+    const getClassStatusBadge = (schedule, type = 'single') => {
+        let status = '';
+        let hoursUntil = null;
+        let isExpired = false;
+
+        if (type === 'single') {
+            status = getStatusTextForSingleDate(schedule.date, schedule.startTime, schedule.endTime);
+            hoursUntil = getHoursUntilClass(schedule.date, schedule.startTime);
+            const todayStr = new Date().toISOString().split('T')[0];
+            isExpired = schedule.date < todayStr || (schedule.date === todayStr && hoursUntil !== null && hoursUntil < 0);
+        } else {
+            status = getStatusText(schedule);
+            const scheduleDates = schedule.scheduleDates || [];
+            const todayStr = new Date().toISOString().split('T')[0];
+            const upcomingDates = scheduleDates.filter(d => d >= todayStr);
+
+            if (upcomingDates.length > 0) {
+                const nextDate = upcomingDates.sort()[0];
+                hoursUntil = getHoursUntilClass(nextDate, schedule.startTime);
+            } else if (scheduleDates.length > 0) {
+                const lastDate = scheduleDates[scheduleDates.length - 1];
+                hoursUntil = getHoursUntilClass(lastDate, schedule.startTime);
+            }
+            isExpired = isClassExpired(schedule);
+        }
 
         if (status === "live") {
             return (
                 <Button
                     size="sm"
-                    className="bg-[#E8F1FF] text-[#3F86F2] animate-pulse"
+                    className="animate-pulse"
+                    color="primary"
                     radius="sm"
+                    variant="flat"
                     startContent={<Video size={14} />}
                 >
                     Live Now
@@ -186,19 +334,15 @@ const StudentClassSheduling = () => {
             );
         }
 
-        if (isClassExpired(schedule)) {
+        if (isExpired) {
             return (
-                <Chip size="sm" variant="flat" color="default">
+                <Button size="sm" variant="flat" color="default">
                     Completed
-                </Chip>
+                </Button>
             );
         }
 
-        const scheduleDateTime = new Date(`${schedule.date}T${schedule.startTime}`);
-        const now = new Date();
-        const hoursUntilClass = Math.floor((scheduleDateTime - now) / (1000 * 60 * 60));
-
-        if (hoursUntilClass < 3) {
+        if (hoursUntil !== null && hoursUntil > 0 && hoursUntil < 3) {
             return (
                 <Button
                     size="sm"
@@ -206,36 +350,45 @@ const StudentClassSheduling = () => {
                     radius="sm"
                     startContent={<Lock size={14} />}
                 >
-                    Starts in {hoursUntilClass}h
+                    Starts in {(hoursUntil)?.toFixed(1)} hr
                 </Button>
             );
         }
 
         return (
-            <Chip size="sm" variant="flat" color="warning">
+            <Button size="sm" variant="flat" color="warning">
                 Upcoming
-            </Chip>
+            </Button>
         );
     };
 
-    const ScheduleCard = ({ schedule }) => {
-        const isLive = isClassLive(schedule);
+    const ScheduleCard = ({ schedule, type = 'allDates' }) => {
+        const isLive = isClassLive(schedule, (type === 'normal' ? 'multiple' : 'single'));
         const isExpired = isClassExpired(schedule);
-        const canJoin = isLive && schedule.meetingLink;
+        const canJoin = isLive;
         const canResched = canReschedule(schedule);
         const canCanc = canCancel(schedule);
 
         return (
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-3 hover:shadow-md transition-shadow">
                 <div className="flex flex-wrap gap-2 mb-3">
-                    {getClassStatusBadge(schedule)}
+                    {getClassStatusBadge(schedule, (type === 'normal' ? 'multiple' : 'single'))}
+                    {type === 'allDates' && (getClassStatus(schedule, 'single') === 'Completed') && (
+                        <Button
+                            size="sm"
+                            variant="flat"
+                            color={schedule?.attendance?.includes(schedule.date) ? 'success' : 'danger'}
+                        >
+                            Attendance: {schedule?.attendance?.includes(schedule.date) ? 'Present' : 'Absent'}
+                        </Button>
+                    )}
                     {schedule.courseName && (
                         <Button
                             size="sm"
                             className="bg-[#95C4BE33] text-[#06574C]"
                             radius="sm"
                         >
-                            {schedule.courseName}
+                            Course: {schedule.courseName}
                         </Button>
                     )}
                 </div>
@@ -248,17 +401,52 @@ const StudentClassSheduling = () => {
                 )}
 
                 <div className="flex flex-wrap gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                        <CiCalendar color="#666666" size={20} />
-                        <p className="text-[#666666] text-sm">
-                            {new Date(schedule.date).toLocaleDateString("en-US", {
-                                weekday: "short",
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric"
-                            })}
-                        </p>
-                    </div>
+                    {type === 'normal' ? (
+                        // For schedule overview (type='normal'), show the date range from scheduleDates
+                        <>
+                            <div className="flex text-[#666666] text-sm items-center gap-2">
+                                <CiCalendar color="#666666" size={20} />
+                                <p className="text-[#666666] text-sm">
+                                    {schedule.scheduleDates?.length > 0 ? (
+                                        <>
+                                            {new Date(schedule.scheduleDates[0]).toLocaleDateString('en-US', {
+                                                month: 'short', day: 'numeric', year: 'numeric'
+                                            })}
+                                            {schedule.scheduleDates.length > 1 && (
+                                                <>
+                                                    {' - '}
+                                                    {new Date(schedule.scheduleDates[schedule.scheduleDates.length - 1]).toLocaleDateString('en-US', {
+                                                        month: 'short', day: 'numeric', year: 'numeric'
+                                                    })}
+                                                </>
+                                            )}
+                                            {' '}
+                                            ({schedule.scheduleDates.length} {schedule.scheduleDates.length === 1 ? 'date' : 'dates'})
+                                        </>
+                                    ) : (
+                                        dateFormatter(schedule.date)
+                                    )}
+                                </p>
+                            </div>
+                            <div className="flex text-[#666666] text-sm items-center gap-2">
+                                <CalendarIcon color="#666666" size={18} />
+                                <p className="text-[#666666] text-sm">
+                                    {schedule.scheduleType || 'Recurring'}
+                                    {schedule.repeatInterval && ` (Every ${schedule.repeatInterval} ${schedule.scheduleType === 'daily' ? 'day' : schedule.scheduleType === 'weekly' ? 'week' : 'month'})`}
+                                </p>
+                            </div>
+                        </>
+                    ) : (
+                        // For date-grouped view, show the specific date
+                        <>
+                            <div className="flex text-[#666666] text-sm items-center gap-2">
+                                <CiCalendar color="#666666" size={20} />
+                                <p className="text-[#666666] text-sm">
+                                    {dateFormatter(schedule.date)}
+                                </p>
+                            </div>
+                        </>
+                    )}
                     <div className="flex items-center gap-2">
                         <Clock color="#666666" size={18} />
                         <p className="text-[#666666] text-sm">
@@ -266,7 +454,17 @@ const StudentClassSheduling = () => {
                         </p>
                     </div>
                 </div>
-
+                {type === 'normal' &&
+                    <Calendar
+                        size="sm"
+                        variant="underlined"
+                        color='success'
+                        isReadOnly
+                        isDateUnavailable={(date) =>
+                            schedule?.scheduleDates?.includes(date.toString())
+                        }
+                    />
+                }
                 <Divider className="my-4" />
 
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
@@ -285,30 +483,30 @@ const StudentClassSheduling = () => {
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {canJoin ? (
-                            <Button
-                                radius="sm"
-                                size="md"
-                                variant="solid"
-                                className="bg-[#1570E8] text-white"
-                                startContent={<LuSquareArrowOutUpRight size={18} />}
-                                onPress={() => handleJoinClass(schedule)}
-                                isLoading={isMarking === schedule.id}
-                            >
-                                Join Zoom
-                            </Button>
-                        ) : (
-                            <Button
-                                radius="sm"
-                                size="md"
-                                variant="solid"
-                                className="bg-[#9A9A9A] text-white"
-                                startContent={<Lock size={18} />}
-                                isDisabled={!isExpired}
-                            >
-                                {isExpired ? "Ended" : "Locked"}
-                            </Button>
-                        )}
-
+                        <Button
+                            radius="sm"
+                            size="md"
+                            variant="solid"
+                            className="bg-[#1570E8] text-white"
+                            startContent={<LuSquareArrowOutUpRight size={18} />}
+                            onPress={() => handleJoinClass(schedule)}
+                            isLoading={isMarking === schedule.id}
+                            isDisabled={isMarking === schedule.id}
+                        >
+                            Join Zoom
+                        </Button>
+                        ) : ( 
+                        <Button
+                            radius="sm"
+                            size="md"
+                            variant="solid"
+                            className="bg-[#9A9A9A] text-white"
+                            startContent={<Lock size={18} />}
+                            isDisabled={!isExpired}
+                        >
+                            {isExpired ? "Ended" : "Locked"}
+                        </Button>
+                         )} 
                         {canResched && (
                             <Button
                                 radius="sm"
@@ -321,7 +519,7 @@ const StudentClassSheduling = () => {
                             </Button>
                         )}
 
-                        {canCanc && !isExpired && (
+                        {/* {canCanc && !isExpired && (
                             <Button
                                 radius="sm"
                                 size="md"
@@ -331,7 +529,7 @@ const StudentClassSheduling = () => {
                             >
                                 Cancel
                             </Button>
-                        )}
+                        )} */}
                     </div>
                 </div>
             </div>
@@ -345,25 +543,28 @@ const StudentClassSheduling = () => {
         { key: "completed", label: "Completed" },
     ];
 
-    const classTypes = [
-        { key: "all", label: "All Classes" },
-        { key: "zoom", label: "Live Zoom" },
-        { key: "video", label: "Video Lesson" },
-    ];
+    if (error) {
+        return <QueryError
+            height="300px"
+            error={error}
+            onRetry={refetch}
+            showLogo={false}
+            isLoading={isFetching}
+        />
+    }
 
     return (
-        <div className="h-full relative bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full no-scrollbar top-0 bottom-0 overflow-auto">
+        <div className="h-full relative bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full no-scsrollbar top-0 bottom-0 overflow-auto">
             <DashHeading
                 title="My Class Schedule"
                 desc="View and manage your upcoming live classes"
             />
 
             <div className="grid grid-cols-12 gap-4 items-start mt-4">
-                {/* Main Content - Schedule List */}
-                <div className="col-span-12 lg:col-span-8">
+                {viewType === 'allDates' ? <div className="col-span-12 lg:col-span-8">
                     {isLoading ? (
                         <div className="flex justify-center items-center py-20">
-                            <Spinner size="lg" color="primary" />
+                            <Spinner size="lg" color="success" />
                         </div>
                     ) : scheduleDates.length === 0 ? (
                         <div className="bg-white rounded-lg p-8 text-center">
@@ -386,61 +587,109 @@ const StudentClassSheduling = () => {
                         ))
                     )}
                 </div>
+                    :
+                    <div className="col-span-12 lg:col-span-8">
+                        {isLoading ? (
+                            <div className="flex justify-center items-center py-20">
+                                <Spinner size="lg" color="success" />
+                            </div>
+                        ) : scheduleData?.schedules?.length === 0 ? (
+                            <div className="bg-white rounded-lg p-8 text-center">
+                                <CalendarIcon className="mx-auto mb-4 text-gray-400" size={48} />
+                                <p className="text-gray-500">No classes scheduled</p>
+                            </div>
+                        ) : (
+                            scheduleData?.schedules?.map((i) => (
+                                <div key={i.id} className="mb-6">
+                                    <DashHeading
+                                        title={i.scheduleDates?.length === 1 ? new Date(i.scheduleDates[0]).toDateString() : (new Date(i.scheduleDates[0]).toDateString()
+                                            + ' to ' +
+                                            new Date(i.scheduleDates[i.scheduleDates?.length - 1]).toDateString())}
+                                    />
+                                    <div className="mt-3">
+                                        <ScheduleCard key={i.id} schedule={i} type="normal" />
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                }
 
                 {/* Sidebar - Calendar & Filters */}
-                <div className="col-span-12 lg:col-span-4 space-y-4">
+                <div className="col-span-12 sm:sticky top-2  lg:col-span-4 space-y-4 mb-4">
                     {/* Quick Stats Card */}
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
+                    {/* <div className="bg-white p-4 rounded-lg shadow-sm">
                         <h3 className="text-sm font-semibold text-gray-700 mb-3">Schedule Overview</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-[#95C4BE33] p-3 rounded-lg text-center">
-                                <p className="text-2xl font-bold text-[#06574C]">
-                                    {scheduleData?.schedules?.filter(s => getStatusText(s) === "upcoming").length || 0}
-                                </p>
-                                <p className="text-xs text-gray-600">Upcoming</p>
+                        {viewType === 'normal' ?
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-[#95C4BE33] p-3 rounded-lg text-center">
+                                    <p className="text-2xl font-bold text-[#06574C]">
+                                        {scheduleData?.schedules?.filter(s => getStatusText(s) === "upcoming").length || 0}
+                                    </p>
+                                    <p className="text-xs text-gray-600">Upcoming</p>
+                                </div>
+                                <div className="bg-[#E8F1FF] p-3 rounded-lg text-center">
+                                    <p className="text-2xl font-bold text-[#3F86F2]">
+                                        {scheduleData?.schedules?.filter(s => getStatusText(s) === "live").length || 0}
+                                    </p>
+                                    <p className="text-xs text-gray-600">Live</p>
+                                </div>
                             </div>
-                            <div className="bg-[#E8F1FF] p-3 rounded-lg text-center">
-                                <p className="text-2xl font-bold text-[#3F86F2]">
-                                    {scheduleData?.schedules?.filter(s => getStatusText(s) === "live").length || 0}
-                                </p>
-                                <p className="text-xs text-gray-600">Live</p>
+                            :
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-[#95C4BE33] p-3 rounded-lg text-center">
+                                    <p className="text-2xl font-bold text-[#06574C]">
+                                        {(() => {
+                                            const todayStr = new Date().toISOString().split('T')[0];
+                                            let count = 0;
+                                            scheduleData?.schedules?.forEach(s => {
+                                                const scheduleDates = s.scheduleDates || [];
+                                                // Count each upcoming date individually
+                                                const upcomingDates = scheduleDates.filter(d => d >= todayStr);
+                                                count += upcomingDates.length;
+                                            });
+                                            return count;
+                                        })()}
+                                    </p>
+                                    <p className="text-xs text-gray-600">Upcoming</p>
+                                </div>
+                                <div className="bg-[#E8F1FF] p-3 rounded-lg text-center">
+                                    <p className="text-2xl font-bold text-[#3F86F2]">
+                                        {(() => {
+                                            const todayStr = new Date().toISOString().split('T')[0];
+                                            let count = 0;
+                                            scheduleData?.schedules?.forEach(s => {
+                                                const scheduleDates = s.scheduleDates || [];
+                                                // Count today's dates that are currently live
+                                                if (scheduleDates.includes(todayStr)) {
+                                                    const [startHour, startMin] = (s.startTime || "").split(":").map(Number);
+                                                    const [endHour, endMin] = (s.endTime || "").split(":").map(Number);
+                                                    const now = new Date();
+                                                    const [year, month, day] = todayStr.split("-").map(Number);
+                                                    const startTime = new Date(year, month - 1, day, startHour, startMin);
+                                                    const endTime = new Date(year, month - 1, day, endHour, endMin);
+                                                    if (now >= startTime && now <= endTime) {
+                                                        count++;
+                                                    }
+                                                }
+                                            });
+                                            return count;
+                                        })()}
+                                    </p>
+                                    <p className="text-xs text-gray-600">Live</p>
+                                </div>
                             </div>
-                        </div>
+                        }
+                    </div> */}
+
+                    <div className="bg-white w-full space-y-4 p-4 rounded-lg shadow-sm">
+                        <CustomCalendar
+                            selectedDates={schedulesDates}
+                            onDateClick={handleDateClick}
+                            className="max-w-[330px] mx-auto"
+                        />
                     </div>
 
-                    {/* Calendar */}
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                        <h3 className="text-sm font-semibold text-gray-700 mb-3">Calendar</h3>
-                        <div className="w-full flex justify-center">
-                            <style>{`
-                                [data-selected="true"] {
-                                    background-color: #06574C !important;
-                                    color: white !important;
-                                    border-radius: 9999px !important;
-                                }
-                                [data-hovered="true"] {
-                                    background-color: #95C4BE !important;
-                                    border-radius: 9999px !important;
-                                }
-                            `}</style>
-                            <Calendar
-                                aria-label="Select Date"
-                                classNames={{
-                                    headerWrapper: "bg-[#FBF4EC] w-full",
-                                    gridHeaderRow: "bg-[#FBF4EC] w-full",
-                                    gridBody: "bg-[#FBF4EC] w-full",
-                                    gridWrapper: "bg-[#FBF4EC] w-full",
-                                    root: "w-full",
-                                    cell: "w-full",
-                                    table: "w-full",
-                                }}
-                                isReadOnly
-                                isDateUnavailable={(date) =>
-                                    schedulesDates?.includes(date.toString())
-                                }
-                            />
-                        </div>
-                    </div>
 
                     {/* Filters */}
                     <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
@@ -462,36 +711,171 @@ const StudentClassSheduling = () => {
                                 ))}
                             </Select>
                         </div>
-
-                        <div>
-                            <label className="text-sm font-semibold text-gray-700 mb-2 block">
-                                Class Type
-                            </label>
-                            <div className="flex flex-col gap-2">
-                                {classTypes.map((type) => (
-                                    <Button
-                                        key={type.key}
-                                        size="sm"
-                                        radius="sm"
-                                        className={`justify-start ${filterType === type.key
-                                            ? "bg-[#06574C] text-white"
-                                            : "bg-gray-100 text-gray-700"
-                                            }`}
-                                        onPress={() => setFilterType(type.key)}
-                                        variant={filterType === type.key ? "solid" : "flat"}
-                                    >
-                                        {type.key === "zoom" && <Video size={16} className="mr-2" />}
-                                        {type.key === "video" && <Lock size={16} className="mr-2" />}
-                                        {type.label}
-                                    </Button>
-                                ))}
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Reschedule Request Modal */}
+            <Modal
+                isOpen={isDateModalOpen}
+                onOpenChange={closeDateModal}
+                size="lg"
+                scrollBehavior="inside"
+            >
+                <ModalContent>
+                    <ModalHeader>
+                        <div className="flex flex-col">
+                            <h2 className="text-lg font-semibold text-[#06574C]">
+                                Schedule Details For
+                            </h2>
+                            {selectedDate && (
+                                <p className="text-sm text-gray-600">
+                                    {selectedDate.toLocaleDateString("en-US", {
+                                        weekday: "long",
+                                        month: "long",
+                                        day: "numeric",
+                                        year: "numeric"
+                                    })}
+                                </p>
+                            )}
+                        </div>
+                    </ModalHeader>
+                    <ModalBody>
+                        {schedulesForSelectedDate.length === 0 ? (
+                            <div className="text-center py-8">
+                                <CalendarIcon className="mx-auto mb-4 text-gray-400" size={48} />
+                                <p className="text-gray-500">No classes scheduled for this date</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-4">
+                                {schedulesForSelectedDate.map((schedule) => (
+                                    <div
+                                        key={schedule.id}
+                                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                                    >
+                                        <div className="flex flex-wrap gap-2 mb-3">
+                                            {getClassStatusBadge(schedule, 'single')}
+                                            {getClassStatus(schedule, 'single') === 'Completed' && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="flat"
+                                                    color={schedule?.attendance?.includes(schedule.date) ? 'secondary' : 'danger'}
+                                                >
+                                                    Attendance: {schedule?.attendance?.includes(schedule.date) ? 'Present' : 'Absent'}
+                                                </Button>
+                                            )}
+                                            {schedule.courseName && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="flat"
+                                                    color="success"
+                                                >
+                                                    Course: {schedule.courseName}
+                                                </Button>
+                                            )}
+                                        </div>
+                                        <h3 className="text-lg font-bold text-gray-800 mb-2">
+                                            {schedule.title}
+                                        </h3>
+
+                                        {schedule.description && (
+                                            <p className="text-gray-600 text-sm mb-3">
+                                                {schedule.description}
+                                            </p>
+                                        )}
+
+                                        <div className="flex flex-col gap-2 mb-4">
+                                            <div className="flex items-center gap-2 text-gray-600 text-sm">
+                                                <CiCalendar size={18} />
+                                                <span>
+                                                    {dateFormatter(schedule.date)}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-gray-600 text-sm">
+                                                <Clock size={18} />
+                                                <span>
+                                                    {formatTime12Hour(schedule.startTime)} - {formatTime12Hour(schedule.endTime)}
+                                                </span>
+                                            </div>
+                                            {schedule.meetingLink && (
+                                                <div className="flex items-center gap-2 text-gray-600 text-sm">
+                                                    <Video size={18} />
+                                                    <span>Zoom Class Available</span>
+                                                </div>
+                                            )}
+                                            {schedule.teacherName && (
+                                                <div className="flex items-center gap-2 text-gray-600 text-sm">
+                                                    <User size={18} />
+                                                    <span>{schedule.teacherName}</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <Divider className="my-3" />
+
+                                        {/* <div className="flex flex-wrap gap-2">
+                                            {schedule.meetingLink && isClassLive({ ...schedule, scheduleDates: [schedule.date] }) ? (
+                                                <Button
+                                                    size="sm"
+                                                    className="bg-[#1570E8] text-white"
+                                                    startContent={<LuSquareArrowOutUpRight size={16} />}
+                                                    onPress={() => handleJoinClass(schedule)}
+                                                    isLoading={isMarking === schedule.id}
+                                                >
+                                                    Join Class
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    size="sm"
+                                                    className="bg-[#9A9A9A] text-white"
+                                                    startContent={<Lock size={16} />}
+                                                    isDisabled
+                                                >
+                                                    Join Locked
+                                                </Button>
+                                            )}
+                                            {canReschedule(schedule) && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="bordered"
+                                                    color="success"
+                                                    onPress={() => {
+                                                        closeDateModal();
+                                                        navigate('/teacher/class-scheduling/manage', { state: schedule });
+                                                    }}
+                                                >
+                                                    Reschedule
+                                                </Button>
+                                            )}
+                                            {canCancel(schedule) && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="bordered"
+                                                    color="danger"
+                                                    onPress={() => {
+                                                        closeDateModal();
+                                                        handleCancelClass(schedule);
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            )}
+                                        </div> */}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            variant="flat"
+                            onPress={() => closeDateModal()}
+                        >
+                            Close
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
             <RescheduleRequestModal
                 isOpen={isRescheduleModalOpen}
                 onClose={() => {
@@ -503,7 +887,6 @@ const StudentClassSheduling = () => {
                 isSubmitting={isRescheduling}
             />
 
-            {/* Cancel Confirmation Modal */}
             <Modal
                 isOpen={isCancelModalOpen}
                 onClose={() => {
@@ -525,7 +908,7 @@ const StudentClassSheduling = () => {
                                 <div className="bg-gray-50 p-3 rounded-lg mt-3">
                                     <p className="font-semibold text-sm">{selectedSchedule.title}</p>
                                     <p className="text-sm text-gray-600">
-                                        {new Date(selectedSchedule.date).toLocaleDateString()} at{" "}
+                                        {(parseDateFromDB(selectedSchedule.date) || new Date(selectedSchedule.date)).toLocaleDateString()} at{" "}
                                         {formatTime12Hour(selectedSchedule.startTime)}
                                     </p>
                                 </div>
@@ -544,14 +927,14 @@ const StudentClassSheduling = () => {
                                 setIsCancelModalOpen(false);
                                 setSelectedSchedule(null);
                             }}
-                            isDisabled={isCancelling}
+                        // isDisabled={isCancelling}
                         >
                             No, Keep It
                         </Button>
                         <Button
                             color="danger"
                             onPress={confirmCancelClass}
-                            isLoading={isCancelling}
+                        // isLoading={isCancelling}
                         >
                             Yes, Cancel
                         </Button>

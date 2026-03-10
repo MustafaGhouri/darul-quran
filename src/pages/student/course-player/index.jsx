@@ -10,6 +10,7 @@ import Loader from "../../../components/Loader";
 import LessonFileViewer from "../../../components/dashboard-components/LessonViewer";
 import RatingStars from "../../../components/RatingStar";
 import QueryError from "../../../components/QueryError";
+import QuizPlayer from "../../../components/dashboard-components/QuizPlayer";
 
 const CoursePlayer = () => {
     const { id } = useParams();
@@ -31,7 +32,7 @@ const CoursePlayer = () => {
 
     const { user } = useSelector((state) => state.user);
 
-    const { data, error, isLoading, isError, refetch } = useGetCourseFilesQuery({ courseId: id, page, search, includeCourse: !courseFromState?.id }, { skip: !id });
+    const { data, error, isLoading, isError, refetch } = useGetCourseFilesQuery({ courseId: id, page, search, includeCourse: !courseFromState?.id, includeQuizeQuestions: true }, { skip: !id });
     const [addReview, { isLoading: isAddingReview }] = useAddRevieworUpdateMutation();
 
     const course = useMemo(() => {
@@ -62,9 +63,11 @@ const CoursePlayer = () => {
                 } catch (e) { cl = []; }
                 setCompletedLessons(cl);
                 const completedCount = data.enrollment.completedLessonsCount;
-                const percentage = totalLessons > 0 ?(completedCount / totalLessons) * 100 : 0;
-                console.log(completedCount,totalLessons,percentage);
-                
+                const percentage =
+                    totalLessons > 0
+                        ? Math.min((completedCount / totalLessons) * 100, 100)
+                        : 0;
+
                 setProgress(percentage);
                 setExistingReview(data?.review);
                 setReviewRating(data.review?.rating);
@@ -88,7 +91,10 @@ const CoursePlayer = () => {
             if (data.success) {
                 setCompletedLessons(data.completedLessons);
                 const completedCount = data.completedCount;
-                const percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+                const percentage =
+                    totalLessons > 0
+                        ? Math.min((completedCount / totalLessons) * 100, 100)
+                        : 0;
                 setProgress(percentage);
                 successMessage("Lesson Completed!");
             }
@@ -157,7 +163,7 @@ const CoursePlayer = () => {
             {/* Header */}
             <header className="h-16 bg-white border-b flex items-center px-4 justify-between shrink-0 z-10 shadow-sm">
                 <div className="flex items-center gap-3">
-                    <Button variant="light" isIconOnly onPress={() => navigate("/student/dashboard")}>
+                    <Button variant="light" isIconOnly onPress={() => navigate(-1)}>
                         <ArrowLeft size={20} />
                     </Button>
                     <div className="flex flex-col">
@@ -166,7 +172,7 @@ const CoursePlayer = () => {
                     </div>
                 </div>
                 <div>
-                    <div className="text-sm font-medium text-[#06574C]">Your Progress: {progress}%</div>
+                    <div className="text-sm font-medium text-[#06574C]">Your Progress: {progress?.toFixed(2)}%</div>
                     <div className="w-32 h-2 bg-gray-200 rounded-full mt-1 overflow-hidden">
                         <div className="h-full bg-[#06574C] transition-all duration-500" style={{ width: `${progress}%` }}></div>
                     </div>
@@ -174,8 +180,20 @@ const CoursePlayer = () => {
             </header>
             <div className="flex flex-1 overflow-hidden">
                 <div className="flex-1 flex flex-col overflow-y-auto bg-black/5">
-                    <div className="bg-black w-full aspect-video shrink-0 relative shadow-lg">
-                        {currentLesson ? (
+                    <div className="bg-black w-full max-h-152 aspect-video shrink-0 relative shadow-lg">
+                        {currentLesson?.fileType === "quiz" ? (
+                            <div className="absolute inset-0 bg-gray-100 overflow-y-auto">
+                                <QuizPlayer
+                                    quiz={currentLesson}
+                                    courseId={id}
+                                    onComplete={(result) => {
+                                        if (result.passed) {
+                                            fetchEnrollment();
+                                        }
+                                    }}
+                                />
+                            </div>
+                        ) : currentLesson ? (
                             <LessonFileViewer
                                 file={currentLesson}
                                 onEnded={handleVideoEnd}
@@ -201,7 +219,13 @@ const CoursePlayer = () => {
                             <p className="whitespace-pre-wrap">
                                 {currentLesson && currentLesson?.description ? currentLesson?.description : !currentLesson?.id ? course?.description : 'No description available for this lesson.'}</p>
                             {currentLesson?.id &&
-                                <Button className="my-3" isLoading={isMarking} size="sm" color="success" onPress={handleVideoEnd}>
+                                <Button
+                                    isDisabled={completedLessons.includes(currentLesson?.id)}
+                                    className="my-3"
+                                    isLoading={isMarking}
+                                    size="sm"
+                                    color="success"
+                                    onPress={handleVideoEnd}>
                                     {completedLessons.includes(currentLesson?.id) ? "Mark Uncomplete" : " Mark Complete"}
                                 </Button>
                             }
@@ -248,7 +272,7 @@ const CoursePlayer = () => {
                                 const lessonId = lesson.id || lesson.lessonId;
                                 const isCompleted = completedLessons.includes(lessonId);
                                 const isCurrentById = currentLesson && currentLesson.id === lessonId;
-                                const isLocked = !lesson.url;
+                                const isLocked = !lesson.url && lesson.fileType !== "quiz";
                                 const releaseText = isLocked
                                     ? lesson.releasedAt && lesson.releasedAt !== "release_immediately"
                                         ? `Releases in ${lesson.releasedAt} after enrollment`
@@ -289,8 +313,8 @@ const CoursePlayer = () => {
                                                 <span className="capitalize">
                                                     Type: {lesson?.fileType?.replace("_", " ") || "Video Lesson"}
                                                 </span>
-                                                {lesson?.file?.pages && <span>pages: {lesson.file.pages}</span>}
-                                                {lesson?.file?.duration && lesson?.file?.duration !== "0" && (
+                                                {lesson?.file?.pages > 0 && <span>pages: {lesson.file.pages}</span>}
+                                                {lesson?.file?.duration > 0 && (
                                                     <span>duration: {lesson.file.duration} mins</span>
                                                 )}
                                             </div>
@@ -380,7 +404,7 @@ const CoursePlayer = () => {
                                         placeholder="What did you like or dislike about this course? How has it helped you?"
                                         value={reviewDescription}
                                         onChange={(e) => setReviewDescription(e.target.value)}
-                                        minRows={5}
+                                        minRows={3}
                                         maxRows={8}
                                         variant="bordered"
                                         classNames={{

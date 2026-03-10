@@ -1,447 +1,759 @@
-import React, { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
-  Button,
-  Checkbox,
-  CheckboxGroup,
-  DatePicker,
-  Input,
-  Select,
-  SelectItem,
-  Textarea,
-  TimeInput,
+    Button,
+    Divider,
+    Select,
+    SelectItem,
+    Spinner,
+    Chip,
+    Modal,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+    useDisclosure,
 } from "@heroui/react";
-import { Calendar } from "lucide-react";
-import { CiCircleAlert, CiVideoOn } from "react-icons/ci";
-import { FaWandMagicSparkles } from "react-icons/fa6";
-import { MdContentCopy } from "react-icons/md";
-import { IoIosSave } from "react-icons/io";
-import { useNavigate } from "react-router-dom";
-
+import { CiCalendar } from "react-icons/ci";
+import { Clock, Lock, Video, Calendar as CalendarIcon, User, MapPin, PlusIcon } from "lucide-react";
+import { FaRegAddressCard } from "react-icons/fa";
+import { LuSquareArrowOutUpRight } from "react-icons/lu";
+import CustomCalendar from "../../../components/teacher/CustomCalendar";
+import {
+    useGetScheduleQuery,
+    useDeleteScheduleMutation,
+} from "../../../redux/api/schedules";
+import { useCreateRescheduleRequestMutation } from "../../../redux/api/reschedule";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
+import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatusText, getStatusTextForSingleDate, getHoursUntilClass } from "../../../utils/scheduleHelpers";
+import { useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { dateFormatter } from "../../../lib/utils";
+import QueryError from "../../../components/QueryError";
 
-const ClassSheduling = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [courses, setCourses] = useState([]);
-  const [currentTeacher, setCurrentTeacher] = useState(null);
+const TeacherClassSheduling = () => {
+    const navigate = useNavigate();
+    const [filterStatus, setFilterStatus] = useState("all");
+    const [filterType, setFilterType] = useState("all");
+    const [selectedSchedule, setSelectedSchedule] = useState(null);
+    const [isMarking, setIsMarking] = useState(false);
+    const [viewType, setViewType] = useState('normal');
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [schedulesForSelectedDate, setSchedulesForSelectedDate] = useState([]);
 
-  const [formData, setFormData] = useState({
-    courseId: "",
-    title: "",
-    date: null,
-    startTime: null,
-    duration: 60,
-    customDuration: "",
-    description: "",
-    meetingLink: "",
-  });
+    const { onOpenChange, isOpen } = useDisclosure()
+    const { isOpen: isDateModalOpen, onOpen: openDateModal, onOpenChange: closeDateModal } = useDisclosure();
 
-  const [settings, setSettings] = useState({
-    recordSession: false,
-    sendEmail: false,
-    allowEarlyJoin: false,
-  });
+    const { data: scheduleData, isLoading, isFetching, error, refetch } = useGetScheduleQuery({
+        page: "1",
+        limit: "100",
+        status: filterStatus === "all" ? undefined : filterStatus,
+    });
 
-  const durationOptions = [30, 45, 60, 90];
+    const [deleteSchedule, { isLoading: isCancelling }] = useDeleteScheduleMutation();
 
-  useEffect(() => {
-    fetchCurrentTeacher();
-  }, []);
+    const { user: currentUser } = useSelector((state) => state.user);
 
-  useEffect(() => {
-    if (currentTeacher) {
-      fetchCourses();
-    }
-  }, [currentTeacher]);
+    const schedulesDates = useMemo(() => {
+        if (!scheduleData?.schedules) return [];
+        const grouped = scheduleData?.schedules.flatMap(schedule => schedule?.scheduleDates);
+        return grouped;
+    }, [scheduleData]);
 
-  const fetchCurrentTeacher = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/auth/me`, {
-        credentials: 'include'
-        
-      });
-      const data = await res.json();
-      if (data.user) {
-        setCurrentTeacher(data.user);
-      }
-    } catch (error) {
-      console.error("Failed to fetch teacher", error);
-    }
-  };
+    // Helper function to parse date string (supports both YYYY-MM-DD and DD-M-YY formats)
+    const parseDateFromDB = (dateStr) => {
+        if (!dateStr) return null;
 
-  const fetchCourses = async () => {
-    try {
-      if (!currentTeacher) return;
+        // Try YYYY-MM-DD format first (from PostgreSQL date array)
+        if (dateStr.includes('-') && dateStr.length === 10) {
+            const parsed = new Date(dateStr);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
 
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/getAll?teacherId=${currentTeacher.id}`,
-       { credentials: 'include'}
-      );
-      const data = await res.json();
-      if (data.success) {
-        setCourses(data.courses || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch courses", error);
-    }
-  };
+        // Try DD-M-YY format (e.g., "26-2-5")
+        const parts = dateStr.split("-");
+        if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+            let year = parseInt(parts[2], 10);
+            // Handle 2-digit years (assume 20xx for years < 100)
+            if (year < 100) year += 2000;
+            const parsed = new Date(year, month, day);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
 
-  const handleGenerateZoomLink = async () => {
-    if (!formData.title || !formData.date || !formData.startTime) {
-      errorMessage("Please fill in Title, Date, and Start Time first");
-      return;
-    }
+        // Fallback to standard Date parsing
+        const parsed = new Date(dateStr);
+        return isNaN(parsed.getTime()) ? null : parsed;
+    };
+    const handleDelete = async (id) => {
+        try {
+            if (!id) {
+                errorMessage('Schedule not selected');
+                return;
+            }
+            const res = await deleteSchedule(id);
+            const error = res?.error?.data;
+            if (error) {
+                throw new Error(error.message || "Operation failed");
+            }
+            successMessage(res.data.message || "Course deleted successfully");
+            onOpenChange(false);
+        } catch (error) {
+            errorMessage("Error deleting session: " + error.message);
+        }
+    };
+    const schedulesByDate = useMemo(() => {
+        if (!scheduleData?.schedules) return {};
 
-    setLoading(true);
-    try {
-      const zoomSettings = {
-        join_before_host: settings.allowEarlyJoin,
-        auto_recording: settings.recordSession
-      };
+        const grouped = {};
+        scheduleData.schedules.forEach((schedule) => {
+            if (filterType !== "all") {
+                if (filterType === "zoom" && !schedule.meetingLink) return;
+                if (filterType === "video" && schedule.meetingLink) return;
+            }
 
-      const requestData = {
-        title: formData.title,
-        date: `${formData.date.year}-${String(formData.date.month).padStart(2, '0')}-${String(formData.date.day).padStart(2, '0')}`,
-        startTime: `${String(formData.startTime.hour).padStart(2, '0')}:${String(formData.startTime.minute).padStart(2, '0')}`,
-        description: formData.description,
-        settings: zoomSettings
-      };
+            // Iterate through scheduleDates array instead of deprecated date field
+            if (!schedule.scheduleDates?.length) return;
 
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule/generate-zoom`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData),
-      });
+            schedule.scheduleDates.forEach((scheduleDate) => {
+                // Handle both string dates and object dates
+                const dateStr = typeof scheduleDate === 'string' ? scheduleDate : scheduleDate?.date;
+                const parsedDate = parseDateFromDB(dateStr);
+                if (!parsedDate || isNaN(parsedDate.getTime())) return;
 
-      const data = await res.json();
-      if (data.success) {
-        setFormData(prev => ({ ...prev, meetingLink: data.meetingLink }));
-        successMessage("Zoom link generated successfully!");
-      } else {
-        errorMessage(data.message || "Failed to generate Zoom link");
-      }
-    } catch (error) {
-      console.error(error);
-      errorMessage("Error generating Zoom link");
-    } finally {
-      setLoading(false);
-    }
-  };
+                const dateKey = parsedDate.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric"
+                });
 
-  const handleScheduleClass = async () => {
-    if (!formData.title || !formData.date || !formData.startTime) {
-      errorMessage("Please fill in all required fields");
-      return;
-    }
-
-    if (!currentTeacher) {
-      errorMessage("Teacher information not found");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const duration = formData.customDuration || formData.duration;
-      const startHour = formData.startTime.hour;
-      const startMinute = formData.startTime.minute;
-
-      const endMinutes = startMinute + parseInt(duration);
-      const endHour = startHour + Math.floor(endMinutes / 60);
-      const endMinute = endMinutes % 60;
-
-      const zoomSettings = {
-        join_before_host: settings.allowEarlyJoin,
-        auto_recording: settings.recordSession
-      };
-
-      const scheduleData = {
-        title: formData.title,
-        date: `${formData.date.year}-${String(formData.date.month).padStart(2, '0')}-${String(formData.date.day).padStart(2, '0')}`,
-        startTime: `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`,
-        endTime: `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`,
-        description: formData.description,
-        teacherId: currentTeacher.id,
-        courseId: formData.courseId || null,
-        settings: zoomSettings
-      };
-
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(scheduleData),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        successMessage("Class scheduled successfully!");
-        setFormData({
-          courseId: "",
-          title: "",
-          date: null,
-          startTime: null,
-          duration: 60,
-          customDuration: "",
-          description: "",
-          meetingLink: "",
+                if (!grouped[dateKey]) {
+                    grouped[dateKey] = [];
+                }
+                // Add schedule with its specific date info
+                grouped[dateKey].push({
+                    ...schedule,
+                    date: dateStr,
+                    startTime: typeof scheduleDate === 'object' ? (scheduleDate.startTime || schedule.startTime) : schedule.startTime,
+                    endTime: typeof scheduleDate === 'object' ? (scheduleDate.endTime || schedule.endTime) : schedule.endTime,
+                });
+            });
         });
-        setTimeout(() => navigate("/teacher/class-scheduling/sheduled-class"), 1000);
-      } else {
-        errorMessage(data.message || "Failed to schedule class");
-      }
-    } catch (error) {
-      console.error(error);
-      errorMessage("Error scheduling class");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const copyToClipboard = () => {
-    if (formData.meetingLink) {
-      navigator.clipboard.writeText(formData.meetingLink);
-      successMessage("Link copied to clipboard!");
-    }
-  };
+        const sortedDates = Object.keys(grouped).sort((a, b) => {
+            return new Date(a) - new Date(b);
+        });
 
-  return (
-    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-screen px-2 sm:px-3 overflow-y-auto pb-20">
-      <div className="flex flex-col md:flex-row gap-3 md:justify-between md:items-center">
-        <DashHeading
-          title={"Class Scheduling"}
-          desc={"Fill in the details below to schedule your live class"}
-        />
+        const sortedGrouped = {};
+        sortedDates.forEach(date => {
+            sortedGrouped[date] = grouped[date];
+        });
 
-        <Button
-          radius="sm"
-          size="lg"
-          className="bg-[#06574C] text-white"
-          startContent={<Calendar size={20} />}
-          onPress={() => navigate("/teacher/class-scheduling/sheduled-class")}
-        >
-          View Scheduled Classes
-        </Button>
-      </div>
+        return sortedGrouped;
+    }, [scheduleData, filterType]);
 
-      <div className="rounded-md bg-[#F1C2AC69] p-4 flex flex-col gap-3 md:flex-row items-center mb-3">
-        <div>
-          <CiCircleAlert size={60} color="#B7721F" />
-        </div>
-        <div>
-          <h1 className="text-[#B7721F] text-lg font-bold">
-            Important Scheduling Notice
-          </h1>
-          <p className="text-[#B7721F] text-sm">
-            Classes must be scheduled or changed at least 4 hours before the
-            start time to ensure proper notification to all enrolled students.
-          </p>
-        </div>
-      </div>
+    //formatted dates
+    const scheduleDates = Object.keys(schedulesByDate);
 
-      <div className="bg-white p-4 rounded-md mb-3">
-        <h1 className="text-xl font-semibold">New Live Class Session</h1>
-        <div className="grid grid-cols-12 gap-3 py-3 md:space-y-2">
-          <Select
-            className="md:col-span-6 col-span-12"
-            radius="sm"
-            label="Select Course (Optional)"
-            variant="bordered"
-            labelPlacement="outside"
-            placeholder="Select Course"
-            selectedKeys={formData.courseId ? [formData.courseId] : []}
-            onSelectionChange={(keys) => {
-              const selectedKey = Array.from(keys)[0];
-              setFormData(prev => ({ ...prev, courseId: selectedKey || "" }));
-            }}
-          >
-            {courses.map((course) => (
-              <SelectItem key={course.id}>
-                {course.courseName}
-              </SelectItem>
-            ))}
-          </Select>
+    const handleCancelClass = (schedule) => {
+        setSelectedSchedule(schedule);
+        onOpenChange(true);
+    };
 
-          <Input
-            className="md:col-span-6 col-span-12"
-            radius="sm"
-            label="Class Title *"
-            variant="bordered"
-            labelPlacement="outside"
-            placeholder="Enter Class Title"
-            value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-          />
 
-          <DatePicker
-            className="md:col-span-6 col-span-12"
-            radius="sm"
-            label="Date *"
-            variant="bordered"
-            labelPlacement="outside"
-            placeholder="Select Date"
-            showMonthAndYearPickers
-            value={formData.date}
-            onChange={(date) => setFormData(prev => ({ ...prev, date }))}
-          />
+    const canReschedule = (schedule) => {
+        const parsedDate = parseDateFromDB(schedule.date);
+        const scheduleDateTime = parsedDate
+            ? new Date(`${parsedDate.toISOString().split('T')[0]}T${schedule.startTime}`)
+            : new Date(`${schedule.date}T${schedule.startTime}`);
+        const now = new Date();
+        const hoursUntilClass = (scheduleDateTime - now) / (1000 * 60 * 60);
+        return hoursUntilClass > 4;
+    };
 
-          <TimeInput
-            className="md:col-span-6 col-span-12"
-            radius="sm"
-            variant="bordered"
-            labelPlacement="outside"
-            label="Start Time *"
-            value={formData.startTime}
-            onChange={(time) => setFormData(prev => ({ ...prev, startTime: time }))}
-          />
-        </div>
+    const canCancel = (schedule) => {
+        const parsedDate = parseDateFromDB(schedule.date);
+        const scheduleDateTime = parsedDate
+            ? new Date(`${parsedDate.toISOString().split('T')[0]}T${schedule.startTime}`)
+            : new Date(`${schedule.date}T${schedule.startTime}`);
+        const now = new Date();
+        const hoursUntilClass = (scheduleDateTime - now) / (1000 * 60 * 60);
+        return hoursUntilClass > 0;
+    };
 
-        <div>
-          <h1 className="text-sm ">Duration</h1>
-          <div className="grid grid-cols-12 gap-3 py-3 md:space-y-2">
-            {durationOptions.map((minutes) => (
-              <Button
-                key={minutes}
-                radius="sm"
-                variant={formData.duration === minutes && !formData.customDuration ? "solid" : "bordered"}
-                className={`md:col-span-3 col-span-12 ${formData.duration === minutes && !formData.customDuration
-                  ? 'bg-[#06574C] text-white border-[#06574C]'
-                  : 'border-gray-300 text-gray-700'
-                  }`}
-                size="md"
-                onPress={() => setFormData(prev => ({ ...prev, duration: minutes, customDuration: "" }))}
-              >
-                {minutes} min
-              </Button>
-            ))}
-          </div>
-        </div>
+    const handleDateClick = (date) => {
+        // date is a JavaScript Date object from CustomCalendar
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const dateStr = `${year}-${month}-${day}`;
 
-        <Input
-          radius="sm"
-          label="Custom Duration (Minutes)"
-          variant="bordered"
-          labelPlacement="outside"
-          type="number"
-          placeholder="Enter Custom Duration"
-          value={formData.customDuration}
-          onChange={(e) => setFormData(prev => ({ ...prev, customDuration: e.target.value, duration: "" }))}
-        />
+        setSelectedDate(date);
 
-        <div className="p-4 bg-[#3F86F212] border-[#3F86F2] border-1 mt-3 rounded-md">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
-            <div className="flex flex-row gap-3 items-center">
-              <div className="h-15 w-15 bg-white rounded-full shadow-xl items-center flex justify-center">
-                <CiVideoOn color="#3F86F2" size={30} />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold">Meeting Link</h1>
-                <p className="text-sm text-[#666666]">
-                  Generate a Zoom meeting link automatically
-                </p>
-              </div>
-            </div>
-            <Button
-              radius="sm"
-              variant="solid"
-              size="lg"
-              className="bg-[#3F86F2] text-white"
-              startContent={<FaWandMagicSparkles size={20} />}
-              onPress={handleGenerateZoomLink}
-              isLoading={loading}
-            >
-              Auto-Generate
-            </Button>
-          </div>
-          <div className="my-3 border-[#3F86F2] border-1 rounded-md p-3 mt-3 bg-white">
-            <Input
-              radius="sm"
-              label="Meeting URL"
-              variant="bordered"
-              labelPlacement="outside"
-              placeholder="Click Auto-Generate to create Zoom link"
-              value={formData.meetingLink}
-              readOnly
-              endContent={
+        // Find schedules for this date
+        const dateKey = date.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric"
+        });
+
+        const schedules = schedulesByDate[dateKey] || [];
+        setSchedulesForSelectedDate(schedules);
+        openDateModal();
+    };
+
+    const getClassStatusBadge = (schedule, type = 'single') => {
+        let status = '';
+        let hoursUntil = null;
+        let isExpired = false;
+
+        if (type === 'single') {
+            status = getStatusTextForSingleDate(schedule.date, schedule.startTime, schedule.endTime);
+            hoursUntil = getHoursUntilClass(schedule.date, schedule.startTime);
+            const todayStr = new Date().toISOString().split('T')[0];
+            isExpired = schedule.date < todayStr || (schedule.date === todayStr && hoursUntil !== null && hoursUntil < 0);
+        } else {
+            status = getStatusText(schedule);
+            const scheduleDates = schedule.scheduleDates || [];
+            const todayStr = new Date().toISOString().split('T')[0];
+            const upcomingDates = scheduleDates.filter(d => d >= todayStr);
+
+            if (upcomingDates.length > 0) {
+                const nextDate = upcomingDates.sort()[0];
+                hoursUntil = getHoursUntilClass(nextDate, schedule.startTime);
+            } else if (scheduleDates.length > 0) {
+                const lastDate = scheduleDates[scheduleDates.length - 1];
+                hoursUntil = getHoursUntilClass(lastDate, schedule.startTime);
+            }
+            isExpired = isClassExpired(schedule);
+        }
+
+        if (status === "live") {
+            return (
                 <Button
-                  isIconOnly
-                  radius="sm"
-                  className="bg-[#95C4BE33]"
-                  onPress={copyToClipboard}
-                  isDisabled={!formData.meetingLink}
+                    size="sm"
+                    className="bg-[#E8F1FF] text-[#3F86F2] animate-pulse"
+                    radius="sm"
+                    startContent={<Video size={14} />}
                 >
-                  <MdContentCopy color="#06574C" size={20} />
+                    Live Now
                 </Button>
-              }
+            );
+        }
+
+        if (isExpired) {
+            return (
+                <Chip size="sm" variant="flat" color="default">
+                    Completed
+                </Chip>
+            );
+        }
+
+        if (hoursUntil !== null && hoursUntil > 0 && hoursUntil < 3) {
+            return (
+                <Button
+                    size="sm"
+                    className="bg-[#95C4BE33] text-[#06574C]"
+                    radius="sm"
+                    startContent={<Lock size={14} />}
+                >
+                    Starts in {(hoursUntil)?.toFixed(1)} hr
+                </Button>
+            );
+        }
+
+        return (
+            <Chip size="sm" variant="flat" color="warning">
+                Upcoming
+            </Chip>
+        );
+    };
+
+    const ScheduleCard = ({ schedule, type = 'allDates' }) => {
+        const isLive = isClassLive(schedule, (type === 'normal' ? 'multiple' : 'single'));
+        const isExpired = isClassExpired(schedule);
+        const canJoin = isLive && schedule.meetingLink;
+        return (
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-3 hover:shadow-md transition-shadow">
+                <div className="flex flex-wrap gap-2 mb-3">
+                    {getClassStatusBadge(schedule, (type === 'normal' ? 'multiple' : 'single'))}
+                    {schedule.courseName && (
+                        <Button
+                            size="sm"
+                            className="bg-[#95C4BE33] text-[#06574C]"
+                            radius="sm"
+                        >
+                            Course: {schedule.courseName}
+                        </Button>
+                    )}
+                </div>
+
+                <h2 className="text-xl font-bold text-gray-800 mb-2">{schedule.title}</h2>
+                {schedule.description && (
+                    <p className="text-[#666666] text-sm mb-4 line-clamp-2">
+                        {schedule.description}
+                    </p>
+                )}
+                {type === 'normal' && <p className="text-[#666666] text-sm mb-4 line-clamp-2">
+                    {schedule.scheduleDates?.length === 1 ? new Date(schedule.scheduleDates[0]).toDateString() : (new Date(schedule.scheduleDates[0]).toDateString()
+                        + ' - to - ' +
+                        new Date(schedule.scheduleDates[schedule.scheduleDates?.length - 1]).toDateString())}
+                </p>}
+                <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="flex text-[#666666] text-sm items-center gap-2">
+                        {type === 'normal' ? "CreatedAt: " : <CiCalendar color="#666666" size={20} />}
+                        <p className="text-[#666666] text-sm">
+                            {dateFormatter(schedule.date, true)}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Clock color="#666666" size={18} />
+                        <p className="text-[#666666] text-sm">
+                            {formatTime12Hour(schedule.startTime)} - {formatTime12Hour(schedule.endTime)}
+                        </p>
+                    </div>
+                </div>
+                {/* {type === 'normal' &&
+                    <Calendar
+                        size="sm"
+                        variant="underlined"
+                        color='success'
+                        isReadOnly
+                        isDateUnavailable={(date) =>
+                            schedule?.scheduleDates?.includes(date.toString())
+                        }
+                    />
+                } */}
+
+                <Divider className="my-4" />
+
+                <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+                    <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 flex items-center justify-center bg-[#95C4BE33] rounded-full">
+                            <FaRegAddressCard color="#06574C" size={24} />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-semibold text-gray-700">
+                                {schedule.teacherName || "Teacher"}
+                            </h3>
+                            {schedule.courseName && (
+                                <p className="text-xs text-gray-500">{schedule.courseName}</p>
+                            )}
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {canJoin ? (
+                            <Button
+                                radius="sm"
+                                size="md"
+                                variant="solid"
+                                className="bg-[#1570E8] text-white"
+                                startContent={<LuSquareArrowOutUpRight size={18} />}
+                                as={Link}
+                                to={schedule.meetingLink}
+                                target="_blank"
+                                isLoading={isMarking === schedule.id}
+                            >
+                                Join Zoom
+                            </Button>
+                        ) : (
+                            <Button
+                                radius="sm"
+                                size="md"
+                                variant="solid"
+                                className="bg-[#9A9A9A] text-white"
+                                startContent={<Lock size={18} />}
+                                isDisabled={!isExpired}
+                            >
+                                {isExpired ? "Ended" : "Locked"}
+                            </Button>
+                        )}
+                        {type === 'normal' && (
+                            <>
+
+                                <Button
+                                    radius="sm"
+                                    size="md"
+                                    variant="bordered"
+                                    color="success"
+                                    onPress={() => navigate('/teacher/class-scheduling/manage', { state: schedule })}
+                                >
+                                    Reschedule
+                                </Button>
+                                <Button
+                                    radius="sm"
+                                    size="md"
+                                    variant="bordered"
+                                    color="danger"
+                                    onPress={() => handleCancelClass(schedule)}
+                                >
+                                    Delete
+                                </Button>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const filters = [
+        { key: "all", label: "All Status" },
+        { key: "upcoming", label: "Upcoming" },
+        { key: "live", label: "Live" },
+        { key: "completed", label: "Completed" },
+    ];
+
+    if (error) {
+        return <QueryError
+            height="300px"
+            error={error}
+            onRetry={refetch}
+            showLogo={false}
+            isLoading={isFetching}
+        />
+    }
+
+    return (
+        <div className="h-full relative bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full nddo-scrollbar top-0 bottom-0 overflow-auto">
+            <DashHeading
+                title="My Course's Schedules"
+                desc="View and manage your upcoming live course's schedules"
             />
-          </div>
-        </div>
-      </div>
+            <div className="flex items-center max-sm:flex-wrap gap-2">
+                <Button
+                    radius="sm"
+                    size="sm"
+                    onPress={() => setViewType('normal')}
+                    variant={viewType === 'normal' ? 'solid' : 'bordered'}
+                    color="success"
+                >
+                    View Schedule By Course
+                </Button>
+                <Button
+                    radius="sm"
+                    size="sm"
+                    variant={viewType === 'allDates' ? 'solid' : 'bordered'}
+                    color="success"
+                    onPress={() => setViewType('allDates')}
+                >
+                    View Schedule By Date
+                </Button>
+            </div>
+            <div className="grid grid-cols-12 gap-4 items-start mt-4">
+                {viewType === 'allDates' ? <div className="col-span-12 lg:col-span-8">
+                    {isLoading ? (
+                        <div className="flex justify-center items-center py-20">
+                            <Spinner size="lg" color="success" />
+                        </div>
+                    ) : scheduleDates.length === 0 ? (
+                        <div className="bg-white rounded-lg p-8 text-center">
+                            <CalendarIcon className="mx-auto mb-4 text-gray-400" size={48} />
+                            <p className="text-gray-500">No classes scheduled</p>
+                        </div>
+                    ) : (
+                        scheduleDates.map((dateKey) => (
+                            <div key={dateKey} className="m b-6">
+                                <DashHeading
+                                    title={dateKey}
+                                    desc={`${schedulesByDate[dateKey].length} ${schedulesByDate[dateKey].length === 1 ? 'class' : 'classes'} scheduled`}
+                                />
+                                <div className="mtd-3">
+                                    {schedulesByDate[dateKey].map((schedule) => (
+                                        <ScheduleCard key={schedule.id} schedule={schedule} />
+                                    ))}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+                    :
+                    <div className="col-span-12 lg:col-span-8">
+                        {isLoading ? (
+                            <div className="flex justify-center items-center py-20">
+                                <Spinner size="lg" color="success" />
+                            </div>
+                        ) : scheduleData?.schedules?.length === 0 ? (
+                            <div className="bg-white rounded-lg p-8 text-center">
+                                <CalendarIcon className="mx-auto mb-4 text-gray-400" size={48} />
+                                <p className="text-gray-500">No classes scheduled</p>
+                            </div>
+                        ) : (
+                            scheduleData?.schedules?.map((i) => (
+                                <div key={i.id} className="mdb-6">
+                                    <DashHeading
+                                        title={"Course: " + i.courseName}
+                                        desc={i.scheduleDates?.length === 1 ? new Date(i.scheduleDates[0]).toDateString() : (new Date(i.scheduleDates[0]).toDateString()
+                                            + ' - to - ' +
+                                            new Date(i.scheduleDates[i.scheduleDates?.length - 1]).toDateString())}
+                                    />
+                                    <div className="mt-d3">
+                                        <ScheduleCard key={i.id} schedule={i} type="normal" />
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                }
 
-      <div className="bg-white p-4 rounded-md mb-3">
-        <h1 className="text-xl font-semibold">Additional Settings</h1>
-        <div className="py-3">
-          <CheckboxGroup>
-            <Checkbox
-              color="success"
-              size="sm"
-              isSelected={settings.recordSession}
-              onValueChange={(val) => setSettings(prev => ({ ...prev, recordSession: val }))}
-            >
-              Record session automatically
-            </Checkbox>
-            <Checkbox
-              color="success"
-              size="sm"
-              isSelected={settings.sendEmail}
-              onValueChange={(val) => setSettings(prev => ({ ...prev, sendEmail: val }))}
-            >
-              Send email notification to students
-            </Checkbox>
-            <Checkbox
-              color="success"
-              size="sm"
-              isSelected={settings.allowEarlyJoin}
-              onValueChange={(val) => setSettings(prev => ({ ...prev, allowEarlyJoin: val }))}
-            >
-              Allow students to join before host
-            </Checkbox>
-          </CheckboxGroup>
-        </div>
-        <div className="py-3">
-          <Textarea
-            label="Class Description (Optional)"
-            labelPlacement="outside"
-            placeholder="Add any additional information or instructions for students..."
-            variant="bordered"
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          />
-        </div>
-      </div>
+                {/* Sidebar - Calendar & Filters */}
+                <div className="col-span-12 sm:sticky top-2 lg:col-span-4 space-y-4 mb-4">
 
-      <div className="p-3 my-5 flex flex-col md:flex-row md:justify-end gap-3">
-        <Button
-          variant="bordered"
-          size="lg"
-          radius="sm"
-          color="success"
-          startContent={<IoIosSave size={20} />}
-          onPress={() => successMessage("Draft saved!")}
-        >
-          Save Draft
-        </Button>
-        <Button
-          size="lg"
-          radius="sm"
-          variant="flat"
-          className="bg-[#06574C] text-white"
-          onPress={handleScheduleClass}
-          isLoading={loading}
-        >
-          Schedule Class
-        </Button>
-      </div>
-    </div>
-  );
+                    <div className="bg-white w-full space-y-4 p-4 rounded-lg shadow-sm">
+                        <Button
+                            startContent={<PlusIcon />}
+                            radius="sm"
+                            size="md"
+                            color="success"
+                            as={Link}
+                            className="w-full"
+                            to="/teacher/class-scheduling/manage"
+                        >
+                            Schedule New
+                        </Button>
+                        <CustomCalendar
+                            selectedDates={schedulesDates}
+                            onDateClick={handleDateClick}
+                            className="max-w-[330px] mx-auto"
+                        />
+                    </div>
+
+                    {/* Filters */}
+                    <div className="bg-white pointer-events-auto p-4 rounded-lg shadow-sm space-y-4">
+                        <div>
+                            <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                                Filter by Status
+                            </label>
+                            <Select
+                                size="sm"
+                                label="Status Filter"
+                                className="w-full"
+                                selectedKeys={[filterStatus]}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                            >
+                                {filters.map((item) => (
+                                    <SelectItem key={item.key} value={item.key}>
+                                        {item.label}
+                                    </SelectItem>
+                                ))}
+                            </Select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Modal for showing schedule details when date is clicked */}
+            <Modal
+                isOpen={isDateModalOpen}
+                onOpenChange={closeDateModal}
+                size="lg"
+                scrollBehavior="inside"
+            >
+                <ModalContent>
+                    <ModalHeader>
+                        <div className="flex flex-col">
+                            <h2 className="text-lg font-semibold text-[#06574C]">
+                                Schedule Details For
+                            </h2>
+                            {selectedDate && (
+                                <p className="text-sm text-gray-600">
+                                    {selectedDate.toLocaleDateString("en-US", {
+                                        weekday: "long",
+                                        month: "long",
+                                        day: "numeric",
+                                        year: "numeric"
+                                    })}
+                                </p>
+                            )}
+                        </div>
+                    </ModalHeader>
+                    <ModalBody>
+                        {schedulesForSelectedDate.length === 0 ? (
+                            <div className="text-center py-8">
+                                <CalendarIcon className="mx-auto mb-4 text-gray-400" size={48} />
+                                <p className="text-gray-500">No classes scheduled for this date</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-4">
+                                {schedulesForSelectedDate.map((schedule) => (
+                                    <div
+                                        key={schedule.id}
+                                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                                    >
+                                        <div className="flex flex-wrap gap-2 mb-3">
+                                            {getClassStatusBadge(schedule, 'single')}
+                                            {schedule.courseName && (
+                                                <Chip
+                                                    size="sm"
+                                                    variant="flat"
+                                                    className="bg-[#95C4BE33] text-[#06574C]"
+                                                >
+                                                    Course: {schedule.courseName}
+                                                </Chip>
+                                            )}
+                                        </div>
+                                        <h3 className="text-lg font-bold text-gray-800 mb-2">
+                                            {schedule.title}
+                                        </h3>
+
+                                        {schedule.description && (
+                                            <p className="text-gray-600 text-sm mb-3">
+                                                {schedule.description}
+                                            </p>
+                                        )}
+
+                                        <div className="flex flex-col gap-2 mb-4">
+                                            <div className="flex items-center gap-2 text-gray-600 text-sm">
+                                                <CiCalendar size={18} />
+                                                <span>
+                                                    {dateFormatter(schedule.date)}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-gray-600 text-sm">
+                                                <Clock size={18} />
+                                                <span>
+                                                    {formatTime12Hour(schedule.startTime)} - {formatTime12Hour(schedule.endTime)}
+                                                </span>
+                                            </div>
+                                            {schedule.meetingLink && (
+                                                <div className="flex items-center gap-2 text-gray-600 text-sm">
+                                                    <Video size={18} />
+                                                    <span>Zoom Class Available</span>
+                                                </div>
+                                            )}
+                                            {schedule.teacherName && (
+                                                <div className="flex items-center gap-2 text-gray-600 text-sm">
+                                                    <User size={18} />
+                                                    <span>{schedule.teacherName}</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <Divider className="my-3" />
+
+                                        {/* <div className="flex flex-wrap gap-2">
+                                            {schedule.meetingLink && isClassLive({ ...schedule, scheduleDates: [schedule.date] }) ? (
+                                                <Button
+                                                    size="sm"
+                                                    className="bg-[#1570E8] text-white"
+                                                    startContent={<LuSquareArrowOutUpRight size={16} />}
+                                                    onPress={() => handleJoinClass(schedule)}
+                                                    isLoading={isMarking === schedule.id}
+                                                >
+                                                    Join Class
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    size="sm"
+                                                    className="bg-[#9A9A9A] text-white"
+                                                    startContent={<Lock size={16} />}
+                                                    isDisabled
+                                                >
+                                                    Join Locked
+                                                </Button>
+                                            )}
+                                            {canReschedule(schedule) && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="bordered"
+                                                    color="success"
+                                                    onPress={() => {
+                                                        closeDateModal();
+                                                        navigate('/teacher/class-scheduling/manage', { state: schedule });
+                                                    }}
+                                                >
+                                                    Reschedule
+                                                </Button>
+                                            )}
+                                            {canCancel(schedule) && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="bordered"
+                                                    color="danger"
+                                                    onPress={() => {
+                                                        closeDateModal();
+                                                        handleCancelClass(schedule);
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            )}
+                                        </div> */}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            variant="flat"
+                            onPress={() => closeDateModal()}
+                        >
+                            Close
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            <Modal
+                isOpen={isOpen}
+                onClose={() => {
+                    onOpenChange(false);
+                    setSelectedSchedule(null);
+                }}
+                size="md"
+            >
+                <ModalContent>
+                    <ModalHeader>
+                        <h2 className="text-lg font-semibold text-[#06574C]">Delete Schdule</h2>
+                    </ModalHeader>
+                    <ModalBody>
+                        {selectedSchedule && (
+                            <>
+                                <p className="text-gray-700">
+                                    Are you sure you want to cancel this schdule?
+                                </p>
+                                <div className="bg-gray-50 p-3 rounded-lg mt-3">
+                                    <p className="font-semibold text-sm">{selectedSchedule.title}</p>
+                                    <p className="text-sm text-gray-600">
+                                        {(parseDateFromDB(selectedSchedule.date) || new Date(selectedSchedule.date)).toLocaleDateString()} at{" "}
+                                        {formatTime12Hour(selectedSchedule.startTime)}
+                                    </p>
+                                </div>
+                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
+                                    <p className="text-sm text-amber-800">
+                                        <strong>⚠️ Note:</strong> This action will notify the admin and students.
+                                    </p>
+                                </div>
+                            </>
+                        )}
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            variant="flat"
+                            onPress={() => {
+                                onOpenChange(false);
+                                setSelectedSchedule(null);
+                            }}
+                            isDisabled={isCancelling}
+                        >
+                            No, Keep It
+                        </Button>
+                        <Button
+                            color="danger"
+                            onPress={() => handleDelete(selectedSchedule?.id)}
+                            isLoading={isCancelling}
+                        >
+                            Yes, Delete
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+        </div >
+    );
 };
 
-export default ClassSheduling;
+export default TeacherClassSheduling;

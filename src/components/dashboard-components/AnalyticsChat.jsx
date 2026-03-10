@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 
-const ApexChart = ({ data = [] }) => {
+const ApexChart = ({ data = [], isLoading = false }) => {
   const seriesData = data.map(item => Number(item.revenue) || 0);
   const categoriesData = data.map(item => item.week_label);
 

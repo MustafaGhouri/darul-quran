@@ -51,10 +51,13 @@ import { useGetAllAnnouncementQuery, useCreateAnnouncementMutation } from "../..
 import QueryError from "../../components/QueryError";
 import CourseSelect from "../../components/select/CourseSelect";
 import { dateFormatter } from "../../lib/utils";
+import QuizModal from "../../components/dashboard-components/forms/QuizModal";
+
 const TeachersDashboard = () => {
   const { user: currentUser } = useSelector((state) => state.user);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
 
   const [placement, setPlacement] = useState("left");
 
@@ -102,43 +105,43 @@ const TeachersDashboard = () => {
   const [course, setCourse] = useState("");
   const [description, setDescription] = useState("");
   const [delivery, setDelivery] = useState("");
- const handleAnnouncement = async (onClose) => {
-  if (!course || !announcement || !description) {
-    errorMessage("Please fill all fields");
-    return;
-  }
+  const handleAnnouncement = async (onClose) => {
+    if (!course || !announcement || !description || !delivery) {
+      errorMessage("Please fill all fields");
+      return;
+    }
 
-  try {
-    const formData = new FormData();
-    formData.append("userId", currentUser.id);
-    formData.append("title", announcement);
-    formData.append("description", description);
-    formData.append("type", announcement);
-    formData.append("delivery", delivery); // Changed to "Both" so it sends push notification
-    formData.append("isFeatured", false);
-    formData.append("sendTo", "students");
-    formData.append("courseId", course);
-    formData.append("senderName", `${currentUser.firstName} ${currentUser.lastName}`);
-    formData.append("createdBy", currentUser.role);
-    formData.append("date", new Date().toISOString());
+    try {
+      const formData = new FormData();
+      formData.append("userId", currentUser.id);
+      formData.append("title", announcement);
+      formData.append("description", description);
+      formData.append("type", announcement);
+      formData.append("delivery", delivery); // Changed to "Both" so it sends push notification
+      formData.append("isFeatured", false);
+      formData.append("sendTo", "students");
+      formData.append("courseId", course);
+      formData.append("senderName", `${currentUser.firstName} ${currentUser.lastName}`);
+      formData.append("createdBy", currentUser.role);
+      formData.append("date", new Date().toISOString());
 
-    files.forEach((file) => {
-      formData.append("files", file);
-    });
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
 
-    await createAnnouncement(formData).unwrap();
+      await createAnnouncement(formData).unwrap();
 
-    // reset
-    setCourse("");
-    setAnnouncement("");
-    setDescription("");
-    setFiles([]);
+      // reset
+      setCourse("");
+      setAnnouncement("");
+      setDescription("");
+      setFiles([]);
 
-    onClose();
-  } catch (err) {
-    errorMessage(err?.data?.message || "Failed to send");
-  }
-};
+      onClose();
+    } catch (err) {
+      errorMessage(err?.data?.message || "Failed to send");
+    }
+  };
   const cardsData = [
     {
       title: "Total Courses ",
@@ -267,22 +270,28 @@ const TeachersDashboard = () => {
 
               return (
                 <div key={item.id} className="col-span-12 md:col-span-6 lg:col-span-4 ">
-                  <div className="w-full bg-white rounded-lg shadow-sm border border-gray-100/50">
-                    <div className="bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)]  rounded-lg p-3 ">
+                  <div className="w-full bg-white rounded-lg shadow-sm border border-gray-100/50 flex flex-col h-full">
+                    <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
+                      <img
+                        src={item.thumbnail}
+                        alt={item.courseName}
+                        className="w-full h-full object-cover rounded-lg  "
+                      />
                       <Button
                         size="sm"
                         radius="sm"
-                        className="bg-white text-[#06574C] px-4 font-medium capitalize"
+                        color="success"
+                        className=" px-4 font-medium capitalize absolute top-2 right-2"
                       >
                         {item.status}
                       </Button>
-                      <div className="">
-                        <span className=" flex justify-center items-center py-6 text-2xl font-semibold text-[#333333]">
-                          {item.courseName}
-                        </span>
-                      </div>
                     </div>
+
                     <div className="p-3 space-y-3">
+                      <h3 title={item.courseName} className="text-base font-semibold text-[#060606] line-clamp-2 min-h-[2rem]">
+                        {item.courseName}
+                      </h3>
+                      <p className="text-sm text-[#666666] line-clamp-2 h-10">{item.description}</p>
                       <div className="flex justify-between items-center ">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-full bg-[#95C4BE33] flex items-center justify-center text-white font-bold text-sm  shrink-0">
@@ -334,7 +343,7 @@ const TeachersDashboard = () => {
       </div>
 
       <div className=" bg-white rounded-lg mb-3 ">
-        <h1 className="p-3 text-xl text-[#333333]">Today's Classes</h1>
+        <h1 className="p-3 text-xl text-[#333333]">Today's Upcomming Classes</h1>
         <div className="flex flex-col gap-3">
           {loading ? (
             // 🔥 Skeleton Loader (3 dummy rows)
@@ -369,23 +378,19 @@ const TeachersDashboard = () => {
               No today classes found.
             </div>
           ) : upcomingClasses.map((item, index) => {
-            const dateObj = new Date(item.date);
-            const day = dateObj.getDate();
-            const month = dateObj.toLocaleString('default', { month: 'short' });
+            const today = new Date();
             return (
               <div
-                key={item.id}
+                key={index}
                 className={`${item.meeting_link ? "bg-[#EAF3F2]" : "bg-[#F5E3DA]"
                   } rounded-md`}
               >
                 <div className="flex flex-col md:flex-row gap-4 md:justify-between p-4 md:items-center">
                   <div className="flex flex-col md:flex-row gap-3 md:items-center justify-center">
                     <div className="h-20 w-20 rounded-full shadow-xl flex flex-col items-center justify-center bg-white">
-                      <p className="text-xl text-[#06574C] font-semibold">
-                        {day}
-                      </p>
-                      <p className="text-sm text-[#06574C] font-semibold">
-                        {month}
+                      <p className="text-[16px] text-[#06574C] font-semibold">
+                        {dateFormatter(today)?.split(",")[0]} <br />
+                        {dateFormatter(today)?.split(",")[1]?.split("20")[0]}
                       </p>
                     </div>
                     <div>
@@ -430,7 +435,7 @@ const TeachersDashboard = () => {
                           <Button
                             startContent={<Video size={20} />}
                             size="sm"
-                            className="bg-green-600 w-32 text-white rounded-md"
+                            color="success"
                             as={Link}
                             to={item.meeting_link}
                             target="_blank"
@@ -502,10 +507,17 @@ const TeachersDashboard = () => {
             variant="flat"
             startContent={<PlusIcon />}
             className="w-full py-4 bg-[#06574C] text-white font-semibold"
+            onPress={() => setIsQuizModalOpen(true)}
           >
             Create Quiz
           </Button>
         </div>
+
+        <QuizModal 
+          isOpen={isQuizModalOpen} 
+          setIsOpen={setIsQuizModalOpen} 
+          // Not passing courseId, so CourseSelect will be shown in the modal
+        />
 
         <Drawer
           isOpen={isOpen}
@@ -521,53 +533,53 @@ const TeachersDashboard = () => {
                 <DrawerHeader className="flex flex-col gap-1 ">
                   Announcements
                 </DrawerHeader>
-                <DrawerBody className="!px-0">
+                <DrawerBody className="px-0!">
                   <Form className="bg-[#95C4BE47] p-3">
                     <CourseSelect label="Select Course" onChange={(val) => setCourse(val)} />
-                     <div className="flex gap-3 w-full">
+                    <div className="flex gap-3 w-full">
                       <Select
-                      className="w-1/2 min-w-[150px]"
-                      radius="sm"
-                      label="Announcement Type"
-                      name="Announcement Type"
-                      variant="bordered"
-                      defaultSelectedKeys={announcement ? [announcement] : undefined}
-                      onChange={(e) => setAnnouncement(e.target.value)}
-                      labelPlacement="outside"
-                      placeholder="Select Announcement Type"
-                    >
-                      <SelectItem key={"Live Class"}>Live Class</SelectItem>
-                      <SelectItem key={"Assignment"}>Assignment</SelectItem>
-                      <SelectItem key={"Exam"}>Exam</SelectItem>
-                      <SelectItem key={"Other"}>Other</SelectItem>
-                      <SelectItem key={"Holiday"}>Holiday</SelectItem>
-                      <SelectItem key={"Fee"}>Fee</SelectItem>
-                      <SelectItem key={"Result"}>Result</SelectItem>   
-                      <SelectItem key={"Information"}>Information</SelectItem>
-                      <SelectItem key={"Important Notice"}>Important Notice</SelectItem>
-                    </Select>
-                    <Select
-                      className="w-1/2 min-w-[150px]"
-                      radius="sm"
-                      label="Delivery"
-                      name="Delivery"
-                      variant="bordered"
-                      defaultSelectedKeys={delivery ? [delivery] : undefined}
-                      onChange={(e) => setDelivery(e.target.value)}
-                      labelPlacement="outside"
-                      placeholder="Select Delivery"
-                    >
-                      <SelectItem key={"Email"}>Email</SelectItem>
-                      <SelectItem key={"Notification"}>Notification</SelectItem>
-                    </Select>
+                        className="w-1/2 min-w-[150px]"
+                        radius="sm"
+                        label="Announcement Type"
+                        name="Announcement Type"
+                        variant="bordered"
+                        defaultSelectedKeys={announcement ? [announcement] : undefined}
+                        onChange={(e) => setAnnouncement(e.target.value)}
+                        labelPlacement="outside"
+                        placeholder="Select Announcement Type"
+                      >
+                        <SelectItem key={"Live Class"}>Live Class</SelectItem>
+                        <SelectItem key={"Assignment"}>Assignment</SelectItem>
+                        <SelectItem key={"Exam"}>Exam</SelectItem>
+                        <SelectItem key={"Other"}>Other</SelectItem>
+                        <SelectItem key={"Holiday"}>Holiday</SelectItem>
+                        <SelectItem key={"Fee"}>Fee</SelectItem>
+                        <SelectItem key={"Result"}>Result</SelectItem>
+                        <SelectItem key={"Information"}>Information</SelectItem>
+                        <SelectItem key={"Important Notice"}>Important Notice</SelectItem>
+                      </Select>
+                      <Select
+                        className="w-1/2 min-w-[150px]"
+                        radius="sm"
+                        label="Delivery"
+                        name="Delivery"
+                        variant="bordered"
+                        defaultSelectedKeys={delivery ? [delivery] : undefined}
+                        onChange={(e) => setDelivery(e.target.value)}
+                        labelPlacement="outside"
+                        placeholder="Select Delivery"
+                      >
+                        <SelectItem key={"Email"}>Email</SelectItem>
+                        <SelectItem key={"In-App"}>In-App</SelectItem>
+                      </Select>
                     </div>
                   </Form>
                   <div className="overflow-y-auto no-scrollbar pb-10">
                     <div className="flex justify-between items-center px-4 pt-2">
-                       <h3 className="font-semibold text-sm text-[#06574C]">Recent Announcements</h3>
-                       <Link to="/teacher/announcements" className="text-xs text-[#D28E3D] hover:underline" onClick={onClose}>
-                          View All
-                       </Link>
+                      <h3 className="font-semibold text-sm text-[#06574C]">Recent Announcements</h3>
+                      <Link to="/teacher/announcements" className="text-xs text-[#D28E3D] hover:underline" onClick={onClose}>
+                        View All
+                      </Link>
                     </div>
                     {announcementsLoading ? (
                       <div className="flex justify-center p-6"><Spinner color="success" size="md" /></div>
@@ -580,7 +592,7 @@ const TeachersDashboard = () => {
                           className="p-4 bg-white rounded-md my-2 group hover:bg-[#FBF4EC] border-[#D28E3D] border-1 m-3 cursor-pointer"
                         >
                           <div className="flex gap-3 items-center">
-                            <div className="h-10 w-10 flex flex-shrink-0 justify-center items-center group-hover:bg-white bg-[#FBF4EC] rounded-full shadow-xl">
+                            <div className="h-10 w-10 flex shrink-0 justify-center items-center group-hover:bg-white bg-[#FBF4EC] rounded-full shadow-xl">
                               {item.createdBy === "teacher" || item.description?.toLowerCase()?.includes("schedule") ? (
                                 <CiCalendar color="#D28E3D" size={22} />
                               ) : (
@@ -623,7 +635,7 @@ const TeachersDashboard = () => {
                       {files.map((file, index) => (
                         <div
                           key={index}
-                          className="relative w-[80px] h-[60px] rounded-lg border border-gray-200 shadow-sm flex items-center justify-center shrink-0 bg-gray-50 mt-1 mr-1"
+                          className="relative w-20 h-[60px] rounded-lg border border-gray-200 shadow-sm flex items-center justify-center shrink-0 bg-gray-50 mt-1 mr-1"
                         >
                           {file.type.startsWith("image/") ? (
                             <img
@@ -675,7 +687,7 @@ const TeachersDashboard = () => {
                     <input
                       type="file"
                       ref={fileInputRef}
-                      className="hidden" 
+                      className="hidden"
                       onChange={handleFileChange}
                     />
                   </div>

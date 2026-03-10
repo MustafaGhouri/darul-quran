@@ -15,6 +15,8 @@ import AreaCharts from "../../components/charts/AreaChart";
 import {
   BookIcon,
   ChartPie,
+  Check,
+  Clock,
   MegaphoneIcon,
   PlusIcon,
   UsersIcon,
@@ -23,12 +25,14 @@ import {
   Video,
 } from "lucide-react";
 import OverviewCards from "../../components/dashboard-components/OverviewCards";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import NotificationPermission from "../../components/NotificationPermission";
 import { useGetAdminDashboardQuery } from "../../redux/api/dashboard";
 import { convertTo12hrsFormat } from "../../lib/utils";
 import { useSelector } from "react-redux";
 import QueryError from "../../components/QueryError";
+import { isClassExpired, isClassLive } from "../../utils/scheduleHelpers";
+import { AiOutlineEye } from "react-icons/ai";
 
 const AdminDashboard = () => {
   const { data: dashboardData, isLoading, error, refetch } = useGetAdminDashboardQuery();
@@ -43,21 +47,21 @@ const AdminDashboard = () => {
       value: stats.total_enrollments || "0",
       icon: <UserStar color="#06574C" size={22} />,
       changeText: "Total students registered",
-      changeColor: "text-gray-500",
+      changeColor: "text-[#06574C]",
     },
     {
       title: "Revenue",
       value: `$${Number(stats.total_revenue || 0).toLocaleString()}`,
       icon: <ChartPie color="#06574C" size={22} />,
       changeText: "Total revenue generated",
-      changeColor: "text-gray-500",
+      changeColor: "text-[#06574C]",
     },
     {
       title: "Active Users",
       value: stats.active_users || "0",
       icon: <UsersRound color="#06574C" size={22} />,
       changeText: "Active in last week",
-      changeColor: "text-gray-500",
+      changeColor: "text-[#06574C]",
     },
     {
       title: "Live Classes Today",
@@ -72,7 +76,7 @@ const AdminDashboard = () => {
 
   const columns = "2fr 1.5fr 1fr 0.8fr 0.8fr";
   const featured = data?.featured || [];
-
+  const navigate = useNavigate();
   if (error) {
     return <QueryError
       height="300px"
@@ -193,6 +197,7 @@ const AdminDashboard = () => {
                 <Button
                   startContent={<PlusIcon />}
                   className="text-sm bg-[#06574C] text-white"
+                  onPress={() => navigate("/admin/class-scheduling")}
                 >
                   Schedule New
                 </Button>
@@ -213,6 +218,7 @@ const AdminDashboard = () => {
                     Class
                   </TableColumn>
                   <TableColumn className="bg-[#EBD4C9]/30">Time</TableColumn>
+                  <TableColumn className="bg-[#EBD4C9]/30">Enrolled</TableColumn>
                   <TableColumn className="bg-[#EBD4C9]/30">Status</TableColumn>
                 </TableHeader>
 
@@ -225,20 +231,71 @@ const AdminDashboard = () => {
                             {classItem.title}
                           </div>
                           <div className="text-xs text-gray-500 mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
-                            {classItem.description}
+                            Course: {classItem.courseName}
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <span className="font-medium">
                           {convertTo12hrsFormat(classItem.start_time)} -{" "}
-                          {convertTo12hrsFormat(classItem.end_time)} UTC
+                          {convertTo12hrsFormat(classItem.end_time)} 
                         </span>
                       </TableCell>
                       <TableCell>
-                        <p className="p-2 w-full text-center rounded-md text-[#06574C] bg-[#95C4BE]/20">
-                          {classItem.status || "Scheduled"}
-                        </p>
+                        <span className="font-medium">{classItem.totalEnrolled}/{classItem.enrollmentLimit}</span>
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const live = isClassLive(classItem);
+                          const expired = isClassExpired(classItem);
+
+                          if (expired) {
+                            return (
+                              <Button
+                                startContent={<Check size={20} />}
+                                size="sm"
+                                className="bg-gray-400 w-32 text-white rounded-md"
+                                isDisabled
+                              >
+                                Completed
+                              </Button>
+                            );
+                          } else if (live && classItem.meeting_link) {
+                            return (
+                              <Button
+                                startContent={<Video size={20} />}
+                                size="sm"
+                                color="success"
+                                as={Link}
+                                to={classItem.meeting_link}
+                                target="_blank"
+                              >
+                                Start Class
+                              </Button>
+                            );
+                          } else if (classItem.meeting_link) {
+                            return (
+                              <Button
+                                startContent={<Clock size={20} />}
+                                size="sm"
+                                className="bg-[#06574C] w-32 text-white rounded-md"
+                                isDisabled
+                              >
+                                Locked
+                              </Button>
+                            );
+                          } else {
+                            return (
+                              <Button
+                                startContent={<AiOutlineEye size={22} />}
+                                size="sm"
+                                className="bg-[#06574C] w-32 text-white rounded-md"
+                              >
+                                Details
+                              </Button>
+                            );
+                          }
+                        })()}
                       </TableCell>
                     </TableRow>
                   ))}

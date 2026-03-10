@@ -42,7 +42,7 @@ class ErrorBoundary extends React.Component {
 
                             <div className="space-y-3">
                                 <Button
-                                    onClick={() => window.location.reload()}
+                                    onPress={() => window.location.reload()}
                                     color="success"
                                     variant="solid"
                                     size="lg"
@@ -62,16 +62,16 @@ class ErrorBoundary extends React.Component {
                             </div>
 
                             {/* Show error details in development only */}
-                            {process.env.NODE_ENV === 'development' && this.state.error && (
+                            {/* {process.env.NODE_ENV === 'development' && this.state.error && ( */}
                                 <details className="mt-6 text-left">
                                     <summary className="cursor-pointer text-[#06574C] dark:text-[#95C4BE] hover:text-[#054a3f] dark:hover:text-[#95C4BE] text-xs font-medium">
                                         Error Details (Dev Only)
                                     </summary>
                                     <div className="mt-2 p-3 bg-[#E9E0D6] dark:bg-gray-900 rounded-md text-xs text-red-500 dark:text-red-300 overflow-auto max-h-40 border border-gray-200 dark:border-gray-700">
-                                        <pre className="whitespace-pre-wrap break-all">{this.state.error.toString()}</pre>
+                                        <pre className="whitespace-pre-wrap break-all">{this.state.error?.toString()}</pre>
                                     </div>
                                 </details>
-                            )}
+                            {/* )} */}
                         </CardBody>
                     </Card>
                 </div>

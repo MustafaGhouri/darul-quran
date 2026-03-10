@@ -20,6 +20,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDeleteCourseMutation, useGetAllCategoriesQuery, useGetAllCoursesQuery } from "../../../redux/api/courses";
 import { errorMessage } from "../../../lib/toast.config";
 import { debounce } from "../../../lib/utils";
+import Swal from "sweetalert2";
 
 const CourseManagement = () => {
 
@@ -31,7 +32,7 @@ const CourseManagement = () => {
   const [categoryId, setCategoryId] = useState(null);
 
   // Query/Fetch
-  const { data, isFetching: isLoading, isError, error,refetch } = useGetAllCoursesQuery({ page, categoryId, limit, status, search });
+  const { data, isFetching: isLoading, isError, error, refetch } = useGetAllCoursesQuery({ page, categoryId, limit, status, search });
   const { data: categoriesData, isError: categoriesError, error: categoriesErrorData } = useGetAllCategoriesQuery();
   // Mutation/Action
   const [deleteProduct] = useDeleteCourseMutation();
@@ -63,6 +64,16 @@ const CourseManagement = () => {
   const [deletingId, setDeletingId] = useState(null);
   const navigate = useNavigate();
   const handleDelete = async (id) => {
+    const { isConfirmed } = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#06574C",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    })
+    if (!isConfirmed) return;
     setOpen(true);
     setDeleteLoading(true);
     setDeletingId(id);
@@ -151,6 +162,7 @@ const CourseManagement = () => {
           <Table
             aria-label="Pending approvals table"
             removeWrapper
+            align="center"
             classNames={{
               base: "table-fixed w-full bg-white rounded-lg min-h-[500px] overflow-y-auto",
               th: "font-bold p-4 text-sm text-[#333333] capitalize tracking-widest bg-[#EBD4C936] cursor-default",

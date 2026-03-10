@@ -26,12 +26,23 @@
  *
  * <AnalyticsCards data={cardsData} />
  */
+
 import { Skeleton } from "@heroui/react";
 
 const AnalyticsCards = ({ data = [], isLoading = false }) => {
     return (
         <div className="py-4 gap-5  overflow-x-auto grid sm:grid-cols-3">
-            {data.map((item, index) => (
+            {
+            isLoading ? (
+                [...Array(3)].map((_, index) => (
+                <div key={index} className="flex items-center justify-center">
+                    <Skeleton
+                        className="w-full h-40 min-w-[15em] bg-white sm:min-w-0 flex-1 space-y-4 rounded-lg p-4 shadow-lg"
+                        count={3}
+                    />
+                </div>
+                ))
+            ) : data.map((item, index) => (
                 <div
                     key={index}
                     className="bg-[#F1E0D9] sm:bg-white min-w-[15em] sm:min-w-0 flex-1 space-y-4 rounded-lg p-4"
@@ -45,12 +56,8 @@ const AnalyticsCards = ({ data = [], isLoading = false }) => {
                             </div>
                         </div>
                         <div>
-                            <Skeleton isLoaded={!isLoading} className="rounded-lg mb-1 min-w-[100px] min-h-[32px]">
-                                <p className="text-2xl font-semibold">{item.value}</p>
-                            </Skeleton>
-                            <Skeleton isLoaded={!isLoading} className="rounded-lg min-w-[140px] min-h-[20px]">
-                                <p className={item.changeColor}>{item.changeText}</p>
-                            </Skeleton>
+                            <p className="text-2xl font-semibold">{item.value}</p>
+                            <p className={item.changeColor}>{item.changeText}</p>
                         </div>
                     </div>
 

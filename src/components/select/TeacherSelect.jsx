@@ -1,7 +1,8 @@
 import { Autocomplete, AutocompleteItem } from "@heroui/react";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useGetAllTeachersQuery } from "../../redux/api/user";
 import { debounce } from "../../lib/utils";
+import { successMessage } from "../../lib/toast.config";
 
 
 /**
@@ -20,7 +21,6 @@ const TeacherSelect = ({ onChange, initialValue, label = undefined }) => {
         limit: 20,
         search: searchValue,
     });
-
     useEffect(() => {
         if (!total) {
             setTotal(teachersData.total);
@@ -44,7 +44,7 @@ const TeacherSelect = ({ onChange, initialValue, label = undefined }) => {
             labelPlacement="outside"
             variant="bordered"
             size="lg"
-            defaultSelectedKey={selectedId}
+            selectedKey={String(initialValue)}
             // value={searchValue}
             isLoading={isLoading}
             onInputChange={total > 10 ? onInputChange : undefined}
@@ -53,8 +53,8 @@ const TeacherSelect = ({ onChange, initialValue, label = undefined }) => {
             endContent={total > 10 && `+${total - 10}`}
         >
             {(item) => (
-                <AutocompleteItem key={String(item.id)}>
-                    {`${item.firstName} ${item.lastName}`}
+                <AutocompleteItem description={item.email} key={String(item.id)}>
+                    {`${item.firstName} ${item.lastName}`+(item.zoomUserId ? ' (Conneted with Zoom)' : '')}
                 </AutocompleteItem>
             )}
         </Autocomplete>

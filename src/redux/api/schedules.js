@@ -29,23 +29,26 @@ export const scheduleApi = createApi({
                 headers: { "Content-Type": "application/json" },
                 body: data,
             }),
-            invalidatesTags: ["schedule"],
+            invalidatesTags: (result, error, arg) =>
+                error ? [] : ['schedule']
         }),
         updateSchedule: builder.mutation({
-            query: ({id, data}) => ({
+            query: ({ id, data }) => ({
                 url: `/update/${id}`,
                 headers: { "Content-Type": "application/json" },
                 method: "PATCH",
                 body: data,
             }),
-            invalidatesTags: ["schedule"],
+            invalidatesTags: (result, error, arg) =>
+                error ? [] : ['schedule']
         }),
-         deleteSchedule: builder.mutation({
+        deleteSchedule: builder.mutation({
             query: (id) => ({
                 url: `/delete/${id}`,
                 method: "DELETE",
             }),
-            invalidatesTags: ["schedule"],
+            invalidatesTags: (result, error, arg) =>
+                error ? [] : ['schedule']
         }),
     }),
 });

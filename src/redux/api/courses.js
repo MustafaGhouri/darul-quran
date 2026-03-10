@@ -47,10 +47,10 @@ export const courseApi = createApi({
             providesTags: ["course"],
         }),
         getCourseFiles: builder.query({
-            query: ({ courseId, page, limit, search, includeCourse }) => ({
+            query: ({ courseId, page, limit, search, includeCourse, includeQuizeQuestions }) => ({
                 url: "/course-files/" + courseId,
                 method: "GET",
-                params: { page, limit, search, includeCourse }
+                params: { page, limit, search, includeCourse, includeQuizeQuestions }
             }),
             providesTags: ["course"],
         }),
@@ -146,6 +146,21 @@ export const courseApi = createApi({
             }),
             invalidatesTags: ["reviews", "course"],
         }),
+        submitQuiz: builder.mutation({
+            query: ({ courseId, quizId, answers }) => ({
+                url: "/submit-quiz",
+                method: "POST",
+                body: { courseId, quizId, answers },
+            }),
+            invalidatesTags: ["course"],
+        }),
+        getQuizAttempts: builder.query({
+            query: (quizId) => ({
+                url: `/quiz-attempts/${quizId}`,
+                method: "GET",
+            }),
+            providesTags: ["course"],
+        }),
         deleteReview: builder.mutation({
             query: (reviewId) => ({
                 url: "/delete-review/" + reviewId,
@@ -175,5 +190,7 @@ export const {
     useAddCategoryMutation,
     useGetReviewsQuery,
     useAddRevieworUpdateMutation,
-    useDeleteReviewMutation
+    useDeleteReviewMutation,
+    useSubmitQuizMutation,
+    useGetQuizAttemptsQuery,
 } = courseApi;

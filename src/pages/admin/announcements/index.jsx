@@ -22,6 +22,7 @@ import {
   Switch,
   Tooltip,
   Form,
+  Spinner,
 } from "@heroui/react";
 import { useSelector } from "react-redux";
 import {
@@ -137,15 +138,20 @@ const Announcements = () => {
     },
   ];
   const statuses = [
-    { key: "all", label: "All Status" },
-    { key: "draft", label: "Draft" },
-    { key: "published", label: "Published" },
+    { key: "all", label: "All" },
+    { key: "students", label: "Students" },
+    { key: "teachers", label: "Teachers" },
+    { key: "admins", label: "Admin" },
   ];
   const categories = [
     { key: "Web Development", label: "Web Development" },
     { key: "all", label: "All Category" },
   ];
-  const filters = [{ key: "all", label: "Filter" }];
+  const filters = [
+    { key: "all", label: "All" },
+    { key: "Email", label: "Email" },
+    { key: "In-App", label: "In-App" },
+  ];
   const limits = [
     { key: "10", label: "10" },
     { key: "20", label: "20" },
@@ -156,6 +162,12 @@ const Announcements = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [isFeatured, setIsFeatured] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalAnnouncements, setTotalAnnouncements] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sendToFilter, setSendToFilter] = useState("all");
+  const [deliveryFilter, setDeliveryFilter] = useState("all");
 
   const handleOpen = (announcement = null) => {
     if (announcement) {
@@ -175,10 +187,19 @@ const Announcements = () => {
   };
 
   const [announcements, setAnnouncements] = useState([]);
-
+  const [loading, setLoading] = useState(false);
   const fetchAnnouncements = async () => {
     try {
-      const res = await fetch(import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/announcement/get", {
+      setLoading(true);
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+
+      if (sendToFilter !== "all") queryParams.append("sendTo", sendToFilter);
+      if (deliveryFilter !== "all") queryParams.append("delivery", deliveryFilter);
+
+      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/announcement/get?${queryParams.toString()}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -190,24 +211,32 @@ const Announcements = () => {
       console.log(result);
       if (result.success) {
         setAnnouncements(result.data);
+        setTotalAnnouncements(result.total || result.data.length);
+        setTotalPages(result.totalPages || 1);
       } else {
         errorMessage(result.message);
       }
     } catch (error) {
       console.error(error);
       errorMessage("Failed to fetch announcements");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchAnnouncements();
-  }, []);
+  }, [page, limit, sendToFilter, deliveryFilter]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
-
+    if (!data.description || !data.delivery || !data.sendTo || !data.title) {
+      errorMessage("Please fill all fields");
+      return;
+    }
     const payload = {
       ...data,
       userId: user?.id,
@@ -226,6 +255,7 @@ const Announcements = () => {
     const method = selectedAnnouncement ? "PUT" : "POST";
 
     try {
+      setLoading(true);
       const res = await fetch(url, {
         method,
         headers: {
@@ -241,11 +271,16 @@ const Announcements = () => {
         onClose();
         fetchAnnouncements();
         successMessage(result.message);
+        setLoading(false);
       } else {
         errorMessage(result.message);
+        setLoading(false);
       }
     } catch (error) {
       errorMessage(error.message);
+      setLoading(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -299,23 +334,41 @@ const Announcements = () => {
       <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
         <div className="flex  items-center gap-2">
           <Select
+            label="Role"
+            labelPlacement="outside"
             className="min-w-[120px]"
             radius="sm"
-            defaultSelectedKeys={["all"]}
-            placeholder="Select status"
-            aria-label="Filter by Status"
+            selectedKeys={[sendToFilter]}
+            placeholder="Select Audience"
+            aria-label="Filter by Audience"
+            onSelectionChange={(keys) => {
+              const val = Array.from(keys)[0];
+              if (val) {
+                setSendToFilter(val.toString());
+                setPage(1);
+              }
+            }}
           >
             {statuses.map((status) => (
               <SelectItem key={status.key}>{status.label}</SelectItem>
             ))}
           </Select>
           <Select
+            label="Delivery Type"
+            labelPlacement="outside"
             radius="sm"
             className="min-w-[120px]"
-            defaultSelectedKeys={["all"]}
+            selectedKeys={[deliveryFilter]}
             selectorIcon={<ListFilterIcon />}
-            placeholder="Filter"
-            aria-label="Filter Options"
+            placeholder="Delivery Type"
+            aria-label="Filter by Delivery Type"
+            onSelectionChange={(keys) => {
+              const val = Array.from(keys)[0];
+              if (val) {
+                setDeliveryFilter(val.toString());
+                setPage(1);
+              }
+            }}
           >
             {filters.map((filter) => (
               <SelectItem key={filter.key}>{filter.label}</SelectItem>
@@ -336,7 +389,7 @@ const Announcements = () => {
         <Table
           removeWrapper
           classNames={{
-            base: "w-full bg-white rounded-lg overflow-x-scroll w-full no-scrollbar min-h-[calc(100vh-350px)] items-center",
+            base: "w-full bg-white rounded-lg overflow-y-scroll overflow-x-scroll w-full no-scrollbar min-h-[calc(100vh-350px)] items-center",
             th: "font-bold p-4 text-md  text-[#333333] capitalize tracking-widest  bg-[#EBD4C936]",
             td: "py-3 items-center",
             tr: "border-b border-default-200 ",
@@ -352,7 +405,7 @@ const Announcements = () => {
             <TableColumn width={220} className="bg-[#EBD4C9]/30">Actions</TableColumn>
           </TableHeader>
 
-          <TableBody>
+          <TableBody emptyContent={"No Announcements Found"} loadingState={loading ? "loading" : "idle"} loadingContent={<Spinner color="success" size="lg" />}>
             {announcements.map((announcement) => (
               <TableRow key={announcement.id}>
                 <TableCell>
@@ -388,7 +441,7 @@ const Announcements = () => {
                 </TableCell>
                 <TableCell>
                   <div>
-                    <Button
+                    <p
                       startContent={
                         announcement.delivery === "Email" ? (
                           <Mail size={20} color="#06574C" />
@@ -399,7 +452,7 @@ const Announcements = () => {
                       className={`p-2 w-full text-center rounded-md bg-[#95C4BE33] text-[#06574C] `}
                     >
                       {announcement.delivery}
-                    </Button>
+                    </p>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -435,22 +488,30 @@ const Announcements = () => {
           <Select
             radius="sm"
             className="w-[70px]"
-            defaultSelectedKeys={["10"]}
+            defaultSelectedKeys={[limit.toString()]}
             placeholder="1"
             aria-label="Items per page"
+            onSelectionChange={(keys) => {
+               const val = Array.from(keys)[0];
+               if (val) {
+                 setLimit(Number(val));
+                 setPage(1); // Reset to first page when limit changes
+               }
+            }}
           >
             {limits.map((limit) => (
               <SelectItem key={limit.key}>{limit.label}</SelectItem>
             ))}
           </Select>
-          <span className="min-w-56">Out of 58</span>
+          <span className="min-w-56">Out of {totalAnnouncements}</span>
         </div>
         <Pagination
           className=""
           showControls
           variant="ghost"
-          initialPage={1}
-          total={10}
+          page={page}
+          total={totalPages}
+          onChange={(p) => setPage(p)}
           classNames={{
             item: "rounded-sm hover:bg-bg-[#06574C]/50",
             cursor: "bg-[#06574C] rounded-sm text-white",
@@ -535,7 +596,7 @@ const Announcements = () => {
                     <Button color="danger" variant="flat" onPress={handleClose}>
                       Cancel
                     </Button>
-                    <Button className="bg-[#06574C] text-white" type="submit">
+                    <Button className="bg-[#06574C] text-white" type="submit" isLoading={loading} disabled={loading}>
                       {selectedAnnouncement ? "Update" : "Create"}
                     </Button>
                   </div>

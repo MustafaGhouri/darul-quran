@@ -21,6 +21,7 @@ import {
   Spinner,
   Chip,
   User,
+  Input,
 } from "@heroui/react";
 import {
   Eye,
@@ -35,6 +36,8 @@ import {
   useDeleteTicketMutation,
 } from "../../../redux/api/supportTickets";
 import { addToast } from "@heroui/react";
+import Swal from "sweetalert2";
+import { debounce } from "../../../lib/utils";
 
 const STATUS_COLORS = {
   open: { bg: "bg-[#E8F1FF]", text: "text-[#3F86F2]" },
@@ -45,7 +48,9 @@ const STATUS_COLORS = {
 
 const AdminSupportTickets = () => {
   const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState('');
+
+  const [statusFilter, setStatusFilter] = useState("");
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [responseMessage, setResponseMessage] = useState("");
   const [ticketStatus, setTicketStatus] = useState("");
@@ -53,13 +58,14 @@ const AdminSupportTickets = () => {
   const respondModal = useDisclosure();
   const viewModal = useDisclosure();
 
-  const { data, isLoading, isFetching } = useGetAllTicketsQuery({ 
-    page, 
-    limit: 10, 
-    status: statusFilter 
+  const { data, isLoading, isFetching } = useGetAllTicketsQuery({
+    page,
+    limit: 10,
+    search,
+    status: statusFilter
   });
   const [respondToTicket, { isLoading: isResponding }] = useRespondToTicketMutation();
-  const [deleteTicket, { isLoading: isDeleting }] = useDeleteTicketMutation();
+  const [deleteTicket] = useDeleteTicketMutation();
 
   const tickets = data?.tickets || [];
   const totalPages = data?.totalPages || 1;
@@ -91,8 +97,16 @@ const AdminSupportTickets = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this ticket?")) return;
-    try {
+    const { isConfirmed } = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#06574C",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    })
+    if (!isConfirmed) return; try {
       await deleteTicket(id).unwrap();
       addToast({ title: "Ticket deleted", color: "success" });
     } catch (err) {
@@ -107,39 +121,44 @@ const AdminSupportTickets = () => {
         desc={"Manage and respond to student and teacher help requests"}
       />
 
-      <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex  justify-between items-center">
-        <div className="flex flex-col  items-center gap-2">
-          <Select
-            className="min-w-[150px]"
-            radius="sm"
-            size="sm"
-            label="Filter by Status"
-            selectedKeys={[statusFilter]}
-            onSelectionChange={(keys) => setStatusFilter([...keys][0] || "all")}
-          >
-            <SelectItem key="all">All Statistics</SelectItem>
-            <SelectItem key="open">Open</SelectItem>
-            <SelectItem key="pending">Pending</SelectItem>
-            <SelectItem key="resolved">Resolved</SelectItem>
-            <SelectItem key="cancelled">Cancelled</SelectItem>
-          </Select>
-        </div>
-        <Button
-          startContent={<Trash2 size={20} />}
+      <div className="bg-[#EBD4C9] max-sm:flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex  justify-start items-center">
+        <Select
+          className="max-w-[150px]"
           radius="sm"
-          className="bg-[#06574C] text-white"
-          onPress={() => setStatusFilter("all")}
+          size="md"
+          placeholder="Filter by Status"
+          // label="Filter by Status"
+          selectedKeys={[statusFilter]}
+          onSelectionChange={(keys) => setStatusFilter([...keys][0] || "all")}
         >
-          Reset Filters
-        </Button>
+          <SelectItem key="all">All</SelectItem>
+          <SelectItem key="open">Open</SelectItem>
+          <SelectItem key="pending">Pending</SelectItem>
+          <SelectItem key="resolved">Resolved</SelectItem>
+          <SelectItem key="cancelled">Cancelled</SelectItem>
+        </Select>
+        <Input
+          type="search"
+          placeholder="Search..."
+          radius="sm"
+          className="max-w-[180px]"
+          defaultValue={search}
+          onChange={(e) =>
+            debounce(() => {
+              setSearch(e.target.value);
+            }, 400)
+          }
+        />
       </div>
 
       <div className="overflow-hidden">
         <Table
+          isHeaderSticky
+          align="center"
           removeWrapper
           classNames={{
-            base: "w-full bg-white rounded-lg overflow-x-auto no-scrollbar",
-            th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+            base: "w-full bg-white rounded-lg overflow-x-auto no-scrollbar h-[calc(100vh-280px)]",
+            th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#ebd4c9]",
             td: "py-3 items-center whitespace-nowrap px-4",
             tr: "border-b border-default-200",
           }}
@@ -175,6 +194,9 @@ const AdminSupportTickets = () => {
                   <TableCell>
                     <div className="max-w-[200px] truncate font-medium">
                       {ticket.title}
+                    </div>
+                    <div className="max-w-[200px] text-sm truncate text-gray-500">
+                      {ticket.description}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -237,26 +259,26 @@ const AdminSupportTickets = () => {
         </Table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex justify-between items-center p-4">
-          <span className="text-sm text-gray-500">
-            Showing Page {page} of {totalPages}
-          </span>
-          <Pagination
-            showControls
-            variant="ghost"
-            page={page}
-            total={totalPages}
-            onChange={setPage}
-            classNames={{
-              item: "rounded-sm",
-              cursor: "bg-[#06574C] rounded-sm text-white",
-              prev: "rounded-sm bg-white/80",
-              next: "rounded-sm bg-white/80",
-            }}
-          />
-        </div>
-      )}
+      {/* {totalPages > 1 && ( */}
+      <div className="flex justify-between items-center p-4">
+        <span className="text-sm text-gray-500">
+          Showing Page {page} of {totalPages}
+        </span>
+        <Pagination
+          showControls
+          variant="ghost"
+          page={page}
+          total={totalPages}
+          onChange={setPage}
+          classNames={{
+            item: "rounded-sm",
+            cursor: "bg-[#06574C] rounded-sm text-white",
+            prev: "rounded-sm bg-gray-200",
+            next: "rounded-sm bg-gray-200",
+          }}
+        />
+      </div>
+      {/* )} */}
 
       {/* ── Respond Modal ── */}
       <Modal isOpen={respondModal.isOpen} onOpenChange={respondModal.onOpenChange} size="lg">
@@ -337,9 +359,8 @@ const AdminSupportTickets = () => {
                         }}
                       />
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          STATUS_COLORS[selectedTicket.status]?.bg
-                        } ${STATUS_COLORS[selectedTicket.status]?.text}`}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[selectedTicket.status]?.bg
+                          } ${STATUS_COLORS[selectedTicket.status]?.text}`}
                       >
                         {selectedTicket.status}
                       </span>

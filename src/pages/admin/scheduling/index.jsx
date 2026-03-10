@@ -28,16 +28,18 @@ import {
   Spinner,
   Pagination,
 } from "@heroui/react";
-import { CalendarIcon, Copy, Trash2, PlusIcon } from "lucide-react";
+import { CalendarIcon, Copy, Trash2, PlusIcon, User } from "lucide-react";
 
 import { getStatusColor, getStatusText, formatTime12Hour } from "../../../utils/scheduleHelpers";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
-import { dateFormatter, limits } from "../../../lib/utils";
+import { dateFormatter, debounce, limits } from "../../../lib/utils";
 import TeacherSelect from "../../../components/select/TeacherSelect";
+import UserSelect from "../../../components/select/UserSelect";
 import { useCreateScheduleMutation, useDeleteScheduleMutation, useGetScheduleQuery, useUpdateScheduleMutation } from "../../../redux/api/schedules";
 import CourseSelect from "../../../components/select/CourseSelect";
 import Swal from "sweetalert2";
 import { Link, useSearchParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const Scheduling = () => {
   const [searchParams] = useSearchParams();
@@ -51,20 +53,19 @@ const Scheduling = () => {
   const [search, setSearch] = useState('');
   const isCalenderView = searchParams.get('calender') === 'true';
   const isOpenModalOnLoad = searchParams.get('modal') === 'true';
-
+  const { user } = useSelector(state => state.user)
   // Modal State
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isEdit, setIsEdit] = useState(false);
-  const [startDate, setStartDate] = useState(false);
-  const [endDate, setEndDate] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     teacherId: "",
     meetingLink: '',
     courseId: '',
-    scheduleType: "once",
+    scheduleType: "daily",
     price: undefined,
+    sessionMode: "all", // "one-on-one" or "all"
 
     // common
     startTime: "",
@@ -78,6 +79,13 @@ const Scheduling = () => {
     endDate: "",
     repeatInterval: 0,
     weeklyDays: [],
+    specificStudentIds: [],
+    // Zoom settings
+    settings: {
+      join_before_host: false,
+      auto_recording: false,
+      waiting_room: false,
+    },
   });
 
   const { data, isFetching } = useGetScheduleQuery({
@@ -86,9 +94,9 @@ const Scheduling = () => {
     search,
     status: statusFilter
   }, { skip: isCalenderView });
-  const [createSchedule, { isLoading: isSubmitting }] = useCreateScheduleMutation();
-  const [updateSchedule, { isLoading: isUpdating }] = useUpdateScheduleMutation();
-  const [deleteSchedule] = useDeleteScheduleMutation();
+  const [createSchedule, { isLoading: isSubmitting, isError }] = useCreateScheduleMutation();
+  const [updateSchedule, { isLoading: isUpdating, isError: isError2 }] = useUpdateScheduleMutation();
+  const [deleteSchedule, { isError: isError3 }] = useDeleteScheduleMutation();
 
   useEffect(() => {
     if (isOpenModalOnLoad) {
@@ -99,24 +107,19 @@ const Scheduling = () => {
   if (isCalenderView) return null;
 
   const handleSubmit = async () => {
-    if (!formData.title || !formData.startTime || !formData.teacherId) {
+    if (!formData.title || !formData.startTime) {
       errorMessage("Please fill required fields (Title,  Time, Teacher)");
       return;
     }
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const dateArray = [];
-    let curr = new Date(start);
-    while (curr <= end) {
-      dateArray.push(curr.toISOString().split("T")[0]);
-      curr.setDate(curr.getDate() + 1);
-    }
-
     try {
-
-      const payload = { ...formData, dateArray }
       let response;
+      const payload = {
+        ...formData,
+      }
 
+      if (user?.role === "teacher") {
+        payload.teacherId = user.id
+      }
       if (isEdit) {
         response = await updateSchedule({ id: formData.id, data: payload });;
       } else {
@@ -125,13 +128,12 @@ const Scheduling = () => {
 
       const data = response.data;
 
-      if (data.success) {
-        successMessage(isEdit ? "Session Updated" : "Session Scheduled & Zoom Generated!");
-        onOpenChange(false);
-        resetForm();
-      } else {
-        errorMessage(data.message || "Operation failed");
+      if (response?.error) {
+        throw new Error(response?.error?.data?.message || "Operation failed");
       }
+      successMessage(data?.message);
+      onOpenChange(false);
+      resetForm();
     } catch (error) {
       console.error(error);
       errorMessage("Error submitting form: " + error.message);
@@ -152,10 +154,11 @@ const Scheduling = () => {
     try {
       setDeleteLoading(id);
       const res = await deleteSchedule(id);
-      if (res.data.success) {
-        successMessage(res.data.message || "Course deleted successfully");
-        return;
-      } else throw new Error(res.data.message);
+      const error = res?.error?.data;
+      if (error) {
+        throw new Error(error.message || "Operation failed");
+      }
+      successMessage(res.data.message || "Course deleted successfully");
     } catch (error) {
       errorMessage("Error deleting session: " + error.message);
     } finally {
@@ -175,8 +178,15 @@ const Scheduling = () => {
       meetingLink: '',
       courseId: '',
       scheduleType: '',
+      sessionMode: 'all',
       repeatInterval: 0,
       weeklyDays: [],
+      specificStudentIds: [],
+      settings: {
+        join_before_host: false,
+        auto_recording: false,
+        waiting_room: true,
+      },
     });
     setIsEdit(false);
   };
@@ -200,10 +210,17 @@ const Scheduling = () => {
       courseId: item.courseId ? String(item.courseId) : '',
       meetingLink: item.meetingLink,
       scheduleType: item.scheduleType,
+      sessionMode: item.specificStudents?.length > 0 ? 'one-on-one' : 'all',
       startDate: item?.scheduleDates[0],
       endDate: item?.scheduleDates[1],
       repeatInterval: item.repeatInterval,
       weeklyDays: item.weeklyDays,
+      specificStudentIds: item.specificStudents,
+      specificStudents: item.specificStudents,
+      settings: {
+        join_before_host: item.settings?.join_before_host || false,
+        auto_recording: item.settings?.auto_recording || false,
+      },
     });
     onOpen();
   };
@@ -219,12 +236,13 @@ const Scheduling = () => {
     { key: "all", label: "All Status" },
     { key: "upcoming", label: "Upcoming" },
     { key: "completed", label: "Completed" },
+    { key: "live", label: "Live" },
   ];
 
 
 
   return (
-    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 mins-h-screen">
+    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 ">
       <DashHeading
         title={"Schedule Live Classes"}
         desc={"Manage and organize your upcoming live sessions"}
@@ -257,7 +275,7 @@ const Scheduling = () => {
         <div className="flex items-center gap-2">
           <Button
             as={Link}
-            to={'/admin/scheduling?calender=true'}
+            to={`/${user.role}/class-scheduling?calender=true`}
             radius="sm"
             size="md"
             startContent={<CalendarIcon color="white" size={15} />}
@@ -283,7 +301,7 @@ const Scheduling = () => {
           isHeaderSticky
           aria-label="Example static collection table"
           classNames={{
-            base: "w-full bg-white rounded-lg min-h-[50vh] overflow-x-scroll w-full no-scrollbar max-h-[500px] shadow-md",
+            base: "w-full bg-white rounded-lg min-h-[55vh] overflow-x-scroll w-full no-scrollbar max-h-[500px] shadow-md",
             th: "font-bold bg-[#EBD4C9] p-4 text-md text-[#333333] capitalize tracking-widest ",
             td: "py-3 items-center whitespace-nowrap",
             tr: "border-b border-default-200",
@@ -318,7 +336,11 @@ const Scheduling = () => {
                 <TableCell>
                   <Popover>
                     <PopoverTrigger>
-                      <span className="cursor-pointer font-medium">{dateFormatter(item.scheduleDates[0])} - {dateFormatter(item?.scheduleDates[item.scheduleDates?.length - 1])}</span>
+                      <span className="cursor-pointer font-medium">
+                        {item.scheduleDates?.length > 1 ? `${dateFormatter(item.scheduleDates[0])} - ${dateFormatter(item?.scheduleDates[item.scheduleDates?.length - 1])}`
+                          : dateFormatter(item.scheduleDates[0])
+                        }
+                      </span>
                     </PopoverTrigger>
                     <PopoverContent>
                       <Calendar
@@ -424,7 +446,6 @@ const Scheduling = () => {
         </div>
       </div>
 
-      {/* Schedule / Edit Modal */}
       <Modal isOpen={isOpen} scrollBehavior="inside" onOpenChange={onOpenChange} placement="center" backdrop="blur" size="lg">
         <ModalContent>
           {(onClose) => (
@@ -436,6 +457,30 @@ const Scheduling = () => {
                 {!isEdit && (
                   <p className="text-xs text-gray-500 mb-2">Zoom link and password will be auto-generated upon creation.</p>
                 )}
+
+                <div className="flex gap-2 mb-4">
+                  <Button
+                    radius="sm"
+                    size="md"
+                    color={formData.sessionMode === "all" ? "success" : "default"}
+                    variant={formData.sessionMode === "all" ? "solid" : "bordered"}
+                    className="w-full"
+                    onPress={() => setFormData({ ...formData, sessionMode: "all" })}
+                  >
+                    For All Enrolled Users
+                  </Button>
+                  <Button
+                    radius="sm"
+                    size="md"
+                    color={formData.sessionMode === "one-on-one" ? "success" : "default"}
+                    className="w-full"
+                    variant={formData.sessionMode === "one-on-one" ? "solid" : "bordered"}
+                    onPress={() => setFormData({ ...formData, sessionMode: "one-on-one" })}
+                  >
+                    One-on-One Live
+                  </Button>
+                </div>
+
                 <Input
                   label="Session Title"
                   variant="bordered"
@@ -449,20 +494,38 @@ const Scheduling = () => {
                   onChange={(courseId) => setFormData({ ...formData, courseId })}
                   status="published"
                   type="live"
+                  isDisabled={isEdit}
                 />
-                {/* Schedule Type */}
-                <Select
-                  label="Schedule Type"
-                  variant="bordered"
-                  selectedKeys={formData?.scheduleType ? new Set([formData?.scheduleType]) : new Set([])}
-                  onChange={(e) =>
-                    setFormData({ ...formData, scheduleType: e.target.value })
-                  }
-                >
-                  <SelectItem key="once">One Time</SelectItem>
-                  <SelectItem key="daily">Daily</SelectItem>
-                  <SelectItem key="weekly">Weekly</SelectItem>
-                </Select>
+
+                <div className="flex gap-2 mb-4">
+                  <Button
+                    radius="md"
+                    size="md"
+                    color={formData.scheduleType === "once" ? "success" : "default"}
+                    variant={formData.scheduleType === "once" ? "solid" : "bordered"}
+                    onPress={() => setFormData({ ...formData, scheduleType: "once" })}
+                  >
+                    One Time
+                  </Button>
+                  <Button
+                    radius="md"
+                    size="md"
+                    color={formData.scheduleType === "daily" ? "success" : "default"}
+                    variant={formData.scheduleType === "daily" ? "solid" : "bordered"}
+                    onPress={() => setFormData({ ...formData, scheduleType: "daily" })}
+                  >
+                    Daily
+                  </Button>
+                  <Button
+                    radius="md"
+                    size="md"
+                    color={formData.scheduleType === "weekly" ? "success" : "default"}
+                    variant={formData.scheduleType === "weekly" ? "solid" : "bordered"}
+                    onPress={() => setFormData({ ...formData, scheduleType: "weekly" })}
+                  >
+                    Weekly
+                  </Button>
+                </div>
 
                 {formData.scheduleType === "once" && (
                   <Input
@@ -592,10 +655,18 @@ const Scheduling = () => {
                     }
                   />
                 </div>
-                <TeacherSelect
+                {user?.role !== "teacher" && <TeacherSelect
                   initialValue={formData.teacherId}
                   onChange={(teacherId) => setFormData({ ...formData, teacherId })}
-                />
+                />}
+                {formData.sessionMode === "one-on-one" && (
+                  <UserSelect
+                    courseId={formData.courseId}
+                    initialValues={formData?.specificStudentIds}
+                    onChange={(specificStudentIds) => setFormData({ ...formData, specificStudentIds })}
+                  />
+                )}
+
                 <Textarea
                   label="Description"
                   variant="bordered"
@@ -604,6 +675,32 @@ const Scheduling = () => {
                     setFormData({ ...formData, description: e.target.value })
                   }
                 />
+                <div className="py-3 border-t pt-4">
+                  <h3 className="text-sm font-semibold mb-2 text-[#06574C]">Zoom Meeting Settings</h3>
+                  <CheckboxGroup
+                    orientation="vertical"
+                    color="success"
+                    value={[
+                      ...(formData.settings?.join_before_host ? ['join_before_host'] : []),
+                      ...(formData.settings?.auto_recording ? ['auto_recording'] : []),
+                      ...(formData.settings?.waiting_room ? ['waiting_room'] : []),
+                    ]}
+                    onChange={(values) => {
+                      setFormData({
+                        ...formData,
+                        settings: {
+                          join_before_host: values.includes('join_before_host'),
+                          auto_recording: values.includes('auto_recording'),
+                          waiting_room: values.includes('waiting_room'),
+                        },
+                      });
+                    }}
+                  >
+                    {/* <Checkbox value="join_before_host">Allow students to join before host</Checkbox> */}
+                    <Checkbox value="auto_recording">Record session automatically (cloud)</Checkbox>
+                    <Checkbox value="waiting_room">Participants must be admitted by the host before joining.</Checkbox>
+                  </CheckboxGroup>
+                </div>
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="flat" onPress={onClose}>

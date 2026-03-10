@@ -1,30 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  BookIcon,
-  CalendarIcon,
-  CalendarPlus,
-  ChartBarIcon,
-  ChevronDown,
-  DollarSignIcon,
-  FileQuestionIcon,
-  HomeIcon,
-  MegaphoneIcon,
-  MegaphoneOffIcon,
-  TicketIcon,
-  TicketsIcon,
-  UsersIcon,
-  Video
+  ChevronDown
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { b } from 'framer-motion/client';
-import { FaChalkboardTeacher } from 'react-icons/fa';
-import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Spinner, User } from '@heroui/react';
+import { Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Spinner, User } from '@heroui/react';
 import { MdLogout } from 'react-icons/md';
 import { errorMessage, successMessage } from '../../lib/toast.config';
 import { useDispatch } from 'react-redux';
 import { clearUser } from '../../redux/reducers/user';
 import { useSelector } from "react-redux";
+import { adminMenu, studentMenu, teacherMenu } from '../../lib/Menues';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
 
@@ -43,81 +29,33 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   };
   const role = getRoleFromPath(pathname);
 
-  // ===== menus for different roles =====
-  const adminMenu = [
-    { name: 'Dashboard', icon: <HomeIcon />, link: '/admin/dashboard', badge: null },
-    {
-      name: 'Courses Management',
-      icon: <BookIcon />,
-      link: '/admin/courses-management',
-      children: [
-        { name: 'Course Builder', link: '/admin/courses-management/builder' },
-        // { name: 'Live Sessions Schedule', link: '/admin/courses-management/live-sessions' },
-        { name: 'Attendance & Progress', link: '/admin/courses-management/attendance' }
-      ]
-    },
-    { name: 'User Management', icon: <UsersIcon />, link: '/admin/user-management' },
-    { name: 'Class Scheduling', icon: <CalendarIcon />, link: '/admin/scheduling'},
-    { name: 'Reschedule Requests', icon: <CalendarPlus />, link: '/admin/reschedule-requests' },
-    { name: 'Announcements', icon: <MegaphoneIcon />, link: '/admin/announcements' },
-    { name: 'Payments & Refunds', icon: <DollarSignIcon />, link: '/admin/payments' },
-    { name: 'Support Tickets', icon: <TicketIcon />, link: '/admin/tickets' },
-    { name: 'Analytics', icon: <ChartBarIcon />, link: '/admin/analytics' },
-    {
-      name: 'Help and Support',
-      icon: <FileQuestionIcon />,
-      link: '/admin/help/messages',
-      children: [
-        { name: 'Message Center', link: '/admin/help/messages' },
-        { name: 'Teacher & Student Chat', link: '/admin/help/chat' },
-        { name: 'Reviews', link: '/admin/help/reviews' },
-        { name: 'FAQs', link: '/admin/help/faqs' }
-      ]
-    }
-  ];
-
-  // Example teacher menu — adjust links & children as needed
-  const teacherMenu = [
-    { name: 'Dashboard', icon: <HomeIcon />, link: '/teacher/dashboard' },
-    {
-      name: 'My Courses',
-      icon: <BookIcon />,
-      link: '/teacher/courses',
-      children: [
-        // { name: 'Course Details View', link: '/teacher/courses/course-details' },
-        { name: 'Upload Materials', link: '/teacher/courses/upload-material' }
-      ]
-    },
-    { name: 'Student Attendance', icon: <CalendarIcon />, link: '/teacher/student-attendance' },
-    { name: 'Class Schedule', icon: <MegaphoneIcon />, link: '/teacher/class-scheduling' },
-    { name: 'Chat Center', icon: <TicketIcon />, link: '/teacher/chat' },
-    { name: 'Support Tickets  ', icon: <TicketsIcon />, link: '/teacher/support-tickets' },
-    { name: 'Announcements', icon: <MegaphoneIcon />, link: '/teacher/announcements' },
-  ];
-
-  const studentMenu = [
-    { name: 'Dashboard', icon: <HomeIcon />, link: '/student/dashboard' },
-    { name: 'My Learning Journey', icon: <FaChalkboardTeacher />, link: '/student/my-learning' },
-    { name: 'Class Schedule', icon: <Video />, link: '/student/class-scheduling' },
-    { name: 'Browse Courses', icon: <Video />, link: '/student/browse-courses' },
-    {
-      name: 'Help and Support',
-      icon: <FileQuestionIcon />,
-      link: '/student/help/messages',
-      children: [
-        { name: 'Chat Center', link: '/student/help/messages' },
-        { name: 'Payments & Invoices', link: '/student/payments' },
-        // { name: 'Reviews', link: '/admin/help/reviews' },
-        // { name: 'FAQs', link: '/admin/help/faqs' }
-      ]
-    },
-    { name: 'Support Tickets  ', icon: <TicketsIcon />, link: '/student/support-tickets' },
-    { name: "Announcements", icon: <MegaphoneIcon />, link: "/student/announcements" }
-  ];
+  //removing not allowed links and child links for sub-admin
+  const filteredAdminMenu = adminMenu
+    .map(tab => {
+      let filteredChildren = [];
+      if (tab.children) {
+        filteredChildren = tab.children.filter(
+          child => user?.permissions?.includes(child.link)
+        );
+      }
+      if (
+        tab.link === "/admin/profile" ||
+        user?.permissions?.includes(tab.link) ||
+        filteredChildren.length > 0
+      ) {
+        return {
+          ...tab,
+          children: filteredChildren.length > 0 ? filteredChildren : undefined,
+        };
+      }
+      return null;
+    })
+    .filter(Boolean);
 
   // Decide which menu to show based on role
+  const finalAdminMenu = user?.email === import.meta.env.VITE_PUBLIC_ADMIN_EMAIL ? adminMenu : filteredAdminMenu
   const menuItems =
-    role === 'admin' ? adminMenu : role === 'teacher' ? teacherMenu : studentMenu;
+    role === 'admin' ? finalAdminMenu : role === 'teacher' ? teacherMenu : studentMenu;
 
   // If a child route is active, auto expand that parent
   useEffect(() => {
@@ -191,7 +129,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
 
       successMessage(data?.message || "Logout successful");
       dispatch(clearUser());
-      // location.reload();
+      localStorage.removeItem("token");
+      // location.href = '/'
     } catch (error) {
       console.log(error);
       errorMessage(error.message);
@@ -234,15 +173,14 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
               <li key={idx}>
                 <div
                   className={`
-      relative flex items-center rounded-md justify-between px-6 py-3 cursor-pointer transition-all
+      relative flex items-center rounded-md justify-between px-6 pgy-3 cursor-pointer transition-all
       ${isActiveParent ? 'text-[#1a5850]' : 'text-[#b8d4d0] hover:bg-white/5'}
     `}
                 >
-                  {/* LEFT SIDE - MAIN LINK */}
                   <Link
                     to={item.link}
                     onClick={handleCloseMobile}
-                    className="flex items-center gap-3 flex-1 z-10"
+                    className="flex items-center gap-3 py-3 flex-1 z-10"
                   >
                     <span className="w-5 h-5">{item.icon}</span>
                     {isSidebarOpen && (
@@ -250,7 +188,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                     )}
                   </Link>
 
-                  {/* RIGHT SIDE - BADGE + TOGGLER */}
                   <div className="flex items-center gap-2 z-10">
                     {item.badge && isSidebarOpen && (
                       <span className="px-2 py-0.5 text-xs bg-[#EBD4C9] text-[#06574C] rounded-full min-w-5 text-center">
@@ -276,7 +213,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                     )}
                   </div>
 
-                  {/* Active background animation */}
                   <AnimatePresence>
                     {isActiveParent && (
                       <motion.span
@@ -295,7 +231,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
                   </AnimatePresence>
                 </div>
 
-                {/* CHILDREN */}
                 <AnimatePresence>
                   {item.children && expandedItems.includes(idx) && (
                     <motion.ul

@@ -66,6 +66,7 @@ export const RescheduleRequestModal = ({
 
         onSubmit({
             scheduleId: schedule.id,
+            courseId: schedule.courseId,
             requestedDate,
             requestedStartTime,
             requestedEndTime,

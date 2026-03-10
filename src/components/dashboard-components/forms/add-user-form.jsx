@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Button,
   Checkbox,
@@ -15,10 +15,10 @@ import {
 import { DashHeading } from "../DashHeading";
 import { EyeIcon, EyeOffIcon, SearchCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-
-import { Country, City } from "country-state-city";
+// import Countries from "../../../../public/countries.json";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
 import { useCreateOrUpdateUserMutation } from "../../../redux/api/user";
+
 
 const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
   const [selectedRole, setSelectedRole] = useState(new Set());
@@ -28,6 +28,8 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
   const [selectedCity, setSelectedCity] = useState(null);
   const [countryInputValue, setCountryInputValue] = useState("");
   const [cityInputValue, setCityInputValue] = useState("");
+  const [availableCities, setAvailableCities] = useState([]);
+  const [Countries, setCountries] = useState([]);
 
   const [isSelected, setIsSelected] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -35,13 +37,28 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedPermissions, setSelectedPermissions] = useState([]);
 
-  const [createOrUpdateUser, { isLoading, error }] = useCreateOrUpdateUserMutation();
+  const [createOrUpdateUser] = useCreateOrUpdateUserMutation();
 
   useEffect(() => {
     if (userData?.permissions) {
       setSelectedPermissions(userData.permissions);
     }
   }, [userData]);
+
+  useEffect(() => {
+    async function fetchCountries() {
+      const res = await fetch('/countries.json', {
+        method: "GET",
+      })
+      if (!res.ok) {
+        errorMessage(res.statusText)
+      }
+      const data = await res.json()
+      setCountries(data || []);
+    }
+    fetchCountries()
+  }, []);
+
   const navigate = useNavigate();
 
   const role = [
@@ -61,30 +78,23 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
   ];
 
   // Get all countries from country-state-city
-  const allCountries = useMemo(() => Country.getAllCountries(), []);
-
-  // Filtered countries based on search input
-  const filteredCountries = useMemo(() => {
-    if (!countryInputValue) return allCountries;
-    return allCountries.filter((country) =>
-      country.name.toLowerCase().includes(countryInputValue.toLowerCase())
-    );
-  }, [countryInputValue, allCountries]);
-
+  const allCountries = useMemo(() => Countries, [Countries]);
   // Get cities based on selected country
-  const availableCities = useMemo(() => {
-    if (!selectedCountry?.isoCode) return [];
-    return City.getCitiesOfCountry(selectedCountry.isoCode);
+  // const availableCities = useMemo(() => {
+  //   if (!selectedCountry?.isoCode) return [];
+  //   return City.getCitiesOfCountry(selectedCountry.isoCode);
+  // }, [selectedCountry]);
+  useEffect(() => {
+    if (selectedCountry?.name) {
+      const asa = selectedCountry.cities?.map((i) => {
+        return {
+          city: i,
+          country: selectedCountry?.name
+        }
+      })
+      setAvailableCities(asa);
+    }
   }, [selectedCountry]);
-
-  // Filtered cities based on search input
-  const filteredCities = useMemo(() => {
-    if (!cityInputValue) return availableCities;
-    return availableCities.filter((city) =>
-      city.name.toLowerCase().includes(cityInputValue.toLowerCase())
-    );
-  }, [cityInputValue, availableCities]);
-
   // Convert Set to string for form submission
   const selectedRoleValue = useMemo(() => {
     return Array.from(selectedRole)[0] || "";
@@ -164,11 +174,11 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
         // We need to wait for country to be set, but we can do it here if we have country isoCode
         const country = allCountries.find(c => c.name === userData.country);
         if (country) {
-          const cities = City.getCitiesOfCountry(country.isoCode);
-          const city = cities.find(c => c.name === userData.city);
+          const cities = country?.cities;
+          const city = cities.find(c => c === userData.city);
           if (city) {
             setSelectedCity(city);
-            setCityInputValue(city.name);
+            setCityInputValue(city);
           }
         }
       }
@@ -202,10 +212,10 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
 
   const handleCitySelect = (key) => {
     // Since city names might not be unique globally, but are within country, we search in availableCities
-    const city = availableCities.find(c => c.name === key);
-    if (city) {
-      setSelectedCity(city);
-      setCityInputValue(city.name);
+    const city = availableCities?.find(c => c.city === key);
+    if (city?.city) {
+      setSelectedCity(city?.city);
+      setCityInputValue(city?.city);
     }
   };
 
@@ -231,15 +241,15 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
         last_name: data.lastName,
         email: data.email,
         phone_number: data.phoneNumber,
-        country: selectedCountryValue,
-        city: selectedCityValue,
+        country: selectedCountry?.name,
+        city: selectedCity,
         role: selectedRoleValue,
         is_active: isSelected,
         permissions: selectedPermissions,
         oldRole: userData?.role,
         bio: data?.bio,
         tagline: data?.tagline,
-        experience_years: data?.experience_years,
+        experience_years: data?.experience_years || null,
       };
 
       // Add password only if provided and valid
@@ -250,41 +260,41 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
 
       const res = await createOrUpdateUser(payload);
 
-      if (error) {
-        throw new Error(error?.data?.errors || res?.data?.message);
+      if (res.error) {
+        throw new Error(res?.error?.data?.message);
       }
 
-      if (userData?.id) {
-        successMessage(`User "${userData.firstName + " " + userData.lastName}" updated successfully!`);
-      } else {
-        successMessage("User created successfully!");
-      }
-
+      successMessage(res.data.message || "User created successfully");
       navigate("/admin/user-management?role=" + payload.role);
     } catch (error) {
-      errorMessage(error.message || "User already exists");
+      errorMessage(error.message);
     } finally {
       setLoading(false);
     }
   };
 
   const ALL_PERMISSIONS = [
-    { label: "Dashboard", value: "dashboard" },
-    { label: "Courses Management", value: "courses-management" },
-    { label: "Course Builder", value: "course-builder" },
-    { label: "Attendance & Progress", value: "attendance-progress" },
-    { label: "User Management", value: "user-management" },
-    { label: "Class Scheduling", value: "class-scheduling" },
-    { label: "Announcements", value: "announcements" },
-    { label: "Payments & Refunds", value: "payments-refunds" },
-    { label: "Support Tickets", value: "support-tickets" },
-    { label: "Analytics", value: "analytics" },
-    { label: "Help and Support", value: "help-support" },
-    { label: "Message Center", value: "messages" },
-    { label: "Notifications Center", value: "notifications" },
-    { label: "Teacher & Student Chat", value: "chat" },
-    { label: "Reviews", value: "reviews" },
-    { label: "FAQs", value: "faqs" },
+    { label: "Dashboard", value: "/admin/dashboard" },
+    { label: "Courses Management", value: "/admin/courses-management" },
+    { label: "Course Builder", value: "/admin/courses-management/builder" },
+    { label: "Attendance & Progress", value: "/admin/courses-management/attendance" },
+    { label: "Student Attendence", value: "/admin/attendance-list" },
+    { label: "User Management", value: "/admin/user-management" },
+    { label: "Add User Management", value: "/admin/user-management/add-user" },
+    { label: "User Detailed View", value: "/admin/user-management/users-details" },
+    { label: "Edit User", value: "/admin/user-management/edit-user" },
+    { label: "Class Scheduling", value: "/admin/class-scheduling" },
+    { label: "Reschedule Requests", value: "/admin/reschedule-requests" },
+    { label: "Announcements", value: "/admin/announcements" },
+    { label: "Payments & Refunds", value: "/admin/payments" },
+    { label: "Support Tickets", value: "/admin/tickets" },
+    { label: "Analytics", value: "/admin/analytics" },
+    { label: "Notifications", value: "/admin/notifications" },
+    // { label: "Help and Support", value: "/admin/help/messages" },
+    { label: "Message Center Or Chat", value: "/admin/help/messages" },
+    { label: "Teacher & Student Chat", value: "/admin/help/chat" },
+    { label: "Reviews", value: "/admin/help/reviews" },
+    { label: "FAQs", value: "/admin/help/faqs" },
   ];
   const handleToggle = (permission = '', checked = false) => {
     setSelectedPermissions((prev) =>
@@ -384,8 +394,7 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
                 labelPlacement="outside"
                 placeholder="Select Country"
                 allowsCustomValue={false}
-                menuTrigger="input"
-                items={filteredCountries}
+                defaultItems={allCountries}
                 selectedKey={selectedCountry?.isoCode || null}
                 inputValue={countryInputValue}
                 onInputChange={setCountryInputValue}
@@ -412,10 +421,9 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
                 labelPlacement="outside"
                 placeholder="Select City"
                 allowsCustomValue={false}
-                menuTrigger="input"
                 isDisabled={!selectedCountry}
-                items={filteredCities}
-                selectedKey={selectedCity?.name || null} // Use name for city key as we search by name
+                defaultItems={availableCities || []}
+                selectedKey={selectedCity || null} // Use name for city key as we search by name
                 inputValue={cityInputValue}
                 onInputChange={setCityInputValue}
                 onSelectionChange={handleCitySelect}
@@ -424,10 +432,10 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
               >
                 {(city) => (
                   <AutocompleteItem
-                    key={city.name}
-                    textValue={city.name}
+                    key={city.city}
+                    textValue={city.city}
                   >
-                    {city.name}
+                    {city.city}
                   </AutocompleteItem>
                 )}
               </Autocomplete>

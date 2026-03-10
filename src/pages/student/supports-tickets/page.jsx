@@ -158,7 +158,7 @@ const SupportTicketsStudent = () => {
             return (
               <TableRow key={ticket.id}>
                 <TableCell className="max-w-xs truncate">{ticket.title}</TableCell>
-                <TableCell className="font-medium text-gray-700">{ticket.description}</TableCell>
+                <TableCell className="font-medium text-gray-700 max-w-xs truncate">{ticket.description}</TableCell>
                 <TableCell>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${color.bg} ${color.text}`}

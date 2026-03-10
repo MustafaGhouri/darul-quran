@@ -61,7 +61,7 @@ const CourseDetails = () => {
 
   const { data: reviewData, isLoading: isReviewLoading, isError: reviewIsError, error: reviewError, refetch: reviewRefetch } = useGetReviewsQuery(
     { courseId: id, page, limit, includeOverview: shouldFetchOverview, rating: ratingForSearch },
-    { skip: (!id || course.rating <= 0) }
+    { skip: (!id || course?.rating <= 0) }
   );
 
   const courseFiles = data?.counts;
@@ -223,7 +223,7 @@ const CourseDetails = () => {
 
                     <div>
                       <h2 className="text-lg font-semibold text-[#06574C]">
-                        {course?.first_name + " " + course?.last_name}
+                        {(course?.first_name || data?.teacher?.firstName) + " " + (course?.last_name || data?.teacher?.lastName)}
                       </h2>
                       <p className="text-sm text-[#6B7280]">Teacher</p>
                     </div>
@@ -234,7 +234,7 @@ const CourseDetails = () => {
                     radius="sm"
                     className="bg-[#E6F2F0] text-[#06574C] font-medium px-4"
                   >
-                    {course?.category_name}
+                    {course?.category_name || course?.categoryName}
                   </Button>
                 </div>
 
@@ -296,17 +296,17 @@ const CourseDetails = () => {
               <div className="flex justify-between items-center p-3">
                 <div className="flex gap-1 items-center ">
                   <h1 className="text-2xl font-bold text-[#06574C]">${course?.coursePrice} </h1>
-                  <h1 className="text-lg  text-[#666666]  line-through">
-                    ${course?.coursePrice}
-                  </h1>
+                  {course?.discountPercentage > 0 && <h1 className="text-lg  text-[#666666]  line-through">
+                    ${course?.basePrice}
+                  </h1>}
                 </div>
-                <Button
+                {course?.discountPercentage > 0 && <Button
                   radius="sm"
                   size="sm"
                   className="bg-[#FFEAEC] text-[#E8505B]"
                 >
-                  {course?.coursePrice == 0 ? "0" : "55"}% OFF
-                </Button>
+                  {course?.discountPercentage}% OFF
+                </Button>}
               </div>
               <div className="p-3">
                 {isEnrolled ? (
@@ -493,7 +493,7 @@ const CourseDetails = () => {
                     {data?.teacher?.email}
                   </p>
                   <p className="text-sm text-gray-600">
-                    {data?.teacher?.tagline} f dgsdg sdgfdsf
+                    {data?.teacher?.tagline}
                   </p>
                 </div>
               </div>

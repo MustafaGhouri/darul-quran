@@ -1,4 +1,3 @@
-import React from 'react'
 import AddUserForm from '../../../../components/dashboard-components/forms/add-user-form'
 
 const AddUser = () => {

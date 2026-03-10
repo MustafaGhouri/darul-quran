@@ -20,14 +20,9 @@ import {
   ModalFooter,
   useDisclosure,
   Textarea,
-  Input
+  Input,
 } from "@heroui/react";
-import {
-  Download,
-  EyeIcon,
-  ListFilterIcon,
-  Search
-} from "lucide-react";
+import { Download, EyeIcon, ListFilterIcon, Search } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import * as motion from "motion/react-client";
 
@@ -35,9 +30,11 @@ import { errorMessage, successMessage } from "../../../lib/toast.config";
 import {
   useGetPaymentHistoryQuery,
   useGetMyRefundRequestsQuery,
-  useRequestRefundMutation
+  useGetMySubscriptionsQuery,
+  useRequestRefundMutation,
+  useCancelSubscriptionMutation,
 } from "../../../redux/api/payments";
-import { debounce } from "../../../lib/utils";
+import { dateFormatter, debounce } from "../../../lib/utils";
 
 const PaymentsInvoices = () => {
   const [page, setPage] = useState(1);
@@ -45,29 +42,48 @@ const PaymentsInvoices = () => {
   const [refundPage, setRefundPage] = useState(1);
   const [refundLimit, setRefundLimit] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const [subSearchQuery, setSubSearchQuery] = useState("");
 
   // Redux Toolkit queries
-  const { data: paymentData, isLoading: paymentsLoading } = useGetPaymentHistoryQuery({ page, limit });
-  const { data: refundRequestsData, isFetching: refundRequestsLoading, refetch: refetchRefundRequests } = useGetMyRefundRequestsQuery({
+  const { data: paymentData, isLoading: paymentsLoading } =
+    useGetPaymentHistoryQuery({ page, limit });
+  const {
+    data: refundRequestsData,
+    isFetching: refundRequestsLoading,
+    refetch: refetchRefundRequests,
+  } = useGetMyRefundRequestsQuery({
     page: refundPage,
     limit: refundLimit,
-    search: searchQuery
+    search: searchQuery,
   });
-  const [requestRefund, { isLoading: refundLoading }] = useRequestRefundMutation();
+  const [requestRefund, { isLoading: refundLoading }] =
+    useRequestRefundMutation();
+  const [cancelSubscription, { isLoading: cancelLoading }] =
+    useCancelSubscriptionMutation();
+  const { data: subscriptionData, isFetching: subscriptionLoading } =
+    useGetMySubscriptionsQuery({ search: subSearchQuery });
 
   // Refund Modal State
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen: isCancelOpen, onOpen: onCancelOpen, onOpenChange: onCancelOpenChange } = useDisclosure();
   const [refundReason, setRefundReason] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  // Cancellation Modal State
+  const [selectedSubscription, setSelectedSubscription] = useState(null);
+  const [cancelType, setCancelType] = useState("period_end"); // 'period_end' or 'immediate'
+  const [cancelReason, setCancelReason] = useState("");
 
   // Extract data from Redux responses
   const invoices = paymentData?.invoices || [];
   const total = paymentData?.total || 0;
   const totalPages = paymentData?.totalPages || 1;
 
-  const refundRequests = refundRequestsData?.enrollments || [];
+  const refundRequests = refundRequestsData?.refundRequests || [];
   const refundTotal = refundRequestsData?.total || 0;
   const refundTotalPages = refundRequestsData?.totalPages || 1;
+
+  const userSubscriptions = subscriptionData?.subscriptions || [];
 
   const openRefundModal = (invoice) => {
     setSelectedInvoice(invoice);
@@ -84,7 +100,39 @@ const PaymentsInvoices = () => {
     try {
       const res = await requestRefund({
         courseId: selectedInvoice.courseId,
-        reason: refundReason
+        reason: refundReason,
+      });
+
+      if (res.error) {
+        throw new Error(res?.error?.data?.message);
+      }
+      successMessage(res.data.message);
+      onClose();
+      refetchRefundRequests();
+    } catch (error) {
+      errorMessage(error?.message);
+    }
+  };
+
+  const openCancelModal = (subscription) => {
+    setSelectedSubscription(subscription);
+    setCancelType("period_end");
+    setCancelReason("");
+    onCancelOpen();
+  };
+
+  const submitCancel = async (onClose) => {
+    if (!cancelReason.trim()) {
+      errorMessage("Please enter a reason for cancellation");
+      return;
+    }
+
+    try {
+      const res = await cancelSubscription({
+        subscriptionId: selectedSubscription.id,
+        cancelAtPeriodEnd: cancelType === "period_end",
+        refundReason: cancelType === "immediate" ? cancelReason : null,
+        refundType: cancelType,
       });
 
       if (res.error) {
@@ -114,12 +162,24 @@ const PaymentsInvoices = () => {
     { key: "Action", label: "Action" },
   ];
 
+  const subHeader = [
+    { key: "studentName", label: "Student Name" },
+    { key: "courseName", label: "Course Name" },
+    { key: "status", label: "Status" },
+    { key: "periodStart", label: "Start Date" },
+    { key: "periodEnd", label: "End Date" },
+    { key: "nextBilling", label: "Next Billing" },
+    { key: "createdAt", label: "Created At" },
+    { key: "action", label: "Action" },
+  ];
+
   const refundHeader = [
-    { key: "Course Name", label: "Course Name" },
-    { key: "Request Date", label: "Request Date" },
-    { key: "Amount", label: "Amount" },
-    { key: "Reason", label: "Reason" },
-    { key: "Status", label: "Status" },
+    { key: "courseName", label: "Course Name" },
+    { key: "requestedAt", label: "Request Date" },
+    { key: "amount", label: "Amount" },
+    { key: "reason", label: "Reason" },
+    { key: "status", label: "Status" },
+    { key: "adminNotes", label: "Admin Notes" },
   ];
 
   const limits = [
@@ -133,43 +193,48 @@ const PaymentsInvoices = () => {
   // Check if invoice is refundable
   const isRefundable = (invoice) => {
     if (!invoice.stripePaymentIntentId) return false;
-    if (invoice.status !== 'paid' && invoice.status !== 'completed') return false;
+    if (invoice.status !== "paid" && invoice.status !== "completed")
+      return false;
     // Check if refund is already requested or processed
     const refundStatus = invoice.refundStatus?.toLowerCase();
-    if (refundStatus && refundStatus !== 'none' && refundStatus !== 'requested') return false;
+    if (refundStatus && refundStatus !== "none" && refundStatus !== "requested")
+      return false;
     return true;
   };
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'requested':
-        return 'bg-[#F1C2AC33] text-[#D28E3D]';
-      case 'processing':
-      case 'pending_refund':
-        return 'bg-[#FDEBD0] text-[#D68910]';
-      case 'refunded':
-        return 'bg-[#95C4BE33] text-[#06574C]';
-      case 'rejected':
-      case 'failed':
-        return 'bg-[#FFEAEC] text-[#E8505B]';
+      case "requested":
+        return "bg-[#F1C2AC33] text-[#D28E3D]";
+      case "approved":
+      case "processing":
+      case "pending_refund":
+        return "bg-[#FDEBD0] text-[#D68910]";
+      case "refunded":
+        return "bg-[#95C4BE33] text-[#06574C]";
+      case "rejected":
+      case "failed":
+        return "bg-[#FFEAEC] text-[#E8505B]";
       default:
-        return 'bg-[#F1C2AC33] text-[#D28E3D]';
+        return "bg-gray-100 text-gray-600";
     }
   };
 
   const getRefundStatusText = (status) => {
     switch (status?.toLowerCase()) {
-      case 'requested':
-        return 'Requested';
-      case 'processing':
-      case 'pending_refund':
-        return 'Processing';
-      case 'refunded':
-        return 'Refunded';
-      case 'rejected':
-        return 'Rejected';
-      case 'failed':
-        return 'Failed';
+      case "requested":
+        return "Requested";
+      case "approved":
+        return "Approved";
+      case "processing":
+      case "pending_refund":
+        return "Processing";
+      case "refunded":
+        return "Refunded";
+      case "rejected":
+        return "Rejected";
+      case "failed":
+        return "Failed";
       default:
         return status;
     }
@@ -180,7 +245,7 @@ const PaymentsInvoices = () => {
   };
 
   const handleSearchKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
@@ -248,7 +313,7 @@ const PaymentsInvoices = () => {
               <TableBody
                 emptyContent="No payments found"
                 loadingState={paymentsLoading ? "loading" : "idle"}
-                loadingContent={<Spinner color="primary" />}
+                loadingContent={<Spinner color="success" />}
               >
                 {invoices.map((item) => (
                   <TableRow key={item.id}>
@@ -262,8 +327,14 @@ const PaymentsInvoices = () => {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{new Date(item.createdAt || item.date).toLocaleDateString()}</TableCell>
-                    <TableCell>${(item.amountPaid || item.amount || 0).toFixed(2)}</TableCell>
+                    <TableCell>
+                      {new Date(
+                        item.createdAt || item.date,
+                      ).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      ${item.amountPaid || item.amount || 0}
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-1 items-center">
                         <img src="/icons/Visa.svg" alt="Card" className="w-8" />
@@ -272,24 +343,31 @@ const PaymentsInvoices = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1">
-                        <Button className={`text-sm p-2 rounded-md capitalize h-8 ${item.status === "paid" || item.status === "completed"
-                          ? "bg-[#95C4BE33] text-[#06574C]"
-                          : item.status === "pending" || item.status === "open"
-                            ? "bg-[#F1C2AC33] text-[#D28E3D]"
-                            : "bg-[#FFEAEC] text-[#E8505B]"
-                          }`}>
+                        <Button
+                          className={`text-sm p-2 rounded-md capitalize h-8 ${item.status === "paid" ||
+                              item.status === "completed"
+                              ? "bg-[#95C4BE33] text-[#06574C]"
+                              : item.status === "pending" ||
+                                item.status === "open"
+                                ? "bg-[#F1C2AC33] text-[#D28E3D]"
+                                : "bg-[#FFEAEC] text-[#E8505B]"
+                            }`}
+                        >
                           {item.status || "Unknown"}
                         </Button>
-                        {item.refundStatus && item.refundStatus !== 'none' && (
-                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded w-fit ${
-                            item.refundStatus === 'refunded' 
-                              ? 'bg-[#95C4BE33] text-[#06574C]'
-                              : item.refundStatus === 'rejected' || item.refundStatus === 'failed'
-                                ? 'bg-[#FFEAEC] text-[#E8505B]'
-                                : item.refundStatus === 'processing' || item.refundStatus === 'pending_refund'
-                                  ? 'bg-[#FDEBD0] text-[#D68910]'
-                                  : 'bg-[#F1C2AC33] text-[#D28E3D]'
-                          }`}>
+                        {item.refundStatus && item.refundStatus !== "none" && (
+                          <span
+                            className={`text-[10px] font-medium px-1.5 py-0.5 rounded w-fit ${item.refundStatus === "refunded"
+                                ? "bg-[#95C4BE33] text-[#06574C]"
+                                : item.refundStatus === "rejected" ||
+                                  item.refundStatus === "failed"
+                                  ? "bg-[#FFEAEC] text-[#E8505B]"
+                                  : item.refundStatus === "processing" ||
+                                    item.refundStatus === "pending_refund"
+                                    ? "bg-[#FDEBD0] text-[#D68910]"
+                                    : "bg-[#F1C2AC33] text-[#D28E3D]"
+                              }`}
+                          >
                             Refund: {getRefundStatusText(item.refundStatus)}
                           </span>
                         )}
@@ -297,15 +375,24 @@ const PaymentsInvoices = () => {
                     </TableCell>
                     <TableCell>
                       <span className="text-sm text-gray-600 capitalize">
-                        {item.type === 'live' ? 'Subscription' : 'One-time'}
+                        {item.type === "live" ? "Subscription" : "One-time"}
                       </span>
                     </TableCell>
                     <TableCell className="flex gap-2">
-                      {(item.hostedInvoiceUrl || item.invoicePdf || item.receiptUrl) ? (
+                      {item.hostedInvoiceUrl ||
+                        item.invoicePdf ||
+                        item.receiptUrl ? (
                         <Button
                           radius="sm"
                           className="bg-[#06574C] text-white"
-                          onPress={() => window.open(item.hostedInvoiceUrl || item.invoicePdf || item.receiptUrl, '_blank')}
+                          onPress={() =>
+                            window.open(
+                              item.hostedInvoiceUrl ||
+                              item.invoicePdf ||
+                              item.receiptUrl,
+                              "_blank",
+                            )
+                          }
                           startContent={<EyeIcon size={18} color="white" />}
                         >
                           View Invoice
@@ -373,7 +460,9 @@ const PaymentsInvoices = () => {
 
       {/* Refund Requests Table */}
       <div className="mt-8">
-        <h2 className="text-2xl font-bold text-[#06574C] mb-3">My Refund Requests</h2>
+        <h2 className="text-2xl font-bold text-[#06574C] mb-3">
+          My Refund Requests
+        </h2>
 
         <div className="bg-[#EBD4C9] p-2 sm:p-4 rounded-lg mb-3">
           <Input
@@ -408,7 +497,7 @@ const PaymentsInvoices = () => {
           <TableBody
             emptyContent="No refund requests found"
             loadingState={refundRequestsLoading ? "loading" : "idle"}
-            loadingContent={<Spinner color="primary" />}
+            loadingContent={<Spinner color="success" />}
           >
             {refundRequests.map((item) => (
               <TableRow key={item.id}>
@@ -417,17 +506,29 @@ const PaymentsInvoices = () => {
                     {item.courseName || "Course"}
                   </div>
                 </TableCell>
-                <TableCell>{new Date(item.createdAt || item.enrolledAt).toLocaleDateString()}</TableCell>
-                <TableCell>${(item.amountPaid || item.amount || 0).toFixed(2)}</TableCell>
                 <TableCell>
-                  <div className="max-w-[250px] text-sm text-gray-600 truncate" title={item.refundReason}>
-                    {item.refundReason || "-"}
+                  {dateFormatter(item.requestedAt || item.createdAt, true)}
+                </TableCell>
+                <TableCell>${item.amount}</TableCell>
+                <TableCell>
+                  <div
+                    className="max-w-[250px] text-sm text-gray-600 truncate"
+                    title={item.reason}
+                  >
+                    {item.reason || "-"}
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Button className={`text-sm p-2 rounded-md capitalize h-8 ${getStatusColor(item.refundStatus)}`}>
-                    {item.refundStatus || "Unknown"}
+                  <Button
+                    className={`text-sm p-2 rounded-md capitalize h-8 ${getStatusColor(item.status)}`}
+                  >
+                    {getRefundStatusText(item.status)}
                   </Button>
+                </TableCell>
+                <TableCell>
+                  <div className="mt-1 text-xs text-gray-400 italic max-w-[150px] truncate">
+                    {item?.adminNotes || "---"}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -471,8 +572,172 @@ const PaymentsInvoices = () => {
         </div>
       </div>
 
+      <div className="mt-4">
+        <h2 className="text-2xl font-bold text-[#06574C] mb-3">All Subscriptions</h2>
+        <div className="bg-[#EBD4C9] p-2 sm:p-4 rounded-lg mb-3">
+          <Input
+            placeholder="Search by course name..."
+            defaultValue={subSearchQuery}
+            onValueChange={(e) => debounce(() => setSubSearchQuery(e), 500)}
+            startContent={<Search size={18} className="text-gray-400" />}
+            className="max-w-sm"
+            radius="sm"
+            type="search"
+          />
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -10, opacity: 0 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+          >
+            <Table
+              isHeaderSticky
+              aria-label="Subscriptions table"
+              removeWrapper
+              classNames={{
+                base: "w-full bg-white rounded-lg overflow-x-scroll w-full no-scrollbar mb-3",
+                th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+                td: "py-3 items-center whitespace-nowrap",
+                tr: "border-b border-default-200 ",
+              }}
+            >
+              <TableHeader>
+                {subHeader.map((item) => (
+                  <TableColumn key={item.key}>{item.label}</TableColumn>
+                ))}
+              </TableHeader>
+
+              <TableBody
+                emptyContent="No subscriptions found"
+                loadingState={subscriptionLoading ? "loading" : "idle"}
+                loadingContent={<Spinner color="success" />}
+              >
+                {userSubscriptions.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="px-4">
+                      <div className="font-medium text-gray-900">
+                        {item.firstName} {item.lastName}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {item.email}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium text-gray-900">
+                        {item.courseName || item.scheduleName || "Course"}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        className={`text-sm p-2 rounded-md capitalize h-8 ${item.status === "active"
+                            ? "bg-[#95C4BE33] text-[#06574C]"
+                            : item.status === "past_due" || item.status === "unpaid"
+                              ? "bg-[#F1C2AC33] text-[#D28E3D]"
+                              : "bg-[#FFEAEC] text-[#E8505B]"
+                          }`}
+                      >
+                        {item.status || "Unknown"}
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      {item.currentPeriodStart ? (dateFormatter(item.currentPeriodStart)) : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      {item.currentPeriodEnd ? (dateFormatter(item.currentPeriodEnd)) : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      {item.currentPeriodEnd ? (dateFormatter(item.currentPeriodEnd)) : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      {item.createdAt ? (dateFormatter(item.createdAt)) : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        {item.status === "active" && !item.cancelAtPeriodEnd && (
+                          <Button
+                            radius="sm"
+                            variant="flat"
+                            color="danger"
+                            size="sm"
+                            onPress={() => openCancelModal(item)}
+                          >
+                            Cancel
+                          </Button>
+                        )}
+                        {item.cancelAtPeriodEnd && (
+                          <Button
+                            radius="sm"
+                            variant="flat"
+                            color="warning"
+                            size="sm"
+                            isDisabled
+                          >
+                            Cancels at Period End
+                          </Button>
+                        )}
+                        {item.status === "canceled" && (
+                          <Button
+                            radius="sm"
+                            variant="flat"
+                            color="default"
+                            size="sm"
+                            isDisabled
+                          >
+                            Canceled
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="md:flex items-center pb-4 gap-2 justify-between overflow-hidden">
+          <div className="flex text-sm items-center gap-1">
+            <span>Showing</span>
+            <Select
+              radius="sm"
+              className="w-[70px]"
+              selectedKeys={[String(limit)]}
+              placeholder="1"
+              onSelectionChange={(keys) => {
+                const newLimit = Number(Array.from(keys)[0]);
+                setLimit(newLimit);
+                setPage(1);
+              }}
+            >
+              {limits.map((limit) => (
+                <SelectItem key={limit.key}>{limit.label}</SelectItem>
+              ))}
+            </Select>
+            <span className="min-w-56">Out of {total}</span>
+          </div>
+          <Pagination
+            className=""
+            showControls
+            variant="ghost"
+            page={page}
+            total={totalPages}
+            onChange={(newPage) => setPage(newPage)}
+            classNames={{
+              item: "rounded-sm hover:bg-bg-[#06574C]/50",
+              cursor: "bg-[#06574C] rounded-sm text-white",
+              prev: "rounded-sm bg-white/80",
+              next: "rounded-sm bg-white/80",
+            }}
+          />
+        </div>
+      </div>
+
       <div className="text-center text-xs text-gray-500 mt-4 pb-4 font-style-italic">
-        Note: "Classes will resume after the next successful payment inshaAllah."
+        Note: "Classes will resume after the next successful payment
+        inshaAllah."
       </div>
 
       {/* Refund Request Modal */}
@@ -480,10 +745,13 @@ const PaymentsInvoices = () => {
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">Request Refund</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">
+                Request Refund
+              </ModalHeader>
               <ModalBody>
                 <p className="text-sm text-gray-500 mb-2">
-                  Please provide a reason for your refund request. Our team will review it shortly.
+                  Please provide a reason for your refund request. Our team will
+                  review it shortly.
                 </p>
                 <Textarea
                   label="Reason"
@@ -503,6 +771,93 @@ const PaymentsInvoices = () => {
                   onPress={() => submitRefund(onClose)}
                 >
                   Submit Request
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Subscription Cancellation Modal */}
+      <Modal isOpen={isCancelOpen} onOpenChange={onCancelOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                Cancel Subscription
+              </ModalHeader>
+              <ModalBody>
+                <p className="text-sm text-gray-700 mb-3">
+                  You are canceling subscription for:{" "}
+                  <span className="font-semibold">
+                    {selectedSubscription?.courseName || selectedSubscription?.scheduleName}
+                  </span>
+                </p>
+
+                <div className="mb-4">
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Cancellation Type
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-start gap-3 p-3 rounded-lg border border-default-200 cursor-pointer hover:bg-default-50">
+                      <input
+                        type="radio"
+                        name="cancelType"
+                        value="period_end"
+                        checked={cancelType === "period_end"}
+                        onChange={(e) => setCancelType(e.target.value)}
+                        className="mt-1"
+                      />
+                      <div>
+                        <p className="font-medium text-sm text-gray-800">
+                          Cancel at Period End
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Continue using until the end of current billing period, then automatically cancel. No refunds.
+                        </p>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start gap-3 p-3 rounded-lg border border-default-200 cursor-pointer hover:bg-default-50">
+                      <input
+                        type="radio"
+                        name="cancelType"
+                        value="immediate"
+                        checked={cancelType === "immediate"}
+                        onChange={(e) => setCancelType(e.target.value)}
+                        className="mt-1"
+                      />
+                      <div>
+                        <p className="font-medium text-sm text-gray-800">
+                          Cancel Immediately (Request Refund)
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Stop access now and submit a refund request for admin review. Refund approval is subject to our refund policy.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <Textarea
+                  label="Reason for Cancellation"
+                  placeholder="Please let us know why you're canceling..."
+                  value={cancelReason}
+                  onValueChange={setCancelReason}
+                  minRows={3}
+                  isRequired
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Go Back
+                </Button>
+                <Button
+                  color={cancelType === "immediate" ? "warning" : "danger"}
+                  isLoading={cancelLoading}
+                  onPress={() => submitCancel(onClose)}
+                >
+                  {cancelType === "immediate" ? "Cancel & Request Refund" : "Cancel at Period End"}
                 </Button>
               </ModalFooter>
             </>

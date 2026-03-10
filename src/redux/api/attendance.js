@@ -9,9 +9,9 @@ export const attendanceApi = createApi({
     tagTypes: ["attendance"],
     endpoints: (builder) => ({
         getCourseAttendanceSummary: builder.query({
-            query: ({ page, limit, search, sort, status ,type}) => ({
+            query: ({ page, limit, search, sort, status, type }) => ({
                 url: "/courses",
-                params: { page, limit, search, sort, status ,type},
+                params: { page, limit, search, sort, status, type },
             }),
             providesTags: ["attendance"],
         }),
@@ -29,6 +29,34 @@ export const attendanceApi = createApi({
             }),
             providesTags: ["attendance"],
         }),
+        getTeacherStudentAttendance: builder.query({
+            query: ({ teacherId, page, limit, search, sort, courseId, status }) => ({
+                url: "/teacher-summary",
+                params: { teacherId, page, limit, search, sort, courseId, status },
+            }),
+            providesTags: ["attendance"],
+        }),
+        getStudentAttendanceList: builder.query({
+            query: ({ page, limit, search, courseId, studentId }) => ({
+                url: "/student-list",
+                params: { page, limit, search, courseId, studentId },
+            }),
+            providesTags: ["attendance"],
+        }),
+        getIndividualStudentAttendanceHistory: builder.query({
+            query: ({ studentId, courseId, startDate, endDate }) => ({
+                url: `/history/${studentId}`,
+                params: { courseId: courseId || '', startDate: startDate || '', endDate: endDate || '' },
+            }),
+            providesTags: ["attendance"],
+        }),
+        getStudentsForFilter: builder.query({
+            query: ({ courseId }) => ({
+                url: "/students-for-filter",
+                params: { courseId },
+            }),
+            providesTags: ["attendance"],
+        }),
     }),
 });
 
@@ -36,4 +64,8 @@ export const {
     useGetCourseAttendanceSummaryQuery,
     useGetCourseAttendanceDetailQuery,
     useGetAttendanceStatsQuery,
+    useGetTeacherStudentAttendanceQuery,
+    useGetStudentAttendanceListQuery,
+    useGetIndividualStudentAttendanceHistoryQuery,
+    useGetStudentsForFilterQuery,
 } = attendanceApi;

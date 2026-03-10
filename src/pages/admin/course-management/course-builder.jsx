@@ -22,12 +22,13 @@ import {
   File,
   FolderDot,
   Lightbulb,
+  PlusIcon,
   Rocket,
   ScrollText,
   Trash2Icon,
   Video,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Videos, {
   Assignments,
   PdfAndNotes,
@@ -38,7 +39,7 @@ import { useNavigate } from "react-router-dom";
 import { useAddCategoryMutation, useAddCourseMutation, useDeleteCategoryMutation, useGetAllCategoriesQuery, useGetCourseByIdQuery, useUpdateCourseMutation } from "../../../redux/api/courses";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
 import { FormOverlayLoader } from "../../../components/Loader";
-import { uploadFilesToServer } from "../../../lib/utils";
+import { parseInterval, uploadFilesToServer } from "../../../lib/utils";
 import { IntervalInput } from "../../../components/dashboard-components/forms/IntervalInput";
 import TeacherSelect from "../../../components/select/TeacherSelect";
 const containerVariants = {
@@ -97,7 +98,7 @@ const CourseBuilder = () => {
   const [addCourse] = useAddCourseMutation();
   const [updateCourse] = useUpdateCourseMutation();
   const [deleteCategory] = useDeleteCategoryMutation();
-  const [addCategory] = useAddCategoryMutation();
+  const [addCategory, { isLoading: isAddingCategory }] = useAddCategoryMutation();
 
   useEffect(() => {
     if (isError) {
@@ -119,10 +120,12 @@ const CourseBuilder = () => {
           category_id: Number(course.category) || "",
           difficulty_level: course.difficultyLevel || "",
           description: course.description || "",
-          course_price: course.coursePrice || "",
-          teacher_id: Number(course.teacherId) || "",
+          // course_price: course.coursePrice || "",
+          teacher_id: Number(course.teacherId) || null,
           access_duration: course.accessDuration || "",
-          previous_lesson: course?.files?.length || "",
+          previous_lesson: course?.previous_lesson || course?.previousLesson || "",
+          base_price: course?.basePrice,
+          discount_percentage: course?.discountPercentage,
           enroll_number: course.enrollNumber || "",
           status: course.status || "draft",
           videoDuration: course.videoDuration || "",
@@ -202,9 +205,10 @@ const CourseBuilder = () => {
     difficulty_level: "",
     description: "",
     category_name: "",
-    course_price: "",
+    base_price: 0,
+    discount_percentage: 0,
     type: "one_time",
-    teacher_id: "",
+    teacher_id: null,
     access_duration: "",
     previous_lesson: 0,
     enroll_number: "",
@@ -215,16 +219,20 @@ const CourseBuilder = () => {
     is_free: false, // Free/Paid toggle
     video_count: 0, // Number of videos
   });
+
   // console.log(formData);
-  const coursepreview = [
-    { title: "Title:", desc: formData?.course_name || "Add Tittle" },
-    { title: "Category:", desc: categories?.find((category) => category.id === formData?.category_id)?.categoryName || formData?.category_name || "Add Category" },
-    { title: "Difficulty Level:", desc: formData?.difficulty_level || "Add Difficulty Level" },
-    { title: "Price:", desc: formData?.course_price || "Add Price" },
-    { title: "Type:", desc: formData?.type?.replace("_", " ") || "Add Type" },
-    { title: "Duration:", desc: formData?.duration || "Add Duration" },
-    formData?.type === "live" && { title: "Subscription - Interval:", desc: formData?.interval || "Add Subscription - Interval" },
-  ];
+  const coursepreview = useMemo(() => {
+    return [
+      { title: "Title:", desc: formData?.course_name || "Add Tittle" },
+      { title: "Category:", desc: categoriesData?.categories?.find((category) => category.id === formData?.category_id)?.categoryName || formData?.category_name || "Add Category" },
+      { title: "Difficulty Level:", desc: formData?.difficulty_level || "Add Difficulty Level" },
+      { title: "Price:", desc: (formData?.base_price - ((formData?.discount_percentage * formData?.base_price) / 100)) || "Add Price" },
+      { title: "Type:", desc: formData?.type?.replace("_", " ") || "Add Type" },
+      { title: "Duration:", desc: `${parseInterval(formData?.duration).number} ${parseInterval(formData?.duration).unit}` || "Add Duration" },
+      formData?.type === "live" && { title: "Subscription - Interval:", desc: `${parseInterval(formData?.interval).number} ${parseInterval(formData?.interval).unit}` || "Add Subscription - Interval" },
+    ];
+  }, [categoriesData, formData]);
+
   // handle change
   const handleChange = (name, value) => {
     setFormData((prev) => ({
@@ -232,16 +240,6 @@ const CourseBuilder = () => {
       [name]: value,
     }));
   };
-  // handle submit tab 1
-  // Function to upload files to server
-
-  useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      previous_lesson: files?.length || 0
-    }))
-  }, [files])
-
   const handleSubmitTab1 = async (e) => {
     e.preventDefault();
     setLoadingAction(pendingAction);
@@ -251,7 +249,6 @@ const CourseBuilder = () => {
       const filesToUpload = [];
       if (video.length > 0) filesToUpload.push({ file: video[0], type: "video" });
       if (thumbnail.length > 0) filesToUpload.push({ file: thumbnail[0], type: "thumbnail" });
-      console.log(thumbnail);
 
       try {
         const uploadedUrls = await uploadFilesToServer(filesToUpload.map(f => f.file));
@@ -280,8 +277,9 @@ const CourseBuilder = () => {
         ? parseInt(formData.enroll_number)
         : null,
       status: formData.status,
-      videoUrl: urlMap.video,
-      thumbnailurl: urlMap.thumbnail,
+      course_price: (formData?.base_price - ((formData?.discount_percentage * formData?.base_price) / 100)),
+      videoUrl: urlMap.video ?? videoUrl ?? null,
+      thumbnailurl: urlMap.thumbnail ?? thumbnailUrl ?? null,
       teacher_id: Number(formData.teacher_id),
       is_free: formData.is_free,
     };
@@ -297,7 +295,7 @@ const CourseBuilder = () => {
 
       const data = response.data;
 
-      if (data.success) {
+      if (data?.success) {
         successMessage(courseId ? "Course Updated!" : "Course Created!");
 
         if (!courseId && data.courseId) {
@@ -306,19 +304,18 @@ const CourseBuilder = () => {
           handleSelected("content");
         }
       } else {
-        errorMessage(data.message || "Something went wrong");
+        errorMessage(response?.error?.data?.message || response?.error?.data?.error || "Something went wrong");
       }
     } catch (error) {
       console.error(error);
-      errorMessage("An error occurred");
+      errorMessage(error.message);
     } finally {
       setLoadingAction(null);
       setPendingAction(null);
     }
   };
 
-  const handleSubmit2tab = async (e) => {
-    if (e) e.preventDefault();
+  const handleSubmit2tab = async () => {
     setLoadingAction(pendingAction);
     if (files.length === 0) { errorMessage("Please upload at least one file"); return; };
 
@@ -425,7 +422,7 @@ const CourseBuilder = () => {
 
   return (
     <div className="h-full relative bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full no-scrollbar top-0 bottom-0 overflow-auto">
-      <FormOverlayLoader loading={isLoading || !!loadingAction} loadingText={loadingAction ? 'Saving...' : "Fetching Data..."} />
+      {/* <FormOverlayLoader loading={isLoading || !!loadingAction} loadingText={loadingAction ? 'Saving...' : "Fetching Data..."} /> */}
       <DashHeading
         title={"Course Builder"}
         desc={"Create a new course step by step"}
@@ -553,8 +550,9 @@ const CourseBuilder = () => {
                             key="add-category"
                             className="text-primary font-semibold"
                             textValue="Add Category"
+                            startContent={<PlusIcon size={15} />}
                           >
-                            ➕ Add Category
+                            Add Category
                           </SelectItem>
                         </Select>
                         <Select
@@ -591,20 +589,39 @@ const CourseBuilder = () => {
                           placeholder="Enter course description"
                         />
                       </div>
-                      <Input
-                        size="lg"
-                        variant="bordered"
-                        label="Course Price ($)"
-                        labelPlacement="outside"
-                        placeholder="$  0.00"
-                        isRequired
-                        errorMessage="Course Price is required"
-                        className="w-full"
-                        value={formData.course_price}
-                        onChange={(e) =>
-                          handleChange("course_price", e.target.value)
-                        }
-                      />
+                      <div className="flex items-center max-sm:flex-wrap gap-3">
+                        <Input
+                          size="lg"
+                          variant="bordered"
+                          label="Base Course Price ($)"
+                          type="number"
+                          labelPlacement="outside"
+                          placeholder="$  0.00"
+                          isRequired
+                          errorMessage="BaseCourse Price is required"
+                          className="w-full"
+                          value={formData.base_price}
+                          onChange={(e) =>
+                            handleChange("base_price", e.target.value)
+                          }
+                        />
+                        <Input
+                          size="lg"
+                          variant="bordered"
+                          label="Discount Percentage"
+                          type="number"
+                          labelPlacement="outside"
+                          placeholder="15%"
+                          endContent={'%'}
+                          max={100}
+                          errorMessage="Discount Percentage is must be between 0 and 100"
+                          className="w-full"
+                          value={formData.discount_percentage}
+                          onChange={(e) =>
+                            handleChange("discount_percentage", e.target.value)
+                          }
+                        />
+                      </div>
                       <div className="pt-6">
                         <TeacherSelect
                           onChange={(id) => handleChange("teacher_id", id)}
@@ -665,6 +682,7 @@ const CourseBuilder = () => {
                           initialValue={formData?.interval}
                           onUpdate={(interval) => handleChange("interval", interval)}
                           releasedImmediately={false}
+                          units={["day", "month"]}
                         />
                       }
                     </div>
@@ -815,7 +833,7 @@ const CourseBuilder = () => {
                       Cancel
                     </Button>
 
-                    <Button color="primary" onPress={handleSubmitAddCategory}>
+                    <Button color="success" isDisabled={isAddingCategory} isLoading={isAddingCategory} onPress={handleSubmitAddCategory}>
                       Add
                     </Button>
                   </ModalFooter>
@@ -915,7 +933,10 @@ const CourseBuilder = () => {
                     size="lg"
                     className="bg-[#06574C] w-full text-white sm:w-35"
                     type="submit"
-                    onPress={handleSubmit2tab}
+                    onPress={() => {
+                      if (files.length === 0) { errorMessage("Please upload at least one file"); return; };
+                      handleSelected("pricing");
+                    }}
                   >
                     Next Step
                   </Button>
@@ -989,7 +1010,7 @@ const CourseBuilder = () => {
                       </div>
 
                       <div className="flex gap-3 items-center py-4">
-                        <Select
+                       {formData.type === "one_time" && <Select
                           size="lg"
                           variant="bordered"
                           label="Access Duration"
@@ -1006,20 +1027,20 @@ const CourseBuilder = () => {
                               {item.label}
                             </SelectItem>
                           ))}
-                        </Select>
-                        {/* <Input
+                        </Select>}
+                        <Input
                           size="lg"
                           variant="bordered"
                           label="Preview Lessons "
                           labelPlacement="outside"
                           placeholder="Select Preview Lessons "
                           className="w-full"
-                          type="number"
+                          type="text"
                           value={formData.previous_lesson}
                           onChange={(e) =>
                             handleChange("previous_lesson", e.target.value)
                           }
-                        /> */}
+                        />
                       </div>
                       <Input
                         size="lg"
@@ -1043,10 +1064,10 @@ const CourseBuilder = () => {
                       <div className="p-3 bg-[#EBD4C982] rounded-lg flex justify-between items-center">
                         <div>
                           <h1 className="text-[#333333] font-bold text-lg">
-                            Current Status: Draft
+                            Current Status: {formData.status === "published" ? "Public" : "Draft"}
                           </h1>
                           <h1 className="text-[#666666] font-medium text-sm">
-                            Your course is not visible to students yet
+                            {formData.status === "published" ? "Your course is visible to students yet" : "Your course is not visible to students yet"}
                           </h1>
                         </div>
 

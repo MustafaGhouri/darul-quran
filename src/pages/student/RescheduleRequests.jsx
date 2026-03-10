@@ -2,12 +2,6 @@ import { useState, useEffect } from "react";
 import {
     Button,
     Chip,
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    Textarea,
     Pagination,
     Select,
     SelectItem,
@@ -22,76 +16,41 @@ import {
 import { DashHeading } from "../../components/dashboard-components/DashHeading";
 import {
     useGetRescheduleRequestsQuery,
-    useApproveRescheduleRequestMutation,
-    useRejectRescheduleRequestMutation,
+    useCancelRescheduleRequestMutation,
 } from "../../redux/api/reschedule";
 import { errorMessage, successMessage } from "../../lib/toast.config";
 import { formatTime12Hour } from "../../utils/scheduleHelpers";
 import { Calendar as CalendarIcon } from "lucide-react";
 
-const AdminRescheduleRequests = () => {
+const StudentRescheduleRequests = () => {
     const [page, setPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState("all");
-    const [selectedRequest, setSelectedRequest] = useState(null);
-    const [isResponseModalOpen, setIsResponseModalOpen] = useState(false);
-    const [adminResponse, setAdminResponse] = useState("");
-    const [actionType, setActionType] = useState(null);
 
     const { data, isFetching: isLoading, refetch } = useGetRescheduleRequestsQuery({
         page: page.toString(),
         limit: "10",
         status: statusFilter,
     });
+
     useEffect(() => {
         if (data) {
             console.log("Reschedule Requests Data:", data);
         }
     }, [data]);
 
-    const [approveRequest, { isLoading: isApproving }] = useApproveRescheduleRequestMutation();
-    const [rejectRequest, { isLoading: isRejecting }] = useRejectRescheduleRequestMutation();
+    const [cancelRequest, { isLoading: isCancelling }] = useCancelRescheduleRequestMutation();
 
-    const handleApproveClick = (request) => {
-        setSelectedRequest(request);
-        setActionType("approve");
-        setAdminResponse(`Your reschedule request has been approved. We will create a separate session for you and notify you with the new schedule details.`);
-        setIsResponseModalOpen(true);
-    };
-
-    const handleRejectClick = (request) => {
-        setSelectedRequest(request);
-        setActionType("reject");
-        setAdminResponse("");
-        setIsResponseModalOpen(true);
-    };
-
-    const handleSubmitResponse = async () => {
-        if (!selectedRequest) return;
-
-        if (actionType === "reject" && (!adminResponse || adminResponse.trim().length === 0)) {
-            errorMessage("Please provide a reason for rejection");
+    const handleCancelClick = async (request) => {
+        if (!window.confirm("Are you sure you want to cancel this reschedule request?")) {
             return;
         }
 
         try {
-            if (actionType === "approve") {
-                await approveRequest({
-                    id: selectedRequest.id,
-                    adminResponse,
-                }).unwrap();
-                successMessage("Reschedule request approved successfully");
-            } else {
-                await rejectRequest({
-                    id: selectedRequest.id,
-                    adminResponse,
-                }).unwrap();
-                successMessage("Reschedule request rejected");
-            }
-            setIsResponseModalOpen(false);
-            setSelectedRequest(null);
+            await cancelRequest(request.id).unwrap();
+            successMessage("Reschedule request cancelled successfully");
             refetch();
         } catch (error) {
-            errorMessage(error?.data?.message || "Failed to process request");
+            errorMessage(error?.data?.message || "Failed to cancel request");
         }
     };
 
@@ -106,21 +65,21 @@ const AdminRescheduleRequests = () => {
     };
 
     const columns = [
-        { key: "student", label: "Student" },
         { key: "class", label: "Class" },
         { key: "originalSchedule", label: "Original Schedule" },
         { key: "requestedSchedule", label: "Requested Schedule" },
         { key: "reason", label: "Reason" },
         { key: "status", label: "Status" },
         { key: "requestedAt", label: "Requested At" },
+        { key: "response", label: "Response" },
         { key: "actions", label: "Actions" },
     ];
 
     return (
         <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 min-h-screen">
             <DashHeading
-                title="Reschedule Requests"
-                desc="Review and manage student reschedule requests"
+                title="My Reschedule Requests"
+                desc="View and manage your reschedule requests"
             />
 
             {/* Filters */}
@@ -180,18 +139,12 @@ const AdminRescheduleRequests = () => {
                             <p className="text-gray-400 text-sm mt-2">
                                 {statusFilter !== "all"
                                     ? `Try changing the filter from "${statusFilter}" to "all"`
-                                    : "Students haven't submitted any requests yet"}
+                                    : "You haven't submitted any reschedule requests yet"}
                             </p>
                         </div>}
                         items={data?.requests || []}>
                         {(request) => (
                             <TableRow key={request.id}>
-                                <TableCell>
-                                    <div>
-                                        <p className="font-medium text-sm">{request.studentName}</p>
-                                        <p className="text-xs text-gray-500">{request.studentEmail}</p>
-                                    </div>
-                                </TableCell>
                                 <TableCell>
                                     <div>
                                         <p className="font-medium text-sm">{request.scheduleTitle}</p>
@@ -237,30 +190,26 @@ const AdminRescheduleRequests = () => {
                                     </p>
                                 </TableCell>
                                 <TableCell>
+                                    <p className="text-sm max-w-xs truncate" title={request.adminResponse || "-"}>
+                                        {request.adminResponse || "-"}
+                                    </p>
+                                </TableCell>
+                                <TableCell>
                                     <div className="flex gap-2 justify-center">
                                         {request.status === "pending" && (
-                                            <>
-                                                <Button
-                                                    size="sm"
-                                                    color="success"
-                                                    variant="flat"
-                                                    onPress={() => handleApproveClick(request)}
-                                                >
-                                                    Approve
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    color="danger"
-                                                    variant="flat"
-                                                    onPress={() => handleRejectClick(request)}
-                                                >
-                                                    Reject
-                                                </Button>
-                                            </>
+                                            <Button
+                                                size="sm"
+                                                color="danger"
+                                                variant="flat"
+                                                onPress={() => handleCancelClick(request)}
+                                                isLoading={isCancelling}
+                                            >
+                                                Cancel
+                                            </Button>
                                         )}
                                         {request.status !== "pending" && (
                                             <Chip size="sm" variant="flat">
-                                                {request.status}
+                                                {request.status === "approved" ? "Reviewed" : "Closed"}
                                             </Chip>
                                         )}
                                     </div>
@@ -282,73 +231,8 @@ const AdminRescheduleRequests = () => {
                     </div>
                 )}
             </div>
-
-            <Modal
-                isOpen={isResponseModalOpen}
-                onClose={() => setIsResponseModalOpen(false)}
-                size="md"
-            >
-                <ModalContent>
-                    <ModalHeader>
-                        <h2 className="text-lg font-semibold">
-                            {actionType === "approve" ? "Approve Request" : "Reject Request"}
-                        </h2>
-                    </ModalHeader>
-                    <ModalBody>
-                        {selectedRequest && (
-                            <div className="mb-4">
-                                <p className="text-sm text-gray-600 mb-2">
-                                    <strong>Student:</strong> {selectedRequest.studentName}
-                                </p>
-                                <p className="text-sm text-gray-600 mb-2">
-                                    <strong>Class:</strong> {selectedRequest.scheduleTitle}
-                                </p>
-                                <div className="bg-gray-50 p-3 rounded-lg">
-                                    <p className="text-xs text-gray-500 mb-1">Requested Schedule:</p>
-                                    <p className="text-sm font-medium">
-                                        {new Date(selectedRequest.requestedDate).toLocaleDateString()}
-                                    </p>
-                                    <p className="text-sm">
-                                        {formatTime12Hour(selectedRequest.requestedStartTime)} -{" "}
-                                        {formatTime12Hour(selectedRequest.requestedEndTime)}
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-
-                        <Textarea
-                            label={actionType === "approve" ? "Approval Message" : "Rejection Reason"}
-                            placeholder={
-                                actionType === "approve"
-                                    ? "Add a message for the student (optional)"
-                                    : "Please provide a reason for rejection"
-                            }
-                            value={adminResponse}
-                            onChange={(e) => setAdminResponse(e.target.value)}
-                            minRows={4}
-                            isRequired={actionType === "reject"}
-                        />
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button
-                            variant="flat"
-                            onPress={() => setIsResponseModalOpen(false)}
-                            isDisabled={isApproving || isRejecting}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            color={actionType === "approve" ? "success" : "danger"}
-                            onPress={handleSubmitResponse}
-                            isLoading={isApproving || isRejecting}
-                        >
-                            {isApproving || isRejecting ? "Processing..." : actionType === "approve" ? "Approve" : "Reject"}
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
         </div>
     );
 };
 
-export default AdminRescheduleRequests;
+export default StudentRescheduleRequests;
