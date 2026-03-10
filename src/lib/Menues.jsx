@@ -88,6 +88,7 @@ export const studentMenu = [
             // { name: 'FAQs', link: '/admin/help/faqs' }
         ]
     },
+    { name: 'Attendance & Progress', icon: <Users2Icon />, link: '/student/attendance-list' },
     { name: 'Support Tickets  ', icon: <TicketsIcon />, link: '/student/support-tickets' },
     { name: "Announcements", icon: <MegaphoneIcon />, link: "/student/announcements" },
     { name: 'Notifications', icon: <BellRing />, link: '/student/notifications' }

@@ -20,6 +20,7 @@ import { showMessage } from "./lib/toast.config";
 import { clearUser, setUser } from "./redux/reducers/user";
 
 import useDynamicMeta from "./hooks/useDynamicMetadata";
+import AttendanceList from "./pages/student/attendance-list";
 
 const Home = lazy(() => import("./pages/Home"));
 
@@ -599,6 +600,14 @@ function App() {
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <EnrollSuccess />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/attendance-list"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <AttendanceList />
                 </ProtectedRoute>
               }
             />
