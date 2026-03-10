@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Button,
   Checkbox,
@@ -15,10 +15,10 @@ import {
 import { DashHeading } from "../DashHeading";
 import { EyeIcon, EyeOffIcon, SearchCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-
-import { Country, City } from "country-state-city";
+// import Countries from "../../../../public/countries.json";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
 import { useCreateOrUpdateUserMutation } from "../../../redux/api/user";
+
 
 const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
   const [selectedRole, setSelectedRole] = useState(new Set());
@@ -28,6 +28,8 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
   const [selectedCity, setSelectedCity] = useState(null);
   const [countryInputValue, setCountryInputValue] = useState("");
   const [cityInputValue, setCityInputValue] = useState("");
+  const [availableCities, setAvailableCities] = useState([]);
+  const [Countries, setCountries] = useState([]);
 
   const [isSelected, setIsSelected] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -42,6 +44,21 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
       setSelectedPermissions(userData.permissions);
     }
   }, [userData]);
+
+  useEffect(() => {
+    async function fetchCountries() {
+      const res = await fetch('/countries.json', {
+        method: "GET",
+      })
+      if (!res.ok) {
+        errorMessage(res.statusText)
+      }
+      const data = await res.json()
+      setCountries(data || []);
+    }
+    fetchCountries()
+  }, []);
+
   const navigate = useNavigate();
 
   const role = [
@@ -61,14 +78,23 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
   ];
 
   // Get all countries from country-state-city
-  const allCountries = useMemo(() => Country.getAllCountries(), []);
+  const allCountries = useMemo(() => Countries, [Countries]);
   // Get cities based on selected country
-  const availableCities = useMemo(() => {
-    if (!selectedCountry?.isoCode) return [];
-    return City.getCitiesOfCountry(selectedCountry.isoCode);
+  // const availableCities = useMemo(() => {
+  //   if (!selectedCountry?.isoCode) return [];
+  //   return City.getCitiesOfCountry(selectedCountry.isoCode);
+  // }, [selectedCountry]);
+  useEffect(() => {
+    if (selectedCountry?.name) {
+      const asa = selectedCountry.cities?.map((i) => {
+        return {
+          city: i,
+          country: selectedCountry?.name
+        }
+      })
+      setAvailableCities(asa);
+    }
   }, [selectedCountry]);
-
-
   // Convert Set to string for form submission
   const selectedRoleValue = useMemo(() => {
     return Array.from(selectedRole)[0] || "";
@@ -148,11 +174,11 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
         // We need to wait for country to be set, but we can do it here if we have country isoCode
         const country = allCountries.find(c => c.name === userData.country);
         if (country) {
-          const cities = City.getCitiesOfCountry(country.isoCode);
-          const city = cities.find(c => c.name === userData.city);
+          const cities = country?.cities;
+          const city = cities.find(c => c === userData.city);
           if (city) {
             setSelectedCity(city);
-            setCityInputValue(city.name);
+            setCityInputValue(city);
           }
         }
       }
@@ -186,10 +212,11 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
 
   const handleCitySelect = (key) => {
     // Since city names might not be unique globally, but are within country, we search in availableCities
-    const city = availableCities.find(c => c.name === key);
-    if (city) {
-      setSelectedCity(city);
-      setCityInputValue(city.name);
+    const city = availableCities?.find(c => c.city === key);
+successMessage(city?.city)
+    if (city?.city) {
+      setSelectedCity(city?.city);
+      setCityInputValue(city?.city);
     }
   };
 
@@ -215,8 +242,8 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
         last_name: data.lastName,
         email: data.email,
         phone_number: data.phoneNumber,
-        country: selectedCountryValue,
-        city: selectedCityValue,
+        country: selectedCountry?.name,
+        city: selectedCity,
         role: selectedRoleValue,
         is_active: isSelected,
         permissions: selectedPermissions,
@@ -396,8 +423,8 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
                 placeholder="Select City"
                 allowsCustomValue={false}
                 isDisabled={!selectedCountry}
-                defaultItems={availableCities}
-                selectedKey={selectedCity?.name || null} // Use name for city key as we search by name
+                defaultItems={availableCities || []}
+                selectedKey={selectedCity || null} // Use name for city key as we search by name
                 inputValue={cityInputValue}
                 onInputChange={setCityInputValue}
                 onSelectionChange={handleCitySelect}
@@ -406,10 +433,10 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
               >
                 {(city) => (
                   <AutocompleteItem
-                    key={city.name}
-                    textValue={city.name}
+                    key={city.city}
+                    textValue={city.city}
                   >
-                    {city.name}
+                    {city.city}
                   </AutocompleteItem>
                 )}
               </Autocomplete>
