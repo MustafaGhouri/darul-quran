@@ -277,7 +277,7 @@ const CourseBuilder = () => {
         ? parseInt(formData.enroll_number)
         : null,
       status: formData.status,
-      course_price: (formData?.base_price - ((formData?.discount_percentage * formData?.base_price) / 100)),
+      course_price: (formData?.base_price - ((formData?.discount_percentage * formData?.base_price) / 100)).toFixed(2),
       videoUrl: urlMap.video ?? videoUrl ?? null,
       thumbnailurl: urlMap.thumbnail ?? thumbnailUrl ?? null,
       teacher_id: Number(formData.teacher_id),
