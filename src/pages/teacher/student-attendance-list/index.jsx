@@ -19,7 +19,7 @@ import { DashHeading } from "../../../components/dashboard-components/DashHeadin
 import { useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import { useSelector } from "react-redux";
-import { Eye } from "lucide-react";
+import { Eye, MessageCircle } from "lucide-react";
 import { useGetStudentAttendanceListQuery, useGetStudentsForFilterQuery } from "../../../redux/api/attendance";
 import { dateFormatter } from "../../../lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -30,6 +30,18 @@ const StudentAttendanceList = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const navigate = useNavigate();
+
+  const messagesPath = user?.role === "admin" ? "/admin/help/messages" : "/teacher/chat";
+
+  const handleOpenChat = (student) => {
+    navigate(messagesPath, {
+      state: {
+        startChatWith: student.studentId,
+        receiverName: student.studentName,
+        receiverRole: "student",
+      },
+    });
+  };
 
   const { data, isLoading } = useGetStudentAttendanceListQuery({
     page,
@@ -128,15 +140,26 @@ const StudentAttendanceList = () => {
                     </div>
                 </TableCell>
                 <TableCell>
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    className="bg-[#06574C]/10 text-[#06574C] font-semibold hover:bg-[#06574C] hover:text-white transition-all duration-300"
-                    startContent={<Eye size={16} />}
-                    onPress={() => handleViewDetails(item)}
-                  >
-                    View Details
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      className="bg-[#06574C]/10 text-[#06574C] font-semibold hover:bg-[#06574C] hover:text-white transition-all duration-300"
+                      startContent={<Eye size={16} />}
+                      onPress={() => handleViewDetails(item)}
+                    >
+                      View Details
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      className="bg-[#95C4BE]/50 text-[#06574C] font-semibold hover:bg-[#06574C] hover:text-white transition-all duration-300"
+                      startContent={<MessageCircle size={16} />}
+                      onPress={() => handleOpenChat(item)}
+                    >
+                      Chat
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             )}

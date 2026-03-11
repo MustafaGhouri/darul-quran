@@ -1,11 +1,5 @@
 import "./App.css";
 
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { HeroUIProvider, ToastProvider } from "@heroui/react";
-
-import { lazy, Suspense, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-
 import ProtectedRoute from "./components/protected-route";
 import AuthLayout from "./components/layouts/AuthLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
@@ -20,20 +14,15 @@ import { lazy, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import TeachersLayout from "./components/layouts/Teacherslayout";
 import StudentLayout from "./components/layouts/Studentlayout";
-
-import Loader from "./components/Loader";
 import ErrorBoundary from "./components/globalError";
 import DownloadModal from "./components/dashboard-components/DownloadModal";
 
 import { showMessage } from "./lib/toast.config";
 import { clearUser, setUser } from "./redux/reducers/user";
-import { setOnlineUsers, setIncomingMessage } from "./redux/reducers/chat";
+import { setOnlineUsers, setIncomingMessage, setChats, updateMessageDelivery, setMessagesReadInChat, updateChatPreview } from "./redux/reducers/chat";
 import Loader from "./components/Loader";
-import StudentLayout from "./components/layouts/Studentlayout";
-import SupportTicketsStudent from "./pages/student/supports-tickets/page";
-import SupportTicketsTeacher from "./pages/teacher/supports-tickets/page";
+
 import useDynamicMeta from "./hooks/useDynamicMetadata";
-import AttendanceList from "./pages/student/attendance-list";
 
 const Home = lazy(() => import("./pages/Home"));
 
@@ -149,10 +138,7 @@ const TeacherAndStudentChat = lazy(() =>
   import("./pages/admin/help/TeacherAndStudent")
 );
 const Review = lazy(() => import("./pages/admin/help/review"));
-const Faqs = lazy(() => import("./pages/admin/help/faqs"));
-const EnrollSuccess = lazy(() => import("./pages/student/enroll-success"));
-const CoursePlayer = lazy(() => import("./pages/student/course-player"));
-const AdminRescheduleRequests = lazy(() => import("./pages/admin/RescheduleRequests"));
+const Faqs = lazy(() => import("./pages/admin/help/faqs")); 
 import { io } from "socket.io-client";
 
 const socket = io(import.meta.env.VITE_PUBLIC_SERVER_URL);
@@ -180,10 +166,10 @@ function App() {
   );
   const { incomingMessage, activeChatId } = useSelector((state) => state?.chat ?? {});
 
-  // Toast when new message arrives and user is not viewing that chat
+  // Toast when new message arrives and user is not viewing that chat (clickable → open chat)
   useEffect(() => {
-    if (!incomingMessage?.message) return;
-    const isOnChatScreen = pathname.includes("/help/messages") || pathname === "/teacher/chat" || pathname.includes("/help/chat");
+    if (!incomingMessage?.message || !user?.id) return;
+    const isOnChatScreen = pathname.includes("/help/messages") || pathname.startsWith("/teacher/chat") || pathname.includes("/help/chat");
     const isViewingThisChat = isOnChatScreen && activeChatId === incomingMessage.chatId;
     if (isViewingThisChat) return;
 
@@ -192,14 +178,41 @@ function App() {
       ? [msg.sender.firstName, msg.sender.lastName].filter(Boolean).join(" ").trim() || msg.sender.email || "Someone"
       : "Someone";
     const text = (msg.text || "").slice(0, 80);
+    const role = (user.role || "").toLowerCase();
+    const messagesBase = role === "admin" ? "/admin/help/messages" : role === "teacher" ? "/teacher/chat" : "/student/help/messages";
+    const chatUrl = `${messagesBase}/${incomingMessage.chatId}`;
+
     addToast({
       title: `New message from ${senderName}`,
-      description: text ? (text.length >= 80 ? `${text}…` : text) : "New message",
+      description: (
+        <div className="flex flex-col gap-1">
+          <span>{text ? (text.length >= 80 ? `${text}…` : text) : "New message"}</span>
+          <button
+            type="button"
+            onClick={() => navigate(chatUrl)}
+            className="text-left font-medium underline hover:no-underline text-sm mt-0.5"
+          >
+            Open chat →
+          </button>
+        </div>
+      ),
       color: "primary",
       variant: "solid",
       placement: "bottom-right",
     });
-  }, [incomingMessage, pathname, activeChatId]);
+  }, [incomingMessage, pathname, activeChatId, user?.id, user?.role, navigate]);
+
+  // Pre-fetch chat list when user logs in for zero-latency navigation to chat screen
+  useEffect(() => {
+    if (!user?.id) return;
+    const api = import.meta.env.VITE_PUBLIC_SERVER_URL;
+    fetch(`${api}/api/chat`, { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.chats) dispatch(setChats(data.chats));
+      })
+      .catch(() => {});
+  }, [user?.id, dispatch]);
 
   useEffect(() => {
     async function loadUser() {
@@ -247,15 +260,30 @@ function App() {
     if (!user?.id) return;
     socket.emit("user-online", user.id);
     const onOnlineUsers = (users) => dispatch(setOnlineUsers(users));
-    const onReceiveMessage = (payload) => dispatch(setIncomingMessage(payload));
+    const onReceiveMessage = (payload) => {
+      dispatch(setIncomingMessage(payload));
+      if (payload?.chat) {
+        dispatch(updateChatPreview({ chat: payload.chat }));
+      }
+    };
+    const onMessageDelivered = ({ chatId, messageId }) => {
+      dispatch(updateMessageDelivery({ chatId, messageId, isDelivered: true }));
+    };
+    const onMessagesRead = ({ chatId }) => {
+      dispatch(setMessagesReadInChat({ chatId, userId: user.id }));
+    };
     socket.on("update-online-users", onOnlineUsers);
     socket.on("receive-message", onReceiveMessage);
+    socket.on("message-delivered", onMessageDelivered);
+    socket.on("messages-read", onMessagesRead);
     return () => {
       socket.off("update-online-users", onOnlineUsers);
       socket.off("receive-message", onReceiveMessage);
+      socket.off("message-delivered", onMessageDelivered);
+      socket.off("messages-read", onMessagesRead);
       socket.disconnect();
     };
-  }, [user?.id]);
+  }, [user?.id, dispatch]);
   if (loading) return (
     <div className="h-screen flex flex-col items-center justify-center">
       <img
@@ -447,7 +475,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/help/messages"
+              path="/admin/help/messages/:chatId?"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <HelpMessages />
@@ -556,7 +584,7 @@ function App() {
               }
             />
             <Route
-              path="/teacher/chat"
+              path="/teacher/chat/:chatId?"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <HelpMessages />
@@ -647,7 +675,7 @@ function App() {
               }
             />
             <Route
-              path="/student/help/messages"
+              path="/student/help/messages/:chatId?"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <HelpMessages />
@@ -670,14 +698,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
+            {/* <Route
               path="/student/attendance-list"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <AttendanceList />
                 </ProtectedRoute>
               }
-            />
+            /> */}
             <Route
               path="/student/support-tickets"
               element={

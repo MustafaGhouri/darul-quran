@@ -1,14 +1,20 @@
 import { useEffect, useState, useRef } from "react";
 import { messages as mockMessages } from "../../lib/constants";
-import { FiMoreVertical, FiPaperclip, FiSend, FiXCircle, FiPhone, FiBellOff, FiUserX, FiFlag, FiEye, FiLock } from "react-icons/fi";
-import { FaRegFileAlt } from "react-icons/fa";
-import { Popover, PopoverContent, PopoverTrigger, Spinner } from "@heroui/react";
-import { CheckCheck } from "lucide-react";
+import { FiMoreVertical, FiXCircle, FiPhone, FiBellOff, FiUserX, FiFlag, FiEye, FiLock } from "react-icons/fi";
+import { Popover, PopoverContent, PopoverTrigger, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, addToast } from "@heroui/react";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
-import { setIncomingMessage, clearIncomingMessage } from "../../redux/reducers/chat";
+import { useNavigate } from "react-router-dom";
+import { setIncomingMessage, clearIncomingMessage, setMessagesForChat, appendMessageToChat, replaceTempMessage, updateChatPreview } from "../../redux/reducers/chat";
+
+import ChatMessageBubble from "./ChatMessageBubble";
+import MessageStatusIcon from "./MessageStatusIcon";
+import ChatInput from "./ChatInput";
+import DateSeparator from "./DateSeparator";
+import { parseMessageAttachment, getMessageDateKey, formatDateSeparator } from "./utils/chatMessage";
 
 const API = import.meta.env.VITE_PUBLIC_SERVER_URL;
+const MESSAGES_PAGE_SIZE = 30;
 
 export default function ChatInterface({
   isTeacherAndStudent = false,
@@ -16,37 +22,86 @@ export default function ChatInterface({
   chat: legacyChat,
   setSelectedData,
   showInput = true,
-  // New props for real chat (teacher/student)
+  // New props for real chat (teacher/student). chatId can be null for new conversation.
   chatId,
   otherUser,
   currentUserId,
   setSelectedChat,
+  onChatCreated,
+  // Admin view: observe teacher-student chat (read-only, no input)
+  adminViewMode = false,
+  adminTeacherId = null,
+  adminTeacherName = "",
+  adminStudentName = "",
 }) {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [hasMoreOlder, setHasMoreOlder] = useState(true);
   const [isOpen, setIsOpen] = useState(true);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [blockModalOpen, setBlockModalOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [teacherStudentInfoModalOpen, setTeacherStudentInfoModalOpen] = useState(false);
+  const [mutedChats, setMutedChats] = useState(() => {
+    try {
+      const raw = localStorage.getItem("chat_muted_ids");
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  });
+  const navigate = useNavigate();
   const messagesEndRef = useRef(null);
+  const messagesTopRef = useRef(null);
+  const [attachedAttachment, setAttachedAttachment] = useState(null);
   const dispatch = useDispatch();
   const incomingMessage = useSelector((state) => state.chat?.incomingMessage);
+  const currentUser = useSelector((state) => state?.user?.user);
+  const cachedMessages = useSelector((state) => (chatId != null ? state.chat?.messagesByChatId?.[chatId] : null));
 
-  const isRealChat = Boolean(chatId && otherUser && currentUserId);
+  const isRealChat = Boolean(otherUser && currentUserId);
+  const isAdminView = Boolean(adminViewMode && chatId != null);
   const displayUser = isRealChat ? otherUser : legacyUser;
 
-  // Load messages from API when using real chat
+  /** Use Redux messages when available so delivery/read updates (from socket) show immediately */
+  const displayMessages = (isRealChat && chatId != null && Array.isArray(cachedMessages) && cachedMessages.length >= 0)
+    ? cachedMessages
+    : isAdminView && Array.isArray(cachedMessages) && cachedMessages.length >= 0
+      ? cachedMessages
+      : messages;
+
+  // Load messages: use cache first for instant show, then fetch (merge/replace). Also load when admin is viewing a teacher-student chat.
   useEffect(() => {
-    if (!isRealChat || !chatId) return;
-    setLoading(true);
-    fetch(`${API}/api/chat/${chatId}/messages`, { credentials: "include" })
+    const shouldFetch = (isRealChat || isAdminView) && chatId;
+    if (!shouldFetch) return;
+    if (cachedMessages && cachedMessages.length > 0 && !isAdminView) {
+      setMessages(cachedMessages);
+      setLoading(false);
+    } else if (isAdminView && cachedMessages && cachedMessages.length > 0) {
+      setMessages(cachedMessages);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+    setHasMoreOlder(true);
+    const url = `${API}/api/chat/${chatId}/messages?limit=${MESSAGES_PAGE_SIZE}`;
+    fetch(url, { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
-        if (data.messages) setMessages(data.messages);
-        else setMessages([]);
+        if (data.messages && data.messages.length > 0) {
+          setMessages(data.messages);
+          dispatch(setMessagesForChat({ chatId, messages: data.messages }));
+        } else if (!cachedMessages?.length) {
+          setMessages([]);
+        }
+        setHasMoreOlder(!!data.hasMore);
       })
-      .catch(() => setMessages([]))
+      .catch(() => {
+        if (!cachedMessages?.length) setMessages([]);
+      })
       .finally(() => setLoading(false));
-  }, [isRealChat, chatId]);
+  }, [isRealChat, isAdminView, chatId]);
 
   // Mock data for admin / legacy view
   useEffect(() => {
@@ -62,9 +117,9 @@ export default function ChatInterface({
     }
   }, [isRealChat, legacyUser?.id, legacyChat?.id, isTeacherAndStudent]);
 
-  // Append incoming real-time message when it belongs to this chat
+  // Append incoming real-time message when it belongs to this chat (skip when chatId is null - new conversation)
   useEffect(() => {
-    if (!incomingMessage || !isRealChat || incomingMessage.chatId !== chatId) return;
+    if (!incomingMessage || !isRealChat || chatId == null || incomingMessage.chatId !== chatId) return;
     const msg = incomingMessage.message;
     if (!msg) {
       dispatch(clearIncomingMessage());
@@ -74,52 +129,248 @@ export default function ChatInterface({
       if (prev.some((m) => m.id === msg.id)) return prev;
       return [...prev, msg];
     });
+    dispatch(appendMessageToChat({ chatId, message: msg }));
     dispatch(clearIncomingMessage());
   }, [incomingMessage, isRealChat, chatId, dispatch]);
 
-  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (behavior = "smooth") => {
+    messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
+  };
+
+  // When initial load finishes, scroll to bottom so latest messages are visible (not stuck at top)
   useEffect(() => {
-    if (messages.length) scrollToBottom();
-  }, [messages.length]);
+    if (!loading && displayMessages.length > 0 && messagesTopRef.current) {
+      const el = messagesTopRef.current;
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+      });
+    }
+  }, [loading, chatId]);
+
+  // Scroll to bottom when a new message is appended (sent or received), not on initial load or when loading older
+  const prevLastIdRef = useRef(null);
+  useEffect(() => {
+    if (displayMessages.length === 0) return;
+    const lastMsg = displayMessages[displayMessages.length - 1];
+    const lastId = lastMsg?.id ?? lastMsg?.tempId ?? null;
+    const hadMessages = prevLastIdRef.current !== null;
+    if (lastId != null && hadMessages && lastId !== prevLastIdRef.current) {
+      scrollToBottom("smooth");
+    }
+    prevLastIdRef.current = lastId;
+  }, [displayMessages.length, displayMessages]);
 
   const handleBack = () => {
     setIsOpen(false);
     setTimeout(() => {
       if (setSelectedChat) setSelectedChat(null);
-      if (setSelectedData) setSelectedData({});
+      if (setSelectedData) setSelectedData(null);
     }, 150);
+  };
+
+  const muteKey = (chatId != null ? chatId : otherUser?.id) ?? "new";
+  const isMuted = mutedChats.includes(muteKey);
+  const toggleMute = () => {
+    const next = isMuted ? mutedChats.filter((id) => id !== muteKey) : [...mutedChats, muteKey];
+    setMutedChats(next);
+    try {
+      localStorage.setItem("chat_muted_ids", JSON.stringify(next));
+    } catch (_) { }
+    addToast({
+      title: next.includes(muteKey) ? "Chat muted" : "Chat unmuted",
+      color: "success",
+      variant: "solid",
+      placement: "bottom-right",
+    });
+  };
+
+  const handleBlock = () => {
+    setBlockModalOpen(false);
+    addToast({
+      title: "User blocked",
+      description: "They can no longer start new conversations with you.",
+      color: "warning",
+      variant: "solid",
+      placement: "bottom-right",
+    });
+    if (setSelectedChat) setSelectedChat(null);
+  };
+
+  const handleReport = () => {
+    setReportModalOpen(false);
+    const role = (currentUser?.role || "student").toLowerCase();
+    const path = role === "admin" ? "/admin/tickets" : role === "teacher" ? "/teacher/support-tickets" : "/student/support-tickets";
+    navigate(path);
+    addToast({
+      title: "Opening support",
+      description: "You can submit a report or ticket there.",
+      color: "primary",
+      variant: "solid",
+      placement: "bottom-right",
+    });
+  };
+
+  const handleRestrict = () => {
+    addToast({
+      title: "Restrict conversation",
+      description: "Contact an admin to restrict this chat.",
+      color: "warning",
+      variant: "solid",
+      placement: "bottom-right",
+    });
+  };
+
+  const deleteUploadedFile = async (url) => {
+    if (!url) return;
+    try {
+      await fetch(`${API}/api/chat/upload/delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ url }),
+      });
+    } catch (_) { }
+  };
+
+  const handleFileSelect = async (file) => {
+    const previousUrl = attachedAttachment?.url;
+    if (previousUrl) await deleteUploadedFile(previousUrl);
+
+    setAttachedAttachment({ file, uploading: true });
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`${API}/api/chat/upload`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        addToast({ title: "Upload failed", color: "danger", placement: "bottom-right" });
+        setAttachedAttachment(null);
+        return;
+      }
+      const type = data.mimeType?.startsWith("image/") ? "image" : data.mimeType?.startsWith("video/") ? "video" : "file";
+      setAttachedAttachment({
+        url: data.url,
+        name: data.name || file.name,
+        size: data.size != null ? `${(data.size / 1024).toFixed(1)} KB` : "",
+        type,
+      });
+    } catch (err) {
+      addToast({ title: "Upload failed", color: "danger", placement: "bottom-right" });
+      setAttachedAttachment(null);
+    }
+  };
+
+  const handleRemoveAttachment = () => {
+    const url = attachedAttachment?.url;
+    if (url) deleteUploadedFile(url);
+    setAttachedAttachment(null);
   };
 
   const sendMessage = async () => {
     const text = message.trim();
-    if (!text) return;
+    const ready = attachedAttachment && attachedAttachment.url && !attachedAttachment.uploading;
+    const hasAttachment = !!ready;
+    if (!text && !hasAttachment) return;
     if (isRealChat && otherUser?.id) {
-      setSending(true);
+      const attachmentData = ready ? { url: attachedAttachment.url, name: attachedAttachment.name, size: attachedAttachment.size, type: attachedAttachment.type } : null;
+      const filePayload = attachmentData ? JSON.stringify(attachmentData) : "";
+      const textToSend = text || (hasAttachment ? "Attachment" : "");
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const optimisticMsg = {
+        tempId,
+        id: null,
+        userId: currentUserId,
+        text: textToSend,
+        createdAt: new Date().toISOString(),
+        pending: true,
+        isDelivered: false,
+        file: filePayload,
+        hasAttachment: !!filePayload,
+        attachment: attachmentData,
+      };
       setMessage("");
+      setAttachedAttachment(null);
+      setMessages((prev) => [...prev, optimisticMsg]);
+      dispatch(appendMessageToChat({ chatId: chatId ?? undefined, message: optimisticMsg }));
+      setSending(true);
       try {
         const res = await fetch(`${API}/api/chat/send`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ receiverId: otherUser.id, message: text, type: "text" }),
+          body: JSON.stringify({
+            receiverId: otherUser.id,
+            message: textToSend,
+            type: filePayload ? "file" : "text",
+            file: filePayload,
+          }),
         });
         const data = await res.json();
         if (data.success && data.data?.message) {
-          setMessages((prev) => [...prev, data.data.message]);
+          const serverMsg = data.data.message;
+          setMessages((prev) => prev.map((m) => (m.tempId === tempId ? serverMsg : m)));
+          if (chatId != null) {
+            dispatch(replaceTempMessage({ chatId, tempId, message: serverMsg }));
+          } else {
+            dispatch(appendMessageToChat({ chatId: data.data.chatId, message: serverMsg }));
+          }
+          if ((chatId == null || chatId === undefined) && data.data.chatId != null) {
+            onChatCreated?.(data.data.chatId);
+          }
+          dispatch(updateChatPreview({
+            chat: {
+              id: chatId ?? data.data.chatId,
+              lastMessage: serverMsg.text,
+              updatedAt: serverMsg.createdAt,
+            },
+          }));
         } else {
-          setMessage(text);
+          setMessages((prev) => prev.filter((m) => m.tempId !== tempId));
+          setMessage(textToSend);
+          if (attachmentData) setAttachedAttachment(attachmentData);
         }
       } catch (err) {
-        setMessage(text);
+        setMessages((prev) => prev.filter((m) => m.tempId !== tempId));
+        setMessage(textToSend);
+        if (attachmentData) setAttachedAttachment(attachmentData);
       } finally {
         setSending(false);
       }
     } else {
       setMessage("");
+      setAttachedAttachment(null);
     }
   };
 
-  const showInputArea = showInput && (isRealChat || !isTeacherAndStudent);
+  const loadOlderMessages = () => {
+    if (!chatId || loadingOlder || !hasMoreOlder || displayMessages.length === 0) return;
+    const firstId = displayMessages[0]?.id;
+    if (!firstId) return;
+    setLoadingOlder(true);
+    fetch(`${API}/api/chat/${chatId}/messages?limit=${MESSAGES_PAGE_SIZE}&beforeId=${firstId}`, { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.messages && data.messages.length > 0) {
+          const current = cachedMessages ?? messages;
+          const merged = [...data.messages, ...current];
+          setMessages(merged);
+          dispatch(setMessagesForChat({ chatId, messages: merged }));
+        }
+        setHasMoreOlder(!!data.hasMore);
+      })
+      .finally(() => setLoadingOlder(false));
+  };
+
+  const handleScroll = (e) => {
+    const el = e.target;
+    if (el.scrollTop < 80 && hasMoreOlder && !loadingOlder) loadOlderMessages();
+  };
+
+  const showInputArea = showInput && !adminViewMode && (isRealChat || !isTeacherAndStudent);
 
   return (
     <div
@@ -158,6 +409,19 @@ export default function ChatInterface({
               </span>
             </div>
           </div>
+        ) : isAdminView ? (
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={handleBack} className="p-1 rounded hover:bg-black/5">
+              <FaArrowLeftLong color="gray" />
+            </button>
+            <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+              <img src="/icons/group-user.png" alt="group" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <p className="text-xs text-teal-700 font-medium truncate">Teacher: {adminTeacherName || legacyChat?.teacher_name}</p>
+              <p className="text-xs text-amber-700 font-medium truncate">Student: {adminStudentName || legacyChat?.student_name}</p>
+            </div>
+          </div>
         ) : (
           <div className="flex items-center gap-3">
             <button type="button" onClick={handleBack} className="p-1 rounded hover:bg-black/5">
@@ -186,17 +450,17 @@ export default function ChatInterface({
             <PopoverContent className="w-48 p-1">
               {!isTeacherAndStudent ? (
                 <ul className="py-1">
-                  <li><button type="button" className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg"><FiPhone className="text-lg" /> Contact Info</button></li>
-                  <li><button type="button" className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg"><FiBellOff className="text-lg" /> Mute</button></li>
-                  <li><button type="button" className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-500 hover:bg-gray-100 rounded-lg"><FiUserX className="text-lg" /> Block</button></li>
-                  <li><button type="button" className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-500 hover:bg-gray-100 rounded-lg"><FiFlag className="text-lg" /> Report</button></li>
+                  <li><button type="button" onClick={() => setContactModalOpen(true)} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg"><FiPhone className="text-lg" /> Contact Info</button></li>
+                  <li><button type="button" onClick={toggleMute} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg"><FiBellOff className="text-lg" /> {isMuted ? "Unmute" : "Mute"}</button></li>
+                  <li><button type="button" onClick={() => setBlockModalOpen(true)} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-500 hover:bg-gray-100 rounded-lg"><FiUserX className="text-lg" /> Block</button></li>
+                  <li><button type="button" onClick={() => setReportModalOpen(true)} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-500 hover:bg-gray-100 rounded-lg"><FiFlag className="text-lg" /> Report</button></li>
                   <li><button type="button" className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg" onClick={handleBack}><FiXCircle className="text-lg" /> Close Chat</button></li>
                 </ul>
               ) : (
                 <ul className="py-1">
-                  <li><button type="button" className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg"><FiEye className="text-lg" /> Teacher Info</button></li>
-                  <li><button type="button" className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg"><FiPhone className="text-lg" /> Student Info</button></li>
-                  <li><button type="button" className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-600 hover:bg-gray-100 rounded-lg"><FiLock className="text-lg" /> Restrict</button></li>
+                  <li><button type="button" onClick={() => setTeacherStudentInfoModalOpen(true)} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg"><FiEye className="text-lg" /> Teacher Info</button></li>
+                  <li><button type="button" onClick={() => setTeacherStudentInfoModalOpen(true)} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg"><FiPhone className="text-lg" /> Student Info</button></li>
+                  <li><button type="button" onClick={handleRestrict} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-600 hover:bg-gray-100 rounded-lg"><FiLock className="text-lg" /> Restrict</button></li>
                   <li><button type="button" className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg" onClick={handleBack}><FiXCircle className="text-lg" /> Close Chat</button></li>
                 </ul>
               )}
@@ -206,107 +470,134 @@ export default function ChatInterface({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
+      <div
+        className="flex-1 overflow-y-auto px-4 pb-4 space-y-4"
+        onScroll={handleScroll}
+        ref={messagesTopRef}
+      >
+        {loadingOlder && (
+          <div className="flex justify-center py-2">
+            <Spinner size="sm" color="success" />
+          </div>
+        )}
         {loading ? (
           <div className="flex justify-center py-8">
             <Spinner color="success" />
           </div>
-        ) : messages.length > 0 ? (
-          messages.map((msg, index) => {
-            const isSent = isRealChat ? msg.userId === currentUserId : msg.sender !== "student";
-            const text = msg.text ?? msg.message;
-            const time = msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : msg.time || "";
+        ) : displayMessages.length > 0 ? (
+          (() => {
+            let lastDateKey = "";
+            return displayMessages.map((msg, index) => {
+              const dateKey = getMessageDateKey(msg.createdAt);
+              const showDate = dateKey && dateKey !== lastDateKey;
+              if (showDate) lastDateKey = dateKey;
 
-            return (
-              <div key={msg.id || index}>
-                {!isSent ? (
-                  <div className="flex justify-start">
-                    <div className="max-w-[75%] min-w-[60%]">
-                      <div className="text-sm flex-col flex justify-end bg-white p-3 rounded-md mb-1">
-                        {msg.hasAttachment && (
-                          <div className="rounded-md bg-gray-50 p-2 border border-gray-300 flex items-start gap-3">
-                            <FaRegFileAlt color="#1a5850" size={24} />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-gray-900 truncate">{msg.attachment?.name}</p>
-                              <p className="text-xs text-gray-400 mt-0.5">{msg.attachment?.size}</p>
-                            </div>
-                          </div>
-                        )}
-                        {text && <p className="m-0">{text}</p>}
-                        <div className="flex items-center justify-end gap-2 mt-1">
-                          <span className="text-xs text-gray-400">{time}</span>
-                          <span className="text-xs text-teal-600"><CheckCheck size={15} /></span>
-                        </div>
-                      </div>
-                    </div>
+              const isSent = isAdminView ? msg.userId === adminTeacherId : isRealChat ? msg.userId === currentUserId : msg.sender !== "student";
+              const text = msg.text ?? msg.message;
+              const time = msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : msg.time || "";
+              const { attachment, hasAttachment } = parseMessageAttachment(msg);
+
+              return (
+                <>
+                  {showDate && <DateSeparator label={formatDateSeparator(msg.createdAt)} />}
+                  <div key={msg.id || msg.tempId || index}>
+                    <ChatMessageBubble
+                      isSent={isSent}
+                      text={text}
+                      time={time}
+                      attachment={hasAttachment ? attachment : null}
+                      statusIcon={isSent ? <MessageStatusIcon msg={msg} currentUserId={currentUserId} /> : null}
+                    />
                   </div>
-                ) : (
-                  <div className="flex justify-end">
-                    <div className="max-w-[75%] min-w-[60%]">
-                      <div className="text-sm text-white flex-col flex justify-end bg-teal-700 p-3 rounded-md mb-1">
-                        {msg.hasAttachment && (
-                          <div className="rounded-md bg-teal-700/30 p-2 border border-gray-300 flex items-start gap-3">
-                            <FaRegFileAlt color="#f9fafb" size={24} />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium text-gray-50 truncate">{msg.attachment?.name}</p>
-                              <p className="text-xs text-gray-100 mt-0.5">{msg.attachment?.size}</p>
-                            </div>
-                          </div>
-                        )}
-                        {text && <p className="m-0">{text}</p>}
-                        <div className="flex items-center justify-end gap-2 mt-1">
-                          <span className="text-xs text-gray-200">{time}</span>
-                          <span className="text-xs text-gray-200"><CheckCheck size={15} /></span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })
+                </>
+              );
+            });
+          })()
         ) : (
           <div className="flex justify-center py-8">
             <span className="text-gray-600">No messages yet. Say hello!</span>
           </div>
         )}
-        {sending && (
-          <div className="flex justify-end">
-            <div className="max-w-[85%]">
-              <div className="text-sm text-white bg-teal-700 px-3 py-2 rounded-md">
-                <Spinner size="sm" color="white" />
-              </div>
-            </div>
-          </div>
-        )}
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Contact Info Modal (real chat) */}
+      {displayUser && !isTeacherAndStudent && (
+        <Modal isOpen={contactModalOpen} onOpenChange={setContactModalOpen}>
+          <ModalContent>
+            <ModalHeader>Contact Info</ModalHeader>
+            <ModalBody>
+              <div className="space-y-2">
+                <p><span className="font-medium">Name:</span> {displayUser.name || "—"}</p>
+                <p><span className="font-medium">Role:</span> {(displayUser.role || "—").toLowerCase()}</p>
+                {displayUser.email ? <p><span className="font-medium">Email:</span> {displayUser.email}</p> : null}
+              </div>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      )}
+
+      {/* Block confirmation */}
+      <Modal isOpen={blockModalOpen} onOpenChange={setBlockModalOpen}>
+        <ModalContent>
+          <ModalHeader>Block user?</ModalHeader>
+          <ModalBody>
+            <p>This user will no longer be able to start new conversations with you. You can unblock them later from settings.</p>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="light" onPress={() => setBlockModalOpen(false)}>Cancel</Button>
+            <Button color="danger" onPress={handleBlock}>Block</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Report */}
+      <Modal isOpen={reportModalOpen} onOpenChange={setReportModalOpen}>
+        <ModalContent>
+          <ModalHeader>Report conversation</ModalHeader>
+          <ModalBody>
+            <p>You will be taken to support tickets where you can describe the issue or report this conversation.</p>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="light" onPress={() => setReportModalOpen(false)}>Cancel</Button>
+            <Button color="primary" onPress={handleReport}>Go to Support</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Teacher / Student Info (legacy teacher-student view) */}
+      {isTeacherAndStudent && legacyChat && (
+        <Modal isOpen={teacherStudentInfoModalOpen} onOpenChange={setTeacherStudentInfoModalOpen}>
+          <ModalContent>
+            <ModalHeader>Conversation</ModalHeader>
+            <ModalBody>
+              <div className="space-y-3">
+                <p><span className="font-medium">Teacher:</span> {legacyChat.teacher_name || "—"}</p>
+                <p><span className="font-medium">Student:</span> {legacyChat.student_name || "—"}</p>
+              </div>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      )}
+
       {showInputArea && (
-        <div className="border-t border-gray-200 px-4 py-3 shrink-0 sticky bottom-0 bg-[#d2ebe5]">
-          <div className="flex bg-white p-3 rounded-xl items-center gap-2">
-            <button type="button" className="p-2 text-gray-500 hover:text-gray-700 shrink-0">
-              <FiPaperclip size={20} />
-            </button>
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-              placeholder="Send a message..."
-              className="flex-1 px-3 py-2 text-sm bg-transparent border-none outline-none placeholder-gray-400 min-w-0"
-            />
-            <button
-              type="button"
-              onClick={sendMessage}
-              disabled={sending || !message.trim()}
-              className="px-4 py-2 bg-teal-700 text-white text-xs font-medium rounded-md hover:bg-teal-800 disabled:opacity-50 flex items-center gap-2 shrink-0"
-            >
-              Send
-              <FiSend className="rotate-45" size={14} />
-            </button>
-          </div>
-        </div>
+        <ChatInput
+          message={message}
+          onMessageChange={setMessage}
+          attachedAttachment={attachedAttachment}
+          onFileSelect={handleFileSelect}
+          onRemoveAttachment={handleRemoveAttachment}
+          onSend={sendMessage}
+          sending={sending}
+          disabled={false}
+          onInvalidFile={() =>
+            addToast({
+              title: "Only images and videos are allowed",
+              color: "warning",
+              placement: "bottom-right",
+            })
+          }
+        />
       )}
     </div>
   );

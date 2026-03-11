@@ -14,6 +14,7 @@ import {
   ChartPie,
   Check,
   Clock,
+  MessageCircle,
 } from "lucide-react";
 import { HiOutlinePlay, HiUserGroup } from "react-icons/hi";
 import { PiFilePdfLight } from "react-icons/pi";
@@ -229,13 +230,34 @@ const CourseDetails = () => {
                     </div>
                   </div>
 
-                  <Button
-                    size="sm"
-                    radius="sm"
-                    className="bg-[#E6F2F0] text-[#06574C] font-medium px-4"
-                  >
-                    {course?.category_name || course?.categoryName}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      radius="sm"
+                      className="bg-[#E6F2F0] text-[#06574C] font-medium px-4"
+                    >
+                      {course?.category_name || course?.categoryName}
+                    </Button>
+                    {(data?.teacher?.id ?? teacherId) && (
+                      <Button
+                        size="sm"
+                        radius="sm"
+                        className="bg-[#06574C] text-white font-medium px-4"
+                        startContent={<MessageCircle size={16} />}
+                        onPress={() =>
+                          navigate("/student/help/messages", {
+                            state: {
+                              startChatWith: data?.teacher?.id ?? teacherId,
+                              receiverName: [data?.teacher?.firstName, data?.teacher?.lastName].filter(Boolean).join(" ").trim() || "Teacher",
+                              receiverRole: "teacher",
+                            },
+                          })
+                        }
+                      >
+                        Chat with teacher
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Description */}

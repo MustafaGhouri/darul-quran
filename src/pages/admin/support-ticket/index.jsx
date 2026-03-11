@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
   Button,
@@ -25,7 +26,7 @@ import {
 } from "@heroui/react";
 import {
   Eye,
-  ListFilterIcon,
+  MessageCircle,
   MessageSquare,
   Trash2,
   TicketIcon,
@@ -47,6 +48,7 @@ const STATUS_COLORS = {
 };
 
 const AdminSupportTickets = () => {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
 
@@ -239,6 +241,20 @@ const AdminSupportTickets = () => {
                         onPress={() => handleRespondOpen(ticket)}
                       >
                         Reply
+                      </Button>
+                      <Button
+                        radius="sm"
+                        variant="flat"
+                        size="sm"
+                        className="text-[#06574C] bg-teal-100"
+                        startContent={<MessageCircle size={18} />}
+                        onPress={() =>
+                          navigate("/admin/help/messages", {
+                            state: { fromTicket: true, ticketId: ticket.id },
+                          })
+                        }
+                      >
+                        Start chat
                       </Button>
                       <Button
                         isIconOnly
