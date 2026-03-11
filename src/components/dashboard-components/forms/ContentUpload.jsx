@@ -687,7 +687,7 @@ export function Assignments({ files, setFiles, courseId }) {
 
 import QuizModal from "./QuizModal"; // Ensure import is present or verify later
 
-export function Quizzes({ files = [], setFiles, courseId, handleUpdateFile }) { // added handleUpdateFile prop
+export function Quizzes({ files = [], setFiles, courseId }) {
     const [isOpen, setIsOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(null);
     const [editingQuiz, setEditingQuiz] = useState(null);
@@ -785,6 +785,7 @@ export function Quizzes({ files = [], setFiles, courseId, handleUpdateFile }) { 
                 editingQuiz={editingQuiz}
                 onSaveSuccess={onSaveSuccess}
                 handleUpdateFile={handleUpdateFile}
+                
             />
         </div>
     );

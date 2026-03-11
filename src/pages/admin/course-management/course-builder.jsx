@@ -99,7 +99,7 @@ const CourseBuilder = () => {
   const [updateCourse] = useUpdateCourseMutation();
   const [deleteCategory] = useDeleteCategoryMutation();
   const [addCategory, { isLoading: isAddingCategory }] = useAddCategoryMutation();
-
+  // const [quizzes, setQuizzes] = useState([]); 
   useEffect(() => {
     if (isError) {
       errorMessage(error.data.error, error.status);
@@ -163,7 +163,7 @@ const CourseBuilder = () => {
     { title: "PDFs:", count: (files?.filter((f) => f.fileType === "pdf_notes")).length || 0, icone: <File size={20} color="#06574C" /> },
     {
       title: "Quizzes",
-      count: 0,
+      count: (files?.filter((f) => f.fileType === "quiz")).length || 0,
       icone: <Lightbulb size={20} color="#06574C" />,
     },
     {
@@ -345,7 +345,6 @@ const CourseBuilder = () => {
     //   setPendingAction(null);
     // }
   };
-
 
   // handle submit 3rd tab
   const handleSubmit3tab = async (e) => {
@@ -899,11 +898,11 @@ const CourseBuilder = () => {
                 files={files}
                 setFiles={setFiles}
               />
-              {/* <Quizzes
-                  quizzes={quizzes}
-                  setQuizzes={setQuizzes}
-                  onSave={(data) => setQuizzes(data)}
-                /> */}
+              <Quizzes
+                courseId={courseId}
+                files={files}
+                setFiles={setFiles}
+              />
               <div className="p-3 my-5 bg-[#95C4BE33] rounded-md flex justify-between items-center">
                 <div>
                   <h1 className="text-[#06574C] font-medium text-lg">
