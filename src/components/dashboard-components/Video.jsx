@@ -20,7 +20,7 @@ export default function VideoPlayer({
     <div
       className={`relative w-full h-full overflow-hidden rounded-t-lg ${className}`}
     >
-      <video
+      {src ? <video
         ref={videoRef}
         src={src}
         poster={poster}
@@ -28,9 +28,14 @@ export default function VideoPlayer({
         controls={isPlaying}
         controlsList="nodownload"
         playsInline
-      />
+      /> :
+        <img
+          src={poster}
+          className="w-full h-full object-cover"
+          alt="Course Thumbnail"
+        />}
 
-      {!isPlaying && (
+      {src&&!isPlaying && (
         <button
           onClick={handlePlay}
           className="absolute inset-0 cursor-pointer flex items-center justify-center bg-black/40 hover:bg-black/50 transition"

@@ -272,7 +272,7 @@ const CourseDetails = () => {
               </div>
             </div>
             <div className="col-span-12 md:col-span-4  rounded-lg bg-white ">
-              {(course?.thumbnail || course?.video) ? (
+              {(course?.thumbnail && course?.video) ? (
                 <div className="w-full h-48 rounded-t-lg overflow-hidden bg-black relative">
                   <video
                     src={course.video}
@@ -282,6 +282,15 @@ const CourseDetails = () => {
                   >
                     Your browser does not support the video tag.
                   </video>
+                </div>
+              ) : course?.thumbnail ? (
+                <div className="w-full h-48 rounded-t-lg overflow-hidden bg-black relative">
+                  <img
+                    src={course.thumbnail}
+                    className="w-full h-full object-contain bg-black"
+                    controls
+                    alt={course?.courseName}
+                  />
                 </div>
               ) : (
                 <div className="bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)] h-30 p-3 flex items-center relative rounded-t-lg">
