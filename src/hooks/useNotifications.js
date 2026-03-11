@@ -9,7 +9,11 @@ import {
  * Custom hook for managing push notifications
  */
 export const useNotifications = () => {
-    const [permission, setPermission] = useState(Notification.permission);
+    const [permission, setPermission] = useState(() =>
+        typeof window !== "undefined" && "Notification" in window
+            ? Notification.permission
+            : "default"
+    );
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [subscription, setSubscription] = useState(null);
 
