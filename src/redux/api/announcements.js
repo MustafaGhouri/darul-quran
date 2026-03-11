@@ -28,19 +28,26 @@ export const announcementAPI = createApi({
             invalidatesTags: ["announcement"],
         }),
         getAllAnnouncement: builder.query({
-            query: ({ page, limit }) => ({
+            query: ({ page, limit, sendTo, delivery }) => ({
                 url: "/get",
                 method: "GET",
-                params: { page, limit }
+                params: { page, limit, sendTo, delivery }
             }),
             providesTags: ["announcement"],
         }),
         updateAnnouncement: builder.mutation({
-            query: (id, data) => ({
+            query: ({ id, data }) => ({
                 url: `/update/${id}`,
                 headers: { "Content-Type": "application/json" },
                 method: "PUT",
                 body: data
+            }),
+            invalidatesTags: ["announcement"],
+        }),
+        deleteAnnouncement: builder.mutation({
+            query: (id) => ({
+                url: `/delete/${id}`,
+                method: "DELETE",
             }),
             invalidatesTags: ["announcement"],
         }),
@@ -50,5 +57,6 @@ export const announcementAPI = createApi({
 export const {
     useCreateAnnouncementMutation,
     useGetAllAnnouncementQuery,
-    useUpdateAnnouncementMutation
+    useUpdateAnnouncementMutation,
+    useDeleteAnnouncementMutation
 } = announcementAPI;

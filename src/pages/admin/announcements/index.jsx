@@ -22,7 +22,7 @@ import {
   Switch,
   Tooltip,
   Form,
-  Spinner,
+  Spinner, 
 } from "@heroui/react";
 import { useSelector } from "react-redux";
 import {
@@ -40,6 +40,12 @@ import { successMessage, errorMessage } from "../../../lib/toast.config";
 import { useEffect, useState } from "react";
 import { dateFormatter, formatForInput } from "../../../lib/utils";
 import Swal from "sweetalert2";
+import {
+  useCreateAnnouncementMutation,
+  useDeleteAnnouncementMutation,
+  useGetAllAnnouncementQuery,
+  useUpdateAnnouncementMutation,
+} from "../../../redux/api/announcements";
 
 const Announcements = () => {
   const { user } = useSelector((state) => state.user);
@@ -164,10 +170,25 @@ const Announcements = () => {
   const [isFeatured, setIsFeatured] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [totalAnnouncements, setTotalAnnouncements] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
   const [sendToFilter, setSendToFilter] = useState("all");
   const [deliveryFilter, setDeliveryFilter] = useState("all");
+
+  const { data: announcementData, isLoading: fetchLoading } = useGetAllAnnouncementQuery({
+    page,
+    limit,
+    sendTo: sendToFilter === "all" ? undefined : sendToFilter,
+    delivery: deliveryFilter === "all" ? undefined : deliveryFilter,
+  });
+
+  const [createAnnouncement, { isLoading: createLoading }] = useCreateAnnouncementMutation();
+  const [updateAnnouncement, { isLoading: updateLoading }] = useUpdateAnnouncementMutation();
+  const [deleteAnnouncement] = useDeleteAnnouncementMutation();
+
+  const announcements = announcementData?.data || [];
+  const totalAnnouncements = announcementData?.total || 0;
+  const totalPages = announcementData?.totalPages || 1;
+
+  const loading = fetchLoading || createLoading || updateLoading;
 
   const handleOpen = (announcement = null) => {
     if (announcement) {
@@ -186,51 +207,9 @@ const Announcements = () => {
     onClose();
   };
 
-  const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const fetchAnnouncements = async () => {
-    try {
-      setLoading(true);
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
-      });
-
-      if (sendToFilter !== "all") queryParams.append("sendTo", sendToFilter);
-      if (deliveryFilter !== "all") queryParams.append("delivery", deliveryFilter);
-
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/announcement/get?${queryParams.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${user?.token}`,
-        },
-        credentials: "include",
-      });
-      const result = await res.json();
-      console.log(result);
-      if (result.success) {
-        setAnnouncements(result.data);
-        setTotalAnnouncements(result.total || result.data.length);
-        setTotalPages(result.totalPages || 1);
-      } else {
-        errorMessage(result.message);
-      }
-    } catch (error) {
-      console.error(error);
-      errorMessage("Failed to fetch announcements");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAnnouncements();
-  }, [page, limit, sendToFilter, deliveryFilter]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
     if (!data.description || !data.delivery || !data.sendTo || !data.title) {
@@ -246,41 +225,25 @@ const Announcements = () => {
       date: data.date ? new Date(data.date) : new Date(),
     };
 
-    console.log("Submitting payload:", payload);
-
-    const url = selectedAnnouncement
-      ? `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/announcement/update/${selectedAnnouncement.id}`
-      : `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/announcement/create`;
-
-    const method = selectedAnnouncement ? "PUT" : "POST";
-
     try {
-      setLoading(true);
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${user?.token}`,
-        },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      const result = await res.json();
-      console.log(result);
+      let result;
+      if (selectedAnnouncement) {
+        result = await updateAnnouncement({
+          id: selectedAnnouncement.id,
+          data: payload,
+        }).unwrap();
+      } else {
+        result = await createAnnouncement(payload).unwrap();
+      }
+
       if (result.success) {
-        onClose();
-        fetchAnnouncements();
+        handleClose();
         successMessage(result.message);
-        setLoading(false);
       } else {
         errorMessage(result.message);
-        setLoading(false);
       }
     } catch (error) {
-      errorMessage(error.message);
-      setLoading(false);
-    } finally {
-      setLoading(false);
+      errorMessage(error?.data?.message || "Something went wrong");
     }
   };
 
@@ -296,19 +259,9 @@ const Announcements = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/announcement/delete/${id}`, {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${user?.token}`,
-            },
-            credentials: "include",
-          });
-          const result = await res.json();
-          console.log(result);
-          if (result.success) {
-            fetchAnnouncements();
-            successMessage(result.message);
+          const res = await deleteAnnouncement(id).unwrap();
+          if (res.success) {
+            successMessage(res.message);
             Swal.fire({
               title: "Deleted!",
               text: "Your announcement has been deleted.",
@@ -316,10 +269,10 @@ const Announcements = () => {
               confirmButtonColor: "#06574C",
             });
           } else {
-            errorMessage(result.message);
+            errorMessage(res.message);
           }
         } catch (error) {
-          errorMessage(error.message);
+          errorMessage(error?.data?.message || "Failed to delete announcement");
         }
       }
     });

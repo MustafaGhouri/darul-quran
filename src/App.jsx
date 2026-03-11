@@ -1,7 +1,7 @@
 import "./App.css";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 ;
-import { HeroUIProvider, ToastProvider } from "@heroui/react";
+import { HeroUIProvider, Spinner, ToastProvider } from "@heroui/react";
 
 import { lazy, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
