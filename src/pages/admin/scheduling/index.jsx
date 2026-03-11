@@ -27,6 +27,7 @@ import {
   PopoverContent,
   Spinner,
   Pagination,
+  Image,
 } from "@heroui/react";
 import { CalendarIcon, Copy, Trash2, PlusIcon, User } from "lucide-react";
 
@@ -97,7 +98,7 @@ const Scheduling = () => {
   const [createSchedule, { isLoading: isSubmitting, isError }] = useCreateScheduleMutation();
   const [updateSchedule, { isLoading: isUpdating, isError: isError2 }] = useUpdateScheduleMutation();
   const [deleteSchedule, { isError: isError3 }] = useDeleteScheduleMutation();
-
+  // console.log(data);
   useEffect(() => {
     if (isOpenModalOnLoad) {
       openCreateModal();
@@ -308,6 +309,7 @@ const Scheduling = () => {
           }}
         >
           <TableHeader>
+            <TableColumn>Image</TableColumn>
             <TableColumn>Details</TableColumn>
             <TableColumn>Teacher</TableColumn>
             <TableColumn>Dates</TableColumn>
@@ -320,6 +322,13 @@ const Scheduling = () => {
           <TableBody loadingContent={<Spinner color="success" />} loadingState={isFetching ? 'loading' : 'idle'} emptyContent={"No sessions scheduled."}>
             {data?.schedules?.map((item) => (
               <TableRow key={item.id}>
+                <TableCell>
+                  <Image src={item.thumbnail} 
+                  width={50}
+                  height={50}
+                  alt={item.courseName} 
+                  className="rounded-lg"/>
+                </TableCell>
                 <TableCell>
                   <div>
                     <div className="font-medium text-gray-900">{item.title}</div>
