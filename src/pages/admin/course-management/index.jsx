@@ -1,6 +1,7 @@
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
   Button,
+  Image,
   Input,
   Pagination,
   Select,
@@ -171,7 +172,8 @@ const CourseManagement = () => {
             }}
           >
             <TableHeader>
-              <TableColumn className="w-1/4">Course</TableColumn>
+              <TableColumn className="w-1/4">Thumbnail</TableColumn>
+              <TableColumn className="w-1/4">Details</TableColumn>
               <TableColumn className="w-2/6 text-center">Type</TableColumn>
               <TableColumn className="w-1/6 text-center">Category</TableColumn>
               <TableColumn className="w-1/6">Teacher</TableColumn>
@@ -189,18 +191,25 @@ const CourseManagement = () => {
             >
               {data?.courses?.map((classItem) => (
                 <TableRow key={classItem.id}>
+                  <TableCell >
+                    <Image src={classItem.thumbnail}
+                      width={50}
+                      height={50}
+                      alt={classItem.courseName}
+                      className="rounded-lg shrink-0" />
+                  </TableCell>
                   <TableCell>
                     <div className="min-w-0">
-                      <div className="font-medium text-gray-900 truncate">
+                      <p className="font-medium text-gray-900 truncate">
                         {classItem?.courseName}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-0.5 whitespace-normal max-w-[220px] line-clamp-1">
+                      </p>
+                      <p title={classItem?.description} className="text-xs text-gray-500 mt-0.5 whitespace-normal max-w-[220px] line-clamp-1">
                         {classItem?.description}
-                      </div>
+                      </p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <p className="p-2 text-center w-full capitalize text-xs rounded-md text-[#06574C] bg-[#95C4BE]/20">
+                    <p className="p-2 text-center w-full capitalize text-xs rounded-md text-warning bg-warning/20">
                       {classItem?.type?.replace("_", "")}
                     </p>
                   </TableCell>

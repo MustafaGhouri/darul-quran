@@ -342,7 +342,7 @@ const Scheduling = () => {
       startDate: item?.scheduleDates[0],
       endDate: item?.scheduleDates[1],
       repeatInterval: item.repeatInterval,
-      weeklyDays: item.weeklyDays||[],
+      weeklyDays: item.weeklyDays || [],
       specificStudentIds: item.specificStudents,
       specificStudents: item.specificStudents,
       settings: {
@@ -441,6 +441,8 @@ const Scheduling = () => {
             <TableColumn>Teacher</TableColumn>
             <TableColumn>Dates</TableColumn>
             <TableColumn>Time</TableColumn>
+            <TableColumn>Schedule Type</TableColumn>
+            <TableColumn>Class Type</TableColumn>
             <TableColumn>Status</TableColumn>
             <TableColumn>Zoom Link</TableColumn>
             <TableColumn>Actions</TableColumn>
@@ -450,11 +452,11 @@ const Scheduling = () => {
             {data?.schedules?.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>
-                  <Image src={item.thumbnail} 
-                  width={50}
-                  height={50}
-                  alt={item.courseName} 
-                  className="rounded-lg"/>
+                  <Image src={item.thumbnail}
+                    width={50}
+                    height={50}
+                    alt={item.courseName}
+                    className="rounded-lg" />
                 </TableCell>
                 <TableCell>
                   <div>
@@ -494,6 +496,12 @@ const Scheduling = () => {
                 </TableCell>
                 <TableCell>
                   <div className="text-gray-500 text-sm">{formatTime12Hour(item.startTime)} - {formatTime12Hour(item.endTime)}</div>
+                </TableCell>
+                <TableCell>
+                  {item.specificStudents?.length > 0 ? 'One-on-one' : 'All'}
+                </TableCell>
+                <TableCell className="capitalize">
+                  {item.scheduleType}
                 </TableCell>
                 <TableCell>
                   <Chip
