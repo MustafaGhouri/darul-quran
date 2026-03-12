@@ -123,8 +123,8 @@ const AttendanceList = () => {
           desc={"Track your attendance and course progress"}
         />
       </div>
-      <div className="mt-5 flex flex-col items-center">
-        <div className="bg-[#EBD4C9] p-4 rounded-lg my-4 flex max-sm:flex-wrap gap-4 items-end shadow-sm w-full">
+      <div className=" flex flex-col items-center">
+        <div className="bg-[#EBD4C9] p-4 rounded-lg flex max-sm:flex-wrap gap-4 items-end shadow-sm w-full">
           <DateRangePicker
             label="Date Range"
             labelPlacement="outside"
