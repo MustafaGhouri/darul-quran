@@ -85,8 +85,11 @@ export default function ChatInterface({
       setLoading(true);
     }
     setHasMoreOlder(true);
+    const finalToken = localStorage.getItem("token");
+    const headers = {};
+    if (finalToken) headers["Authorization"] = `Bearer ${finalToken}`;
     const url = `${API}/api/chat/${chatId}/messages?limit=${MESSAGES_PAGE_SIZE}`;
-    fetch(url, { credentials: "include" })
+    fetch(url, { credentials: "include", headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.messages && data.messages.length > 0) {
@@ -223,9 +226,10 @@ export default function ChatInterface({
   const deleteUploadedFile = async (url) => {
     if (!url) return;
     try {
+      const finalToken = localStorage.getItem("token");
       await fetch(`${API}/api/chat/upload/delete`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Authorization": `Bearer ${finalToken}`, "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ url }),
       });
@@ -240,10 +244,14 @@ export default function ChatInterface({
     try {
       const formData = new FormData();
       formData.append("file", file);
+      const finalToken = localStorage.getItem("token");
+      const headers = {};
+      if (finalToken) headers["Authorization"] = `Bearer ${finalToken}`;
       const res = await fetch(`${API}/api/chat/upload`, {
         method: "POST",
         credentials: "include",
         body: formData,
+        headers
       });
       const data = await res.json();
       if (!res.ok || !data.url) {
@@ -298,9 +306,10 @@ export default function ChatInterface({
       dispatch(appendMessageToChat({ chatId: chatId ?? undefined, message: optimisticMsg }));
       setSending(true);
       try {
+        const finalToken = localStorage.getItem("token");
         const res = await fetch(`${API}/api/chat/send`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Authorization": `Bearer ${finalToken}`, "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
             receiverId: otherUser.id,
@@ -351,7 +360,10 @@ export default function ChatInterface({
     const firstId = displayMessages[0]?.id;
     if (!firstId) return;
     setLoadingOlder(true);
-    fetch(`${API}/api/chat/${chatId}/messages?limit=${MESSAGES_PAGE_SIZE}&beforeId=${firstId}`, { credentials: "include" })
+    const finalToken = localStorage.getItem("token");
+    const headers = {};
+    if (finalToken) headers["Authorization"] = `Bearer ${finalToken}`;
+    fetch(`${API}/api/chat/${chatId}/messages?limit=${MESSAGES_PAGE_SIZE}&beforeId=${firstId}`, { credentials: "include",headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.messages && data.messages.length > 0) {
