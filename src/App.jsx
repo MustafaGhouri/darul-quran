@@ -134,8 +134,9 @@ const TeacherAndStudentChat = lazy(() =>
   import("./pages/admin/help/TeacherAndStudent")
 );
 const Review = lazy(() => import("./pages/admin/help/review"));
-const Faqs = lazy(() => import("./pages/admin/help/faqs")); 
+const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 import { io } from "socket.io-client";
+import NotFound from "./components/NotFound";
 
 const socket = io(import.meta.env.VITE_PUBLIC_SERVER_URL);
 
@@ -207,7 +208,7 @@ function App() {
       .then((data) => {
         if (data?.chats) dispatch(setChats(data.chats));
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [user?.id, dispatch]);
 
   useEffect(() => {
@@ -298,6 +299,7 @@ function App() {
         <ToastProvider position="top-bottom" />
         <DownloadModal />
         <Routes>
+          <Route path="*" element={<NotFound />} />
           {/* ---------- Auth/Public Layout (NO HEADER/SIDEBAR) ---------- */}
           <Route element={<AuthLayout isAuthenticated={!isAuthenticated} redirect={''} />}>
             <Route
