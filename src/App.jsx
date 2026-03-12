@@ -136,6 +136,7 @@ const TeacherAndStudentChat = lazy(() =>
 const Review = lazy(() => import("./pages/admin/help/review"));
 const Faqs = lazy(() => import("./pages/admin/help/faqs")); 
 import { io } from "socket.io-client";
+import AttendanceList from "./pages/student/attendance-list";
 
 const socket = io(import.meta.env.VITE_PUBLIC_SERVER_URL);
 
@@ -691,14 +692,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/* <Route
+            <Route
               path="/student/attendance-list"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <AttendanceList />
                 </ProtectedRoute>
               }
-            /> */}
+            />  
             <Route
               path="/student/support-tickets"
               element={

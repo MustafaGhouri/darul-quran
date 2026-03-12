@@ -120,7 +120,7 @@ const BrowseCourses = () => {
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 flex flex-col">
       <DashHeading
         title={"Browse Courses"}
-        desc={"Discover your next learning adventure from 2,847 courses"}
+        desc={"Discover your next learning adventure from " + data?.total + " courses"}
       />
 
 
@@ -316,7 +316,7 @@ const BrowseCourses = () => {
                     </div>
                   )}
 
-                  <div className={`p-3 ${!item.thumbnail ? "bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)] rounded-t-lg" : ""}`}>
+                  <div className={`p-3 ${!item.thumbnail ? "bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)] rounded-t-lg h-48" : "" }`}>
                     {!item.thumbnail && (
                       <div className="flex justify-between items-center mb-2">
                         <Button
@@ -335,6 +335,10 @@ const BrowseCourses = () => {
                       </div>
                     )}
 
+                    
+                  </div>
+
+                  <div className="p-3 pt-0 space-y-3 flex-grow flex flex-col justify-between">
                     <h3 title={item.courseName} className="text-base font-semibold text-[#060606] line-clamp-2 min-h-[2.5rem]">
                       {item.courseName}
                     </h3>
@@ -344,9 +348,6 @@ const BrowseCourses = () => {
                         {item.description}
                       </p>
                     )}
-                  </div>
-
-                  <div className="p-3 pt-0 space-y-3 flex-grow flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
@@ -362,7 +363,7 @@ const BrowseCourses = () => {
                         </div>
                         <div className="text-end">
                           <p className={`font-bold text-lg ${item.coursePrice === "0" || item.coursePrice === "00" ? "text-[#34A853]" : "text-[#D28E3D]"}`}>
-                            {item.coursePrice === "0" || item.coursePrice === "00" ? "Free" : `$${item.coursePrice}`}
+                            {item.coursePrice === "0" || item.coursePrice === "00" ? "Free" : `€${item.coursePrice}`}
                           </p>
                         </div>
                       </div>
