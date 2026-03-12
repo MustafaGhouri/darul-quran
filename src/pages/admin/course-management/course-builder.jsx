@@ -226,7 +226,7 @@ const CourseBuilder = () => {
       { title: "Title:", desc: formData?.course_name || "Add Tittle" },
       { title: "Category:", desc: categoriesData?.categories?.find((category) => category.id === formData?.category_id)?.categoryName || formData?.category_name || "Add Category" },
       { title: "Difficulty Level:", desc: formData?.difficulty_level || "Add Difficulty Level" },
-      { title: "Price:", desc: (formData?.base_price - ((formData?.discount_percentage * formData?.base_price) / 100)) || "Add Price" },
+      { title: "Price:",  desc: (formData?.base_price - ((formData?.discount_percentage * formData?.base_price) / 100)) + "€" || "Add Price" },
       { title: "Type:", desc: formData?.type?.replace("_", " ") || "Add Type" },
       { title: "Duration:", desc: `${parseInterval(formData?.duration).number} ${parseInterval(formData?.duration).unit}` || "Add Duration" },
       formData?.type === "live" && { title: "Subscription - Interval:", desc: `${parseInterval(formData?.interval).number} ${parseInterval(formData?.interval).unit}` || "Add Subscription - Interval" },

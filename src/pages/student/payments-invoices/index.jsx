@@ -333,7 +333,7 @@ const PaymentsInvoices = () => {
                       ).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      ${item.amountPaid || item.amount || 0}
+                      €{item.amountPaid || item.amount || 0}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1 items-center">
