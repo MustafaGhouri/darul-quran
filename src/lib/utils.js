@@ -128,3 +128,23 @@ export const parseInterval = (interval) => {
     unit: unit?.toLowerCase()?.replace("s", ""),
   };
 };
+
+export const getScheduleDateTime = (dateStr, timeStr) => {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  return new Date(year, month - 1, day, hours, minutes, 0, 0); // local time
+};
+
+// Check if a single schedule date is editable (>4 hours before start)
+export const isEditable = (dateStr, startTime) => {
+  const scheduleDateTime = getScheduleDateTime(dateStr, startTime);
+  const now = new Date();
+  const hoursUntil = (scheduleDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+  return hoursUntil > 4;
+};
+
+// Check if the schedule (array of dates) is editable
+export const canReschedule = (schedule) => {
+  // Editable only if **all dates** are at least 4 hours away
+  return schedule.scheduleDates.every(dateStr => isEditable(dateStr, schedule.startTime));
+};

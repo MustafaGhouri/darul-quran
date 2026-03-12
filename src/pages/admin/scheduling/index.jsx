@@ -28,12 +28,13 @@ import {
   Spinner,
   Pagination,
   Image,
+  Tooltip,
 } from "@heroui/react";
 import { CalendarIcon, Copy, Trash2, PlusIcon, User } from "lucide-react";
 
 import { getStatusColor, getStatusText, formatTime12Hour } from "../../../utils/scheduleHelpers";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
-import { dateFormatter, debounce, limits } from "../../../lib/utils";
+import { canReschedule, dateFormatter, debounce, limits } from "../../../lib/utils";
 import TeacherSelect from "../../../components/select/TeacherSelect";
 import UserSelect from "../../../components/select/UserSelect";
 import { useCreateScheduleMutation, useDeleteScheduleMutation, useGetScheduleQuery, useUpdateScheduleMutation } from "../../../redux/api/schedules";
@@ -243,6 +244,7 @@ const Scheduling = () => {
       let response;
       const payload = {
         ...formData,
+        weeklyDays: formData.weeklyDays.map(String)
       }
 
       if (user?.role === "teacher") {
@@ -527,16 +529,19 @@ const Scheduling = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Button
-                      radius="sm"
-                      variant="bordered"
-                      className="border-[#06574C] text-[#06574C]"
-                      startContent={<CalendarIcon size={18} />}
-                      size="sm"
-                      onPress={() => openEditModal(item)}
-                    >
-                      Reschedule
-                    </Button>
+                    <Tooltip isDisabled={canReschedule(item)} color="success" content="Schedule can only be rescheduled before 4 hours of the start time.">
+                      <Button
+                        radius="sm"
+                        variant="bordered"
+                        className="border-[#06574C] text-[#06574C]"
+                        // isDisabled={!canReschedule(item)}
+                        startContent={<CalendarIcon size={18} />}
+                        size="sm"
+                        onPress={() => openEditModal(item)}
+                      >
+                        Reschedule
+                      </Button>
+                    </Tooltip>
                     <Button
                       radius="sm"
                       className="bg-[#06574C] text-white"

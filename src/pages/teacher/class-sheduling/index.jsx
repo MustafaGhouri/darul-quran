@@ -13,6 +13,7 @@ import {
     ModalBody,
     ModalFooter,
     useDisclosure,
+    Tooltip,
 } from "@heroui/react";
 import { CiCalendar } from "react-icons/ci";
 import { Clock, Lock, Video, Calendar as CalendarIcon, User, MapPin, PlusIcon } from "lucide-react";
@@ -28,7 +29,7 @@ import { errorMessage, successMessage } from "../../../lib/toast.config";
 import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatusText, getStatusTextForSingleDate, getHoursUntilClass } from "../../../utils/scheduleHelpers";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { dateFormatter } from "../../../lib/utils";
+import { canReschedule, dateFormatter } from "../../../lib/utils";
 import QueryError from "../../../components/QueryError";
 
 const TeacherClassSheduling = () => {
@@ -162,16 +163,6 @@ const TeacherClassSheduling = () => {
         onOpenChange(true);
     };
 
-
-    const canReschedule = (schedule) => {
-        const parsedDate = parseDateFromDB(schedule.date);
-        const scheduleDateTime = parsedDate
-            ? new Date(`${parsedDate.toISOString().split('T')[0]}T${schedule.startTime}`)
-            : new Date(`${schedule.date}T${schedule.startTime}`);
-        const now = new Date();
-        const hoursUntilClass = (scheduleDateTime - now) / (1000 * 60 * 60);
-        return hoursUntilClass > 4;
-    };
 
     const canCancel = (schedule) => {
         const parsedDate = parseDateFromDB(schedule.date);
@@ -373,16 +364,19 @@ const TeacherClassSheduling = () => {
                         )}
                         {type === 'normal' && (
                             <>
+                                <Tooltip isDisabled={canReschedule(schedule)} color="success" content="Schedule can only be rescheduled before 4 hours of the start time.">
+                                    <Button
+                                        radius="sm"
+                                        size="md"
+                                        variant="bordered"
+                                        color="success"
+                                        isDisabled={!canReschedule(schedule)}
 
-                                <Button
-                                    radius="sm"
-                                    size="md"
-                                    variant="bordered"
-                                    color="success"
-                                    onPress={() => navigate('/teacher/class-scheduling/manage', { state: schedule })}
-                                >
-                                    Reschedule
-                                </Button>
+                                        onPress={() => navigate('/teacher/class-scheduling/manage', { state: schedule })}
+                                    >
+                                        Reschedule
+                                    </Button>
+                                </Tooltip>
                                 <Button
                                     radius="sm"
                                     size="md"
