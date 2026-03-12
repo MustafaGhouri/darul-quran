@@ -41,7 +41,7 @@ const StudentClassSheduling = () => {
     const [viewType, setViewType] = useState('allDates');
     const [selectedDate, setSelectedDate] = useState(null);
     const [schedulesForSelectedDate, setSchedulesForSelectedDate] = useState([]);
-    const { data: scheduleData, isLoading,isFetching, refetch, error } = useGetScheduleQuery({
+    const { data: scheduleData, isLoading, isFetching, refetch, error } = useGetScheduleQuery({
         page: "1",
         limit: "100",
         status: filterStatus === "all" ? undefined : filterStatus,
@@ -167,11 +167,12 @@ const StudentClassSheduling = () => {
             return;
         }
         setIsMarking(schedule.id);
+        const finalToken = localStorage.getItem("token");
         try {
             const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/attendance/mark`, {
                 method: "POST",
                 credentials: "include",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Authorization": `Bearer ${finalToken}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
                     scheduleId: schedule.id,
                     studentId: currentUser.id,
@@ -483,30 +484,30 @@ const StudentClassSheduling = () => {
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {canJoin ? (
-                        <Button
-                            radius="sm"
-                            size="md"
-                            variant="solid"
-                            className="bg-[#1570E8] text-white"
-                            startContent={<LuSquareArrowOutUpRight size={18} />}
-                            onPress={() => handleJoinClass(schedule)}
-                            isLoading={isMarking === schedule.id}
-                            isDisabled={isMarking === schedule.id}
-                        >
-                            Join Zoom
-                        </Button>
-                        ) : ( 
-                        <Button
-                            radius="sm"
-                            size="md"
-                            variant="solid"
-                            className="bg-[#9A9A9A] text-white"
-                            startContent={<Lock size={18} />}
-                            isDisabled={!isExpired}
-                        >
-                            {isExpired ? "Ended" : "Locked"}
-                        </Button>
-                         )} 
+                            <Button
+                                radius="sm"
+                                size="md"
+                                variant="solid"
+                                className="bg-[#1570E8] text-white"
+                                startContent={<LuSquareArrowOutUpRight size={18} />}
+                                onPress={() => handleJoinClass(schedule)}
+                                isLoading={isMarking === schedule.id}
+                                isDisabled={isMarking === schedule.id}
+                            >
+                                Join Zoom
+                            </Button>
+                        ) : (
+                            <Button
+                                radius="sm"
+                                size="md"
+                                variant="solid"
+                                className="bg-[#9A9A9A] text-white"
+                                startContent={<Lock size={18} />}
+                                isDisabled={!isExpired}
+                            >
+                                {isExpired ? "Ended" : "Locked"}
+                            </Button>
+                        )}
                         {canResched && (
                             <Button
                                 radius="sm"
