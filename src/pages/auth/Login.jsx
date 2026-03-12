@@ -7,14 +7,14 @@ import {
 } from "@heroui/react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { setUser } from "../../redux/reducers/user";
 import { useDispatch } from "react-redux";
 import { api } from "../../services/api";
 import { successMessage } from "../../lib/toast.config";
 const Login = () => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [email, setEmail] = useState("admin@admin.com");
   const [password, setPassword] = useState("password123");
@@ -60,8 +60,8 @@ const Login = () => {
         localStorage.setItem("token", data.user.token);
       }
 
-      window.history.replaceState({}, document.title, window.location.pathname);
-      // navigate(route, { replace: true });
+      // window.history.replaceState({}, document.title, window.location.pathname);
+      navigate(route, { replace: true });
       location.replace(route)
     } catch (error) {
       setModalType("error");
