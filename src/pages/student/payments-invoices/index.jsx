@@ -509,7 +509,7 @@ const PaymentsInvoices = () => {
                 <TableCell>
                   {dateFormatter(item.requestedAt || item.createdAt, true)}
                 </TableCell>
-                <TableCell>${item.amount}</TableCell>
+                <TableCell>€{item.amount}</TableCell>
                 <TableCell>
                   <div
                     className="max-w-[250px] text-sm text-gray-600 truncate"
