@@ -231,7 +231,7 @@ const CourseManagement = () => {
 
                   <TableCell className="text-center">
                     <span className="font-medium">
-                      ${classItem?.coursePrice}
+                      €{classItem?.coursePrice}
                     </span>
                   </TableCell>
 

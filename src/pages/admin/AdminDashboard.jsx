@@ -51,7 +51,7 @@ const AdminDashboard = () => {
     },
     {
       title: "Revenue",
-      value: `$${Number(stats.total_revenue || 0).toLocaleString()}`,
+      value: `€${Number(stats.total_revenue || 0).toLocaleString()}`,
       icon: <ChartPie color="#06574C" size={22} />,
       changeText: "Total revenue generated",
       changeColor: "text-[#06574C]",

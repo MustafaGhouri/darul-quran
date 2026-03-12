@@ -101,7 +101,7 @@ const Analytics = () => {
     },
     {
       title: "Revenue",
-      value: `$${(analyticsData?.revenueToday || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: `€${(analyticsData?.revenueToday || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       icon: <ChartLine size={26} color="#06574C" />,
       changeText: `${Number(analyticsData?.revenueChange) >= 0 ? "+" : ""}${analyticsData?.revenueChange || "0.0"}% from yesterday`,
       changeColor:

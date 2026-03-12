@@ -592,10 +592,10 @@ const CourseBuilder = () => {
                         <Input
                           size="lg"
                           variant="bordered"
-                          label="Base Course Price ($)"
+                          label="Base Course Price (EUR)"
                           type="number"
                           labelPlacement="outside"
-                          placeholder="$  0.00"
+                          placeholder="€  0.00"
                           isRequired
                           errorMessage="BaseCourse Price is required"
                           className="w-full"
@@ -1049,6 +1049,8 @@ const CourseBuilder = () => {
                         placeholder="0"
                         className="w-full"
                         type="number"
+                        isRequired={true}
+                        errorMessage="Please enter enrollment limit"
                         value={formData.enroll_number}
                         onChange={(e) =>
                           handleChange("enroll_number", e.target.value)

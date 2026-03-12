@@ -243,7 +243,7 @@ const PaymentsRefunds = () => {
                       </div>
                     )}
                   </TableCell>
-                  <TableCell>${item.amount}</TableCell>
+                  <TableCell>€{item.amount}</TableCell>
                   <TableCell>{new Date(item.requestedAt).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <Chip
@@ -359,7 +359,7 @@ const PaymentsRefunds = () => {
                   </div>
                 </TableCell>
                 <TableCell>{item.courseName}</TableCell>
-                <TableCell>${item.amountPaid}</TableCell>
+                <TableCell>€{item.amountPaid}</TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
                     <Chip
