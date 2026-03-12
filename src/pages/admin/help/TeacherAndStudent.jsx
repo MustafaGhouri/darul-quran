@@ -13,7 +13,10 @@ export default function TeacherAndStudentChat() {
   useEffect(() => {
     async function fetchChats() {
       try {
-        const res = await fetch(`${API}/api/chat/teacher-student-chats`, { credentials: "include" });
+        const finalToken = localStorage.getItem("token");
+        const headers = {};
+        if (finalToken) headers["Authorization"] = `Bearer ${finalToken}`;
+        const res = await fetch(`${API}/api/chat/teacher-student-chats`, { credentials: "include", headers });
         const data = await res.json();
         if (res.ok && data.chats) setChats(data.chats);
         else setChats([]);

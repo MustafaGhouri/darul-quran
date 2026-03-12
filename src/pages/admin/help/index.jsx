@@ -26,7 +26,7 @@ export default function HelpMessages() {
   const navigate = useNavigate();
   const handledStartChatRef = useRef(null);
   const handledFromTicketRef = useRef(null);
-  const { user: currentUser } = useSelector((state) => state?.user);
+  const { user: currentUser, token } = useSelector((state) => state?.user);
   const reduxChats = useSelector((state) => state?.chat?.chats ?? []);
   const [chats, setChatsLocal] = useState(reduxChats);
   const adminModal = useDisclosure();
@@ -44,7 +44,10 @@ export default function HelpMessages() {
   useEffect(() => {
     async function fetchChats() {
       try {
-        const res = await fetch(`${API}/api/chat`, { credentials: "include" });
+        const finalToken = localStorage.getItem("token") || token;
+        const headers = {};
+        if (finalToken) headers["Authorization"] = `Bearer ${finalToken}`;
+        const res = await fetch(`${API}/api/chat`, { credentials: "include", headers });
         const data = await res.json();
         if (res.ok && data.chats) {
           setChatsLocal(data.chats);
@@ -103,9 +106,10 @@ export default function HelpMessages() {
 
     (async () => {
       try {
+        const finalToken = localStorage.getItem("token") || token;
         const res = await fetch(`${API}/api/chat/start-from-ticket`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Authorization": `Bearer ${finalToken}`, "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ ticketId: state.ticketId }),
         });
@@ -162,11 +166,11 @@ export default function HelpMessages() {
 
   const selectedOtherUser = selectedChat
     ? {
-        id: selectedChat.otherUserId,
-        name: [selectedChat.otherUserFirstName, selectedChat.otherUserLastName].filter(Boolean).join(" ") || selectedChat.otherUserEmail || "User",
-        role: selectedChat.otherUserRole || "student",
-        email: selectedChat.otherUserEmail || "",
-      }
+      id: selectedChat.otherUserId,
+      name: [selectedChat.otherUserFirstName, selectedChat.otherUserLastName].filter(Boolean).join(" ") || selectedChat.otherUserEmail || "User",
+      role: selectedChat.otherUserRole || "student",
+      email: selectedChat.otherUserEmail || "",
+    }
     : null;
 
   const handleChatCreated = (newChatId) => {
