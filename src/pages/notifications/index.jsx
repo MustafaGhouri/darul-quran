@@ -10,17 +10,24 @@ import {
   Select,
   SelectItem,
   Spinner,
+  Pagination,
 } from "@heroui/react";
 import { BellRing, CheckCircle2, Clock, Search, Check, Trash2, DollarSign, Home, MessageSquare } from "lucide-react";
-import { useGetNotificationsQuery, useMarkAsReadMutation } from "../../redux/api/notifications";
+import { useGetNotificationsQuery, useMarkAsReadMutation, useDeleteReadNotificationsMutation } from "../../redux/api/notifications";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import Swal from "sweetalert2";
 
 const NotificationsPage = () => {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [isReadSort, setIsReadSort] = useState("");
   const [markLoading, setMarkLoading] = useState(null);
-  const { user } = useSelector(state => state?.user)
+  const { user } = useSelector(state => state?.user);
+
+  const isFilter = page > 1 || debouncedSearch || isReadSort;
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
@@ -28,31 +35,49 @@ const NotificationsPage = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const { data: notificationData, isFetching, isLoading, refetch } = useGetNotificationsQuery({ search: debouncedSearch });
-  const [markAsRead, { isLoading: isLoading2 }] = useMarkAsReadMutation();
+  useEffect(() => {
+    setPage(1);
+  }, [isReadSort, debouncedSearch]);
+
+  const { data: notificationData, isFetching, isLoading } = useGetNotificationsQuery({
+    search: debouncedSearch,
+    page,
+    is_read: isReadSort
+  });
+  const [markAsRead] = useMarkAsReadMutation();
+  const [deleteReadNotifications, { isLoading: isDeleting }] = useDeleteReadNotificationsMutation();
 
   const notifications = notificationData?.data || [];
+  const pagination = notificationData?.pagination || { totalPages: 1 };
 
-  const handleMarkAsRead = async (id) => {
-    try {
-      setMarkLoading(id);
-      await markAsRead({ id, is_read: true }).unwrap();
-    } catch (error) {
-      console.error("Failed to mark notification as read:", error);
-    } finally {
-      setMarkLoading(null);
-    }
+  const handleMarkAsRead = (id) => {
+    markAsRead({ id, is_read: true });
   };
 
-  const handleMarkAllAsRead = async () => {
-    try {
-      setMarkLoading(true);
-      await markAsRead({ is_read: true }).unwrap();
-    } catch (error) {
-      console.error("Failed to mark all as read:", error);
-    } finally {
-      setMarkLoading(false);
-    }
+  const handleMarkAllAsRead = () => {
+    markAsRead({ is_read: true });
+  };
+
+  const handleDeleteRead = async () => {
+    const { isConfirmed } = await Swal.fire({
+      title: "Confirm Delete",
+      text: "Are you sure you want to delete all read notifications?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "red",
+      cancelButtonColor: '#406c65',
+      buttonsStyling: false,
+      customClass: {
+        confirmButton: "z-0 cursor-pointer group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap font-normal bg-[#406c65] border-1 rounded-md text-white px-4 min-w-20 h-10 text-small mr-2",
+        cancelButton: "z-0 group cursor-pointer relative inline-flex items-center justify-center box-border appearance-none select-none px-4 min-w-20 h-10 text-small gap-2 whitespace-nowrap font-normal bg-white border-1 rounded-md text-[#406c65] border-[#406c65]"
+      }
+    });
+
+    if (!isConfirmed) return;
+
+    await deleteReadNotifications();
   };
 
   const getIcon = (type) => {
@@ -86,36 +111,53 @@ const NotificationsPage = () => {
               desc="Stay updated with the latest platform activities and alerts."
             />
 
-            <div className="flex  justify-end flex-row flex-wrap items-end gap-3">
+            <div className="flex justify-end flex-row flex-wrap items-end gap-3">
               <Input
                 placeholder="Search Notifications..."
                 startContent={<Search size={18} className="text-gray-400" />}
                 className="w-full md:w-64"
-                endContent={
-                  isFetching ?
-                    <Spinner size="sm" color="success" />
-                    : undefined
-                }
+                // endContent={
+                //   isFetching ?
+                //     <Spinner size="sm" color="success" />
+                //     : undefined
+                // }
                 size="sm"
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <Button
-                color="success"
-                startContent={<Check size={18} />}
-                onPress={handleMarkAllAsRead}
-                isLoading={isLoading2}
-                size="sm"
+              <Select
+                aria-label="Filter by read status"
+                className="max-w-[180px]"
+                defaultSelectedKeys={new Set([isReadSort])}
+                onSelectionChange={(keys) => {
+                  const k = [...keys];
+                  setIsReadSort(k[0])
+                }}
               >
-                Mark All Read
-              </Button>
-              {/* <Button
-                className="bg-[#06574C] text-white font-medium"
+                <SelectItem key="" >Latest</SelectItem>
+                <SelectItem key="true">Read</SelectItem>
+                <SelectItem key="false">Unread</SelectItem>
+              </Select>
+              {notifications?.some(n => !n.is_read) && (
+                <Button
+                  color="success"
+                  startContent={<Check size={18} />}
+                  onPress={handleMarkAllAsRead}
+                  size="sm"
+                >
+                  Mark All Read
+                </Button>
+              )}
+              <Button
+                color="danger"
+                startContent={<Trash2 size={18} />}
+                onPress={handleDeleteRead}
+                isLoading={isDeleting}
                 size="sm"
               >
                 Delete Read
-              </Button> */}
+              </Button>
             </div>
           </div>
         </div>
@@ -147,14 +189,15 @@ const NotificationsPage = () => {
                           </p>
 
                           <div className="flex flex-wrap items-center gap-3 mt-3 text-sm">
-                            {notif.url && <Link to={(notif.url || "#").replace("ROLE", user.role)} className="underline text-gray-600 font-medium hover:text-[#06574C]">View</Link>}                            {!notif.is_read && (
+                            {notif.url && <Link to={(notif.url || "#").replace("ROLE", user.role)} className="underline text-gray-600 font-medium hover:text-[#06574C]">View</Link>}
+                            {!notif.is_read && (
                               <>
                                 <span className="text-gray-300">•</span>
                                 <Button
                                   onPress={() => handleMarkAsRead(notif.id)}
-                                  isLoading={isLoading2 && markLoading === notif.id}
                                   variant="light"
                                   color="success"
+                                  size="sm"
                                 >
                                   Mark as Read
                                 </Button>
@@ -184,6 +227,16 @@ const NotificationsPage = () => {
             </div>
           )}
         </div>
+        <Pagination
+          showControls
+          total={pagination.totalPages}
+          size="sm"
+          variant="faded"
+          page={page}
+          onChange={setPage}
+          color="success"
+          className="max-w-[300px] my-4 mx-auto"
+        />
       </div>
     </div>
   );

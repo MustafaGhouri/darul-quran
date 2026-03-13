@@ -1,7 +1,7 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
-const NotFound = () => {
+const NotFoundPage = () => {
+const navigate = useNavigate()
     return (
         <div className='h-screen w-screen bg-[#f6fbff] notfound '>
             <div className="h-full w-full flex flex-col px-4 justify-center items-center relative notfound-404">
@@ -26,9 +26,12 @@ const NotFound = () => {
                 <Link to={'/'} className='underline text-blue-700'>
                     click here to visit <strong>Home</strong>
                 </Link>
+                <button onClick={()=>navigate(-1)} className='underline cursor-pointer text-blue-700'>
+                    <strong>Back</strong>
+                </button>
             </div>
         </div>
     )
 }
 
-export default NotFound;
+export default NotFoundPage;

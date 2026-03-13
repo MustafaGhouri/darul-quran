@@ -49,6 +49,7 @@ const CourseDetails = () => {
   }
 
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollment, setEnrollment] = useState(null);
   const [enrolling, setEnrolling] = useState(false);
   const [overview, setOverview] = useState(null);
   const [shouldFetchOverview, setShouldFetchOverview] = useState(true);
@@ -92,6 +93,7 @@ const CourseDetails = () => {
       const data = await res.json();
       if (data.success) {
         setIsEnrolled(data.isEnrolled);
+        setEnrollment(data);
       }
     } catch (error) {
       console.error("Failed to check enrollment", error);
@@ -317,13 +319,13 @@ const CourseDetails = () => {
                   />
                 </div>
               ) : (
-                <div className="bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)] h-30 p-3 flex items-center relative rounded-t-lg">
+                <div className="bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)] h-48 p-3 flex items-center relative rounded-t-lg">
                   <h1 className="text-xl font-bold text-center ">
                     {course?.courseName}
                   </h1>
-                  <div className="h-15 w-15 flex justify-center items-center rounded-full  absolute p-2 bg-[#95C4BEC4] left-1/2 -translate-x-1/2">
+                  {/* <div className="h-15 w-15 flex justify-center items-center rounded-full  absolute p-2 bg-[#95C4BEC4] left-1/2 -translate-x-1/2">
                     <IoPlay color="#06574C" size={35} />
-                  </div>
+                  </div> */}
                 </div>
               )}
               <div className="flex justify-between items-center p-3">
@@ -342,7 +344,16 @@ const CourseDetails = () => {
                 </Button>}
               </div>
               <div className="p-3">
-                {isEnrolled ? (
+                {enrollment?.isExpired ? (
+                  <Button
+                    radius="sm"
+                    size="sm"
+                    className="w-full bg-[#06574C] text-white"
+                    onPress={() => navigate("/student/dashboard")}
+                  >
+                    Update Enrollment
+                  </Button>
+                ) : isEnrolled ?
                   <Button
                     radius="sm"
                     size="sm"
@@ -351,19 +362,19 @@ const CourseDetails = () => {
                   >
                     Go to Course
                   </Button>
-                ) : (
-                  <Button
-                    radius="sm"
-                    size="sm"
-                    variant="bordered"
-                    color="success"
-                    className="w-full"
-                    onPress={handleEnroll}
-                    isLoading={enrolling}
-                  >
-                    {course?.type === 'one_time' ? "Enroll Now" : "Subscribe Now"}
-                  </Button>
-                )}
+                  : (
+                    <Button
+                      radius="sm"
+                      size="sm"
+                      variant="bordered"
+                      color="success"
+                      className="w-full"
+                      onPress={handleEnroll}
+                      isLoading={enrolling}
+                    >
+                      {course?.type === 'one_time' ? "Enroll Now" : "Subscribe Now"}
+                    </Button>
+                  )}
               </div>
               <Divider size="sm" className="mb-3" />
               <div className="p-3">

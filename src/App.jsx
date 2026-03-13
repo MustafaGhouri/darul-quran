@@ -139,6 +139,7 @@ const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 import { io } from "socket.io-client";
 import AttendanceList from "./pages/student/attendance-list";
 import { BiChat, BiPaperclip } from "react-icons/bi";
+import NotFoundPage from "./components/NotFound";
 
 const socket = io(import.meta.env.VITE_PUBLIC_SERVER_URL);
 
@@ -321,6 +322,7 @@ function App() {
         <ToastProvider position="top-bottom" />
         <DownloadModal />
         <Routes>
+          <Route path="*" element={<NotFoundPage />} />
           {/* ---------- Auth/Public Layout (NO HEADER/SIDEBAR) ---------- */}
           <Route element={<AuthLayout isAuthenticated={!isAuthenticated} redirect={''} />}>
             <Route

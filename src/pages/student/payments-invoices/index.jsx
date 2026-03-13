@@ -168,12 +168,12 @@ const PaymentsInvoices = () => {
   ];
 
   const subHeader = [
-    { key: "studentName", label: "Student Name" },
     { key: "courseName", label: "Course Name" },
     { key: "status", label: "Status" },
-    { key: "periodStart", label: "Start Date" },
-    { key: "periodEnd", label: "End Date" },
+    { key: "periodStart", label: "Current Period Start" },
+    { key: "periodEnd", label: "Current Period End" },
     { key: "nextBilling", label: "Next Billing" },
+    { key: "cancelAt", label: "Cancel At" },
     { key: "createdAt", label: "Created At" },
     { key: "action", label: "Action" },
   ];
@@ -350,12 +350,12 @@ const PaymentsInvoices = () => {
                       <div className="flex flex-col gap-1">
                         <Button
                           className={`text-sm p-2 rounded-md capitalize h-8 ${item.status === "paid" ||
-                              item.status === "completed"
-                              ? "bg-[#95C4BE33] text-[#06574C]"
-                              : item.status === "pending" ||
-                                item.status === "open"
-                                ? "bg-[#F1C2AC33] text-[#D28E3D]"
-                                : "bg-[#FFEAEC] text-[#E8505B]"
+                            item.status === "completed"
+                            ? "bg-[#95C4BE33] text-[#06574C]"
+                            : item.status === "pending" ||
+                              item.status === "open"
+                              ? "bg-[#F1C2AC33] text-[#D28E3D]"
+                              : "bg-[#FFEAEC] text-[#E8505B]"
                             }`}
                         >
                           {item.status || "Unknown"}
@@ -363,14 +363,14 @@ const PaymentsInvoices = () => {
                         {item.refundStatus && item.refundStatus !== "none" && (
                           <span
                             className={`text-[10px] font-medium px-1.5 py-0.5 rounded w-fit ${item.refundStatus === "refunded"
-                                ? "bg-[#95C4BE33] text-[#06574C]"
-                                : item.refundStatus === "rejected" ||
-                                  item.refundStatus === "failed"
-                                  ? "bg-[#FFEAEC] text-[#E8505B]"
-                                  : item.refundStatus === "processing" ||
-                                    item.refundStatus === "pending_refund"
-                                    ? "bg-[#FDEBD0] text-[#D68910]"
-                                    : "bg-[#F1C2AC33] text-[#D28E3D]"
+                              ? "bg-[#95C4BE33] text-[#06574C]"
+                              : item.refundStatus === "rejected" ||
+                                item.refundStatus === "failed"
+                                ? "bg-[#FFEAEC] text-[#E8505B]"
+                                : item.refundStatus === "processing" ||
+                                  item.refundStatus === "pending_refund"
+                                  ? "bg-[#FDEBD0] text-[#D68910]"
+                                  : "bg-[#F1C2AC33] text-[#D28E3D]"
                               }`}
                           >
                             Refund: {getRefundStatusText(item.refundStatus)}
@@ -602,6 +602,7 @@ const PaymentsInvoices = () => {
               isHeaderSticky
               aria-label="Subscriptions table"
               removeWrapper
+              align="center"
               classNames={{
                 base: "w-full bg-white rounded-lg overflow-x-scroll w-full no-scrollbar mb-3",
                 th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
@@ -622,14 +623,6 @@ const PaymentsInvoices = () => {
               >
                 {userSubscriptions.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="px-4">
-                      <div className="font-medium text-gray-900">
-                        {item.firstName} {item.lastName}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {item.email}
-                      </div>
-                    </TableCell>
                     <TableCell>
                       <div className="font-medium text-gray-900">
                         {item.courseName || item.scheduleName || "Course"}
@@ -638,10 +631,10 @@ const PaymentsInvoices = () => {
                     <TableCell>
                       <Button
                         className={`text-sm p-2 rounded-md capitalize h-8 ${item.status === "active"
-                            ? "bg-[#95C4BE33] text-[#06574C]"
-                            : item.status === "past_due" || item.status === "unpaid"
-                              ? "bg-[#F1C2AC33] text-[#D28E3D]"
-                              : "bg-[#FFEAEC] text-[#E8505B]"
+                          ? "bg-[#95C4BE33] text-[#06574C]"
+                          : item.status === "past_due" || item.status === "unpaid"
+                            ? "bg-[#F1C2AC33] text-[#D28E3D]"
+                            : "bg-[#FFEAEC] text-[#E8505B]"
                           }`}
                       >
                         {item.status || "Unknown"}
@@ -657,6 +650,9 @@ const PaymentsInvoices = () => {
                       {item.currentPeriodEnd ? (dateFormatter(item.currentPeriodEnd)) : "N/A"}
                     </TableCell>
                     <TableCell>
+                      {item.canceledAt ? (dateFormatter(item.canceledAt)) : "N/A"}
+                    </TableCell>
+                    <TableCell>
                       {item.createdAt ? (dateFormatter(item.createdAt)) : "N/A"}
                     </TableCell>
                     <TableCell>
@@ -664,7 +660,7 @@ const PaymentsInvoices = () => {
                         {item.status === "active" && !item.cancelAtPeriodEnd && (
                           <Button
                             radius="sm"
-                            variant="flat"
+                            variant="solid"
                             color="danger"
                             size="sm"
                             onPress={() => openCancelModal(item)}
