@@ -1,7 +1,7 @@
 import "./App.css";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 ;
-import { addToast, HeroUIProvider, Spinner, ToastProvider } from "@heroui/react";
+import { addToast, Button, HeroUIProvider, Spinner, ToastProvider } from "@heroui/react";
 
 import { lazy, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -134,9 +134,10 @@ const TeacherAndStudentChat = lazy(() =>
   import("./pages/admin/help/TeacherAndStudent")
 );
 const Review = lazy(() => import("./pages/admin/help/review"));
-const Faqs = lazy(() => import("./pages/admin/help/faqs")); 
+const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 import { io } from "socket.io-client";
 import AttendanceList from "./pages/student/attendance-list";
+import { BiChat, BiPaperclip } from "react-icons/bi";
 
 const socket = io(import.meta.env.VITE_PUBLIC_SERVER_URL);
 
@@ -169,33 +170,45 @@ function App() {
     const isOnChatScreen = pathname.includes("/help/messages") || pathname.startsWith("/teacher/chat") || pathname.includes("/help/chat");
     const isViewingThisChat = isOnChatScreen && activeChatId === incomingMessage.chatId;
     if (isViewingThisChat) return;
-
     const msg = incomingMessage.message;
     const senderName = msg.sender
       ? [msg.sender.firstName, msg.sender.lastName].filter(Boolean).join(" ").trim() || msg.sender.email || "Someone"
       : "Someone";
     const text = (msg.text || "").slice(0, 80);
+    const file = msg?.file;
     const role = (user.role || "").toLowerCase();
     const messagesBase = role === "admin" ? "/admin/help/messages" : role === "teacher" ? "/teacher/chat" : "/student/help/messages";
     const chatUrl = `${messagesBase}/${incomingMessage.chatId}`;
-
     addToast({
-      title: `New message from ${senderName}`,
+      title: senderName + ":",
       description: (
         <div className="flex flex-col gap-1">
-          <span>{text ? (text.length >= 80 ? `${text}…` : text) : "New message"}</span>
-          <button
-            type="button"
-            onClick={() => navigate(chatUrl)}
-            className="text-left font-medium underline hover:no-underline text-sm mt-0.5"
-          >
-            Open chat →
-          </button>
+          <span>
+            {text ? (text.length >= 80 ? `${text}…` : text) : "New message"}
+          </span>
+
+          {file && (
+            <div className="flex items-center gap-1 text-xs opacity-80">
+              <BiPaperclip />
+              <span>Attachment</span>
+            </div>
+          )}
         </div>
       ),
-      color: "primary",
-      variant: "solid",
-      placement: "bottom-right",
+      color: "success",
+      icon: <BiChat />,
+      endContent: (
+        <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            color="success"
+            to={chatUrl}
+            as={Link}
+          >
+            Open chat →
+          </Button>
+        </div>
+      ),
     });
   }, [incomingMessage, pathname, activeChatId, user?.id, user?.role, navigate]);
 
@@ -208,7 +221,7 @@ function App() {
       .then((data) => {
         if (data?.chats) dispatch(setChats(data.chats));
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [user?.id, dispatch]);
 
   useEffect(() => {
@@ -699,7 +712,7 @@ function App() {
                   <AttendanceList />
                 </ProtectedRoute>
               }
-            />  
+            />
             <Route
               path="/student/support-tickets"
               element={

@@ -28,6 +28,7 @@ export default function HelpMessages() {
   const handledFromTicketRef = useRef(null);
   const { user: currentUser, token } = useSelector((state) => state?.user);
   const reduxChats = useSelector((state) => state?.chat?.chats ?? []);
+  const onlineUsers = useSelector((state) => state?.chat?.onlineUsers);
   const [chats, setChatsLocal] = useState(reduxChats);
   const adminModal = useDisclosure();
   const [adminsList, setAdminsList] = useState([]);
@@ -288,13 +289,17 @@ export default function HelpMessages() {
                       color: role === "student" ? "#D28E3D" : role === "admin" ? "#374151" : "#06574C",
                     }}
                   >
-                    {role === "teacher" ? (
-                      <img src="/icons/teacher_icon.png" alt="teacher" />
-                    ) : role === "admin" ? (
-                      <Headphones size={22} />
-                    ) : (
-                      <img src="/icons/student_icon.png" alt="student" />
-                    )}
+                    <div className="relative">
+                      <span className={`absolute -bottom-3 -right-3 h-3 w-3 rounded-full ring-2 ring-white 
+                  ${onlineUsers.includes(chat?.otherUserId) ? "bg-emerald-500" : "bg-neutral-300"}`} />
+                      {role === "teacher" ? (
+                        <img src="/icons/teacher_icon.png" alt="teacher" />
+                      ) : role === "admin" ? (
+                        <Headphones size={22} />
+                      ) : (
+                        <img src="/icons/student_icon.png" alt="student" />
+                      )}                    </div>
+
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">

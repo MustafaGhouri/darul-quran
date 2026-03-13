@@ -530,17 +530,19 @@ const Scheduling = () => {
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Tooltip isDisabled={canReschedule(item)} color="success" content="Schedule can only be rescheduled before 4 hours of the start time.">
-                      <Button
-                        radius="sm"
-                        variant="bordered"
-                        className="border-[#06574C] text-[#06574C]"
-                        // isDisabled={!canReschedule(item)}
-                        startContent={<CalendarIcon size={18} />}
-                        size="sm"
-                        onPress={() => openEditModal(item)}
-                      >
-                        Reschedule
-                      </Button>
+                      <span className="cursor-pointer">
+                        <Button
+                          radius="sm"
+                          variant="bordered"
+                          className="border-[#06574C] text-[#06574C]"
+                          isDisabled={!canReschedule(item)}
+                          startContent={<CalendarIcon size={18} />}
+                          size="sm"
+                          onPress={() => openEditModal(item)}
+                        >
+                          Reschedule
+                        </Button>
+                      </span>
                     </Tooltip>
                     <Button
                       radius="sm"

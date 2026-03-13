@@ -58,6 +58,7 @@ export default function ChatInterface({
   const dispatch = useDispatch();
   const incomingMessage = useSelector((state) => state.chat?.incomingMessage);
   const currentUser = useSelector((state) => state?.user?.user);
+  const onlineUsers = useSelector((state) => state?.chat?.onlineUsers);
   const cachedMessages = useSelector((state) => (chatId != null ? state.chat?.messagesByChatId?.[chatId] : null));
 
   const isRealChat = Boolean(otherUser && currentUserId);
@@ -363,7 +364,7 @@ export default function ChatInterface({
     const finalToken = localStorage.getItem("token");
     const headers = {};
     if (finalToken) headers["Authorization"] = `Bearer ${finalToken}`;
-    fetch(`${API}/api/chat/${chatId}/messages?limit=${MESSAGES_PAGE_SIZE}&beforeId=${firstId}`, { credentials: "include",headers })
+    fetch(`${API}/api/chat/${chatId}/messages?limit=${MESSAGES_PAGE_SIZE}&beforeId=${firstId}`, { credentials: "include", headers })
       .then((res) => res.json())
       .then((data) => {
         if (data.messages && data.messages.length > 0) {
@@ -402,11 +403,15 @@ export default function ChatInterface({
                 color: (displayUser.role || "student") === "teacher" ? "#06574C" : "#D28E3D",
               }}
             >
-              {(displayUser.role || "student") === "teacher" ? (
-                <img src="/icons/teacher_icon.png" alt="teacher" />
-              ) : (
-                <img src="/icons/student_icon.png" alt="student" />
-              )}
+              <div className="relative">
+                <span className={`absolute -bottom-2 -right-2 h-3 w-3 rounded-full ring-2 ring-white 
+                  ${onlineUsers.includes(displayUser.id) ? "bg-emerald-500" : "bg-neutral-300"}`} />
+                {(displayUser.role || "student") === "teacher" ? (
+                  <img src="/icons/teacher_icon.png" alt="teacher" />
+                ) : (
+                  <img src="/icons/student_icon.png" alt="student" />
+                )}
+              </div>
             </div>
             <div className="flex max-sm:flex-col items-center sm:gap-2">
               <h3 className="font-bold text-sm text-gray-800">{displayUser.name || "User"}</h3>

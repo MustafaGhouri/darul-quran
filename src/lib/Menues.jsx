@@ -76,18 +76,21 @@ export const studentMenu = [
     { name: 'My Learning Journey', icon: <FaChalkboardTeacher />, link: '/student/my-learning' },
     { name: 'Class Schedule', icon: <Video />, link: '/student/class-scheduling' },
     { name: 'Browse Courses', icon: <Video />, link: '/student/browse-courses' },
-    {
-        name: 'Help and Support',
-        icon: <FileQuestionIcon />,
-        link: '/student/help/messages',
-        children: [
-            { name: 'Chat Center', link: '/student/help/messages' },
-            { name: 'Payments & Invoices', link: '/student/payments' },
-            { name: 'My Reschedule Requests', link: '/student/reschedule-requests' },
-            // { name: 'Reviews', link: '/admin/help/reviews' },
-            // { name: 'FAQs', link: '/admin/help/faqs' }
-        ]
-    },
+    // {
+    //     name: 'Help and Support',
+    //     icon: <FileQuestionIcon />,
+    //     link: '/student/help/messages',
+    //     children: [
+    //         { name: 'Chat Center', link: '/student/help/messages' },
+    //         { name: 'Payments & Subscriptions', link: '/student/payments' },
+    //         { name: 'My Reschedule Requests', link: '/student/reschedule-requests' },
+    //         // { name: 'Reviews', link: '/admin/help/reviews' },
+    //         // { name: 'FAQs', link: '/admin/help/faqs' }
+    //     ]
+    // },
+    { name: 'Chat Center', icon: <Users2Icon />, link: '/student/help/messages' },
+    { name: 'Payments & Subscriptions', icon: <Users2Icon />, link: '/student/payments' },
+    { name: 'My Reschedule Requests', icon: <Users2Icon />, link: '/student/reschedule-requests' },
     { name: 'Attendance & Progress', icon: <Users2Icon />, link: '/student/attendance-list' },
     { name: 'Support Tickets  ', icon: <TicketsIcon />, link: '/student/support-tickets' },
     { name: "Announcements", icon: <MegaphoneIcon />, link: "/student/announcements" },
