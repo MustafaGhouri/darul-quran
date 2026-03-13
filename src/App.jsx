@@ -1,6 +1,6 @@
 import "./App.css";
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Route, Routes, useLocation, useNavigate , Link} from "react-router-dom";
 import { initGA, trackPageView } from "./lib/analytics";
 ;
 import { addToast, Button, HeroUIProvider, Spinner, ToastProvider } from "@heroui/react";
