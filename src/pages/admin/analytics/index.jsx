@@ -38,8 +38,9 @@ import AnalyticsCards from "../../../components/dashboard-components/AnalyticsCa
 import ApexChart from "../../../components/dashboard-components/AnalyticsChat";
 import BarChart from "../../../components/dashboard-components/BarChart";
 import PieChart from "../../../components/dashboard-components/PieChart";
-import { useGetAnalyticsQuery } from "../../../redux/api/analytics";
+import { useGetAnalyticsQuery, useGetActivitiesQuery } from "../../../redux/api/analytics";
 import QueryError from "../../../components/QueryError";
+import { format } from "date-fns";
 
 const Analytics = () => {
   const statuses = [
@@ -50,6 +51,9 @@ const Analytics = () => {
   const filters = [{ key: "all", label: "Filter" }];
   const [revenueFilter, setRevenueFilter] = useState("week");
   const [enrollmentFilter, setEnrollmentFilter] = useState("week");
+  const [logsPage, setLogsPage] = useState(1);
+  const [logsLimit, setLogsLimit] = useState(10);
+  const [logsSearch, setLogsSearch] = useState("");
 
   const today = new Date();
   const yesterday = new Date(today);
@@ -73,6 +77,12 @@ const Analytics = () => {
   const { data, isLoading, error, refetch } = useGetAnalyticsQuery({
     revenueFilter,
     enrollmentFilter,
+  });
+
+  const { data: logsDataResponse, isLoading: logsLoading } = useGetActivitiesQuery({
+    page: logsPage,
+    limit: logsLimit,
+    search: logsSearch,
   });
 
   if (error) {
@@ -131,68 +141,8 @@ const Analytics = () => {
     { key: "Status", label: "Status" },
   ];
 
-  const PaymentTable = [
-    {
-      id: 1,
-      student_name: "Jhon Davis",
-      course_name: "React Hooks Deep Dive",
-      course_desc: "Advanced JavaScript Course",
-      details: "Successful login via web browser",
-      email: "john.davis@email.com",
-      amount: "$149.99",
-      role: "Student",
-      payment_method: "•••• 4532",
-      time: "Today, 2:00 PM",
-      action: "Login",
-      date: "Nov 20, 2025",
-      status: "Failed",
-    },
-    {
-      id: 2,
-      student_name: "Jhon Davis",
-      course_name: "React Hooks Deep Dive",
-      course_desc: "Advanced JavaScript Course",
-      details: "Enrolled in 'Advanced Mathematics'",
-      email: "john.davis@email.com",
-      amount: "$149.99",
-      role: "Teacher",
-      payment_method: "•••• 4532",
-      time: "Today, 2:00 PM",
-      action: "Enrollment",
-      date: "Nov 20, 2025",
-      status: "Success",
-    },
-    {
-      id: 3,
-      student_name: "Jhon Davis",
-      course_name: "React Hooks Deep Dive",
-      course_desc: "Advanced JavaScript Course",
-      details: "Paid $350 for 'Chemistry Basics'",
-      email: "john.davis@email.com",
-      amount: "$149.99",
-      role: "Student",
-      payment_method: "•••• 4532",
-      time: "Today, 2:00 PM",
-      action: "Payment",
-      date: "Nov 20, 2025",
-      status: "Failed",
-    },
-    {
-      id: 4,
-      student_name: "Jhon Davis",
-      course_name: "React Hooks Deep Dive",
-      course_desc: "Advanced JavaScript Course",
-      details: "Marked attendance for 'Physics 101'",
-      email: "john.davis@email.com",
-      amount: "$149.99",
-      role: "Teacher",
-      payment_method: "•••• 4532",
-      time: "Today, 2:00 PM",
-      action: "Attendance",
-      date: "Nov 20, 2025",
-      status: "Success",
-    },
-  ];
+  const activities = logsDataResponse?.activities || [];
+  const totalLogs = logsDataResponse?.total || 0;
 
   const limits = [
     { key: "10", label: "10" },
@@ -531,6 +481,8 @@ const Analytics = () => {
                   radius="sm"
                   variant="bordered"
                   placeholder="Search user activities..."
+                  value={logsSearch}
+                  onValueChange={setLogsSearch}
                   endContent={<SearchIcon size={20} />}
                 />
               </div>
@@ -553,46 +505,46 @@ const Analytics = () => {
                   ))}
                 </TableHeader>
 
-                <TableBody>
-                  {PaymentTable.map((classItem) => (
-                    <TableRow key={classItem.id}>
+                <TableBody
+                  isLoading={logsLoading}
+                  loadingContent={<Skeleton className="w-full h-8" />}
+                  emptyContent={"No activity logs found."}
+                >
+                  {activities.map((log) => (
+                    <TableRow key={log.id}>
                       <TableCell className="px-4">
                         <h1 className="font-semibold text-sm">
-                          {classItem.student_name}
+                          {log.userName}
                         </h1>
                         <h1 className="text-xs text-[#9A9A9A]">
-                          {classItem.email}
+                          {log.email}
                         </h1>
                       </TableCell>
                       <TableCell>
                         <Button
                           size="sm"
-                          className="bg-[#95C4BE33] text-[#06574C] w-30"
+                          className="bg-[#95C4BE33] text-[#06574C] w-30 capitalize"
                         >
-                          {classItem.role}
+                          {log.role}
                         </Button>
                       </TableCell>
                       <TableCell>
-                        <span>{classItem.details}</span>
+                        <span>{log.activity}</span>
                       </TableCell>
 
                       <TableCell>
                         <div className="p-2 bg-[#FBF4EC] text-[#D28E3D] text-xs text-center rounded-md">
-                          {classItem.action}
+                          {log.activityTitle}
                         </div>
                       </TableCell>
-                      <TableCell>{classItem.date}</TableCell>
-                      <TableCell>{classItem.time}</TableCell>
+                      <TableCell>{format(new Date(log.createdAt), "MMM dd, yyyy")}</TableCell>
+                      <TableCell>{format(new Date(log.createdAt), "hh:mm a")}</TableCell>
 
                       <TableCell>
                         <div
-                          className={`p-2 ${
-                            classItem.status === "Failed"
-                              ? "bg-[#FFEAEC] text-[#E8505B]"
-                              : "bg-[#95C4BE33] text-[#06574C]"
-                          } text-xs text-center rounded-md font-semibold`}
+                          className={`p-2 bg-[#95C4BE33] text-[#06574C] text-xs text-center rounded-md font-semibold`}
                         >
-                          {classItem.status}
+                          Success
                         </div>
                       </TableCell>
                     </TableRow>
@@ -605,21 +557,23 @@ const Analytics = () => {
                   <Select
                     radius="sm"
                     className="w-[70px]"
-                    defaultSelectedKeys={["10"]}
+                    selectedKeys={[String(logsLimit)]}
+                    onSelectionChange={(keys) => setLogsLimit(Number(Array.from(keys)[0]))}
                     placeholder="1"
                   >
                     {limits.map((limit) => (
                       <SelectItem key={limit.key}>{limit.label}</SelectItem>
                     ))}
                   </Select>
-                  <span className="min-w-56">Out of 58</span>
+                  <span className="min-w-56">Out of {totalLogs}</span>
                 </div>
                 <Pagination
                   className=""
                   showControls
                   variant="ghost"
-                  initialPage={1}
-                  total={10}
+                  page={logsPage}
+                  onChange={setLogsPage}
+                  total={logsDataResponse?.totalPages || 1}
                   classNames={{
                     item: "rounded-sm hover:bg-bg-[#06574C]/50",
                     cursor: "bg-[#06574C] rounded-sm text-white",

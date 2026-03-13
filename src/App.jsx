@@ -1,5 +1,6 @@
 import "./App.css";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { initGA, trackPageView } from "./lib/analytics";
 ;
 import { addToast, HeroUIProvider, Spinner, ToastProvider } from "@heroui/react";
 
@@ -155,6 +156,14 @@ function App() {
   const { pathname } = useLocation();
 
   useDynamicMeta({ location });
+
+  useEffect(() => {
+    initGA();
+  }, []);
+
+  useEffect(() => {
+    trackPageView(pathname);
+  }, [pathname]);
 
   const dispatch = useDispatch();
 

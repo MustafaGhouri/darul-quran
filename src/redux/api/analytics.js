@@ -26,9 +26,17 @@ export const analyticsApi = createApi({
             }),
             providesTags: ["Analytics"],
         }),
+        getActivities: builder.query({
+            query: (params) => ({
+                url: "/activities",
+                params,
+            }),
+            providesTags: ["Analytics"],
+        }),
     }),
 });
 
 export const {
     useGetAnalyticsQuery,
+    useGetActivitiesQuery,
 } = analyticsApi;

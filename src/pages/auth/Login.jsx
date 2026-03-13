@@ -13,6 +13,7 @@ import { setUser } from "../../redux/reducers/user";
 import { useDispatch } from "react-redux";
 import { api } from "../../services/api";
 import { successMessage } from "../../lib/toast.config";
+import { analyticsEvents } from "../../lib/analytics";
 const Login = () => {
   const navigate = useNavigate();
 
@@ -44,6 +45,7 @@ const Login = () => {
       dispatch(setUser(data.user));
       successMessage("Login successful");
       const role = data.user.role?.toLowerCase();
+      analyticsEvents.login(role);
 
       let route = '/';
       if (role === "admin") {

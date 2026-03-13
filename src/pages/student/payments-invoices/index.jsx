@@ -35,6 +35,7 @@ import {
   useCancelSubscriptionMutation,
 } from "../../../redux/api/payments";
 import { dateFormatter, debounce } from "../../../lib/utils";
+import { analyticsEvents } from "../../../lib/analytics";
 
 const PaymentsInvoices = () => {
   const [page, setPage] = useState(1);
@@ -43,6 +44,10 @@ const PaymentsInvoices = () => {
   const [refundLimit, setRefundLimit] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [subSearchQuery, setSubSearchQuery] = useState("");
+
+  React.useEffect(() => {
+    // Page view already handled in App.jsx, but we can track specialty events here if needed.
+  }, []);
 
   // Redux Toolkit queries
   const { data: paymentData, isLoading: paymentsLoading } =

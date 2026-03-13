@@ -27,6 +27,7 @@ import { MdMenuBook } from "react-icons/md";
 import { useLocation, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
 import { dateFormatter } from "../../../lib/utils";
+import { analyticsEvents } from "../../../lib/analytics";
 import { useGetCourseByIdQuery, useGetCourseByIdViewQuery, useGetCourseFilesQuery, useGetReviewsQuery } from "../../../redux/api/courses";
 import RatingStars from "../../../components/RatingStar";
 import QueryError from "../../../components/QueryError";
@@ -120,6 +121,7 @@ const CourseDetails = () => {
 
       if (!paymentData.requiresPayment && paymentData.isEnrolled) {
         successMessage(paymentData.message || "Enrolled successfully!");
+        analyticsEvents.enroll(course.courseName);
         setIsEnrolled(true);
         return;
       }
