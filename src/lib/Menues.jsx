@@ -78,7 +78,7 @@ export const teacherMenu = [
 
 export const studentMenu = [
     { name: 'Dashboard', icon: <HomeIcon />, link: '/student/dashboard' },
-    { name: 'My Learning Journey', icon: <FaChalkboardTeacher />, link: '/student/my-learning' },
+    { name: 'My Learning Journey', icon: <FaChalkboardTeacher size={22}/>, link: '/student/my-learning' },
     { name: 'Class Schedule', icon: <Video />, link: '/student/class-scheduling' },
     { name: 'Browse Courses', icon: <IoBook  size={21}/>, link: '/student/browse-courses' },
     // {

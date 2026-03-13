@@ -198,6 +198,8 @@ const CreaterOrUpdateSchedule = () => {
             let response;
             const payload = {
                 ...formData,
+                weeklyDays: formData.weeklyDays.map(String)
+
             }
 
             if (user?.role === "teacher") {
@@ -505,7 +507,7 @@ const CreaterOrUpdateSchedule = () => {
 
                         <CheckboxGroup
                             label="Select Days"
-                            value={formData?.weeklyDays}
+                            value={formData?.weeklyDays.map(String)}
                             orientation="horizontal"
                             color="success"
                             isRequired={formData.scheduleType === "weekly"}
