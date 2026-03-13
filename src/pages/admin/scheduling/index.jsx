@@ -515,7 +515,7 @@ const Scheduling = () => {
                     {getStatusText(item)}
                   </Chip>
                 </TableCell>
-                <TableCell>
+                <TableCell className="flex gap-3 items-center">
                   {item.meetingLink ? (
                     <div className="flex gap-2 items-center cursor-pointer" onClick={() => copyToClipboard(item.meetingLink, item.id)}>
                       <Copy color="#3F86F2" size={16} />
@@ -526,6 +526,9 @@ const Scheduling = () => {
                   ) : (
                     <span className="text-gray-400 text-sm">No Link</span>
                   )}
+                  <Button as={Link} to={item.meetingLink} target="_blank" rel="noopener noreferrer" variant="ghost" size="sm" radius="sm" color="primary">
+                      Join
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
