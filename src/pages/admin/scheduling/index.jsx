@@ -432,41 +432,41 @@ const Scheduling = () => {
           isHeaderSticky
           aria-label="Example static collection table"
           classNames={{
-            base: "w-full bg-white rounded-lg min-h-[55vh] overflow-x-scroll w-full no-scrollbar max-h-[500px] shadow-md",
+            base: "w-full bg-white rounded-lg min-h-[55vh] overflow-x-scroll w-full no-scrollbar max-sh-[500px] shadow-md",
             th: "font-bold bg-[#EBD4C9] p-4 text-md text-[#333333] capitalize tracking-widest ",
             td: "py-3 items-center whitespace-nowrap",
             tr: "border-b border-default-200",
           }}
         >
           <TableHeader>
-            <TableColumn>Image</TableColumn>
-            <TableColumn>Details</TableColumn>
-            <TableColumn>Teacher</TableColumn>
-            <TableColumn>Dates</TableColumn>
-            <TableColumn>Time</TableColumn>
-            <TableColumn>Schedule Type</TableColumn>
-            <TableColumn>Class Type</TableColumn>
-            <TableColumn>Status</TableColumn>
-            <TableColumn>Zoom Link</TableColumn>
-            <TableColumn>Actions</TableColumn>
+            {/* <TableColumn>Image</TableColumn> */}
+            <TableColumn width={200}>Details</TableColumn>
+            <TableColumn width={200}>Teacher</TableColumn>
+            <TableColumn width={200}>Dates</TableColumn>
+            <TableColumn width={200}>Time</TableColumn>
+            <TableColumn width={200}>Schedule Type</TableColumn>
+            <TableColumn width={200}>Class Type</TableColumn>
+            <TableColumn width={200}>Status</TableColumn>
+            <TableColumn width={200}>Zoom Link</TableColumn>
+            <TableColumn width={200}>Actions</TableColumn>
           </TableHeader>
 
           <TableBody loadingContent={<Spinner color="success" />} loadingState={isFetching ? 'loading' : 'idle'} emptyContent={"No sessions scheduled."}>
             {data?.schedules?.map((item) => (
               <TableRow key={item.id}>
-                <TableCell>
+                {/* <TableCell>
                   <Image src={item.thumbnail}
                     width={50}
                     height={50}
                     alt={item.courseName}
                     className="rounded-lg" />
-                </TableCell>
+                </TableCell> */}
                 <TableCell>
                   <div>
-                    <div className="font-medium text-gray-900">{item.title}</div>
-                    <div className="text-xs text-gray-500 mt-0.5 max-w-[200px] truncate">{item.description || 'No description'}</div>
+                    <div className="font-medium text-gray-900 max-w-[200px] truncate">{item.title}</div>
+                    <div title={item.description || 'No description'} className="text-xs cursor-pointer text-gray-500 mt-0.5 max-w-[200px] truncate"> {item.description || 'No description'}</div>
                     <div className="text-xs text-[#06574C] mt-1">{item.courseName || 'General Session'}</div>
-                  </div>
+                  </div> 
                 </TableCell>
                 <TableCell>
                   <div className="flex-col flex">
@@ -516,20 +516,17 @@ const Scheduling = () => {
                     {getStatusText(item)}
                   </Chip>
                 </TableCell>
-                <TableCell className="flex gap-3 items-center">
+                <TableCell className=" ">
                   {item.meetingLink ? (
-                    <div className="flex gap-2 items-center cursor-pointer" onClick={() => copyToClipboard(item.meetingLink, item.id)}>
-                      <Copy color="#3F86F2" size={16} />
-                      <span className="text-[#3F86F2] hover:underline text-sm">
-                        {copiedId === item.id ? "Copied!" : "Copy link"}
-                      </span>
+                    <div className="flex gap-2 items-center cursor-pointer" >
+                      <Copy title="Copy Link" color="#3F86F2" size={16} onClick={() => copyToClipboard(item.meetingLink, item.id)} />
+                      <a href={item.meetingLink} target="_blank" rel="noopener noreferrer" className="text-[#3F86F2] bg-[#3F86F2]/10 py-1 px-2 rounded-md hover:bg-[#3F86F2]/30 text-sm">
+                        Join Zoom
+                      </a>
                     </div>
                   ) : (
                     <span className="text-gray-400 text-sm">No Link</span>
                   )}
-                  <Button as={Link} to={item.meetingLink} target="_blank" rel="noopener noreferrer" variant="ghost" size="sm" radius="sm" color="primary">
-                    Join
-                  </Button>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
