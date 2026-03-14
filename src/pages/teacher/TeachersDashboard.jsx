@@ -42,7 +42,7 @@ import { GrAnnounce, GrAttachment, GrClose, GrSend } from "react-icons/gr";
 import { CiCalendar } from "react-icons/ci";
 import { IoAlertCircleOutline } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
-import { formatTime12Hour, isClassLive, isClassExpired } from "../../utils/scheduleHelpers";
+import { formatTime12Hour, isClassLive, isClassExpired, getHoursUntilClass } from "../../utils/scheduleHelpers";
 import NotificationPermission from "../../components/NotificationPermission";
 import { useSelector } from "react-redux";
 import { errorMessage } from "../../lib/toast.config";
@@ -419,6 +419,14 @@ const TeachersDashboard = () => {
                       const live = isClassLive(item);
                       const expired = isClassExpired(item);
 
+                      // Get the next upcoming class date
+                      const allDates = item.schedule_dates || item.scheduleDates || [];
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      const upcomingDates = allDates.filter(d => d >= todayStr);
+                      const nextClassDate = upcomingDates.length > 0 ? upcomingDates.sort()[0] : (allDates[0] || item.date);
+                      const dateStr = nextClassDate?.includes('T') ? nextClassDate.split('T')[0] : nextClassDate;
+                      const hoursUntil = getHoursUntilClass(dateStr, item.start_time || item.startTime);
+
                       if (expired) {
                         return (
                           <Button
@@ -435,7 +443,7 @@ const TeachersDashboard = () => {
                           <Button
                             startContent={<Video size={20} />}
                             size="sm"
-                            color="success"
+                            className="bg-green-600 w-32 text-white rounded-md animate-pulse"
                             as={Link}
                             to={item.meeting_link}
                             target="_blank"
@@ -444,9 +452,21 @@ const TeachersDashboard = () => {
                           </Button>
                         );
                       } else if (item.meeting_link) {
+                        if (hoursUntil !== null && hoursUntil < 3 && hoursUntil > 0) {
+                          return (
+                            <Button
+                              startContent={<Clock size={20} />}
+                              size="sm"
+                              className="bg-[#95C4BE33] text-[#06574C] w-32 rounded-md"
+                            >
+                              Starts in {Math.floor(hoursUntil)}h
+                            </Button>
+                          );
+                        }
+                        
                         return (
                           <Button
-                            startContent={<Clock size={20} />}
+                            startContent={<Lock size={20} />}
                             size="sm"
                             className="bg-[#06574C] w-32 text-white rounded-md"
                             isDisabled
