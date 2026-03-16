@@ -140,6 +140,7 @@ import { io } from "socket.io-client";
 import AttendanceList from "./pages/student/attendance-list";
 import { BiChat, BiPaperclip } from "react-icons/bi";
 import NotFoundPage from "./components/NotFound";
+import Enrollments from "./pages/student/enrollnments";
 
 const socket = io(import.meta.env.VITE_PUBLIC_SERVER_URL);
 
@@ -657,6 +658,14 @@ function App() {
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <MyLearning />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/enrollments"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <Enrollments />
                 </ProtectedRoute>
               }
             />

@@ -17,7 +17,7 @@ import {
     MessageCircleMore
 } from 'lucide-react';
 import { FaChalkboardTeacher, FaMedal } from 'react-icons/fa';
-import { IoBook } from 'react-icons/io5';
+import { IoBook, IoCashOutline } from 'react-icons/io5';
 import { MdOutlinePayments } from "react-icons/md";
 import { GrSchedules } from "react-icons/gr";
 
@@ -79,6 +79,7 @@ export const teacherMenu = [
 export const studentMenu = [
     { name: 'Dashboard', icon: <HomeIcon />, link: '/student/dashboard' },
     { name: 'My Learning Journey', icon: <FaChalkboardTeacher size={22}/>, link: '/student/my-learning' },
+    { name: 'Enrollments', icon: <IoCashOutline size={22}/>, link: '/student/enrollments' },
     { name: 'Class Schedule', icon: <Video />, link: '/student/class-scheduling' },
     { name: 'Browse Courses', icon: <IoBook  size={21}/>, link: '/student/browse-courses' },
     // {

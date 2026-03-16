@@ -47,6 +47,13 @@ export const enrollmentAdminApi = createApi({
             }),
             providesTags: ["enrollment"],
         }),
+        getEnrollments: builder.query({
+            query: (params) => ({
+                url: "/enrollments",
+                params,
+            }),
+            providesTags: ["enrollment"],
+        }),
     }),
 });
 
@@ -55,4 +62,5 @@ export const {
     useGetCourseProgressAnalyticsQuery,
     useGetStudentCourseProgressQuery,
     useGetEnrollmentStatsQuery,
+    useGetEnrollmentsQuery,
 } = enrollmentAdminApi;
