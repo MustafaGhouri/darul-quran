@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
   Button,
@@ -48,12 +48,20 @@ const Analytics = () => {
     { key: "draft", label: "Draft" },
     { key: "published", label: "Published" },
   ];
+   const roles = [
+    { key: "all", label: "All" },
+    { key: "admin", label: "Admin" },
+    { key: "teacher", label: "Teacher" },
+    { key: "student", label: "Student" },
+  ];
   const filters = [{ key: "all", label: "Filter" }];
   const [revenueFilter, setRevenueFilter] = useState("week");
   const [enrollmentFilter, setEnrollmentFilter] = useState("week");
   const [logsPage, setLogsPage] = useState(1);
   const [logsLimit, setLogsLimit] = useState(10);
   const [logsSearch, setLogsSearch] = useState("");
+  const [logsRole, setLogsRole] = useState("all");
+  const [logsDate, setLogsDate] = useState(null);
 
   const today = new Date();
   const yesterday = new Date(today);
@@ -74,6 +82,10 @@ const Analytics = () => {
     { key: "month", label: "This Month" },
   ];
 
+  useEffect(() => {
+    setLogsPage(1);
+  }, [logsSearch, logsRole, logsDate, logsLimit]);
+
   const { data, isLoading, error, refetch } = useGetAnalyticsQuery({
     revenueFilter,
     enrollmentFilter,
@@ -83,6 +95,8 @@ const Analytics = () => {
     page: logsPage,
     limit: logsLimit,
     search: logsSearch,
+    role: logsRole,
+    date: logsDate ? format(new Date(logsDate.year, logsDate.month - 1, logsDate.day), "yyyy-MM-dd") : "",
   });
 
   if (error) {
@@ -463,10 +477,11 @@ const Analytics = () => {
                   radius="sm"
                   className="w-full md:w-60 !border-[#06574C] "
                   variant="bordered"
-                  defaultSelectedKeys={["all"]}
+                  selectedKeys={[logsRole]}
+                  onSelectionChange={(keys) => setLogsRole(Array.from(keys)[0])}
                   placeholder="Filter"
                 >
-                  {statuses.map((items) => (
+                  {roles.map((items) => (
                     <SelectItem key={items.key}>{items.label}</SelectItem>
                   ))}
                 </Select>
@@ -475,6 +490,8 @@ const Analytics = () => {
                   className="w-full md:w-50"
                   variant="bordered"
                   showMonthAndYearPickers
+                  value={logsDate}
+                  onChange={setLogsDate}
                 />
                 <Input
                   className="w-full md:w-60"
