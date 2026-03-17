@@ -15,6 +15,19 @@ import { successMessage } from "../../../lib/toast.config";
  * @param {String[]} props.units
  * @param {Boolean} props.releasedImmediately
  */
+const DEFAULT_UNITS = ["hour", "day", "month", 'year'];
+
+/**
+ * @param {Object} props
+ * @param {String} props.initialValue
+ * @param {(intervalValue: String)=>void} props.onUpdate
+ * @param {String} props.label
+ * @param {import("react").JSX.Element?} props.toolTipContent
+ * @param {Number} props.inputWidth
+ * @param {String} props.className
+ * @param {String[]} props.units
+ * @param {Boolean} props.releasedImmediately
+ */
 export const IntervalInput = ({
     initialValue,
     onUpdate,
@@ -22,7 +35,7 @@ export const IntervalInput = ({
     toolTipContent,
     inputWidth = 80,
     className = 'flex flex-col sm:flex-row sm:items-center gap-2',
-    units = ["hour", "day", "month",'year'],
+    units = DEFAULT_UNITS,
     releasedImmediately = true,
 }) => {
     const [initialNumber, setInitialNumber] = useState({ number: 0, unit: '' });
@@ -32,11 +45,14 @@ export const IntervalInput = ({
     useEffect(() => {
         if (initialValue) {
             const { number, unit } = parseInterval(initialValue);
-            setInitialNumber({ number, unit });
-            setNumberValue(number || 0);
-            setUnitValue(unit || (releasedImmediately ? "released_immediately" : units[0]));
+            // Only update if it's different from current state to avoid resetting user input
+            if (number !== numberValue || unit !== unitValue) {
+                setInitialNumber({ number, unit });
+                setNumberValue(number || 0);
+                setUnitValue(unit || (releasedImmediately ? "released_immediately" : units[0]));
+            }
         }
-    }, [initialValue, releasedImmediately, units]);
+    }, [initialValue]);
     
     const handleUpdate = () => {
         if (unitValue === "released_immediately") {
@@ -46,7 +62,8 @@ export const IntervalInput = ({
         if (!numberValue || !unitValue) return;
         if ((numberValue === initialNumber.number) && (unitValue === initialNumber.unit)) return;
         
-        const interval = `${numberValue} ${numberValue < 2 ? unitValue?.replace('s', '') : unitValue}`;
+        const unit = numberValue > 1 ? `${unitValue}s` : unitValue;
+        const interval = `${numberValue} ${unit}`;
         onUpdate(interval);
     };
 
@@ -70,7 +87,7 @@ export const IntervalInput = ({
                     min={1}
                     placeholder="Period Value"
                     title="Period Value"
-                    max={unitValue === "hours" ? 24 : 31}
+                    max={unitValue === "hour" ? 24 : 31}
                     onChange={(e) => setNumberValue(Number(e.target.value))}
                     onBlur={handleUpdate}
                 />
@@ -81,7 +98,9 @@ export const IntervalInput = ({
                     id="period_unit"
                     placeholder="Period Unit Type"
                     title="Period Unit Type"
-                    onChange={(e) => setUnitValue(e.target.value)}
+                    onChange={(e) => {
+                        setUnitValue(e.target.value);
+                    }}
                     onBlur={handleUpdate}
                 >
                     {units.map((unit) => (

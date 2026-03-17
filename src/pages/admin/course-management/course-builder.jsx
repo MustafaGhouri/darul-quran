@@ -62,25 +62,25 @@ const CourseBuilder = () => {
   const currentTab = searchParams.get("tab");
   const courseId = searchParams.get("id");
 
-  useEffect(() => {
-    const fetchTeachers = async () => {
-      try {
-        const response = await fetch(
-          import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/user/getTeachers"
-        );
-        const data = await response.json();
+  // useEffect(() => {
+  //   const fetchTeachers = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/user/getTeachers"
+  //       );
+  //       const data = await response.json();
 
-        if (data.success) {
-          setTeachers(data.user);
-          console.log("Teachers", data.user);
-        }
-      } catch (error) {
-        console.error("Failed to fetch teachers", error);
-      }
-    };
+  //       if (data.success) {
+  //         setTeachers(data.user);
+  //         console.log("Teachers", data.user);
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to fetch teachers", error);
+  //     }
+  //   };
 
-    fetchTeachers();
-  }, []);
+  //   fetchTeachers();
+  // }, []);
   const [teachers, setTeachers] = useState([]);
   const navigate = useNavigate();
   const [video, setVideo] = useState([]); //file objects with metadata
@@ -303,6 +303,7 @@ const CourseBuilder = () => {
         } else {
           handleSelected("content");
         }
+        
       } else {
         errorMessage(response?.error?.data?.message || response?.error?.data?.error || "Something went wrong");
       }
@@ -350,10 +351,10 @@ const CourseBuilder = () => {
   const handleSubmit3tab = async (e) => {
     if (e) e.preventDefault();
     setLoadingAction(pendingAction);
-    if (formData?.status === 'published' && files.length === 0) {
-      errorMessage("Please add at least one file to publish the course.");
-      return;
-    };
+    // if (formData?.status === 'published' && files.length === 0) {
+    //   errorMessage("Please add at least one file to publish the course.");
+    //   return;
+    // };
 
     try {
 
@@ -682,7 +683,7 @@ const CourseBuilder = () => {
                           initialValue={formData?.interval}
                           onUpdate={(interval) => handleChange("interval", interval)}
                           releasedImmediately={false}
-                          units={["day", "month"]}
+                          units={["week", "month"]}
                         />
                       }
                     </div>
