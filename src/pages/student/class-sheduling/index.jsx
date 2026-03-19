@@ -104,8 +104,8 @@ const StudentClassSheduling = () => {
             }
 
             // Handle both scheduleDates array and fallback to date field
-            const datesToProcess = schedule.scheduleDates?.length > 0 
-                ? schedule.scheduleDates 
+            const datesToProcess = schedule.scheduleDates?.length > 0
+                ? schedule.scheduleDates
                 : (schedule.date ? [schedule.date] : []);
 
             if (!datesToProcess.length) return;
@@ -239,8 +239,8 @@ const StudentClassSheduling = () => {
     };
 
     const canReschedule = (schedule) => {
-        const scheduleDates = schedule.scheduleDates?.length > 0 
-            ? schedule.scheduleDates 
+        const scheduleDates = schedule.scheduleDates?.length > 0
+            ? schedule.scheduleDates
             : (schedule.date ? [schedule.date] : []);
         const todayStr = new Date().toISOString().split('T')[0];
         const upcomingDates = scheduleDates.filter(d => d >= todayStr);
@@ -254,8 +254,8 @@ const StudentClassSheduling = () => {
     };
 
     const canCancel = (schedule) => {
-        const scheduleDates = schedule.scheduleDates?.length > 0 
-            ? schedule.scheduleDates 
+        const scheduleDates = schedule.scheduleDates?.length > 0
+            ? schedule.scheduleDates
             : (schedule.date ? [schedule.date] : []);
         const todayStr = new Date().toISOString().split('T')[0];
         const upcomingDates = scheduleDates.filter(d => d >= todayStr);
@@ -280,8 +280,8 @@ const StudentClassSheduling = () => {
             isExpired = schedule.date < todayStr || (schedule.date === todayStr && hoursUntil !== null && hoursUntil < 0);
         } else {
             status = getStatusText(schedule);
-            const scheduleDates = schedule.scheduleDates?.length > 0 
-                ? schedule.scheduleDates 
+            const scheduleDates = schedule.scheduleDates?.length > 0
+                ? schedule.scheduleDates
                 : (schedule.date ? [schedule.date] : []);
             const todayStr = new Date().toISOString().split('T')[0];
             const upcomingDates = scheduleDates.filter(d => d >= todayStr);
@@ -324,8 +324,8 @@ const StudentClassSheduling = () => {
             isExpired = schedule.date < todayStr || (schedule.date === todayStr && hoursUntil !== null && hoursUntil < 0);
         } else {
             status = getStatusText(schedule);
-            const scheduleDates = schedule.scheduleDates?.length > 0 
-                ? schedule.scheduleDates 
+            const scheduleDates = schedule.scheduleDates?.length > 0
+                ? schedule.scheduleDates
                 : (schedule.date ? [schedule.date] : []);
             const todayStr = new Date().toISOString().split('T')[0];
             const upcomingDates = scheduleDates.filter(d => d >= todayStr);
@@ -421,52 +421,22 @@ const StudentClassSheduling = () => {
                     </p>
                 )}
 
+                {type === 'normal' && schedule?.scheduleType !== 'once' ? (
+                    <p className="text-[#666666] text-sm mb-4 line-clamp-2">
+                        {schedule.scheduleDates?.length === 1
+                            ? new Date(schedule.scheduleDates[0]).toDateString()
+                            : `${new Date(schedule.scheduleDates[0]).toDateString()} - to - ${schedule?.isDateGenerated ? 'On Going' : new Date(schedule.scheduleDates[schedule.scheduleDates.length - 1]).toDateString()}`}
+                    </p>
+                ) : (
+                    <p className="text-[#666666] text-sm mb-4 line-clamp-2">{new Date(schedule.startDate).toDateString()}</p>
+                )}
                 <div className="flex flex-wrap gap-4 mb-4">
-                    {type === 'normal' ? (
-                        // For schedule overview (type='normal'), show the date range from scheduleDates
-                        <>
-                            <div className="flex text-[#666666] text-sm items-center gap-2">
-                                <CiCalendar color="#666666" size={20} />
-                                <p className="text-[#666666] text-sm">
-                                    {schedule.scheduleDates?.length > 0 ? (
-                                        <>
-                                            {new Date(schedule.scheduleDates[0]).toLocaleDateString('en-US', {
-                                                month: 'short', day: 'numeric', year: 'numeric'
-                                            })}
-                                            {schedule.scheduleDates.length > 1 && (
-                                                <>
-                                                    {' - '}
-                                                    {schedule?.isDateGenerated ? 'On Going' : new Date(schedule.scheduleDates[schedule.scheduleDates?.length - 1]).toDateString()}
-
-                                                </>
-                                            )}
-                                            {' '}
-                                            ({schedule.scheduleDates.length} {schedule.scheduleDates.length === 1 ? 'date' : 'dates'})
-                                        </>
-                                    ) : (
-                                        dateFormatter(schedule.date)
-                                    )}
-                                </p>
-                            </div>
-                            <div className="flex text-[#666666] text-sm items-center gap-2">
-                                <CalendarIcon color="#666666" size={18} />
-                                <p className="text-[#666666] text-sm">
-                                    {schedule.scheduleType || 'Recurring'}
-                                    {schedule.repeatInterval && ` (Every ${schedule.repeatInterval} ${schedule.scheduleType === 'daily' ? 'day' : schedule.scheduleType === 'weekly' ? 'week' : 'month'})`}
-                                </p>
-                            </div>
-                        </>
-                    ) : (
-                        // For date-grouped view, show the specific date
-                        <>
-                            <div className="flex text-[#666666] text-sm items-center gap-2">
-                                <CiCalendar color="#666666" size={20} />
-                                <p className="text-[#666666] text-sm">
-                                    {dateFormatter(schedule.date)}
-                                </p>
-                            </div>
-                        </>
-                    )}
+                    <div className="flex text-[#666666] text-sm items-center gap-2">
+                        {type === 'normal' ? "CreatedAt: " : <CiCalendar color="#666666" size={20} />}
+                        <p className="text-[#666666] text-sm">
+                            {dateFormatter(schedule.date, true)}
+                        </p>
+                    </div>
                     <div className="flex items-center gap-2">
                         <Clock color="#666666" size={18} />
                         <p className="text-[#666666] text-sm">
@@ -474,20 +444,20 @@ const StudentClassSheduling = () => {
                         </p>
                     </div>
                 </div>
-                {type === 'normal' &&
+                {/* {type === 'normal' &&
                     <Calendar
                         size="sm"
                         variant="underlined"
                         color='success'
                         isReadOnly
                         isDateUnavailable={(date) => {
-                            const datesToCheck = schedule.scheduleDates?.length > 0 
-                                ? schedule.scheduleDates 
+                            const datesToCheck = schedule.scheduleDates?.length > 0
+                                ? schedule.scheduleDates
                                 : (schedule.date ? [schedule.date] : []);
                             return datesToCheck.includes(date.toString());
                         }}
                     />
-                }
+                } */}
                 <Divider className="my-4" />
 
                 <div className="flex flex-col md:flex-row gap-4 justify-between items-center">

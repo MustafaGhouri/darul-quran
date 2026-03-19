@@ -47,7 +47,7 @@ const TeacherClassSheduling = () => {
 
     const { data: scheduleData, isLoading, isFetching, error, refetch } = useGetScheduleQuery({
         page: "1",
-        limit: "100",
+        limit: "10",
         status: filterStatus === "all" ? undefined : filterStatus,
     });
 
@@ -288,11 +288,15 @@ const TeacherClassSheduling = () => {
                         {schedule.description}
                     </p>
                 )}
-                {type === 'normal' && <p className="text-[#666666] text-sm mb-4 line-clamp-2">
-                    {schedule.scheduleDates?.length === 1 ? new Date(schedule.scheduleDates[0]).toDateString() : (new Date(schedule.scheduleDates[0]).toDateString()
-                        + ' - to - ' +
-                      ( schedule?.isDateGenerated?'On Going': new Date(schedule.scheduleDates[schedule.scheduleDates?.length - 1]).toDateString()))}
-                </p>}
+                {type === 'normal' && schedule?.scheduleType !== 'once' ? (
+                    <p className="text-[#666666] text-sm mb-4 line-clamp-2">
+                        {schedule.scheduleDates?.length === 1
+                            ? new Date(schedule.scheduleDates[0]).toDateString()
+                            : `${new Date(schedule.scheduleDates[0]).toDateString()} - to - ${schedule?.isDateGenerated ? 'On Going' : new Date(schedule.scheduleDates[schedule.scheduleDates.length - 1]).toDateString()}`}
+                    </p>
+                ) : (
+                    <p className="text-[#666666] text-sm mb-4 line-clamp-2">{new Date(schedule.startDate).toDateString()}</p>
+                )}
                 <div className="flex flex-wrap gap-4 mb-4">
                     <div className="flex text-[#666666] text-sm items-center gap-2">
                         {type === 'normal' ? "CreatedAt: " : <CiCalendar color="#666666" size={20} />}
