@@ -13,6 +13,8 @@ import {
     ModalBody,
     ModalFooter,
     useDisclosure,
+    Tabs,
+    Tab,
 } from "@heroui/react";
 import { CiCalendar } from "react-icons/ci";
 import { Clock, Lock, Video, Calendar as CalendarIcon, User, MapPin } from "lucide-react";
@@ -552,6 +554,18 @@ const StudentClassSheduling = () => {
                 title="My Class Schedule"
                 desc="View and manage your upcoming live classes"
             />
+
+            <div className="flex items-center max-sm:flex-wrap gap-2">
+                    <Tabs
+                      color="success"
+                      variant="underlined"
+                      selectedKey={viewType}
+                      onSelectionChange={setViewType}
+                    >
+                      <Tab key="normal" title="View Schedule By Course" />
+                      <Tab key="allDates" title="View Schedule By Date" />
+                    </Tabs>
+                  </div>
 
             <div className="grid grid-cols-12 gap-4 items-start mt-4">
                 {viewType === 'allDates' ?
