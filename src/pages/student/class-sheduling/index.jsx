@@ -54,7 +54,15 @@ const StudentClassSheduling = () => {
 
     const schedulesDates = useMemo(() => {
         if (!scheduleData?.schedules) return [];
-        const grouped = scheduleData?.schedules.flatMap(schedule => schedule?.scheduleDates);
+        const grouped = scheduleData?.schedules.flatMap(schedule => {
+            // Use scheduleDates if available, otherwise fall back to date field
+            if (schedule.scheduleDates?.length > 0) {
+                return schedule.scheduleDates;
+            } else if (schedule.date) {
+                return [schedule.date];
+            }
+            return [];
+        });
         return grouped;
     }, [scheduleData]);
 
@@ -95,10 +103,14 @@ const StudentClassSheduling = () => {
                 if (filterType === "video" && schedule.meetingLink) return;
             }
 
-            // Iterate through scheduleDates array instead of deprecated date field
-            if (!schedule.scheduleDates?.length) return;
+            // Handle both scheduleDates array and fallback to date field
+            const datesToProcess = schedule.scheduleDates?.length > 0 
+                ? schedule.scheduleDates 
+                : (schedule.date ? [schedule.date] : []);
 
-            schedule.scheduleDates.forEach((scheduleDate) => {
+            if (!datesToProcess.length) return;
+
+            datesToProcess.forEach((scheduleDate) => {
                 // Handle both string dates and object dates
                 const dateStr = scheduleDate;
                 const parsedDate = parseDateFromDB(dateStr);
@@ -227,7 +239,9 @@ const StudentClassSheduling = () => {
     };
 
     const canReschedule = (schedule) => {
-        const scheduleDates = schedule.scheduleDates || [];
+        const scheduleDates = schedule.scheduleDates?.length > 0 
+            ? schedule.scheduleDates 
+            : (schedule.date ? [schedule.date] : []);
         const todayStr = new Date().toISOString().split('T')[0];
         const upcomingDates = scheduleDates.filter(d => d >= todayStr);
 
@@ -240,7 +254,9 @@ const StudentClassSheduling = () => {
     };
 
     const canCancel = (schedule) => {
-        const scheduleDates = schedule.scheduleDates || [];
+        const scheduleDates = schedule.scheduleDates?.length > 0 
+            ? schedule.scheduleDates 
+            : (schedule.date ? [schedule.date] : []);
         const todayStr = new Date().toISOString().split('T')[0];
         const upcomingDates = scheduleDates.filter(d => d >= todayStr);
 
@@ -264,7 +280,9 @@ const StudentClassSheduling = () => {
             isExpired = schedule.date < todayStr || (schedule.date === todayStr && hoursUntil !== null && hoursUntil < 0);
         } else {
             status = getStatusText(schedule);
-            const scheduleDates = schedule.scheduleDates || [];
+            const scheduleDates = schedule.scheduleDates?.length > 0 
+                ? schedule.scheduleDates 
+                : (schedule.date ? [schedule.date] : []);
             const todayStr = new Date().toISOString().split('T')[0];
             const upcomingDates = scheduleDates.filter(d => d >= todayStr);
 
@@ -306,7 +324,9 @@ const StudentClassSheduling = () => {
             isExpired = schedule.date < todayStr || (schedule.date === todayStr && hoursUntil !== null && hoursUntil < 0);
         } else {
             status = getStatusText(schedule);
-            const scheduleDates = schedule.scheduleDates || [];
+            const scheduleDates = schedule.scheduleDates?.length > 0 
+                ? schedule.scheduleDates 
+                : (schedule.date ? [schedule.date] : []);
             const todayStr = new Date().toISOString().split('T')[0];
             const upcomingDates = scheduleDates.filter(d => d >= todayStr);
 
@@ -460,9 +480,12 @@ const StudentClassSheduling = () => {
                         variant="underlined"
                         color='success'
                         isReadOnly
-                        isDateUnavailable={(date) =>
-                            schedule?.scheduleDates?.includes(date.toString())
-                        }
+                        isDateUnavailable={(date) => {
+                            const datesToCheck = schedule.scheduleDates?.length > 0 
+                                ? schedule.scheduleDates 
+                                : (schedule.date ? [schedule.date] : []);
+                            return datesToCheck.includes(date.toString());
+                        }}
                     />
                 }
                 <Divider className="my-4" />
