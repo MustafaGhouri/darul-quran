@@ -26,9 +26,10 @@ export const adminMenu = [
     {
         name: 'Courses Management',
         icon: <BookIcon />,
-        link: '/admin/courses-management',
+        // link: '/admin/courses-management',
         value: 'courses-management',
         children: [
+            { name: 'All Courses', link: '/admin/courses-management', value: 'all-courses' },
             { name: 'Course Builder', link: '/admin/courses-management/builder', value: 'course-builder' },
             { name: 'Attendance & Progress', link: '/admin/courses-management/attendance', value: 'attendance-progress' }
         ]
