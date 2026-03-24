@@ -22,7 +22,7 @@ const TeacherSelect = ({
     limit = 20,
     isDisabled = false,
     isMultiple = false,
-    courseTeacherId, 
+    courseTeacherId,
 }) => {
     const [searchValue, setSearchValue] = useState("");
     const [selectedIds, setSelectedIds] = useState(Array.isArray(initialValue) ? initialValue : (initialValue ? [initialValue] : []));
@@ -34,7 +34,8 @@ const TeacherSelect = ({
     const { data = { user: [], total: 0 }, isFetching: isLoading } = useGetAllTeachersQuery({
         page: 1,
         limit,
-        search: searchValue, 
+        search: searchValue,
+        initialValue
     });
 
     // Fetch initial teacher(s) by ID if we have initialValue but no selectedTeachers yet
