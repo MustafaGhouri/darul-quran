@@ -21,7 +21,8 @@ const TeacherSelect = ({
     placeholder = "Select teacher...",
     limit = 20,
     isDisabled = false,
-    isMultiple = false
+    isMultiple = false,
+    courseTeacherId, 
 }) => {
     const [searchValue, setSearchValue] = useState("");
     const [selectedIds, setSelectedIds] = useState(Array.isArray(initialValue) ? initialValue : (initialValue ? [initialValue] : []));
@@ -33,7 +34,7 @@ const TeacherSelect = ({
     const { data = { user: [], total: 0 }, isFetching: isLoading } = useGetAllTeachersQuery({
         page: 1,
         limit,
-        search: searchValue,
+        search: searchValue, 
     });
 
     // Fetch initial teacher(s) by ID if we have initialValue but no selectedTeachers yet
@@ -42,6 +43,7 @@ const TeacherSelect = ({
     const { data: initialTeacherData } = useGetUserByIdQuery(initialIdToFetch || '', {
         skip: !hasInitialValue || selectedTeachers.length > 0
     });
+
 
     // Set initial teacher from direct ID fetch
     useEffect(() => {
@@ -65,7 +67,6 @@ const TeacherSelect = ({
         }
     }, [data.user, selectedIds]);
 
-    // Sync with initialValue changes
     useEffect(() => {
         if (initialValue !== undefined && initialValue !== null && initialValue !== '') {
             const newIds = Array.isArray(initialValue) ? initialValue : [initialValue];
@@ -75,6 +76,8 @@ const TeacherSelect = ({
             setSelectedTeachers([]);
         }
     }, [initialValue]);
+
+
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -131,8 +134,9 @@ const TeacherSelect = ({
         onChange?.(isMultiple ? [] : null);
     };
 
+    // Show assigned teacher in dropdown even if it's currently selected, as requested
     const filteredTeachers = data.user?.filter(
-        teacher => !selectedIds.includes(teacher.id)
+        teacher => !selectedIds.includes(Number(teacher.id)) || Number(teacher.id) === Number(courseTeacherId)
     );
 
     return (
@@ -228,16 +232,23 @@ const TeacherSelect = ({
                                     <div
                                         key={teacher.id}
                                         onClick={() => toggleTeacher(teacher)}
-                                        className="px-3 py-2.5 hover:bg-green-50 cursor-pointer transition-colors duration-150 flex items-center gap-3 group"
+                                        className={`px-3 py-2.5 hover:bg-green-50 cursor-pointer transition-colors duration-150 flex items-center gap-3 group ${selectedIds.includes(Number(teacher.id)) ? 'bg-green-50' : ''}`}
                                     >
                                         <div className="w-8 h-8 rounded-full bg-linear-to-br from-green-400 to-[#406c65] flex items-center justify-center text-white text-sm font-medium shadow-sm">
                                             {teacher.firstName?.charAt(0)}{teacher.lastName?.charAt(0)}
                                         </div>
 
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-gray-900 truncate">
-                                                {`${teacher.firstName} ${teacher.lastName}`}
-                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-sm font-medium text-gray-900 truncate">
+                                                    {`${teacher.firstName} ${teacher.lastName}`}
+                                                </p>
+                                                {teacher.id === Number(courseTeacherId) && (
+                                                    <span className="px-1.5 py-0.5 text-[10px] bg-green-600 text-white font-bold rounded-sm uppercase tracking-wider">
+                                                        Course's Teacher
+                                                    </span>
+                                                )}
+                                            </div>
                                             {teacher.email && (
                                                 <p className="text-xs text-gray-500 truncate">
                                                     {teacher.email}
@@ -250,8 +261,8 @@ const TeacherSelect = ({
                                             )}
                                         </div>
 
-                                        <div className="w-5 h-5 rounded border-2 border-gray-200 group-hover:border-[#406c65] transition-colors flex items-center justify-center">
-                                            <div className="w-3 h-3 rounded-sm bg-[#406c65] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <div className={`w-5 h-5 rounded border-2 transition-colors flex items-center justify-center ${selectedIds.includes(Number(teacher.id)) ? 'border-[#406c65] bg-[#406c65]/10' : 'border-gray-200 group-hover:border-[#406c65]'}`}>
+                                            <div className={`w-3 h-3 rounded-sm bg-[#406c65] transition-opacity ${selectedIds.includes(Number(teacher.id)) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
                                         </div>
                                     </div>
                                 ))}

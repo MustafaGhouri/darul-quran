@@ -66,6 +66,7 @@ const Scheduling = () => {
   // Modal State
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isEdit, setIsEdit] = useState(false);
+  const [ defultTeacher, setdefultTeacher] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -661,7 +662,8 @@ const Scheduling = () => {
                 />
                 <CourseSelect
                   initialValue={formData.courseId}
-                  onChange={(courseId) => setFormData({ ...formData, courseId })}
+                  onSelect={(course) => { setFormData({ ...formData, courseId: course.id }); 
+                  setdefultTeacher(course.teacherId) }}
                   status="published"
                   type="live"
                   isDisabled={isEdit}
@@ -829,6 +831,8 @@ const Scheduling = () => {
                 </div>
                 {user?.role !== "teacher" && <TeacherSelect
                   initialValue={formData.teacherId}
+                  courseTeacherId={defultTeacher}
+                  courseId={formData.courseId}
                   onChange={(teacherId) => setFormData({ ...formData, teacherId })}
                 />}
                 {formData.sessionMode === "one-on-one" && (

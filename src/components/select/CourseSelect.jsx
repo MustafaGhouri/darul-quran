@@ -19,6 +19,7 @@ const CourseSelect = ({
     isDisabled = false, 
     initialValue, 
     onChange, 
+    onSelect, 
     label, 
     placeholder = "Select a course...", 
     status = 'all', 
@@ -93,6 +94,7 @@ const CourseSelect = ({
         setSelectedId(course.id);
         setSelectedCourse(course);
         onChange?.(Number(course.id));
+        onSelect?.(course);
         setIsOpen(false);
     };
 
@@ -100,7 +102,7 @@ const CourseSelect = ({
         e.stopPropagation();
         setSelectedId(null);
         setSelectedCourse(null);
-        onChange?.(null);
+        onSelect?.(null);
     };
 
     const filteredCourses = data.courses?.filter(
