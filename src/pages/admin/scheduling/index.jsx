@@ -662,8 +662,8 @@ const Scheduling = () => {
                 />
                 <CourseSelect
                   initialValue={formData.courseId}
-                  onSelect={(course) => { setFormData({ ...formData, courseId: course.id }); 
-                  setdefultTeacher(course.teacherId) }}
+                  onSelect={(course) => { setFormData({ ...formData, courseId: course?.id }); 
+                  setdefultTeacher(course?.teacherId) }}
                   status="published"
                   type="live"
                   isDisabled={isEdit}

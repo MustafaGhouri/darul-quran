@@ -103,6 +103,7 @@ const CourseSelect = ({
         setSelectedId(null);
         setSelectedCourse(null);
         onSelect?.(null);
+        onChange?.(null);
     };
 
     const filteredCourses = data.courses?.filter(
