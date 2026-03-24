@@ -34,7 +34,7 @@ export const IntervalInput = ({
     initialValue,
     onUpdate,
     label = "Released Interval",
-    nullableValueLabel = "Released Interval",
+    nullableValueLabel = "Released immediately",
     toolTipContent,
     inputWidth = 80,
     className = 'flex flex-col sm:flex-row sm:items-center gap-2',

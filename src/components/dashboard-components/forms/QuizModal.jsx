@@ -144,12 +144,12 @@ export default function QuizModal({
     return (
         <Modal isOpen={isOpen} onOpenChange={setIsOpen} size="4xl" scrollBehavior="inside">
             <ModalContent>
-                <Form onSubmit={handleSaveQuiz} className="w-full">
-                    {(onClose) => (
-                        <>
-                            <ModalHeader>{editingQuiz ? "Edit Quiz" : "Create New Quiz"}</ModalHeader>
-                            <ModalBody className="w-full">
-                                <div className="space-y-4">
+                {(onClose) => (
+                    <>
+                        <ModalHeader>{editingQuiz ? "Edit Quiz" : "Create New Quiz"}</ModalHeader>
+                        <ModalBody className="w-full p-0 m-0">
+                            <Form onSubmit={handleSaveQuiz} className="w-full px-3 sm:p-5">
+                                <div className="space-y-4 w-full ">
                                     {!initialCourseId && !editingQuiz && (
                                         <div className="mb-4">
                                             <CourseSelect
@@ -216,6 +216,7 @@ export default function QuizModal({
                                                 <Input
                                                     label={`Question ${qIndex + 1}`}
                                                     value={q.questionText}
+                                                    classNames={{ label: 'z-0' }}
                                                     onValueChange={(val) => handleQuestionChange(qIndex, "questionText", val)}
                                                 />
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -242,17 +243,24 @@ export default function QuizModal({
                                         ))}
                                     </div>
                                 </div>
-                            </ModalBody>
-                            <ModalFooter>
+                                <div className="flex w-full  sticky bottom-0 rounded-b-xl bg-white p-2 justify-end gap-2">
+                                    <Button color="danger" variant="light" onPress={onClose}>Cancel</Button>
+                                    <Button className="bg-[#06574C] text-white" type="submit" isLoading={isSaving}>
+                                        {editingQuiz ? "Update Quiz" : "Save Quiz"}
+                                    </Button>
+                                </div>
+                            </Form>
+                        </ModalBody>
+                        {/* <ModalFooter>
                                 <Button color="danger" variant="light" onPress={onClose}>Cancel</Button>
                                 <Button className="bg-[#06574C] text-white" type="submit" isLoading={isSaving}>
                                     {editingQuiz ? "Update Quiz" : "Save Quiz"}
                                 </Button>
-                            </ModalFooter>
-                        </>
-                    )}
-                </Form>
+                            </ModalFooter> */}
+                    </>
+                )}
+                {/* </Form> */}
             </ModalContent>
-        </Modal>
+        </Modal >
     );
 }
