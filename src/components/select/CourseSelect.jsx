@@ -15,16 +15,16 @@ import { Spinner } from "@heroui/react";
  * @param {Boolean} props.isDisabled
  * @param {Number} props.limit - API limit per request (default 20)
  */
-const CourseSelect = ({ 
-    isDisabled = false, 
-    initialValue, 
-    onChange, 
-    onSelect, 
-    label, 
-    placeholder = "Select a course...", 
-    status = 'all', 
+const CourseSelect = ({
+    isDisabled = false,
+    initialValue,
+    onChange,
+    onSelect,
+    label,
+    placeholder = "Select a course...",
+    status = 'all',
     type = 'all',
-    limit = 20 
+    limit = 20
 }) => {
     const [searchValue, setSearchValue] = useState("");
     const [selectedId, setSelectedId] = useState(initialValue || null);
@@ -33,18 +33,19 @@ const CourseSelect = ({
     const containerRef = useRef(null);
     const listRef = useRef(null);
 
-    const { data = { total: 0, courses: [] }, isFetching: isLoading, isError, error } = useGetAllCoursesForSelectQuery({ 
-        type, 
-        status, 
-        page: 1, 
-        limit, 
-        search: searchValue 
+    const { data = { total: 0, courses: [] }, isFetching: isLoading, isError, error } = useGetAllCoursesForSelectQuery({
+        type,
+        status,
+        page: 1,
+        limit,
+        search: searchValue,
+        initialValue
     });
 
     // Fetch initial course by ID directly
     const hasInitialValue = initialValue !== undefined && initialValue !== null && initialValue !== '';
-    const { data: initialCourseData } = useGetCourseByIdQuery(initialValue || '', { 
-        skip: !hasInitialValue || selectedCourse !== null 
+    const { data: initialCourseData } = useGetCourseByIdQuery(initialValue || '', {
+        skip: !hasInitialValue || selectedCourse !== null
     });
 
     // Set initial course from direct ID fetch

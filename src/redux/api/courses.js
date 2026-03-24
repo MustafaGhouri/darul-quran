@@ -32,11 +32,11 @@ export const courseApi = createApi({
             providesTags: ["course"],
         }),
         getAllCoursesForSelect: builder.query({
-            query: ({ page, limit, status, search, type = "live" }) => ({
+            query: ({ page, limit, status, search, type = "live", initialValue }) => ({
                 url: "/getAllCoursesForSelect",
                 method: "GET",
                 params: {
-                    page, limit, search, status, type,
+                    page, limit, search, status, type, initialValue
                 },
             }),
             providesTags: ["course"],
