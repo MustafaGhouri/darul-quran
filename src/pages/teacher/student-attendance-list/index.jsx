@@ -92,7 +92,7 @@ const StudentAttendanceList = () => {
           aria-label="Student Attendance Table"
           removeWrapper
           classNames={{
-            base: "w-full overflow-x-auto h-[calc(100vh-300px)] no-scrollbar",
+            base: "w-full overflow-x-auto h-[calc(100vh-400px)] no-scrollbar",
             th: "bg-[#FBF4EC] text-black font-bold py-4 px-6 text-sm uppercase tracking-wider",
             td: "py-4 px-6 border-b border-gray-50",
             tr: "hover:bg-gray-50/50 transition-colors",

@@ -103,10 +103,10 @@ const CourseDetails = () => {
   const handleEnroll = async () => {
     try {
       setEnrolling(true);
-
+      const finalToken = localStorage.getItem("token");
       const paymentRes = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/payment/create-checkout-session`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${finalToken}` },
         credentials: 'include',
         body: JSON.stringify({
           courseId: course.id,
