@@ -462,7 +462,7 @@ const Scheduling = () => {
             <TableColumn width={200}>Details</TableColumn>
             <TableColumn width={200}>Teacher</TableColumn>
             <TableColumn width={200}>Dates<small>(Latest 30)</small></TableColumn>
-            <TableColumn width={200}>Students</TableColumn>
+            <TableColumn width={200}>Student</TableColumn>
             <TableColumn width={200}>Time</TableColumn>
             <TableColumn width={200}>Schedule Type</TableColumn>
             <TableColumn width={200}>Class Type</TableColumn>
@@ -517,8 +517,23 @@ const Scheduling = () => {
                     </PopoverContent>
                   </Popover>
                 </TableCell>
-                <TableCell className="text-center">
-                  {item.specificStudents?.length > 0 ? item.specificStudents?.length : 'All'}
+                <TableCell>
+                  {item.students?.length > 0 ? (
+                    <div className="flex flex-col">
+                      {item.students.map((student, index) => (
+                        <div key={index} className="flex flex-col">
+                          <span className="font-semibold text-sm">
+                            {student.firstName} {student.lastName}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {student.email}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400 text-sm italic">All Students</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="text-gray-500 text-sm">{formatTime12Hour(item.startTime)} - {formatTime12Hour(item.endTime)}</div>
