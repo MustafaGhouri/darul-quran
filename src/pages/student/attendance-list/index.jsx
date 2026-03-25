@@ -147,15 +147,13 @@ const AttendanceList = () => {
             </Button>
           )}
         </div>
-        {isLoading ? (
-          <div className="flex justify-center p-10 w-full">
-            <Spinner color="success" size="lg" />
-          </div>
-        ) : (
+ 
           <Table
+
             aria-label="Student Attendance History Table"
             className="mt-6"
             removeWrapper
+            // selectionMode="multiple"
             classNames={{
               base: "w-full bg-white rounded-lg overflow-x-auto no-scrollbar shadow-md h-[calc(100vh-300px)]",
               th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
@@ -169,6 +167,9 @@ const AttendanceList = () => {
               <TableColumn>Actions</TableColumn>
             </TableHeader>
             <TableBody
+            isLoading={isLoading}
+            loadingState={isLoading ? "loading" : "idle"}
+            loadingContent={<Spinner color="success" size="lg" />}
               emptyContent={
                 <div className="flex flex-col items-center justify-center p-8 text-gray-500">
                   <p>No attendance history found.</p>
@@ -204,7 +205,7 @@ const AttendanceList = () => {
               })}
             </TableBody>
           </Table>
-        )}
+              
       </div>
          <div className="flex w-full justify-center mt-4 mb-4">
                   <Pagination

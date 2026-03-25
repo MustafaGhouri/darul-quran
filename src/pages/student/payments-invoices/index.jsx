@@ -332,7 +332,7 @@ const PaymentsInvoices = () => {
                           {item.courseName || "Course"}
                         </div>
                         <div className="text-xs text-gray-500 mt-0.5 max-w-[200px] truncate">
-                          {item.description || item.billingReason || "Payment"}
+                          {item.description || item?.billingReason?.replace(/_/g, " ") || "Payment"}
                         </div>
                       </div>
                     </TableCell>
