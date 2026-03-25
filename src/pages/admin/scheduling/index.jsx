@@ -526,18 +526,28 @@ const Scheduling = () => {
                 </TableCell>
                 <TableCell>
                   {item.students?.length > 0 ? (
-                    <div className="flex flex-col">
-                      {item.students.map((student, index) => (
-                        <div key={index} className="flex flex-col">
-                          <span className="font-semibold text-sm">
-                            {student.firstName} {student.lastName}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {student.email}
-                          </span>
+                    <Popover placement="bottom" showArrow={true}>
+                      <PopoverTrigger>
+                        <span className="text-[#06574C] text-sm font-semibold cursor-pointer underline hover:text-[#06574C]/80">
+                          {item.students.length} {item.students.length === 1 ? 'Student' : 'Students'}
+                        </span>
+                      </PopoverTrigger>
+                      <PopoverContent>
+                        <div className="flex flex-col gap-2 p-2 min-w-[200px]">
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Assigned Students</p>
+                          {item.students.map((student, index) => (
+                            <div key={index} className="flex flex-col border-b border-gray-100 last:border-0 pb-1 last:pb-0">
+                              <span className="font-semibold text-sm text-gray-900">
+                                {student.firstName} {student.lastName}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {student.email}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </PopoverContent>
+                    </Popover>
                   ) : (
                     <span
                       className="text-[#06574C] text-sm italic cursor-pointer underline hover:text-[#06574C]/80"
@@ -546,7 +556,7 @@ const Scheduling = () => {
                         onEnrolledUsersModalOpen();
                       }}
                     >
-                     For All Students
+                      For All Students
                     </span>
                   )}
                 </TableCell>
