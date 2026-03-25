@@ -462,6 +462,7 @@ const Scheduling = () => {
             <TableColumn width={200}>Details</TableColumn>
             <TableColumn width={200}>Teacher</TableColumn>
             <TableColumn width={200}>Dates<small>(Latest 30)</small></TableColumn>
+            <TableColumn width={200}>Students</TableColumn>
             <TableColumn width={200}>Time</TableColumn>
             <TableColumn width={200}>Schedule Type</TableColumn>
             <TableColumn width={200}>Class Type</TableColumn>
@@ -516,10 +517,13 @@ const Scheduling = () => {
                     </PopoverContent>
                   </Popover>
                 </TableCell>
+                <TableCell className="text-center">
+                  {item.specificStudents?.length > 0 ? item.specificStudents?.length : 'All'}
+                </TableCell>
                 <TableCell>
                   <div className="text-gray-500 text-sm">{formatTime12Hour(item.startTime)} - {formatTime12Hour(item.endTime)}</div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-center">
                   {item.specificStudents?.length > 0 ? 'One-on-one' : 'All'}
                 </TableCell>
                 <TableCell className="capitalize">
