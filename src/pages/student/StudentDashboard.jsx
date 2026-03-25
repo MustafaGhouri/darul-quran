@@ -38,7 +38,39 @@ const StudentDashboard = () => {
   const featured = dashboardData?.data?.announcements[0];
   const upcomingClasses = dashboardData?.data?.upcomingClasses || [];
   const announcements = dashboardData?.data?.announcements?.slice(1, 5) || [];
-
+  const handleJoinClass = async (schedule) => {
+    if (!user) {
+      errorMessage("Please login first");
+      return;
+    }
+    setIsMarking(schedule.id);
+    const finalToken = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/attendance/mark`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Authorization": `Bearer ${finalToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scheduleId: schedule.id,
+          studentId: user.id,
+          courseId: schedule.courseId,
+          date: schedule.date
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        window.open(data?.link, '_blank');
+        successMessage(data?.message || "Joined class! Attendance marked.");
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      console.error("Failed to mark attendance", error);
+      errorMessage(error.message);
+    } finally {
+      setIsMarking(null);
+    }
+  };
   if (dashboardError) {
     return <QueryError
       height="300px"
@@ -88,18 +120,18 @@ const StudentDashboard = () => {
           </div>
         </div>
       </div>
-      <div> 
-         {error &&
-            <QueryError
-              height="300px"
-              error={error}
-              onRetry={refetch}
-              showLogo={false}
-              isLoading={isFetching}
-            />
-          }
+      <div>
+        {error &&
+          <QueryError
+            height="300px"
+            error={error}
+            onRetry={refetch}
+            showLogo={false}
+            isLoading={isFetching}
+          />
+        }
         <div className="grid grid-cols-12 gap-3 py-4">
-        
+
           {isLoading ? (
             Array.from({ length: 3 }).map((_, index) => (
               <div
@@ -166,18 +198,18 @@ const StudentDashboard = () => {
                       <div className="flex gap-1 items-center ">
                         {<FaRegAddressCard size={16} />}{" "}
                         {item.teacherName || "Instructor"}
-                      </div> 
+                      </div>
                       <div className="flex gap-1 items-center ">
                         <span className="text-xs font-semibold text-success">Enrolled At :</span>
                         {<CiCalendar size={16} />}{" "}
-                        {dateFormatter(item.enrolledAt , true)}
+                        {dateFormatter(item.enrolledAt, true)}
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-sm text-black">
                       <div className="flex gap-1 items-center ">
                         <span className="text-xs font-semibold text-success">Expires At :</span>
                         {<CiCalendar size={16} />}{" "}
-                        {item?.cancelledAt || item?.cancelledat ? dateFormatter(item?.cancelledAt || item?.cancelledat , true) : "Live Time"}
+                        {item?.cancelledAt || item?.cancelledat ? dateFormatter(item?.cancelledAt || item?.cancelledat, true) : "Live Time"}
                       </div>
                     </div>
                     <div>
@@ -308,14 +340,6 @@ const StudentDashboard = () => {
                       const live = isClassLive(item);
                       const expired = isClassExpired(item);
 
-                      // Get the next upcoming class date
-                      const allDates = item.schedule_dates || item.scheduleDates || [];
-                      const todayStr = new Date().toISOString().split('T')[0];
-                      const upcomingDates = allDates.filter(d => d >= todayStr);
-                      const nextClassDate = upcomingDates.length > 0 ? upcomingDates.sort()[0] : (allDates[0] || item.date);
-                      const dateStr = nextClassDate?.includes('T') ? nextClassDate.split('T')[0] : nextClassDate;
-                      const hoursUntil = getHoursUntilClass(dateStr, item.start_time || item.startTime);
-
                       if (expired) {
                         return (
                           <Button
@@ -332,30 +356,19 @@ const StudentDashboard = () => {
                           <Button
                             startContent={<Video size={20} />}
                             size="sm"
-                            className="bg-green-600 w-32 text-white rounded-md animate-pulse"
-                            as={Link}
-                            to={item.meeting_link}
+                            color="success"
+                            onPress={handleJoinClass}
+                            // as={Link}
+                            // to={item.meeting_link}
                             target="_blank"
                           >
                             Start Class
                           </Button>
                         );
                       } else if (item.meeting_link) {
-                        if (hoursUntil !== null && hoursUntil < 3 && hoursUntil > 0) {
-                          return (
-                            <Button
-                              startContent={<Clock size={20} />}
-                              size="sm"
-                              className="bg-[#95C4BE33] text-[#06574C] w-32 rounded-md"
-                            >
-                              Starts in {Math.floor(hoursUntil)}h
-                            </Button>
-                          );
-                        }
-                        
                         return (
                           <Button
-                            startContent={<Lock size={20} />}
+                            startContent={<Clock size={20} />}
                             size="sm"
                             className="bg-[#06574C] w-32 text-white rounded-md"
                             isDisabled
@@ -381,7 +394,7 @@ const StudentDashboard = () => {
             )
           })}
         </div>
-      </div>
+      </div >
       <div className=" bg-white rounded-lg mb-3 ">
         <h1 className="p-3 text-xl font-medium text-[#333333]">
           Recent Announcements
@@ -445,7 +458,7 @@ const StudentDashboard = () => {
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 export default StudentDashboard;
