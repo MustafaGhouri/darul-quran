@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useGetAllUserForSelectQuery } from "../../redux/api/user";
 import { debounce } from "../../lib/utils";
 import { X, Search, ChevronDown, Users } from "lucide-react";
-import { Spinner } from "@heroui/react";
+import { Avatar, Spinner } from "@heroui/react";
 
 /**
  * @param {Object} props
@@ -185,9 +185,7 @@ const UserSelect = ({ onChange, courseId, initialValues = [], label, placeholder
                                         onClick={() => toggleUser(user)}
                                         className="px-3 py-2.5 hover:bg-green-50 cursor-pointer transition-colors duration-150 flex items-center gap-3 group"
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-linear-to-br from-green-400 to-[#406c65] flex items-center justify-center text-white text-sm font-medium shadow-sm">
-                                            {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
-                                        </div>
+                                        <Avatar className="w-10 h-10 rounded-full" src={user.avatar} />
 
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-gray-900 truncate">

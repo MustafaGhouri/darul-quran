@@ -166,7 +166,7 @@ const AdminDashboard = () => {
             <div className="sm:hidden rounded-2xl overflow-hidden">
               <div className="flex justify-between my-4 items-center">
                 <h2 className="text-base sm:text-lg font-semibold text-gray-900">
-                  Upcoming Live Classes
+                  Today Live Classes
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">View all</p>
               </div>
@@ -192,7 +192,7 @@ const AdminDashboard = () => {
             <div className="max-sm:hidden overflow-hidden">
               <div className="flex items-center justify-between py-4 ">
                 <h2 className="text-xl font-medium text-gray-900">
-                  Upcoming Live Classes
+                  Today Live Classes
                 </h2>
                 <Button
                   startContent={<PlusIcon />}

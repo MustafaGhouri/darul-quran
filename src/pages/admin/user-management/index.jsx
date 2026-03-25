@@ -56,7 +56,7 @@ const UserManagement = () => {
     { key: "Date", label: "Join Date" },
     { key: "Status", label: "Status" },
     { key: "Zoom", label: "Zoom" },
-    { key: "Action", label: "Action" },
+    { key: "Action", label: "Action", style: "text-center" },
   ];
 
   const limits = [
@@ -373,7 +373,7 @@ const UserManagement = () => {
               transition={{ duration: 0.6, ease: "easeInOut" }}
             >
               <Table
-                align="center"
+                align="start"
                 isHeaderSticky
                 selectionMode={data?.total > 0 ? "multiple" : undefined}
                 selectedKeys={selectedUsers}
@@ -388,9 +388,9 @@ const UserManagement = () => {
                   tr: "border-b border-default-200 ",
                 }}
               >
-                <TableHeader>
+                <TableHeader >
                   {header.map((item) => (
-                    <TableColumn key={item.key}>{item.label}</TableColumn>
+                    <TableColumn className={item.style} key={item.key}>{item.label}</TableColumn>
                   ))}
                 </TableHeader>
 
@@ -406,8 +406,8 @@ const UserManagement = () => {
                       <TableCell className="px-4">
                         <User
                           avatarProps={{
-                            src: classItem.avatar || `https://ui-avatars.com/api/?name=${classItem.firstName || "U"}&background=random`,
-                            size: "sm",
+                            src: classItem.avatar,
+                            size: "md",
                             className: "shrink-0"
                           }}
                           name={`${classItem.firstName || ""} ${classItem.lastName || ""}`.trim() || "User"}

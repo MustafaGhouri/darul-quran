@@ -117,7 +117,7 @@ const ProfilePage = () => {
       ? typeof avatarFiles[0] === "string"
         ? avatarFiles[0]
         : URL.createObjectURL(avatarFiles[0].file)
-      : user?.avatar || "https://ui-avatars.com/api/?name=" + (user?.firstName || "User") + "&background=random";
+      : user?.avatar ||  "";
 
   const flatInputClassNames = {
     inputWrapper: "bg-[#F3F7F6] hover:bg-[#EBF1EF] shadow-none border-none",
@@ -249,7 +249,7 @@ const ProfilePage = () => {
       </Form>
 
       {/* Reset Password Section */}
-      <h2 className="text-lg font-semibold text-[#2A5C54] mb-2 mt-8">Reset Password</h2>
+      <h2 className="text-lg font-semibold text-[#2A5C54] mb-2">Reset Password</h2>
       <hr className="border-gray-200 mb-8" />
       
       <Form onSubmit={handleChangePassword} className="w-full flex flex-col gap-6">

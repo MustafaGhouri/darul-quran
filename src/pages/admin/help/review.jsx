@@ -150,9 +150,11 @@ const Review = () => {
                 <div className="flex justify-between items-start gap-3">
                   <div className="flex gap-3 flex-1">
                     <Avatar
+                      className="shadow-lg"
                       name={item.username || "User"}
                       size="lg"
                       color="success"
+                      src={item.avatar}
                     />
                     <div className="flex flex-col gap-1">
                       <div className="flex max-sm:flex-wrap items-center gap-2 flex-wrap">

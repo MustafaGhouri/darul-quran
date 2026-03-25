@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useGetAllTeachersQuery } from "../../redux/api/user";
 import { debounce } from "../../lib/utils";
 import { X, Search, ChevronDown, Users } from "lucide-react";
-import { Spinner } from "@heroui/react";
+import { Avatar, Spinner } from "@heroui/react";
 
 /**
  * @param {Object} props
@@ -217,8 +217,9 @@ const TeacherSelect = ({
                                         onClick={() => toggleTeacher(teacher)}
                                         className={`px-3 py-2.5 hover:bg-green-50 cursor-pointer transition-colors duration-150 flex items-center gap-3 group ${selectedIds.includes(Number(teacher.id)) ? 'bg-green-50' : ''}`}
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-linear-to-br from-green-400 to-[#406c65] flex items-center justify-center text-white text-sm font-medium shadow-sm">
-                                            {teacher.firstName?.charAt(0)}{teacher.lastName?.charAt(0)}
+                                        <div className="w-10 h-10 rounded-full bg-linear-to-br from-green-400 to-[#406c65] flex items-center justify-center text-white text-sm font-medium shadow-sm">
+                                            {/* {teacher.firstName?.charAt(0)}{teacher.lastName?.charAt(0)} */}
+                                            <Avatar className="w-10 h-10 rounded-full" src={teacher.avatar} />
                                         </div>
 
                                         <div className="flex-1 min-w-0">
