@@ -197,7 +197,7 @@ const StudentClassSheduling = () => {
             const data = await res.json();
             if (res.ok) {
                 window.open(data?.link, '_blank');
-                successMessage(data?.message||"Joined class! Attendance marked.");
+                // successMessage(data?.message||"Joined class! Attendance marked.");
             } else {
                 throw new Error(data.message);
             }

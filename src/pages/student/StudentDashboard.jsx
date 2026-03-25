@@ -14,7 +14,7 @@ import { Spinner } from "@heroui/react";
 import VideoPlayer from "../../components/dashboard-components/Video";
 import { useGetEnrolledCoursesQuery } from "../../redux/api/courses";
 import { useGetAllAnnouncementQuery } from "../../redux/api/announcements";
-import { errorMessage } from "../../lib/toast.config";
+import { errorMessage, successMessage } from "../../lib/toast.config";
 import { dateFormatter } from "../../lib/utils";
 import QueryError from "../../components/QueryError";
 import { formatTime12Hour, isClassExpired, isClassLive, getHoursUntilClass, getStatusText } from "../../utils/scheduleHelpers";
@@ -24,6 +24,7 @@ const StudentDashboard = () => {
   const { user } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
+  const [isMarking, setIsMarking] = useState(false);
   const { data, error, isLoading, isFetching, refetch } = useGetEnrolledCoursesQuery({
     page,
   });
@@ -60,7 +61,7 @@ const StudentDashboard = () => {
       const data = await res.json();
       if (res.ok) {
         window.open(data?.link, '_blank');
-        successMessage(data?.message || "Joined class! Attendance marked.");
+        // successMessage(data?.message || "Joined class! Attendance marked.");
       } else {
         throw new Error(data.message);
       }
@@ -357,7 +358,8 @@ const StudentDashboard = () => {
                             startContent={<Video size={20} />}
                             size="sm"
                             color="success"
-                            onPress={handleJoinClass}
+                            onPress={() => handleJoinClass(item)}
+                            isLoading={isMarking}
                             // as={Link}
                             // to={item.meeting_link}
                             target="_blank"
