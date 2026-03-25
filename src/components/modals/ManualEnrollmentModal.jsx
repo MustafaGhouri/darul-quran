@@ -54,6 +54,9 @@ const ManualEnrollmentModal = ({ isOpen, onOpenChange, unenrolledStudents, cours
                             <p className="mt-4 text-xs font-semibold text-amber-600">
                                 Manual enrollment will be completed at $0 cost.
                             </p>
+                            <p className="mt-4 text-xs font-semibold text-gray-500">
+                                From now on this student can access course and all schedules of this course. 
+                            </p>
                         </ModalBody>
                         <ModalFooter>
                             <Button color="danger" variant="flat" onPress={onClose}>

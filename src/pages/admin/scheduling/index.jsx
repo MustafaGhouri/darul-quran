@@ -249,7 +249,7 @@ const Scheduling = () => {
     }
 
     if (formData.sessionMode === 'one-on-one') {
-      const unenrolled = formData.selectedUsers?.filter(u => !u.subscriptionId);
+      const unenrolled = formData.selectedUsers?.filter(u => !u.enrollmentId);
       if (unenrolled?.length > 0) {
         setUnenrolledStudents(unenrolled);
         onEnrollModalOpen();
