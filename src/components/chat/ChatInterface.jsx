@@ -387,7 +387,7 @@ export default function ChatInterface({
 
   return (
     <div
-      className={`flex flex-col duration-300 transition-transform ${isOpen ? "max-md:translate-x-0" : "max-md:translate-x-[120%]"} max-md:fixed md:flex-1 h-screen bg-[#d2ebe5]`}
+      className={`flex flex-col duration-300 transition-transform ${isOpen ? "max-md:translate-x-0" : "max-md:translate-x-[120%]"} max-md:fixed md:flex-1 w-full h-screen bg-[#d2ebe5]`}
     >
       {/* Header */}
       <div className="border-b border-gray-300 px-4 py-3 flex items-center justify-between shrink-0">

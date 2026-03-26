@@ -96,7 +96,7 @@ export default function AdminLayout() {
                     <button
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                         type="button"
-                        className="absolute border-gray-400 border-r border-t border-b z-30 top-0 cursor-pointer inline-flex items-center justify-center p-1 bg-white rounded-full h-10 w-10 mt-2 ml-2 shadow-lg"
+                        className="absolute border-gray-400 border-r border-t border-b z-30 max-md:ml-0  max-md:rounded-l-lg  max-md:h-15 max-md:top-[40px] top-0 cursor-pointer inline-flex items-center justify-center p-1 bg-white rounded-full h-10 w-10 mt-2 ml-2 shadow-lg"
                         aria-label="Sidebar Button"
                         title={isSidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}
                     >
