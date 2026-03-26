@@ -214,8 +214,8 @@ const CourseBuilder = () => {
     enroll_number: "",
     status: "draft", // Default
     videoDuration: "",
-    duration: "",
-    interval: "",
+    duration: null,
+    interval: null,
     is_free: false, // Free/Paid toggle
     video_count: 0, // Number of videos
   });
