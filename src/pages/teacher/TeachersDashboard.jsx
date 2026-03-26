@@ -28,6 +28,7 @@ import {
   UserStar,
   Video,
   Check,
+  Lock,
 } from "lucide-react";
 import OverviewCards from "../../components/dashboard-components/OverviewCards";
 import {

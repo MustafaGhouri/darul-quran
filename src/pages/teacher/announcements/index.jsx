@@ -347,8 +347,7 @@ const Announcements = () => {
                         placeholder="Select Delivery"
                       >
                         <SelectItem key={"Email"}>Email</SelectItem>
-                        <SelectItem key={"Notification"}>Notification</SelectItem>
-                        <SelectItem key={"Both"}>Both</SelectItem>
+                        <SelectItem key={"In-App"}>In-App</SelectItem>
                       </Select>
                     </div>
                     <div className="flex items-center gap-2">
