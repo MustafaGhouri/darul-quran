@@ -73,7 +73,7 @@ const AttendanceList = () => {
     let isLate = false;
     let isEarly = false;
 
-    if (item.status === "Attended") {
+    if (item.status === "present") {
       statusColor = "success";
 
       if (item.joinedAt && item.startTime) {
