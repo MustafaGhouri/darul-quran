@@ -488,7 +488,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/help/faqs"
+              path="/admin/faqs"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <Faqs />

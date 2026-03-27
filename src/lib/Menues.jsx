@@ -54,7 +54,7 @@ export const adminMenu = [
             { name: 'Message Center', link: '/admin/help/messages', value: 'messages' },
             { name: 'Teacher & Student Chat', link: '/admin/help/chat', value: 'chat' },
             { name: 'Reviews', link: '/admin/help/reviews', value: 'reviews' },
-            { name: 'FAQs', link: '/admin/help/faqs', value: 'faqs' }
+            { name: 'FAQs', link: '/admin/faqs', value: 'faqs' }
         ]
     }
 ];
