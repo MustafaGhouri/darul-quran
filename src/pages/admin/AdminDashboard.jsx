@@ -125,7 +125,7 @@ const AdminDashboard = () => {
           pagination={{
             clickable: true,
           }}
-          navigation={false}
+          navigation={true}
           modules={[Autoplay, Pagination, Navigation]}
           className="mySwiper rounded-lg"
         >
@@ -147,6 +147,9 @@ const AdminDashboard = () => {
                       </h1>
                       <p className="text-white text-lg sm:text-xl font-medium overflow-hidden line-clamp-3 max-w-2xl drop-shadow-sm">
                         {item?.description}
+                      </p>
+                      <p className="text-white text-sm font-medium overflow-hidden capitalize line-clamp-3 max-w-2xl drop-shadow-sm">
+                        Created By : {item?.createdBy}
                       </p>
                       <div className="flex items-center gap-4 mt-6">
                         <Button

@@ -100,7 +100,7 @@ const StudentDashboard = () => {
           pagination={{
             clickable: true,
           }}
-          navigation={false}
+          navigation={true}
           modules={[Autoplay, SwiperPagination, Navigation]}
           className="mySwiper rounded-lg"
         >
@@ -110,8 +110,8 @@ const StudentDashboard = () => {
                 <div
                   className="space-y-4 p-4 w-full flex flex-col justify-center bg-center bg-no-repeat bg-cover"
                   style={{
-                    backgroundImage: item?.announcement_file
-                      ? `url('${item.announcement_file}')`
+                    backgroundImage: item?.announcementFile
+                      ? `url('${item.announcementFile}')`
                       : `url('/images/banner.png')`,
                   }}
                 >
@@ -122,6 +122,9 @@ const StudentDashboard = () => {
                       </h1>
                       <p className="text-white text-lg sm:text-xl font-medium overflow-hidden line-clamp-3 max-w-2xl drop-shadow-sm">
                         {item?.description}
+                      </p>
+                      <p className="text-white text-sm font-medium overflow-hidden capitalize line-clamp-3 max-w-2xl drop-shadow-sm">
+                        Created By : {item?.createdBy}
                       </p>
                       <Button
                         as={Link}
@@ -464,8 +467,14 @@ const StudentDashboard = () => {
               >
                 <div className="flex flex-col md:flex-row gap-4 md:justify-between p-4 md:items-start">
                   <div className="flex flex-col md:flex-row gap-3 md:items-center justify-center">
-                    <div className="h-20 shrink-0 w-20 rounded-full shadow-xl flex flex-col items-center justify-center bg-white">
-                      {item.created_by === "teacher" ||
+                    <div className="h-20 shrink-0 w-20 rounded-full shadow-lg flex flex-col items-center justify-center bg-white overflow-hidden border-4 border-white">
+                      {item.announcementFile || item.announcement_file ? (
+                        <img
+                          src={item.announcementFile || item.announcement_file}
+                          alt="Banner"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : item.created_by === "teacher" ||
                         item.description?.toLowerCase()?.includes("schedule") ? (
                         <CiCalendar color="#D28E3D" size={30} />
                       ) : (
@@ -491,8 +500,11 @@ const StudentDashboard = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="font-medium text-sm text-[#666666]">
-                      {item.sender_name || "Admin"}
+                    <p className="font-medium text-sm text-[#666666] capitalize">
+                      {item.createdBy}
+                    </p>
+                    <p className="font-medium text-sm text-[#666666] capitalize">
+                      {dateFormatter(item.createdAt)}
                     </p>
                   </div>
                 </div>

@@ -47,12 +47,18 @@ const StudentAnnouncements = () => {
               >
                 <CardBody className="p-5">
                   <div className="flex gap-4 md:gap-6">
-                    <div className="hidden sm:flex h-12 w-12 shrink-0 justify-center items-center bg-[#FBF4EC] rounded-full shadow-inner">
-                      {item.createdBy === "teacher" ||
-                      item.description?.toLowerCase()?.includes("schedule") ? (
-                        <CiCalendar color="#D28E3D" size={24} />
+                    <div className="hidden sm:flex h-16 w-16 shrink-0 justify-center items-center bg-[#FBF4EC] rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                      {item.announcementFile || item.announcement_file ? (
+                        <img
+                          src={item.announcementFile || item.announcement_file}
+                          alt="Banner"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : item.createdBy === "teacher" ||
+                        item.description?.toLowerCase()?.includes("schedule") ? (
+                        <CiCalendar color="#D28E3D" size={28} />
                       ) : (
-                        <GrAnnounce color="#06574C" size={24} />
+                        <GrAnnounce color="#06574C" size={28} />
                       )}
                     </div>
                     

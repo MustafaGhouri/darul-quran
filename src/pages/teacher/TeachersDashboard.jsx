@@ -223,6 +223,9 @@ const TeachersDashboard = () => {
                       <p className="text-white text-lg sm:text-xl font-medium overflow-hidden line-clamp-3 max-w-2xl drop-shadow-sm">
                         {item?.description}
                       </p>
+                      <p className="text-white text-sm font-medium overflow-hidden capitalize line-clamp-3 max-w-2xl drop-shadow-sm">
+                        Created By : {item?.createdBy}
+                      </p>
                       <Button
                         as={Link}
                         to={`/teacher/announcements`}
@@ -659,8 +662,17 @@ const TeachersDashboard = () => {
                           className="p-4 bg-white rounded-md my-2 group hover:bg-[#FBF4EC] border-[#D28E3D] border-1 m-3 cursor-pointer"
                         >
                           <div className="flex gap-3 items-center">
-                            <div className="h-10 w-10 flex shrink-0 justify-center items-center group-hover:bg-white bg-[#FBF4EC] rounded-full shadow-xl">
-                              {item.createdBy === "teacher" || item.description?.toLowerCase()?.includes("schedule") ? (
+                            <div className="h-10 w-10 flex shrink-0 justify-center items-center group-hover:bg-white bg-[#FBF4EC] rounded-full shadow-lg overflow-hidden border-2 border-white">
+                              {item.announcementFile ? (
+                                <img
+                                  src={item.announcementFile}
+                                  alt="Banner"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : item.createdBy === "teacher" ||
+                                item.description
+                                  ?.toLowerCase()
+                                  ?.includes("schedule") ? (
                                 <CiCalendar color="#D28E3D" size={22} />
                               ) : (
                                 <GrAnnounce color="#06574C" size={22} />

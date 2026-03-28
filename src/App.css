@@ -1,52 +1,51 @@
-@import url('https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&display=swap");
 @import "tailwindcss";
 @plugin "./components/hero.js";
 @source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
 @config "../tailwind.config.js";
 
-
 @layer utilities {
-    .custom-scrollbar {
-        /* Firefox support */
-        scrollbar-width: auto;
-        scrollbar-color: #1a5850 #f1f1f1;
-    }
+  .custom-scrollbar {
+    /* Firefox support */
+    scrollbar-width: auto;
+    scrollbar-color: #1a5850 #f1f1f1;
+  }
 
-    /* Chrome, Edge, and Safari support */
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 8px;
-    }
+  /* Chrome, Edge, and Safari support */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
 
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
 
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background-color: #1a5850;
-        border-radius: 10px;
-        border: 2px solid #f1f1f1;
-        /* Creates a padding effect */
-    }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #1a5850;
+    border-radius: 10px;
+    border: 2px solid #f1f1f1;
+    /* Creates a padding effect */
+  }
 }
 
 body {
-    font-family: "Karla", sans-serif;
+  font-family: "Karla", sans-serif;
 }
 
 .no-scrollbar {
-    -ms-overflow-style: none;
-    /* IE and Edge */
-    scrollbar-width: none;
-    /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .ut-button {
-    pointer-events: auto !important;
+  pointer-events: auto !important;
 }
 
 .ut-dropzone {
-    pointer-events: auto !important;
+  pointer-events: auto !important;
 }
 
 /* ============================================
@@ -55,192 +54,244 @@ body {
 
 /* Calendar Container */
 .fc {
-    font-size: 0.875rem;
+  font-size: 0.875rem;
 }
 
 /* Header Styling */
 .fc .fc-toolbar-title {
-    font-size: 1.5rem !important;
-    font-weight: 700;
-    color: #06574C;
+  font-size: 1.5rem !important;
+  font-weight: 700;
+  color: #06574c;
 }
 
 .fc .fc-button {
-    background-color: #06574C !important;
-    border-color: #06574C !important;
-    padding: 0.4rem 0.8rem !important;
-    font-size: 0.875rem !important;
+  background-color: #06574c !important;
+  border-color: #06574c !important;
+  padding: 0.4rem 0.8rem !important;
+  font-size: 0.875rem !important;
 }
 
 .fc .fc-button:hover {
-    background-color: #044d43 !important;
-    border-color: #044d43 !important;
+  background-color: #044d43 !important;
+  border-color: #044d43 !important;
 }
 
 .fc .fc-button-primary:disabled {
-    background-color: #9ca3af !important;
-    border-color: #9ca3af !important;
+  background-color: #9ca3af !important;
+  border-color: #9ca3af !important;
 }
 
 /* Day Header (Sun, Mon, etc.) */
 .fc .fc-col-header-cell {
-    padding: 0.5rem 0.25rem;
-    background-color: #f9fafb;
-    border-color: #e5e7eb !important;
-    font-weight: 600;
-    color: #374151;
-    font-size: 0.8rem;
-    text-transform: uppercase;
+  padding: 0.5rem 0.25rem;
+  background-color: #f9fafb;
+  border-color: #e5e7eb !important;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.8rem;
+  text-transform: uppercase;
 }
 
 /* Compact Day Cells - Reduced Height */
 .fc-daygrid-day {
-    height: 100px !important;
-    min-height: 100px !important;
-    max-height: 100px !important;
-    overflow: hidden;
-    border-color: #e5e7eb !important;
-    transition: background-color 0.2s ease;
+  height: 100px !important;
+  min-height: 100px !important;
+  max-height: 100px !important;
+  overflow: hidden;
+  border-color: #e5e7eb !important;
+  transition: background-color 0.2s ease;
 }
 
 .fc-daygrid-day:hover {
-    background-color: #f9fafb;
+  background-color: #f9fafb;
 }
 
 .fc-daygrid-day-frame {
-    height: 100% !important;
-    display: flex;
-    flex-direction: column;
-    padding: 2px;
+  height: 100% !important;
+  display: flex;
+  flex-direction: column;
+  padding: 2px;
 }
 
 /* Day Number */
 .fc-daygrid-day-top {
-    flex-shrink: 0;
-    padding: 4px 6px;
+  flex-shrink: 0;
+  padding: 4px 6px;
 }
 
 .fc-daygrid-day-number {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #374151;
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
 .fc-daygrid-day:hover .fc-daygrid-day-number {
-    background-color: #06574C;
-    color: white;
+  background-color: #06574c;
+  color: white;
 }
 
 /* Today Highlight */
 .fc .fc-day-today {
-    background-color: #f0fdf4 !important;
+  background-color: #f0fdf4 !important;
 }
 
 .fc .fc-day-today .fc-daygrid-day-number {
-    background-color: #06574C;
-    color: white;
-    font-weight: 700;
+  background-color: #06574c;
+  color: white;
+  font-weight: 700;
 }
 
 /* Events Container - Compact & Scrollable */
 .fc-daygrid-day-events {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    max-height: 70px;
-    padding: 0 2px;
-    scrollbar-width: thin;
-    scrollbar-color: #06574C #f3f4f6;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 70px;
+  padding: 0 2px;
+  scrollbar-width: thin;
+  scrollbar-color: #06574c #f3f4f6;
 }
 
 .fc-daygrid-day-events::-webkit-scrollbar {
-    width: 3px;
+  width: 3px;
 }
 
 .fc-daygrid-day-events::-webkit-scrollbar-track {
-    background: #f3f4f6;
-    border-radius: 2px;
+  background: #f3f4f6;
+  border-radius: 2px;
 }
 
 .fc-daygrid-day-events::-webkit-scrollbar-thumb {
-    background-color: #06574C;
-    border-radius: 2px;
+  background-color: #06574c;
+  border-radius: 2px;
 }
 
 /* Event Styling - Modern & Clean */
 .fc-daygrid-event {
-    margin-bottom: 2px !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 0.7rem !important;
-    padding: 3px 6px !important;
-    border-radius: 4px !important;
-    border: none !important;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-weight: 500;
+  margin-bottom: 2px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.7rem !important;
+  padding: 3px 6px !important;
+  border-radius: 4px !important;
+  border: none !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .fc-daygrid-event:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0.9;
 }
 
 .fc-event-time {
-    font-weight: 600;
-    margin-right: 4px;
+  font-weight: 600;
+  margin-right: 4px;
 }
 
 .fc-event-title {
-    font-weight: 500;
+  font-weight: 500;
 }
 
 /* More Events Link */
 .fc-daygrid-more-link {
-    font-size: 0.7rem;
-    color: #06574C;
-    font-weight: 600;
-    padding: 2px 4px;
-    margin: 2px;
-    border-radius: 3px;
-    background-color: #f0fdf4;
+  font-size: 0.7rem;
+  color: #06574c;
+  font-weight: 600;
+  padding: 2px 4px;
+  margin: 2px;
+  border-radius: 3px;
+  background-color: #f0fdf4;
 }
 
 .fc-daygrid-more-link:hover {
-    background-color: #dcfce7;
-    text-decoration: none;
+  background-color: #dcfce7;
+  text-decoration: none;
 }
 
 /* Other Month Days */
 .fc .fc-day-other .fc-daygrid-day-number {
-    color: #000000;
+  color: #000000;
 }
 
 /* Remove default borders for cleaner look */
 .fc-theme-standard td,
 .fc-theme-standard th {
-    border-color: #e5e7eb !important;
+  border-color: #e5e7eb !important;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .fc-daygrid-day {
-        height: 80px !important;
-        min-height: 80px !important;
-        max-height: 80px !important;
-    }
+  .fc-daygrid-day {
+    height: 80px !important;
+    min-height: 80px !important;
+    max-height: 80px !important;
+  }
 
-    .fc-daygrid-day-events {
-        max-height: 50px;
-    }
+  .fc-daygrid-day-events {
+    max-height: 50px;
+  }
 
-    .fc-daygrid-event {
-        font-size: 0.65rem !important;
-        padding: 2px 4px !important;
+  .fc-daygrid-event {
+    font-size: 0.65rem !important;
+    padding: 2px 4px !important;
+  }
+}
+
+/* ============================================
+   Swiper Custom Navigation Arrows (Glassmorphism)
+   ============================================ */
+
+.mySwiper .swiper-button-prev,
+.mySwiper .swiper-button-next {
+    width: 22px;
+    height: 22px;
+    padding: 4px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    color: #06574C;
+    transition: all 0.3s ease;
+    top: 92%; /* Positioned near the bottom row */
+    transform: translateY(-50%);
+    z-index: 20;
+}
+
+.mySwiper .swiper-button-prev:hover,
+.mySwiper .swiper-button-next:hover {
+    background: rgba(255, 255, 255, 0.60);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-50%) scale(1.15);
+}
+
+.mySwiper .swiper-button-prev::after,
+.mySwiper .swiper-button-next::after {
+    font-size: 10px;
+    font-weight: 900;
+    color: #06574C;
+}
+
+.mySwiper .swiper-button-prev {
+    left: 8px;
+}
+
+.mySwiper .swiper-button-next {
+    right: 8px;
+}
+
+/* Hide on very small screens */
+@media (max-width: 480px) {
+    .mySwiper .swiper-button-prev,
+    .mySwiper .swiper-button-next {
+        display: none;
     }
 }

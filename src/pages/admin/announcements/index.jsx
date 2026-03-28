@@ -387,13 +387,28 @@ const Announcements = () => {
             {announcements.map((announcement) => (
               <TableRow key={announcement.id}>
                 <TableCell>
-                  <div className="max-w-[300px]">
-                    <p className="font-medium text-gray-900 line-clamp-1">
-                      {announcement.title}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 wrap-break-word">
-                      {announcement.description}
-                    </p>
+                  <div className="flex items-center gap-3 max-w-[400px]">
+                    {announcement.announcementFile ? (
+                      <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-gray-100 shadow-sm">
+                        <img
+                          src={announcement.announcementFile}
+                          alt="Banner"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center shrink-0 border border-dashed border-gray-200">
+                        <span className="text-xl opacity-30">🖼️</span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 line-clamp-1">
+                        {announcement.title}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 break-all">
+                        {announcement.description}
+                      </p>
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell>
