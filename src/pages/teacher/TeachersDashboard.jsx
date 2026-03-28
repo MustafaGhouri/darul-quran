@@ -53,6 +53,11 @@ import QueryError from "../../components/QueryError";
 import CourseSelect from "../../components/select/CourseSelect";
 import { dateFormatter } from "../../lib/utils";
 import QuizModal from "../../components/dashboard-components/forms/QuizModal";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
 
 const TeachersDashboard = () => {
   const { user: currentUser } = useSelector((state) => state.user);
@@ -96,9 +101,9 @@ const TeachersDashboard = () => {
   };
 
   const [createAnnouncement, { isLoading: isCreatingAnnouncement }] = useCreateAnnouncementMutation();
-  const { data, isLoading: loading, error, refetch } = useGetTeacherDashboardQuery();
+  const { data, isLoading: loading, error, refetch: dashboardRefetch } = useGetTeacherDashboardQuery();
 
-  const featured = data?.data?.featured;
+  const featuredAnnouncements = data?.data?.featured || [];
   const upcomingClasses = data?.data?.upcomingClasses;
   const analytics = data?.data?.analytics;
   const activeCourses = data?.data?.activeCourses;
@@ -177,44 +182,85 @@ const TeachersDashboard = () => {
     return <QueryError
       height="300px"
       error={error}
-      onRetry={refetch}
+      onRetry={dashboardRefetch}
       showLogo={false}
     />
   }
   return (
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-scrseen px-2 sm:px-3">
-      {/* banner */}
-      <div className="space-y-4 mt-3 w-full bg-[url('/images/banner.png')] p-4 rounded-lg bg-center bg-no-repeat bg-cover">
-        <div className="flex max-sm:flex-wrap gap-3 justify-between items-start">
-          <div>
-            {featured && featured.length > 0 ? (
-              <div>
-                <h1 className="text-xl sm:text-3xl text-white font-semibold capitalize">
-                  {featured[0]?.title}
-                </h1>
-                <p className="text-white text-lg sm:text-xl overflow-hidden line-clamp-2">
-                  {featured[0]?.description}
-                </p>
+      {/* banner slider */}
+      <div className="mt-3 w-full rounded-lg overflow-hidden">
+        <Swiper
+          spaceBetween={30}
+          centeredSlides={true}
+          autoplay={{
+            delay: 4500,
+            disableOnInteraction: false,
+          }}
+          pagination={{
+            clickable: true,
+          }}
+          navigation={true}
+          modules={[Autoplay, Pagination, Navigation]}
+          className="mySwiper rounded-lg"
+        >
+          {featuredAnnouncements.length > 0 ? (
+            featuredAnnouncements.map((item, index) => (
+              <SwiperSlide key={item.id || index}>
+                <div
+                  className="space-y-4 p-4 flex flex-col justify-center bg-center bg-no-repeat bg-cover"
+                  style={{
+                    backgroundImage: item?.announcementFile
+                      ? `url('${item.announcementFile}')`
+                      : `url('/images/banner.png')`,
+                  }}
+                >
+                  <div className="flex max-sm:flex-wrap gap-3 justify-between items-start">
+                    <div>
+                      <h1 className="text-xl sm:text-4xl text-white font-bold capitalize mb-2 drop-shadow-md">
+                        {item?.title}
+                      </h1>
+                      <p className="text-white text-lg sm:text-xl font-medium overflow-hidden line-clamp-3 max-w-2xl drop-shadow-sm">
+                        {item?.description}
+                      </p>
+                      <Button
+                        as={Link}
+                        to={`/teacher/announcements`}
+                        size="md"
+                        className="bg-[#06574C] text-white rounded-md mt-6 font-semibold hover:bg-[#086d5f] transition-all"
+                      >
+                        View Announcements
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))
+          ) : (
+            <SwiperSlide>
+              <div className="space-y-4 p-4 bg-white/50 flex flex-col justify-center">
+                <div className="flex max-sm:flex-wrap gap-3 justify-between items-start">
+                  <div>
+                    <h1 className="text-xl sm:text-4xl text-white font-bold capitalize mb-2 drop-shadow-md">
+                      Welcome to Darul Quran
+                    </h1>
+                    <p className="text-white text-lg sm:text-xl font-medium overflow-hidden line-clamp-2 drop-shadow-sm">
+                      {currentUser?.firstName} {currentUser?.lastName}
+                    </p>
+                    <Button
+                      as={Link}
+                      to={`/teacher/announcements`}
+                      size="md"
+                      className="bg-[#06574C] text-white rounded-md mt-6 font-semibold hover:bg-[#086d5f] transition-all"
+                    >
+                      View Announcements
+                    </Button>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <p className="text-white text-xl">
-                Welcome to Darul Quran{" "}
-                {currentUser?.firstName + " " + currentUser?.lastName}
-              </p>
-            )}
-            <Button
-              as={Link}
-              to={`/`}
-              size="sm"
-              className="bg-[#06574C] text-white rounded-md mt-2"
-            >
-              View Announcements
-            </Button>
-          </div>
-          <div>
-            <NotificationPermission />
-          </div>
-        </div>
+            </SwiperSlide>
+          )}
+        </Swiper>
       </div>
 
       <OverviewCards data={cardsData} isLoading={loading} />

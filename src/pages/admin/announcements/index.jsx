@@ -166,6 +166,8 @@ const Announcements = () => {
     { key: "50", label: "50" },
   ];
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [bannerImage, setBannerImage] = useState(null);   // { file, preview }
+  const fileInputRef = useState(null);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [isFeatured, setIsFeatured] = useState(false);
   const [page, setPage] = useState(1);
@@ -194,9 +196,12 @@ const Announcements = () => {
     if (announcement) {
       setSelectedAnnouncement(announcement);
       setIsFeatured(announcement.isFeatured || false);
+      // Show existing image as preview (URL string)
+      setBannerImage(announcement.announcementFile ? { file: null, preview: announcement.announcementFile } : null);
     } else {
       setSelectedAnnouncement(null);
       setIsFeatured(false);
+      setBannerImage(null);
     }
     onOpen();
   };
@@ -204,26 +209,46 @@ const Announcements = () => {
   const handleClose = () => {
     setSelectedAnnouncement(null);
     setIsFeatured(false);
+    setBannerImage(null);
     onClose();
+  };
+
+  const handleBannerChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setBannerImage({ file, preview: URL.createObjectURL(file) });
+  };
+
+  const removeBanner = () => {
+    setBannerImage(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
+    const rawForm = new FormData(e.currentTarget);
+    const data = Object.fromEntries(rawForm.entries());
     if (!data.description || !data.delivery || !data.sendTo || !data.title) {
       errorMessage("Please fill all fields");
       return;
     }
-    const payload = {
-      ...data,
-      userId: user?.id,
-      createdBy: user?.role,
-      senderName: user?.firstName + " " + user?.lastName,
-      isFeatured,
-      date: data.date ? new Date(data.date) : new Date(),
-    };
+
+    // Build multipart FormData so the file is sent correctly
+    const payload = new FormData();
+    payload.append("userId", user?.id);
+    payload.append("title", data.title);
+    payload.append("description", data.description);
+    payload.append("delivery", data.delivery);
+    payload.append("sendTo", data.sendTo);
+    payload.append("isFeatured", isFeatured);
+    payload.append("createdBy", user?.role);
+    payload.append("senderName", `${user?.firstName} ${user?.lastName}`);
+    payload.append("date", data.date ? new Date(data.date).toISOString() : new Date().toISOString());
+
+    // Attach new file if selected
+    if (bannerImage?.file) {
+      payload.append("files", bannerImage.file);
+    }
 
     try {
       let result;
@@ -503,6 +528,42 @@ const Announcements = () => {
                       name="description"
                       defaultValue={selectedAnnouncement?.description}
                     />
+
+                    {/* Banner Image Upload */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-medium text-gray-700">Banner Image <span className="text-xs text-gray-400">(optional)</span></label>
+                      {bannerImage?.preview ? (
+                        <div className="relative w-full rounded-lg overflow-hidden border border-dashed border-gray-300">
+                          <img
+                            src={bannerImage.preview}
+                            alt="Banner preview"
+                            className="w-full h-36 object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={removeBanner}
+                            className="absolute top-2 right-2 bg-white/90 hover:bg-red-50 text-red-500 rounded-full p-1 shadow text-xs font-semibold transition"
+                          >
+                            ✕ Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <label
+                          htmlFor="banner-upload"
+                          className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#06574C] hover:bg-[#06574C]/5 transition-colors"
+                        > 
+                          <span className="text-sm text-gray-500">Click to upload banner image</span>
+                          <span className="text-xs text-gray-400 mt-0.5">PNG, JPG, WEBP up to 5MB</span>
+                        </label>
+                      )}
+                      <input
+                        id="banner-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleBannerChange}
+                      />
+                    </div>
                     <div className="flex justify-start gap-3 items-center w-full">
                       <Select
                         className="w-[48%]"

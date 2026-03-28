@@ -8,7 +8,12 @@ import { BiGroup } from "react-icons/bi";
 import { GrAnnounce } from "react-icons/gr";
 import { CiCalendar } from "react-icons/ci";
 import { useSelector } from "react-redux";
-import NotificationPermission from "../../components/NotificationPermission";
+import NotificationPermission from "../../components/NotificationPermission"; 
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Navigation, Pagination as SwiperPagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
 
 import { Spinner } from "@heroui/react";
 import VideoPlayer from "../../components/dashboard-components/Video";
@@ -18,7 +23,7 @@ import { errorMessage, successMessage } from "../../lib/toast.config";
 import { dateFormatter } from "../../lib/utils";
 import QueryError from "../../components/QueryError";
 import { formatTime12Hour, isClassExpired, isClassLive, getHoursUntilClass, getStatusText } from "../../utils/scheduleHelpers";
-import { useGetStudentDashboardQuery } from "../../redux/api/dashboard";
+import { useGetStudentDashboardQuery } from "../../redux/api/dashboard"; 
 
 const StudentDashboard = () => {
   const { user } = useSelector((state) => state.user);
@@ -36,9 +41,9 @@ const StudentDashboard = () => {
     refetch: dashboardRefetch
   } = useGetStudentDashboardQuery()
 
-  const featured = dashboardData?.data?.announcements[0];
+  const announcementsSlider = dashboardData?.data?.announcements || [];
   const upcomingClasses = dashboardData?.data?.upcomingClasses || [];
-  const announcements = dashboardData?.data?.announcements?.slice(1, 5) || [];
+  const announcementsList = dashboardData?.data?.recentAnnouncements || [];
   const handleJoinClass = async (schedule) => {
     if (!user) {
       errorMessage("Please login first");
@@ -83,43 +88,79 @@ const StudentDashboard = () => {
   }
   return (
     <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-fsull px-2 sm:px-3">
-      {/* banner */}
-      <div className="space-y-4 mt-3 w-full bg-[url('/images/banner.png')] p-4 rounded-lg bg-center bg-no-repeat bg-cover">
-        <div className="flex max-sm:flex-wrap gap-3 justify-between items-start">
-          <div>
-            {featured ? (
-              <div>
-                <h1 className="text-xl sm:text-3xl text-white font-semibold capitalize">
-                  {featured?.title}
-                </h1>
-                <p className="text-white text-lg sm:text-xl overflow-hidden line-clamp-2">
-                  {featured?.description}
-                </p>
+      {/* banner slider */}
+      <div className="mt-3 w-full rounded-lg overflow-hidden">
+        <Swiper
+          spaceBetween={30}
+          centeredSlides={true}
+          autoplay={{
+            delay: 4500,
+            disableOnInteraction: false,
+          }}
+          pagination={{
+            clickable: true,
+          }}
+          navigation={false}
+          modules={[Autoplay, SwiperPagination, Navigation]}
+          className="mySwiper rounded-lg"
+        >
+          {announcementsSlider.length > 0 ? (
+            announcementsSlider.map((item, index) => (
+              <SwiperSlide key={item.id || index}>
+                <div
+                  className="space-y-4 p-4 w-full flex flex-col justify-center bg-center bg-no-repeat bg-cover"
+                  style={{
+                    backgroundImage: item?.announcement_file
+                      ? `url('${item.announcement_file}')`
+                      : `url('/images/banner.png')`,
+                  }}
+                >
+                  <div className="flex max-sm:flex-wrap gap-3 justify-between items-start">
+                    <div>
+                      <h1 className="text-xl sm:text-4xl text-white font-bold capitalize mb-2 drop-shadow-md">
+                        {item?.title}
+                      </h1>
+                      <p className="text-white text-lg sm:text-xl font-medium overflow-hidden line-clamp-3 max-w-2xl drop-shadow-sm">
+                        {item?.description}
+                      </p>
+                      <Button
+                        as={Link}
+                        to={`/student/announcements`}
+                        size="md"
+                        className="bg-[#06574C] text-white rounded-md mt-6 font-semibold hover:bg-[#086d5f] transition-all"
+                      >
+                        View Announcements
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))
+          ) : (
+            <SwiperSlide>
+              <div className="space-y-4 bg-white/50 p-4 w-full flex flex-col justify-center">
+                <div className="flex max-sm:flex-wrap gap-3 justify-between items-start">
+                  <div>
+                    <h1 className="text-xl sm:text-4xl text-white font-bold capitalize mb-2 drop-shadow-md">
+                      Welcome to Darul Quran
+                    </h1>
+                    <p className="text-white text-lg sm:text-xl font-medium overflow-hidden line-clamp-2 drop-shadow-sm">
+                      {user?.firstName} {user?.lastName}
+                    </p>
+                    <Button
+                      as={Link}
+                      to={`/student/announcements`}
+                      size="md"
+                      className="bg-[#06574C] text-white rounded-md mt-6 font-semibold hover:bg-[#086d5f] transition-all"
+                    >
+                      View Announcements
+                    </Button>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div>
-                <h1 className="text-xl sm:text-3xl text-white font-semibold mb-0">
-                  Welcome back, {user?.firstName}! 👋
-                </h1>
-                <p className="text-white text-sm">
-                  Ready to continue your learning journey? Let's make today
-                  productive!
-                </p>
-              </div>
-            )}
-            <Button
-              as={Link}
-              to="/student/announcements"
-              size="sm"
-              className="bg-[#06574C] text-white rounded-md mt-2"
-            >
-              View Announcements
-            </Button>
-          </div>
-          <div>
-            <NotificationPermission />
-          </div>
-        </div>
+            </SwiperSlide>
+          )}
+        </Swiper>
       </div>
       <div>
         {error &&
@@ -406,13 +447,13 @@ const StudentDashboard = () => {
             <div className="flex justify-center py-10">
               <Spinner color="success" size="lg" />
             </div>
-          ) : !announcements ||
-            announcements?.length <= 0 ? (
+          ) : !announcementsList ||
+            announcementsList?.length <= 0 ? (
             <div className="text-center py-10 text-gray-500">
               No announcements found
             </div>
           ) : (
-            announcements.map((item, index) => (
+            announcementsList.map((item, index) => (
               <div
                 key={item.id}
                 className={`${item.created_by === "teacher" ||

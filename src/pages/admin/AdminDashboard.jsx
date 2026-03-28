@@ -9,6 +9,7 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
+  Switch,
 } from "@heroui/react";
 import BarCharts from "../../components/charts/BarCharts";
 import AreaCharts from "../../components/charts/AreaChart";
@@ -33,10 +34,33 @@ import { useSelector } from "react-redux";
 import QueryError from "../../components/QueryError";
 import { isClassExpired, isClassLive } from "../../utils/scheduleHelpers";
 import { AiOutlineEye } from "react-icons/ai";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import { useUpdateAnnouncementMutation } from "../../redux/api/announcements";
+import { successMessage, errorMessage } from "../../lib/toast.config";
 
 const AdminDashboard = () => {
-  const { data: dashboardData, isLoading, error, refetch } = useGetAdminDashboardQuery();
+  const {
+    data: dashboardData,
+    isLoading,
+    error,
+    refetch,
+  } = useGetAdminDashboardQuery();
   const { user: currentUser } = useSelector((state) => state.user);
+  const [updateAnnouncement, { isLoading: isUpdating }] = useUpdateAnnouncementMutation();
+
+  const handleToggleActive = async (id, currentStatus) => {
+    try {
+      await updateAnnouncement({
+        id,
+        data: { isFeatured: !currentStatus },
+      }).unwrap();
+      successMessage(`Announcement ${!currentStatus ? "activated" : "deactivated"} successfully`);
+      refetch();
+    } catch (err) {
+      errorMessage(err?.data?.message || "Failed to update status");
+    }
+  };
 
   const data = dashboardData?.data || {};
   const stats = data.stats || {};
@@ -78,48 +102,102 @@ const AdminDashboard = () => {
   const featured = data?.featured || [];
   const navigate = useNavigate();
   if (error) {
-    return <QueryError
-      height="300px"
-      error={error}
-      onRetry={refetch}
-      showLogo={false}
-    />
+    return (
+      <QueryError
+        height="300px"
+        error={error}
+        onRetry={refetch}
+        showLogo={false}
+      />
+    );
   }
   return (
     <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 h-scrseen px-2 sm:px-3">
-      {/* banner */}
-      <div className="space-y-4 mt-3 w-full bg-[url('/images/banner.png')] p-4 rounded-lg bg-center bg-no-repeat bg-cover">
-        <div className="flex max-sm:flex-wrap gap-3 justify-between items-start">
-          <div>
-            {featured.length > 0 ? (
-              <div>
-                <h1 className="text-xl sm:text-3xl text-white font-semibold capitalize">
-                  {featured[0]?.title}
-                </h1>
-                <p className="text-white text-lg sm:text-xl overflow-hidden line-clamp-2">
-                  {featured[0]?.description}
-                </p>
+      {/* banner slider */}
+      <div className="mt-3 w-full rounded-lg overflow-hidden">
+        <Swiper
+          spaceBetween={30}
+          centeredSlides={true}
+          autoplay={{
+            delay: 4500,
+            disableOnInteraction: false,
+          }}
+          pagination={{
+            clickable: true,
+          }}
+          navigation={false}
+          modules={[Autoplay, Pagination, Navigation]}
+          className="mySwiper rounded-lg"
+        >
+          {featured.length > 0 ? (
+            featured.map((item, index) => (
+              <SwiperSlide key={item.id || index}>
+                <div
+                  className="space-y-4 p-4 bg-white w-full flex flex-col justify-center bg-center bg-no-repeat bg-cover"
+                  style={{
+                    backgroundImage: item?.announcementFile
+                      ? `url('${item.announcementFile}')`
+                      : `url('/images/banner.png')`,
+                  }}
+                >
+                  <div className="flex max-sm:flex-wrap gap-3 justify-between items-start">
+                    <div>
+                      <h1 className="text-xl sm:text-4xl text-white font-bold capitalize mb-2 drop-shadow-md">
+                        {item?.title}
+                      </h1>
+                      <p className="text-white text-lg sm:text-xl font-medium overflow-hidden line-clamp-3 max-w-2xl drop-shadow-sm">
+                        {item?.description}
+                      </p>
+                      <div className="flex items-center gap-4 mt-6">
+                        <Button
+                          as={Link}
+                          to={`/admin/announcements`}
+                          size="md"
+                          className="bg-[#06574C] text-white rounded-md font-semibold hover:bg-[#086d5f] transition-all"
+                        >
+                          View Announcements
+                        </Button>
+                        <div className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/30">
+                          <span className="text-white text-sm font-semibold">Active:</span>
+                          <Switch
+                            isSelected={item.isFeatured}
+                            size="sm"
+                            color="success"
+                            aria-label={`Toggle announcement ${item.id} active`}
+                            onValueChange={() => handleToggleActive(item.id, item.isFeatured)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))
+          ) : (
+            <SwiperSlide>
+              <div className="space-y-4 bg-white/50 p-6 w-full flex flex-col justify-center">
+                <div className="flex max-sm:flex-wrap gap-3 justify-between items-start">
+                  <div>
+                    <h1 className="text-xl sm:text-4xl text-white font-bold capitalize mb-2 drop-shadow-md">
+                      Welcome to Darul Quran
+                    </h1>
+                    <p className="text-white text-lg sm:text-xl font-medium overflow-hidden line-clamp-2 drop-shadow-sm">
+                      {currentUser?.firstName} {currentUser?.lastName}
+                    </p>
+                    <Button
+                      as={Link}
+                      to={`/admin/announcements`}
+                      size="md"
+                      className="bg-[#06574C] text-white rounded-md mt-6 font-semibold hover:bg-[#086d5f] transition-all"
+                    >
+                      View Announcements
+                    </Button>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <p className="text-white text-xl">
-                {" "}
-                Welcome to Darul Quran{" "}
-                {currentUser?.firstName + "" + currentUser?.lastName}{" "}
-              </p>
-            )}
-            <Button
-              as={Link}
-              to={`/admin/announcements`}
-              size="sm"
-              className="bg-[#06574C] text-white rounded-md mt-2"
-            >
-              View Announcements
-            </Button>
-          </div>
-          <div>
-            <NotificationPermission />
-          </div>
-        </div>
+            </SwiperSlide>
+          )}
+        </Swiper>
       </div>
 
       <OverviewCards data={cardsData} isLoading={isLoading} />
@@ -218,7 +296,9 @@ const AdminDashboard = () => {
                     Class
                   </TableColumn>
                   <TableColumn className="bg-[#EBD4C9]/30">Time</TableColumn>
-                  <TableColumn className="bg-[#EBD4C9]/30">Enrolled</TableColumn>
+                  <TableColumn className="bg-[#EBD4C9]/30">
+                    Enrolled
+                  </TableColumn>
                   <TableColumn className="bg-[#EBD4C9]/30">Status</TableColumn>
                 </TableHeader>
 
@@ -238,11 +318,13 @@ const AdminDashboard = () => {
                       <TableCell>
                         <span className="font-medium">
                           {convertTo12hrsFormat(classItem.start_time)} -{" "}
-                          {convertTo12hrsFormat(classItem.end_time)} 
+                          {convertTo12hrsFormat(classItem.end_time)}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="font-medium">{classItem.totalEnrolled}/{classItem.enrollmentLimit}</span>
+                        <span className="font-medium">
+                          {classItem.totalEnrolled}/{classItem.enrollmentLimit}
+                        </span>
                       </TableCell>
                       <TableCell>
                         {(() => {
@@ -334,7 +416,7 @@ const AdminDashboard = () => {
           <Button
             variant="flat"
             as={Link}
-            to={'/admin/announcements'}
+            to={"/admin/announcements"}
             startContent={<MegaphoneIcon />}
             className="w-full py-4 bg-[#95C4BE] text-[#06574C] font-semibold"
           >

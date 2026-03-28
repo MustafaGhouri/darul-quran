@@ -20,10 +20,10 @@ export const announcementAPI = createApi({
     tagTypes: ["announcement"],
     endpoints: (builder) => ({
         createAnnouncement: builder.mutation({
-            query: (data) => ({
+            query: (formData) => ({
                 url: "/create",
                 method: "POST",
-                body: data
+                body: formData,
             }),
             invalidatesTags: ["announcement"],
         }),
@@ -38,9 +38,8 @@ export const announcementAPI = createApi({
         updateAnnouncement: builder.mutation({
             query: ({ id, data }) => ({
                 url: `/update/${id}`,
-                headers: { "Content-Type": "application/json" },
                 method: "PUT",
-                body: data
+                body: data,
             }),
             invalidatesTags: ["announcement"],
         }),
