@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button, Pagination, Skeleton } from "@heroui/react";
+import { Button, Pagination, Progress, Skeleton } from "@heroui/react";
 import { Clock, Video, VideoIcon, Check, Lock } from "lucide-react";
 import { AiOutlineEye } from "react-icons/ai";
 import { FaRegAddressCard } from "react-icons/fa";
@@ -235,7 +235,8 @@ const StudentDashboard = () => {
                     />
                   </div>
                   <div className="p-4 space-y-3">
-                    <h1 className="text-lg font-bold text-[#06574C] line-clamp-1">
+                    <div className="flex flex-col flex-1 gap-2">
+                      <h1 className="text-lg font-bold text-[#06574C] line-clamp-1">
                       {item.courseName}
                     </h1>
 
@@ -256,6 +257,20 @@ const StudentDashboard = () => {
                         {<CiCalendar size={16} />}{" "}
                         {item?.cancelledAt || item?.cancelledat ? dateFormatter(item?.cancelledAt || item?.cancelledat, true) : "Live Time"}
                       </div>
+                    </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center text-sm text-black">
+                        <span className="text-xs font-semibold text-success">Progress :</span>
+                        {item.progress ? item.progress + " %" : "Not Started"}
+                      </div> 
+                      <Progress
+                        aria-label="Course Progress"
+                        size="sm"
+                        value={item.progress}
+                        color="success" 
+                        className="max-w-md"
+                      />
                     </div>
                     <div>
                       <Button

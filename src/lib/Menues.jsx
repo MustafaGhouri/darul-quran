@@ -1,111 +1,244 @@
 import {
-    BookIcon,
-    CalendarIcon,
-    CalendarPlus,
-    ChartBarIcon,
-    DollarSignIcon,
-    FileQuestionIcon,
-    HomeIcon,
-    MegaphoneIcon,
-    TicketIcon,
-    TicketsIcon,
-    UsersIcon,
-    Video,
-    BellRing,
-    Users2Icon,
-    MessageSquare,
-    MessageCircleMore,
-    UserIcon
-} from 'lucide-react';
-import { FaChalkboardTeacher, FaMedal } from 'react-icons/fa';
-import { IoBook, IoCashOutline } from 'react-icons/io5';
+  BookIcon,
+  CalendarIcon,
+  CalendarPlus,
+  ChartBarIcon,
+  DollarSignIcon,
+  FileQuestionIcon,
+  HomeIcon,
+  MegaphoneIcon,
+  TicketIcon,
+  TicketsIcon,
+  UsersIcon,
+  Video,
+  BellRing,
+  Users2Icon,
+  MessageSquare,
+  MessageCircleMore,
+  UserIcon,
+} from "lucide-react";
+import { FaChalkboardTeacher, FaMedal } from "react-icons/fa";
+import { IoBook, IoCashOutline } from "react-icons/io5";
 import { MdOutlinePayments } from "react-icons/md";
 import { GrSchedules } from "react-icons/gr";
 
 export const adminMenu = [
-    { name: 'Dashboard', icon: <HomeIcon />, link: '/admin/dashboard', value: 'dashboard' },
-    {
-        name: 'Courses Management',
-        icon: <BookIcon />,
-        link: '/admin/courses-management',
-        value: 'courses-management',
-        children: [
-            { name: 'All Courses', link: '/admin/courses-management', value: 'all-courses' },
-            { name: 'Course Builder', link: '/admin/courses-management/builder', value: 'course-builder' },
-            { name: 'Attendance & Progress', link: '/admin/courses-management/attendance', value: 'attendance-progress' }
-        ]
-    },
-    { name: 'User Management', icon: <UsersIcon />, link: '/admin/user-management', value: 'user-management' },
-    { name: 'Class Scheduling', icon: <CalendarIcon />, link: '/admin/class-scheduling', value: 'class-scheduling' },
-    { name: 'Student Attendance List', icon: <Users2Icon />, link: '/admin/attendance-list', value: 'attendance-list' },
-    { name: 'Announcements', icon: <MegaphoneIcon />, link: '/admin/announcements', value: 'announcements' },
-    { name: 'Payments & Refunds', icon: <DollarSignIcon />, link: '/admin/payments', value: 'payments-refunds' },
-    { name: 'Support Tickets', icon: <TicketIcon />, link: '/admin/tickets', value: 'support-tickets' },
-    { name: 'Analytics', icon: <ChartBarIcon />, link: '/admin/analytics', value: 'analytics' },
-    { name: 'Notifications', icon: <BellRing />, link: '/admin/notifications', value: 'notifications' },
-    { name: 'Profile', icon: <UserIcon />, link: '/admin/profile', value: 'profile' },
-    { name: 'Reschedule Requests', icon: <CalendarPlus />, link: '/admin/reschedule-requests' },
-    {
-        name: 'Help and Support',
-        icon: <FileQuestionIcon />,
-        link: '/admin/help/messages',
-        value: 'help-support',
-        children: [
-            { name: 'Message Center', link: '/admin/help/messages', value: 'messages' },
-            { name: 'Teacher & Student Chat', link: '/admin/help/chat', value: 'chat' },
-            { name: 'Reviews', link: '/admin/help/reviews', value: 'reviews' },
-            { name: 'FAQs', link: '/admin/faqs', value: 'faqs' }
-        ]
-    }
+  {
+    name: "Dashboard",
+    icon: <HomeIcon />,
+    link: "/admin/dashboard",
+    value: "dashboard",
+  },
+  {
+    name: "Courses Management",
+    icon: <BookIcon />,
+    link: "/admin/courses-management",
+    value: "courses-management",
+    children: [
+      {
+        name: "All Courses",
+        link: "/admin/courses-management",
+        value: "all-courses",
+      },
+      {
+        name: "Course Builder",
+        link: "/admin/courses-management/builder",
+        value: "course-builder",
+      },
+      {
+        name: "Attendance & Progress",
+        link: "/admin/courses-management/attendance",
+        value: "attendance-progress",
+      },
+    ],
+  },
+  {
+    name: "User Management",
+    icon: <UsersIcon />,
+    link: "/admin/user-management",
+    value: "user-management",
+  },
+  {
+    name: "Class Scheduling",
+    icon: <CalendarIcon />,
+    link: "/admin/class-scheduling",
+    value: "class-scheduling",
+  },
+  {
+    name: "Student Attendance List",
+    icon: <Users2Icon />,
+    link: "/admin/attendance-list",
+    value: "attendance-list",
+  },
+  {
+    name: "Announcements",
+    icon: <MegaphoneIcon />,
+    link: "/admin/announcements",
+    value: "announcements",
+  },
+  {
+    name: "Payments & Refunds",
+    icon: <DollarSignIcon />,
+    link: "/admin/payments",
+    value: "payments-refunds",
+  },
+  {
+    name: "Support Tickets",
+    icon: <TicketIcon />,
+    link: "/admin/tickets",
+    value: "support-tickets",
+  },
+  {
+    name: "Analytics",
+    icon: <ChartBarIcon />,
+    link: "/admin/analytics",
+    value: "analytics",
+  },
+  {
+    name: "Notifications",
+    icon: <BellRing />,
+    link: "/admin/notifications",
+    value: "notifications",
+  },
+  {
+    name: "Profile",
+    icon: <UserIcon />,
+    link: "/admin/profile",
+    value: "profile",
+  },
+  {
+    name: "Reschedule Requests",
+    icon: <CalendarPlus />,
+    link: "/admin/reschedule-requests",
+  },
+  {
+    name: "Help and Support",
+    icon: <FileQuestionIcon />,
+    link: "/admin/help/messages",
+    value: "help-support",
+    children: [
+      {
+        name: "Message Center",
+        link: "/admin/help/messages",
+        value: "messages",
+      },
+      {
+        name: "Teacher & Student Chat",
+        link: "/admin/help/chat",
+        value: "chat",
+      },
+      { name: "Reviews", link: "/admin/help/reviews", value: "reviews" },
+      { name: "FAQs", link: "/admin/faqs", value: "faqs" },
+    ],
+  },
 ];
 export const teacherMenu = [
-    { name: 'Dashboard', icon: <HomeIcon />, link: '/teacher/dashboard' },
-    {
-        name: 'My Courses',
-        icon: <BookIcon />,
-        link: '/teacher/courses',
-        children: [
-            // { name: 'Course Details View', link: '/teacher/courses/course-details' },
-            { name: 'Upload Materials', link: '/teacher/courses/upload-material' }
-        ]
-    },
-    { name: 'Student Attendance', icon: <CalendarIcon />, link: '/teacher/student-attendance' },
-    { name: 'Student Attendance List', icon: <Users2Icon />, link: '/teacher/attendance-list' },
-    { name: 'Class Schedule', icon: <MegaphoneIcon />, link: '/teacher/class-scheduling' },
-    { name: 'Reschedule Requests', icon: <CalendarPlus />, link: '/teacher/reschedule-requests' },
-    { name: 'Chat Center', icon: <TicketIcon />, link: '/teacher/chat' },
-    { name: 'Support Tickets  ', icon: <TicketsIcon />, link: '/teacher/support-tickets' },
-    { name: 'Announcements', icon: <MegaphoneIcon />, link: '/teacher/announcements' },
-    { name: 'Notifications', icon: <BellRing />, link: '/teacher/notifications' },
-    { name: 'FAQs', icon: <FileQuestionIcon />, link: '/teacher/faqs' },
-    { name: 'Profile', icon: <UserIcon />, link: '/teacher/profile' },
+  { name: "Dashboard", icon: <HomeIcon />, link: "/teacher/dashboard" },
+  {
+    name: "My Courses",
+    icon: <BookIcon />,
+    link: "/teacher/courses",
+    children: [
+      // { name: 'Course Details View', link: '/teacher/courses/course-details' },
+      { name: "Upload Materials", link: "/teacher/courses/upload-material" },
+    ],
+  },
+  {
+    name: "Attendance",
+    icon: <CalendarIcon />,
+    link: "/teacher/student-attendance",
+    children: [
+      { name: "Mark Attendance", link: "/teacher/student-attendance" },
+      { name: "Student Attendance List", link: "/teacher/attendance-list" },
+    ],
+  },
+  // { name: 'Student Attendance', icon: <CalendarIcon />, link: '/teacher/student-attendance' },
+  // { name: 'Student Attendance List', icon: <Users2Icon />, link: '/teacher/attendance-list' },
+  {
+    name: "Class Schedule",
+    icon: <MegaphoneIcon />,
+    link: "/teacher/class-scheduling",
+  },
+  {
+    name: "Reschedule Requests",
+    icon: <CalendarPlus />,
+    link: "/teacher/reschedule-requests",
+  },
+  { name: "Chat Center", icon: <TicketIcon />, link: "/teacher/chat" },
+  {
+    name: "Support Tickets  ",
+    icon: <TicketsIcon />,
+    link: "/teacher/support-tickets",
+  },
+  {
+    name: "Alerts Center",
+    icon: <BellRing />,
+    link: "/teacher/announcements",
+    children: [
+      { name: "Announcements", link: "/teacher/announcements" },
+      { name: "Notifications", link: "/teacher/notifications" },
+      { name: "FAQs", link: "/teacher/faqs" },
+    ],
+  },
+  // { name: 'Announcements', icon: <MegaphoneIcon />, link: '/teacher/announcements' },
+  // { name: 'Notifications', icon: <BellRing />, link: '/teacher/notifications' },
+  // { name: 'FAQs', icon: <FileQuestionIcon />, link: '/teacher/faqs' },
+  { name: "Profile", icon: <UserIcon />, link: "/teacher/profile" },
 ];
 
 export const studentMenu = [
-    { name: 'Dashboard', icon: <HomeIcon />, link: '/student/dashboard' },
-    { name: 'My Learning Journey', icon: <FaChalkboardTeacher size={22}/>, link: '/student/my-learning' },
-    { name: 'Enrollments', icon: <IoCashOutline size={22}/>, link: '/student/enrollments' },
-    { name: 'Class Schedule', icon: <Video />, link: '/student/class-scheduling' },
-    { name: 'Browse Courses', icon: <IoBook  size={21}/>, link: '/student/browse-courses' },
-    // {
-    //     name: 'Help and Support',
-    //     icon: <FileQuestionIcon />,
-    //     link: '/student/help/messages',
-    //     children: [
-    //         { name: 'Chat Center', link: '/student/help/messages' },
-    //         { name: 'Payments & Subscriptions', link: '/student/payments' },
-    //         { name: 'My Reschedule Requests', link: '/student/reschedule-requests' },
-    //         // { name: 'Reviews', link: '/admin/help/reviews' },
-    //         // { name: 'FAQs', link: '/admin/help/faqs' }
-    //     ]
-    // },
-    { name: 'Chat Center', icon: <MessageCircleMore size={20}/>, link: '/student/help/messages' },
-    { name: 'Payments & Subscriptions', icon: <MdOutlinePayments  size={23}/>, link: '/student/payments' },
-    { name: 'My Reschedule Requests', icon: <GrSchedules  size={21}/>, link: '/student/reschedule-requests' },
-    { name: 'Attendance & Progress', icon: <FaMedal size={21} />, link: '/student/attendance-list' },
-    { name: 'Support Tickets  ', icon: <TicketsIcon />, link: '/student/support-tickets' },
-    { name: "Announcements", icon: <MegaphoneIcon />, link: "/student/announcements" },
-    { name: 'Notifications', icon: <BellRing />, link: '/student/notifications' },
-    { name: 'FAQs', icon: <FileQuestionIcon />, link: '/student/faqs' },
-    { name: 'Profile', icon: <UserIcon />, link: '/student/profile' }
+  { name: "Dashboard", icon: <HomeIcon />, link: "/student/dashboard" },
+  // { name: 'My Learning Journey', icon: <FaChalkboardTeacher size={22}/>, link: '/student/my-learning' },
+  // { name: 'Enrollments', icon: <IoCashOutline size={22}/>, link: '/student/enrollments' },
+  {
+    name: "Class Schedule",
+    icon: <Video />,
+    link: "/student/class-scheduling",
+  },
+  {
+    name: "Browse Courses",
+    icon: <IoBook size={21} />,
+    link: "/student/browse-courses",
+  },
+  // {
+  //     name: 'Help and Support',
+  //     icon: <FileQuestionIcon />,
+  //     link: '/student/help/messages',
+  //     children: [
+  //         { name: 'Chat Center', link: '/student/help/messages' },
+  //         { name: 'Payments & Subscriptions', link: '/student/payments' },
+  //         { name: 'My Reschedule Requests', link: '/student/reschedule-requests' },
+  //         // { name: 'Reviews', link: '/admin/help/reviews' },
+  //         // { name: 'FAQs', link: '/admin/help/faqs' }
+  //     ]
+  // },
+  {
+    name: "Payments & Subscriptions",
+    icon: <MdOutlinePayments size={23} />,
+    link: "/student/payments",
+  },
+  {
+    name: "My Reschedule Requests",
+    icon: <GrSchedules size={21} />,
+    link: "/student/reschedule-requests",
+  },
+  // { name: 'Attendance & Progress', icon: <FaMedal size={21} />, link: '/student/attendance-list' },
+  {
+    name: "Announcements",
+    icon: <MegaphoneIcon />,
+    link: "/student/announcements",
+  },
+  { name: "Notifications", icon: <BellRing />, link: "/student/notifications" },
+
+  {
+    name: "Chat & Support",
+    icon: <MessageCircleMore size={20} />,
+    link: "/student/help/messages",
+    children: [
+      { name: "Chat Center", link: "/student/help/messages" },
+      { name: "Support Tickets  ", link: "/student/support-tickets" },
+      { name: "FAQs", link: "/student/faqs" },
+    ],
+  },
+  { name: "Profile", icon: <UserIcon />, link: "/student/profile" },
 ];
