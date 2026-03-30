@@ -334,3 +334,21 @@ export const getUpcomingSchedules = (schedules) => {
     const today = new Date().setHours(0, 0, 0, 0);
     return schedules.filter(s => new Date(s.date) >= today);
 };
+
+/**
+ * Format remaining time in a user-friendly way (e.g., "45m" or "1h 30m")
+ * @param {number} hoursUntil - Hours until class starts
+ * @returns {string} Formatted string
+ */
+export const formatRemainingTime = (hoursUntil) => {
+    if (hoursUntil === null || hoursUntil < 0) return "";
+    
+    const h = Math.floor(hoursUntil);
+    const m = Math.round((hoursUntil % 1) * 60);
+    
+    if (h < 1) {
+        return `${m}m`;
+    }
+    
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+};

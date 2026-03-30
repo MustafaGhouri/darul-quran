@@ -27,7 +27,7 @@ import {
 import { useCreateRescheduleRequestMutation } from "../../../redux/api/reschedule";
 import { RescheduleRequestModal } from "../../../components/schedule/RescheduleRequestModal";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
-import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatusText, getStatusTextForSingleDate, getHoursUntilClass } from "../../../utils/scheduleHelpers";
+import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatusText, getStatusTextForSingleDate, getHoursUntilClass, formatRemainingTime } from "../../../utils/scheduleHelpers";
 import { useSelector } from "react-redux";
 import { dateFormatter } from "../../../lib/utils";
 import CustomCalendar from "../../../components/teacher/CustomCalendar";
@@ -307,7 +307,7 @@ const StudentClassSheduling = () => {
         }
 
         if (hoursUntil !== null && hoursUntil > 0 && hoursUntil < 3) {
-            return `Starts in ${(hoursUntil)?.toFixed(1)} hr`;
+            return `Starts in ${formatRemainingTime(hoursUntil)}`;
         }
 
         return "Upcoming";
@@ -373,7 +373,7 @@ const StudentClassSheduling = () => {
                     radius="sm"
                     startContent={<Lock size={14} />}
                 >
-                    Starts in {(hoursUntil)?.toFixed(1)} hr
+                    Starts in {formatRemainingTime(hoursUntil)}
                 </Button>
             );
         }

@@ -43,7 +43,7 @@ import { GrAnnounce, GrAttachment, GrClose, GrSend } from "react-icons/gr";
 import { CiCalendar } from "react-icons/ci";
 import { IoAlertCircleOutline } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
-import { formatTime12Hour, isClassLive, isClassExpired, getHoursUntilClass } from "../../utils/scheduleHelpers";
+import { formatTime12Hour, isClassLive, isClassExpired, getHoursUntilClass, formatRemainingTime } from "../../utils/scheduleHelpers";
 import NotificationPermission from "../../components/NotificationPermission";
 import { useSelector } from "react-redux";
 import { errorMessage } from "../../lib/toast.config";
@@ -509,7 +509,7 @@ const TeachersDashboard = () => {
                               size="sm"
                               className="bg-[#95C4BE33] text-[#06574C] w-32 rounded-md"
                             >
-                              Starts in {Math.floor(hoursUntil)}h
+                              Starts in {formatRemainingTime(hoursUntil)}
                             </Button>
                           );
                         }
