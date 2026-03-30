@@ -74,10 +74,10 @@ const AdminDashboard = () => {
       changeColor: "text-[#06574C]",
     },
     {
-      title: "Revenue",
+      title: "Total Revenue",
       value: `£${Number(stats.total_revenue || 0).toLocaleString()}`,
       icon: <ChartPie color="#06574C" size={22} />,
-      changeText: `This Week: £${Number(stats.weekly_revenue || 0).toLocaleString()}`,
+      changeText: `Revenue This Week: ${Number(stats.weekly_revenue || 0).toLocaleString()} £ `,
       changeColor: "text-[#06574C]",
     },
     {
