@@ -49,6 +49,8 @@ import { FormOverlayLoader } from "../../../components/Loader";
 import { parseInterval, uploadFilesToServer } from "../../../lib/utils";
 import { IntervalInput } from "../../../components/dashboard-components/forms/IntervalInput";
 import TeacherSelect from "../../../components/select/TeacherSelect";
+import UserSelect from "../../../components/select/UserSelect";
+import StudentSelect from "../../../components/select/StudentSelect";
 const containerVariants = {
   hidden: { opacity: 0, y: 10, scale: 0.98 },
 
@@ -710,6 +712,7 @@ const CourseBuilder = () => {
                             }}
                             className="w-32"
                             variant="bordered"
+                            defaultSelectedKeys={["draft"]}
                           >
                             <SelectItem key="published">Public</SelectItem>
                             <SelectItem key="private">Private</SelectItem>
@@ -723,6 +726,13 @@ const CourseBuilder = () => {
                           initialValue={formData.teacher_id}
                         />
                       </div>
+                      <div className="my-4">
+                        <StudentSelect
+                          onChange={(id) => handleChange("student_id", id)}
+                          initialValue={formData.student_id}
+                        />
+                      </div>
+                      
                       <div className="pt-6">
                         <Select
                           placeholder="Select Type"

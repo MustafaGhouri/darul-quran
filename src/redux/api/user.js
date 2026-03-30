@@ -35,6 +35,14 @@ export const userAPI = createApi({
             }),
             providesTags: ["user"],
         }),
+        getStudents: builder.query({
+            query: ({ page, limit, search }) => ({
+                url: "/getStudents",
+                method: "GET",
+                params: { page, limit, search }
+            }),
+            providesTags: ["user"],
+        }),
         getUserById: builder.query({
             query: (id) => ({
                 url: `/userByID/${id}`,
@@ -137,6 +145,7 @@ export const userAPI = createApi({
 export const {
     useGetAllUsersQuery,
     useGetAllTeachersQuery,
+    useGetStudentsQuery,
     useGetUserByIdQuery,
     useCreateOrUpdateUserMutation,
     useDeleteUserMutation,

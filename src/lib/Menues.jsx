@@ -148,7 +148,7 @@ export const teacherMenu = [
     icon: <CalendarIcon />,
     link: "/teacher/student-attendance",
     children: [
-      { name: "Mark Attendance", link: "/teacher/student-attendance" },
+      { name: "Attendance Progress", link: "/teacher/student-attendance" },
       { name: "Student Attendance List", link: "/teacher/attendance-list" },
     ],
   },
