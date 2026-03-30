@@ -92,7 +92,7 @@ const StudentAttendanceList = () => {
           aria-label="Student Attendance Table"
           removeWrapper
           classNames={{
-            base: "w-full overflow-x-auto no-scrollbar",
+            base: "w-full overflow-x-auto no-scrollbar max-h-[calc(100vh-200px)] min-h-[calc(100vh-350px)]",
             th: "bg-[#FBF4EC] text-black font-bold py-4 px-6 text-sm uppercase tracking-wider",
             td: "py-4 px-6 border-b border-gray-50",
             tr: "hover:bg-gray-50/50 transition-colors",
@@ -106,6 +106,7 @@ const StudentAttendanceList = () => {
           <TableBody 
             items={attendanceData}
             isLoading={isLoading}
+            loadingState={isLoading ? "loading" : "idle"}
             loadingContent={<Spinner color="success" size="lg" />}
             emptyContent={isLoading ? " " : "No students found"}
           >
