@@ -36,7 +36,14 @@ import Videos, {
 } from "../../../components/dashboard-components/forms/ContentUpload";
 import { useSearchParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { useAddCategoryMutation, useAddCourseMutation, useDeleteCategoryMutation, useGetAllCategoriesQuery, useGetCourseByIdQuery, useUpdateCourseMutation } from "../../../redux/api/courses";
+import {
+  useAddCategoryMutation,
+  useAddCourseMutation,
+  useDeleteCategoryMutation,
+  useGetAllCategoriesQuery,
+  useGetCourseByIdQuery,
+  useUpdateCourseMutation,
+} from "../../../redux/api/courses";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
 import { FormOverlayLoader } from "../../../components/Loader";
 import { parseInterval, uploadFilesToServer } from "../../../lib/utils";
@@ -57,7 +64,6 @@ const containerVariants = {
   },
 };
 const CourseBuilder = () => {
-
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get("tab");
   const courseId = searchParams.get("id");
@@ -92,14 +98,25 @@ const CourseBuilder = () => {
   const [loadingAction, setLoadingAction] = useState(null);
   const [pendingAction, setPendingAction] = useState(null);
   //query/fetch
-  const { data = {}, isLoading, isError, error } = useGetCourseByIdQuery(courseId, { skip: !courseId });
-  const { data: categoriesData, isError: categoriesError, error: categoriesErrorData } = useGetAllCategoriesQuery();
+  const {
+    data = {},
+    isLoading,
+    isError,
+    error,
+  } = useGetCourseByIdQuery(courseId, { skip: !courseId });
+  const {
+    data: categoriesData,
+    isError: categoriesError,
+    error: categoriesErrorData,
+  } = useGetAllCategoriesQuery();
   //mutations/actions
   const [addCourse] = useAddCourseMutation();
-  const [updateCourse, { error: updateCourseError }] = useUpdateCourseMutation();
+  const [updateCourse, { error: updateCourseError }] =
+    useUpdateCourseMutation();
   const [deleteCategory] = useDeleteCategoryMutation();
-  const [addCategory, { isLoading: isAddingCategory }] = useAddCategoryMutation();
-  // const [quizzes, setQuizzes] = useState([]); 
+  const [addCategory, { isLoading: isAddingCategory }] =
+    useAddCategoryMutation();
+  // const [quizzes, setQuizzes] = useState([]);
   useEffect(() => {
     if (isError) {
       errorMessage(error.data.error, error.status);
@@ -123,7 +140,8 @@ const CourseBuilder = () => {
           // course_price: course.coursePrice || "",
           teacher_id: Number(course.teacherId) || null,
           access_duration: course.accessDuration || "",
-          previous_lesson: course?.previous_lesson || course?.previousLesson || "",
+          previous_lesson:
+            course?.previous_lesson || course?.previousLesson || "",
           base_price: course?.basePrice,
           discount_percentage: course?.discountPercentage,
           enroll_number: course.enrollNumber || "",
@@ -131,9 +149,9 @@ const CourseBuilder = () => {
           videoDuration: course.videoDuration || "",
           is_free: course.isFree || false,
           video_count: course.videoCount || 0,
-          type: course.type || 'one_time',
-          interval: course.interval || '',
-          duration: course.duration || '',
+          type: course.type || "one_time",
+          interval: course.interval || "",
+          duration: course.duration || "",
         });
 
         setVideoUrl(course.video || "");
@@ -160,7 +178,11 @@ const CourseBuilder = () => {
       count: (files?.filter((f) => f.fileType === "lesson_video")).length || 0,
       icone: <Video size={20} color="#06574C" />,
     },
-    { title: "PDFs:", count: (files?.filter((f) => f.fileType === "pdf_notes")).length || 0, icone: <File size={20} color="#06574C" /> },
+    {
+      title: "PDFs:",
+      count: (files?.filter((f) => f.fileType === "pdf_notes")).length || 0,
+      icone: <File size={20} color="#06574C" />,
+    },
     {
       title: "Quizzes",
       count: (files?.filter((f) => f.fileType === "quiz")).length || 0,
@@ -224,12 +246,41 @@ const CourseBuilder = () => {
   const coursepreview = useMemo(() => {
     return [
       { title: "Title:", desc: formData?.course_name || "Add Tittle" },
-      { title: "Category:", desc: categoriesData?.categories?.find((category) => category.id === formData?.category_id)?.categoryName || formData?.category_name || "Add Category" },
-      { title: "Difficulty Level:", desc: formData?.difficulty_level || "Add Difficulty Level" },
-      { title: "Price:", desc: (formData?.base_price - ((formData?.discount_percentage * formData?.base_price) / 100)) + "£" || "Add Price" },
+      {
+        title: "Category:",
+        desc:
+          categoriesData?.categories?.find(
+            (category) => category.id === formData?.category_id,
+          )?.categoryName ||
+          formData?.category_name ||
+          "Add Category",
+      },
+      {
+        title: "Difficulty Level:",
+        desc: formData?.difficulty_level || "Add Difficulty Level",
+      },
+      {
+        title: "Price:",
+        desc:
+          formData?.base_price -
+            (formData?.discount_percentage * formData?.base_price) / 100 +
+            "£" || "Add Price",
+      },
       { title: "Type:", desc: formData?.type?.replace("_", " ") || "Add Type" },
-      { title: "Duration:", desc: formData?.duration === null ? 'Ongoing' : `${parseInterval(formData?.duration).number} ${parseInterval(formData?.duration).unit}` || "Add Duration" },
-      formData?.type === "live" && { title: "Subscription - Interval:", desc: `${parseInterval(formData?.interval).number} ${parseInterval(formData?.interval).unit}` || "Add Subscription - Interval" },
+      {
+        title: "Duration:",
+        desc:
+          formData?.duration === null
+            ? "Ongoing"
+            : `${parseInterval(formData?.duration).number} ${parseInterval(formData?.duration).unit}` ||
+              "Add Duration",
+      },
+      formData?.type === "live" && {
+        title: "Subscription - Interval:",
+        desc:
+          `${parseInterval(formData?.interval).number} ${parseInterval(formData?.interval).unit}` ||
+          "Add Subscription - Interval",
+      },
     ];
   }, [categoriesData, formData]);
 
@@ -247,18 +298,28 @@ const CourseBuilder = () => {
     const urlMap = {};
     if (video.length > 0 || thumbnail.length > 0) {
       const filesToUpload = [];
-      if (video.length > 0) filesToUpload.push({ file: video[0], type: "video" });
-      if (thumbnail.length > 0) filesToUpload.push({ file: thumbnail[0], type: "thumbnail" });
+      if (video.length > 0)
+        filesToUpload.push({ file: video[0], type: "video" });
+      if (thumbnail.length > 0)
+        filesToUpload.push({ file: thumbnail[0], type: "thumbnail" });
 
       try {
-        const uploadedUrls = await uploadFilesToServer(filesToUpload.map(f => f.file));
+        const uploadedUrls = await uploadFilesToServer(
+          filesToUpload.map((f) => f.file),
+        );
         uploadedUrls.forEach((url, index) => {
           const type = filesToUpload[index].type;
           urlMap[type] = url;
         });
 
-        if (urlMap.video) { setVideoUrl(urlMap.video); setVideo([]) };
-        if (urlMap.thumbnail) { setThumbnailUrl(urlMap.thumbnail); setThumbnail([]) };
+        if (urlMap.video) {
+          setVideoUrl(urlMap.video);
+          setVideo([]);
+        }
+        if (urlMap.thumbnail) {
+          setThumbnailUrl(urlMap.thumbnail);
+          setThumbnail([]);
+        }
       } catch (error) {
         console.error("Upload failed", error);
         errorMessage("Failed to upload files");
@@ -277,7 +338,10 @@ const CourseBuilder = () => {
         ? parseInt(formData.enroll_number)
         : null,
       status: formData.status,
-      course_price: (formData?.base_price - ((formData?.discount_percentage * formData?.base_price) / 100)).toFixed(2),
+      course_price: (
+        formData?.base_price -
+        (formData?.discount_percentage * formData?.base_price) / 100
+      ).toFixed(2),
       videoUrl: urlMap.video ?? videoUrl ?? null,
       thumbnailurl: urlMap.thumbnail ?? thumbnailUrl ?? null,
       teacher_id: Number(formData.teacher_id),
@@ -288,7 +352,7 @@ const CourseBuilder = () => {
       let response;
 
       if (courseId) {
-        response = await updateCourse({ id: courseId, data: payload });;
+        response = await updateCourse({ id: courseId, data: payload });
       } else {
         response = await addCourse(payload);
       }
@@ -303,9 +367,12 @@ const CourseBuilder = () => {
         } else {
           handleSelected("content");
         }
-
       } else {
-        errorMessage(response?.error?.data?.message || response?.error?.data?.error || "Something went wrong");
+        errorMessage(
+          response?.error?.data?.message ||
+            response?.error?.data?.error ||
+            "Something went wrong",
+        );
       }
     } catch (error) {
       console.error(error);
@@ -337,7 +404,7 @@ const CourseBuilder = () => {
       discountPercentage: formData.discount_percentage,
       status: formData.status,
       isFree: formData.is_free,
-    }
+    };
     try {
       const data = await updateCourse({
         id: courseId,
@@ -346,7 +413,6 @@ const CourseBuilder = () => {
 
       successMessage(data?.message);
       navigate("/admin/courses-management");
-
     } catch (error) {
       console.error("Update error:", error);
 
@@ -362,7 +428,6 @@ const CourseBuilder = () => {
       setPendingAction(null);
     }
   };
-
 
   const handleSubmitAddCategory = async () => {
     if (!newCategory.trim()) {
@@ -500,7 +565,9 @@ const CourseBuilder = () => {
                           isRequired
                           errorMessage="Category is required"
                           selectedKeys={
-                            formData.category_id ? [String(formData.category_id)] : []
+                            formData.category_id
+                              ? [String(formData.category_id)]
+                              : []
                           }
                           onSelectionChange={(keys) => {
                             const selected = [...keys][0];
@@ -514,16 +581,25 @@ const CourseBuilder = () => {
                         >
                           {categoriesData?.categories?.map((item) => (
                             <SelectItem
-                              endContent={<Button
-                                size="sm"
-                                variant="light"
-                                color="danger"
-                                isIconOnly
-                                onPress={() => { handleDeleteCategory(item.id) }}
-                              >
-                                <Trash2Icon className="text-red-500" size={15} />
-                              </Button>}
-                              key={String(item.id)} value={String(item.id)}>
+                              endContent={
+                                <Button
+                                  size="sm"
+                                  variant="light"
+                                  color="danger"
+                                  isIconOnly
+                                  onPress={() => {
+                                    handleDeleteCategory(item.id);
+                                  }}
+                                >
+                                  <Trash2Icon
+                                    className="text-red-500"
+                                    size={15}
+                                  />
+                                </Button>
+                              }
+                              key={String(item.id)}
+                              value={String(item.id)}
+                            >
                               {item.categoryName}
                             </SelectItem>
                           ))}
@@ -581,7 +657,7 @@ const CourseBuilder = () => {
                           placeholder="0.00"
                           isRequired
                           isDisabled={formData.is_free}
-                          startContent={'£'}
+                          startContent={"£"}
                           errorMessage="BaseCourse Price is required"
                           className="w-full"
                           value={formData.base_price}
@@ -596,7 +672,7 @@ const CourseBuilder = () => {
                           type="number"
                           labelPlacement="outside"
                           placeholder="15%"
-                          endContent={'%'}
+                          endContent={"%"}
                           max={100}
                           isDisabled={formData.is_free}
                           errorMessage="Discount Percentage is must be between 0 and 100"
@@ -607,18 +683,39 @@ const CourseBuilder = () => {
                           }
                         />
                       </div>
-                      <div className="flex items-center pt-2 gap-3">
-                        <p className="text-md text-[#06574C]">
-                          {formData.is_free ? "Free" : "Paid"}
-                        </p>
-                        <Switch
-                          color="success"
-                          aria-label="Free or Paid course"
-                          isSelected={!formData.is_free}
-                          onValueChange={(val) => {
-                            handleChange("is_free", !val);
-                          }}
-                        />
+                      <div className="flex items-center pt-2 gap-3 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <p className="text-md text-[#06574C]">
+                            {formData.is_free ? "Free" : "Paid"}
+                          </p>
+                          <Switch
+                            color="success"
+                            aria-label="Free or Paid course"
+                            isSelected={!formData.is_free}
+                            onValueChange={(val) => {
+                              handleChange("is_free", !val);
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 ml-auto">
+                          <p className="text-sm font-medium text-gray-700">
+                            Course Status:
+                          </p>
+                          <Select
+                            size="sm"
+                            selectedKeys={[formData.status]}
+                            onSelectionChange={(keys) => {
+                              const value = Array.from(keys)[0];
+                              handleChange("status", value);
+                            }}
+                            className="w-32"
+                            variant="bordered"
+                          >
+                            <SelectItem key="published">Public</SelectItem>
+                            <SelectItem key="private">Private</SelectItem>
+                            <SelectItem key="draft">Draft</SelectItem>
+                          </Select>
+                        </div>
                       </div>
                       <div className="pt-6">
                         <TeacherSelect
@@ -646,19 +743,47 @@ const CourseBuilder = () => {
                               : new Set()
                           }
                         >
-                          <SelectItem key="all" value="all" className="capitalize">
+                          <SelectItem
+                            key="all"
+                            value="all"
+                            className="capitalize"
+                          >
                             All Courses
                           </SelectItem>
 
-                          <SelectItem description={<span title=" Pay once and get lifetime access to all course materials. Includes course player, files, and progress tracking." className="block text-xs text-gray-500">
-                            Pay once and get lifetime access to all course materials. Includes course player, files, and progress tracking.
-                          </span>} key="one_time" value="one_time" className="capitalize">
+                          <SelectItem
+                            description={
+                              <span
+                                title=" Pay once and get lifetime access to all course materials. Includes course player, files, and progress tracking."
+                                className="block text-xs text-gray-500"
+                              >
+                                Pay once and get lifetime access to all course
+                                materials. Includes course player, files, and
+                                progress tracking.
+                              </span>
+                            }
+                            key="one_time"
+                            value="one_time"
+                            className="capitalize"
+                          >
                             One Time Paid
                           </SelectItem>
 
-                          <SelectItem description={<span title="Scheduled live sessions requiring subscription. Access course player, files, and track progress for each live class." className="block text-xs text-gray-500">
-                            Scheduled live sessions requiring subscription. Access course player, files, and track progress for each live class.
-                          </span>} key="live" value="live" className="capitalize">
+                          <SelectItem
+                            description={
+                              <span
+                                title="Scheduled live sessions requiring subscription. Access course player, files, and track progress for each live class."
+                                className="block text-xs text-gray-500"
+                              >
+                                Scheduled live sessions requiring subscription.
+                                Access course player, files, and track progress
+                                for each live class.
+                              </span>
+                            }
+                            key="live"
+                            value="live"
+                            className="capitalize"
+                          >
                             Live Classes
                           </SelectItem>
                         </Select>
@@ -670,19 +795,25 @@ const CourseBuilder = () => {
                         nullableValue="on_going"
                         nullableValueLabel="Ongoing"
                         initialValue={formData?.duration}
-                        onUpdate={(interval) => handleChange("duration", interval)}
+                        onUpdate={(interval) =>
+                          handleChange("duration", interval)
+                        }
                       />
-                      {formData?.type === 'live' &&
+                      {formData?.type === "live" && (
                         <IntervalInput
                           label="Subscription Interval"
                           inputWidth={140}
-                          toolTipContent={'How do want to charge student for live sessions on this course'}
+                          toolTipContent={
+                            "How do want to charge student for live sessions on this course"
+                          }
                           className="mt-3"
                           initialValue={formData?.interval}
-                          onUpdate={(interval) => handleChange("interval", interval)}
+                          onUpdate={(interval) =>
+                            handleChange("interval", interval)
+                          }
                           units={["week", "month"]}
                         />
-                      }
+                      )}
                     </div>
                   </div>
                   <div className="col-span-12 sm:col-span-4">
@@ -728,7 +859,9 @@ const CourseBuilder = () => {
                           )}
                           {/* Video Cover Image Uploader */}
                           <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-sm mb-2 text-gray-700">Video Cover Image (thumbnail)</h4>
+                            <h4 className="font-medium text-sm mb-2 text-gray-700">
+                              Video Cover Image (thumbnail)
+                            </h4>
                             {thumbnailUrl ? (
                               <div className="relative w-full h-40 rounded-lg overflow-hidden group border border-gray-300">
                                 <Image
@@ -741,7 +874,13 @@ const CourseBuilder = () => {
                                   size="sm"
                                   color="danger"
                                   className="absolute top-2 right-2 z-10"
-                                  onPress={() => { setRemovedUrls([...removedUrls, thumbnailUrl]); setThumbnailUrl(""); }}
+                                  onPress={() => {
+                                    setRemovedUrls([
+                                      ...removedUrls,
+                                      thumbnailUrl,
+                                    ]);
+                                    setThumbnailUrl("");
+                                  }}
                                 >
                                   Remove
                                 </Button>
@@ -766,7 +905,10 @@ const CourseBuilder = () => {
                       </h1>
                       <div className="py-2">
                         {coursepreview.map((item, i) => (
-                          <div key={i} className="py-1 flex justify-between items-center">
+                          <div
+                            key={i}
+                            className="py-1 flex justify-between items-center"
+                          >
                             <h1 className="text-[16px] font-medium text-[#666666]">
                               {item.title}
                             </h1>
@@ -789,7 +931,7 @@ const CourseBuilder = () => {
                     onPress={() => setPendingAction("save-1")}
                     isLoading={loadingAction === "save-1"}
                   >
-                    Save Draft
+                    Save Progress
                   </Button>
                   <div className="flex flex-wrap gap-3">
                     <Button
@@ -831,7 +973,12 @@ const CourseBuilder = () => {
                       Cancel
                     </Button>
 
-                    <Button color="success" isDisabled={isAddingCategory} isLoading={isAddingCategory} onPress={handleSubmitAddCategory}>
+                    <Button
+                      color="success"
+                      isDisabled={isAddingCategory}
+                      isLoading={isAddingCategory}
+                      onPress={handleSubmitAddCategory}
+                    >
                       Add
                     </Button>
                   </ModalFooter>
@@ -867,7 +1014,10 @@ const CourseBuilder = () => {
             >
               <div className="w-full grid grid-cols-2 md:grid-cols-4 py-4 gap-2">
                 {card.map((item, i) => (
-                  <div key={i} className="w-full sm:flex-1 max-sm:border border-gray-300 p-3 bg-white rounded-lg">
+                  <div
+                    key={i}
+                    className="w-full sm:flex-1 max-sm:border border-gray-300 p-3 bg-white rounded-lg"
+                  >
                     <h1 className="text-[#333333] text-md font-semibold">
                       {item.title}
                     </h1>
@@ -882,11 +1032,7 @@ const CourseBuilder = () => {
                   </div>
                 ))}
               </div>
-              <Videos
-                courseId={courseId}
-                files={files}
-                setFiles={setFiles}
-              />
+              <Videos courseId={courseId} files={files} setFiles={setFiles} />
               <PdfAndNotes
                 courseId={courseId}
                 files={files}
@@ -897,11 +1043,7 @@ const CourseBuilder = () => {
                 files={files}
                 setFiles={setFiles}
               />
-              <Quizzes
-                courseId={courseId}
-                files={files}
-                setFiles={setFiles}
-              />
+              <Quizzes courseId={courseId} files={files} setFiles={setFiles} />
               <div className="p-3 my-5 bg-[#95C4BE33] rounded-md flex justify-between items-center">
                 <div>
                   <h1 className="text-[#06574C] font-medium text-lg">
@@ -951,10 +1093,7 @@ const CourseBuilder = () => {
                   <h1 className="text-xl font-bold text-[#06574C]">3</h1>
                 </div>
                 <div className="text-start">
-                  <h1 className="text-[#06574C] text-lg font-bold">
-                    {" "}
-                    Access
-                  </h1>
+                  <h1 className="text-[#06574C] text-lg font-bold"> Access</h1>
                   <h1 className="text-xs wrap-break-word">
                     {" "}
                     Configure access rules
@@ -988,28 +1127,29 @@ const CourseBuilder = () => {
                             Choose between paid or free course
                           </h1>
                         </div>
-
                       </div>
 
                       <div className="flex gap-3 items-center py-4">
-                        {formData.type === "one_time" && <Select
-                          size="lg"
-                          variant="bordered"
-                          label="Access Duration"
-                          labelPlacement="outside"
-                          placeholder="Select Access Duration"
-                          className="w-full"
-                          selectedKeys={[formData.access_duration]}
-                          onSelectionChange={(keys) =>
-                            handleChange("access_duration", [...keys][0])
-                          }
-                        >
-                          {accessDuration.map((item) => (
-                            <SelectItem key={item.key} value={item.label}>
-                              {item.label}
-                            </SelectItem>
-                          ))}
-                        </Select>}
+                        {formData.type === "one_time" && (
+                          <Select
+                            size="lg"
+                            variant="bordered"
+                            label="Access Duration"
+                            labelPlacement="outside"
+                            placeholder="Select Access Duration"
+                            className="w-full"
+                            selectedKeys={[formData.access_duration]}
+                            onSelectionChange={(keys) =>
+                              handleChange("access_duration", [...keys][0])
+                            }
+                          >
+                            {accessDuration.map((item) => (
+                              <SelectItem key={item.key} value={item.label}>
+                                {item.label}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        )}
                         <Input
                           size="lg"
                           variant="bordered"
@@ -1048,29 +1188,33 @@ const CourseBuilder = () => {
                       <div className="p-3 bg-[#EBD4C982] rounded-lg flex justify-between items-center">
                         <div>
                           <h1 className="text-[#333333] font-bold text-lg">
-                            Current Status: {formData.status === "published" ? "Public" : "Draft"}
+                            Current Status: {formData.status}
                           </h1>
+
                           <h1 className="text-[#666666] font-medium text-sm">
-                            {formData.status === "published" ? "Your course is visible to students yet" : "Your course is not visible to students yet"}
+                            {formData.status === "published"
+                              ? "Your course is visible to students"
+                              : formData.status === "private"
+                                ? "Your course is private (only you can see it)"
+                                : "Your course is saved as draft"}
                           </h1>
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <p className="text-md text-[#06574C]">
-                            {formData.status === "published" ? "Public" : "Draft"}
-                          </p>
-                          <Switch
-                            color="success"
-                            aria-label="set active status of course"
-                            isSelected={formData.status === "published"}
-                            onValueChange={(val) => {
-                              handleChange("status", "published")
-
-                              if (val === false) {
-                                handleChange("status", "draft")
-                              }
+                          <Select
+                            selectedKeys={[formData.status]}
+                            onSelectionChange={(keys) => {
+                              const value = Array.from(keys)[0];
+                              handleChange("status", value);
                             }}
-                          />
+                            className="w-40"
+                            variant="bordered"
+                            color="success"
+                          >
+                            <SelectItem key="published">Public</SelectItem>
+                            <SelectItem key="private">Private</SelectItem>
+                            <SelectItem key="draft">Draft</SelectItem>
+                          </Select>
                         </div>
                       </div>
                     </div>
@@ -1093,10 +1237,12 @@ const CourseBuilder = () => {
                       variant="bordered"
                       className="border-[#06574C] text-[#06574C] w-80 sm:w-40"
                       type="submit"
-                      onPress={() => { setPendingAction("save-3"); handleChange("status", "draft"); }}
+                      onPress={() => {
+                        setPendingAction("save-3");
+                      }}
                       isLoading={loadingAction === "save-3"}
                     >
-                      Save Draft
+                      Save Changes
                     </Button>
                   </div>
                   <div className="flex gap-3">
@@ -1105,11 +1251,20 @@ const CourseBuilder = () => {
                       startContent={<Rocket color="white" size={16} />}
                       className="bg-[#06574C] text-white w-80 sm:w-60"
                       type="submit"
-                      isDisabled={formData?.status !== "published"}
-                      onPress={() => setPendingAction("publish-3")}
+                      onPress={() => {
+                        setPendingAction("publish-3");
+                        // Only auto-publish if it's a draft. If private/public already selected, just save.
+                        if (formData?.status === "draft") {
+                          handleChange("status", "published");
+                        }
+                      }}
                       isLoading={loadingAction === "publish-3"}
                     >
-                      Publish Course
+                      {formData?.status === "published"
+                        ? "Save & Published"
+                        : formData?.status === "private"
+                          ? "Save as Private"
+                          : "Publish Course"}
                     </Button>
                   </div>
                 </div>
