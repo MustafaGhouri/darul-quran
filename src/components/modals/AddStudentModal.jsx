@@ -25,7 +25,15 @@ const AddStudentModal = ({ isOpen, onClose }) => {
     const [countryInputValue, setCountryInputValue] = useState("");
     const [cityInputValue, setCityInputValue] = useState("");
     const [availableCities, setAvailableCities] = useState([]);
-
+    const [formData, setFormData] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phoneNumber: "",
+        country: "",
+        city: "",
+        password: ""
+    });
     useEffect(() => {
         async function fetchCountries() {
             try {
@@ -64,11 +72,9 @@ const AddStudentModal = ({ isOpen, onClose }) => {
         setCityInputValue(key);
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async () => {
         setLoading(true);
-        const formData = new FormData(e.currentTarget);
-        const data = Object.fromEntries(formData);
+        const data = formData;
 
         try {
             const payload = {
@@ -99,7 +105,7 @@ const AddStudentModal = ({ isOpen, onClose }) => {
         <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
             <ModalContent>
                 {(onClose) => (
-                    <Form onSubmit={handleSubmit} validationBehavior="native" className="w-full">
+                    <div className="w-full">
                         <ModalHeader className="flex flex-col gap-1">Add New Student</ModalHeader>
                         <ModalBody className="w-full">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
@@ -110,6 +116,8 @@ const AddStudentModal = ({ isOpen, onClose }) => {
                                     isRequired 
                                     variant="bordered" 
                                     labelPlacement="outside"
+                                    value={formData.firstName}
+                                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                                 />
                                 <Input 
                                     name="lastName" 
@@ -118,6 +126,8 @@ const AddStudentModal = ({ isOpen, onClose }) => {
                                     isRequired 
                                     variant="bordered" 
                                     labelPlacement="outside"
+                                    value={formData.lastName}
+                                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                                 />
                                 <Input 
                                     name="email" 
@@ -127,6 +137,8 @@ const AddStudentModal = ({ isOpen, onClose }) => {
                                     isRequired 
                                     variant="bordered" 
                                     labelPlacement="outside"
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({...formData, email: e.target.value})}
                                 />
                                 <Input 
                                     name="phoneNumber" 
@@ -135,6 +147,8 @@ const AddStudentModal = ({ isOpen, onClose }) => {
                                     isRequired 
                                     variant="bordered" 
                                     labelPlacement="outside"
+                                    value={formData.phoneNumber}
+                                    onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
                                 />
                                 <Autocomplete
                                     label="Country"
@@ -146,6 +160,8 @@ const AddStudentModal = ({ isOpen, onClose }) => {
                                     onInputChange={setCountryInputValue}
                                     inputValue={countryInputValue}
                                     isRequired
+                                    value={formData.country}
+                                    onChange={(e) => setFormData({...formData, country: e.target.value})}
                                 >
                                     {(item) => (
                                         <AutocompleteItem key={item.isoCode} textValue={item.name}>
@@ -164,6 +180,8 @@ const AddStudentModal = ({ isOpen, onClose }) => {
                                     onInputChange={setCityInputValue}
                                     inputValue={cityInputValue}
                                     isRequired
+                                    value={formData.city}
+                                    onChange={(e) => setFormData({...formData, city: e.target.value})}
                                 >
                                     {(item) => (
                                         <AutocompleteItem key={item.city} textValue={item.city}>
@@ -193,7 +211,9 @@ const AddStudentModal = ({ isOpen, onClose }) => {
                                                 )}
                                             </button>
                                         }
-                                    />
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                        />
                                 </div>
                             </div>
                         </ModalBody>
@@ -201,11 +221,11 @@ const AddStudentModal = ({ isOpen, onClose }) => {
                             <Button color="danger" variant="light" onPress={onClose}>
                                 Cancel
                             </Button>
-                            <Button color="primary" type="submit" isLoading={loading}>
+                            <Button color="primary" onPress={handleSubmit} isLoading={loading}>
                                 Create Student
                             </Button>
                         </ModalFooter>
-                    </Form>
+                    </div>
                 )}
             </ModalContent>
         </Modal>

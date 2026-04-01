@@ -406,6 +406,7 @@ const CourseBuilder = () => {
       discountPercentage: formData.discount_percentage,
       status: formData.status,
       isFree: formData.is_free,
+      studentIds: formData.student_ids,
     };
     try {
       const data = await updateCourse({
@@ -728,8 +729,8 @@ const CourseBuilder = () => {
                       </div>
                       <div className="my-4">
                         <StudentSelect
-                          onChange={(id) => handleChange("student_id", id)}
-                          initialValue={formData.student_id}
+                          onChange={(id) => handleChange("student_ids", id)}
+                          initialValue={formData.student_ids}
                         />
                       </div>
                       

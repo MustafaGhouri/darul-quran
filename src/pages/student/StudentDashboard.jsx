@@ -262,7 +262,7 @@ const StudentDashboard = () => {
                     <div>
                       <div className="flex justify-between items-center text-sm text-black">
                         <span className="text-xs font-semibold text-success">Progress :</span>
-                        {item.progress ? item.progress + " %" : "Not Started"}
+                        {item.progress ? item.progress == "not_started" ? "0 %" : item.progress + " %" : "0 %"}
                       </div> 
                       <Progress
                         aria-label="Course Progress"

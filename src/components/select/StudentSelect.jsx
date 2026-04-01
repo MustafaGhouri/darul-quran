@@ -53,6 +53,13 @@ const StudentSelect = ({ onChange, initialValues = [], label, placeholder = "Sel
         debounce(() => setSearchValue(value), 500)
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    };
+
     const toggleUser = (user) => {
         const isSelected = selectedIds.includes(user.id);
         let newSelectedIds, newSelectedUsers;
@@ -158,16 +165,22 @@ const StudentSelect = ({ onChange, initialValues = [], label, placeholder = "Sel
                                 className="w-full pl-9 pr-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#406c65] transition-all"
                                 placeholder="Search..."
                                 onChange={onInputChange}
+                                onKeyDown={handleKeyDown}
                                 onClick={(e) => e.stopPropagation()}
                             />
                         </div>
                         <Button 
                             isIconOnly
+                            type="button"
                             size="sm" 
                             variant="flat" 
                             color="success" 
                             className="rounded-lg"
-                            onPress={onAddModalOpen}
+                            onPress={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onAddModalOpen();
+                            }}
                             title="Add new student"
                         >
                             <Plus size={18} />
@@ -189,10 +202,15 @@ const StudentSelect = ({ onChange, initialValues = [], label, placeholder = "Sel
                                 <span className="text-sm mb-4">{searchValue ? 'No users found' : 'No users available'}</span>
                                 <Button
                                     size="sm"
+                                    type="button"
                                     color="success"
                                     variant="flat"
                                     startContent={<Plus size={16} />}
-                                    onPress={onAddModalOpen}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onAddModalOpen();
+                                    }}
                                 >
                                     Add Student
                                 </Button>
@@ -225,7 +243,12 @@ const StudentSelect = ({ onChange, initialValues = [], label, placeholder = "Sel
                                 ))}
                                 <div className="p-1 border-t border-gray-50">
                                     <button
-                                        onClick={onAddModalOpen}
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            onAddModalOpen();
+                                        }}
                                         className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-[#406c65] font-medium hover:bg-green-50 rounded-lg transition-colors group"
                                     >
                                         <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center group-hover:bg-green-100 transition-colors">
