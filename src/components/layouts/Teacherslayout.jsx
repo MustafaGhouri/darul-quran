@@ -121,7 +121,7 @@ export default function TeachersLayout() {
                             </button>
                             <div className="flex  items-center gap-2">
                                 <div className="relative flex items-center gap-2">
-                                    <NotificationPopover />
+                                    
 
                                     <input
                                         type="search"
@@ -148,6 +148,7 @@ export default function TeachersLayout() {
                                         placeholder="Search here..."
                                     />
                                 </div>
+                                <NotificationPopover />
                                 <LogoutToggule />
                             </div>
                         </header>}

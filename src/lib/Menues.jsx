@@ -70,35 +70,52 @@ export const adminMenu = [
     link: "/admin/attendance-list",
     value: "attendance-list",
   },
-  {
-    name: "Announcements",
-    icon: <MegaphoneIcon />,
-    link: "/admin/announcements",
-    value: "announcements",
-  },
+  // {
+  //   name: "Announcements",
+  //   icon: <MegaphoneIcon />,
+  //   link: "/admin/announcements",
+  //   value: "announcements",
+  // },
   {
     name: "Payments & Refunds",
     icon: <DollarSignIcon />,
     link: "/admin/payments",
     value: "payments-refunds",
   },
-  {
-    name: "Support Tickets",
-    icon: <TicketIcon />,
-    link: "/admin/tickets",
-    value: "support-tickets",
-  },
+  // {
+
+  //   icon: <TicketIcon />,
+
+  // },
   {
     name: "Analytics",
     icon: <ChartBarIcon />,
     link: "/admin/analytics",
     value: "analytics",
   },
+  // {
+  //   name: "Notifications",
+  //   icon: <BellRing />,
+  //   link: "/admin/notifications",
+  //   value: "notifications",
+  // },
   {
-    name: "Notifications",
+    name: "Notifications & Announcements",
     icon: <BellRing />,
     link: "/admin/notifications",
-    value: "notifications",
+    value: "notifications-announcements",
+    children: [
+      {
+        name: "Notifications",
+        link: "/admin/notifications",
+        value: "notifications",
+      },
+      {
+        name: "Announcements",
+        link: "/admin/announcements",
+        value: "announcements",
+      },
+    ],
   },
   {
     name: "Profile",
@@ -127,6 +144,11 @@ export const adminMenu = [
         link: "/admin/help/chat",
         value: "chat",
       },
+      {
+        name: "Support Tickets",
+        link: "/admin/tickets",
+        value: "support-tickets",
+      },
       { name: "Reviews", link: "/admin/help/reviews", value: "reviews" },
       { name: "FAQs", link: "/admin/faqs", value: "faqs" },
     ],
@@ -154,22 +176,33 @@ export const teacherMenu = [
   },
   // { name: 'Student Attendance', icon: <CalendarIcon />, link: '/teacher/student-attendance' },
   // { name: 'Student Attendance List', icon: <Users2Icon />, link: '/teacher/attendance-list' },
+  // {
+  //   name: "Class Schedule",
+  //   icon: <MegaphoneIcon />,
+  //   link: "/teacher/class-scheduling",
+  // },
+  // {
+  //   name: "Reschedule Requests",
+  //   icon: <CalendarPlus />,
+  //   link: "/teacher/reschedule-requests",
+  // },
+  { name: "Chat Center", icon: <TicketIcon />, link: "/teacher/chat" },
+  // {
+  //   name: "Support Tickets  ",
+  //   icon: <TicketsIcon />,
+  //   link: "/teacher/support-tickets"`,
+  // },
+
   {
-    name: "Class Schedule",
+    name: "Schedules Center",
     icon: <MegaphoneIcon />,
     link: "/teacher/class-scheduling",
+    children: [
+      { name: "Class Schedule", link: "/teacher/class-scheduling" },
+      { name: "Reschedule Requests", link: "/teacher/reschedule-requests" },
+    ],
   },
-  {
-    name: "Reschedule Requests",
-    icon: <CalendarPlus />,
-    link: "/teacher/reschedule-requests",
-  },
-  { name: "Chat Center", icon: <TicketIcon />, link: "/teacher/chat" },
-  {
-    name: "Support Tickets  ",
-    icon: <TicketsIcon />,
-    link: "/teacher/support-tickets",
-  },
+
   {
     name: "Alerts Center",
     icon: <BellRing />,
@@ -177,7 +210,9 @@ export const teacherMenu = [
     children: [
       { name: "Announcements", link: "/teacher/announcements" },
       { name: "Notifications", link: "/teacher/notifications" },
+      { name: "Support Tickets" , link: "/teacher/support-tickets" },
       { name: "FAQs", link: "/teacher/faqs" },
+
     ],
   },
   // { name: 'Announcements', icon: <MegaphoneIcon />, link: '/teacher/announcements' },
