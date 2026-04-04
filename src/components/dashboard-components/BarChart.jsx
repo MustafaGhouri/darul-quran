@@ -1,6 +1,6 @@
 import React from "react";
 import ReactApexChart from "react-apexcharts";
-// import dayjs from "dayjs";
+import { getQuarter, format } from "date-fns";
 
 const BarChart = ({ data = [] }) => {
   // If data is passed in, use it; otherwise fallback to the hardcoded array
@@ -52,8 +52,12 @@ const BarChart = ({ data = [] }) => {
   colors: ["#95C4BE"],
     tooltip: {
       x: {
-        formatter: (val) =>
-          "Q" + dayjs(val).quarter() + " " + dayjs(val).format("YYYY"),
+        formatter: (val) => {
+          const date = new Date(val);
+          return isNaN(date.getTime()) 
+            ? val 
+            : `Q${getQuarter(date)} ${format(date, "yyyy")}`;
+        },
       },
     },
   };

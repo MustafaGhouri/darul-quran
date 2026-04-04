@@ -56,6 +56,7 @@ const CourseManagement = () => {
   const statuses = [
     { key: "all", label: "All Status" },
     { key: "draft", label: "Draft" },
+    { key: "private", label: "Private" },
     { key: "published", label: "Published" },
   ];
   const limits = [

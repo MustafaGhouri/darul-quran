@@ -22,7 +22,8 @@ import {
   ModalBody,
   ModalFooter,
   Textarea,
-  useDisclosure
+  useDisclosure,
+  Tooltip
 } from "@heroui/react";
 
 import { errorMessage, successMessage } from "../../../lib/toast.config";
@@ -236,7 +237,9 @@ const PaymentsRefunds = () => {
                   </TableCell>
                   <TableCell>{item.courseName}</TableCell>
                   <TableCell className="max-w-xs whitespace-normal text-sm">
-                    {item.reason}
+                    <Tooltip content={item.reason}>
+                      <span className="line-clamp-1 cursor-pointer">{item.reason}</span>
+                    </Tooltip>
                     {item.adminNotes && (
                       <div className="mt-1 text-xs text-gray-400 italic">
                         Admin: {item.adminNotes}

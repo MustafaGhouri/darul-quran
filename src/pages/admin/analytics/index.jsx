@@ -249,15 +249,15 @@ const Analytics = () => {
       ],
     ];
 
-    const logsData = PaymentTable.map((item) => [
-      `"${item.student_name}"`,
-      `"${item.email}"`,
-      `"${item.role}"`,
-      `"${item.details}"`,
-      `"${item.action}"`,
-      `"${item.date}"`,
-      `"${item.time}"`,
-      `"${item.status}"`,
+    const logsData = activities.map((log) => [
+      `"${log.userName}"`,
+      `"${log.email}"`,
+      `"${log.role}"`,
+      `"${log.details}"`,
+      `"${log.action}"`,
+      `"${log.date}"`,
+      `"${log.time}"`,
+      `"${log.status}"`,
     ]);
 
     const csvContent = [
