@@ -16,6 +16,7 @@ import {
   Tooltip,
   Tabs,
   Tab,
+  Textarea,
 } from "@heroui/react";
 import { CiCalendar } from "react-icons/ci";
 import {
@@ -33,6 +34,7 @@ import CustomCalendar from "../../../components/teacher/CustomCalendar";
 import {
   useGetScheduleQuery,
   useDeleteScheduleMutation,
+  useAddScheduleNoteMutation,
 } from "../../../redux/api/schedules";
 import { useCreateRescheduleRequestMutation } from "../../../redux/api/reschedule";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
@@ -58,6 +60,7 @@ const TeacherClassSheduling = () => {
   const [isMarking, setIsMarking] = useState(false);
   const [viewType, setViewType] = useState("normal");
   const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedNoteDate, setSelectedNoteDate] = useState(null);
   const [schedulesForSelectedDate, setSchedulesForSelectedDate] = useState([]);
 
   const { onOpenChange, isOpen } = useDisclosure();
@@ -65,6 +68,11 @@ const TeacherClassSheduling = () => {
     isOpen: isDateModalOpen,
     onOpen: openDateModal,
     onOpenChange: closeDateModal,
+  } = useDisclosure();
+  const {
+    isOpen: isNoteModalOpen,
+    onOpen: openNoteModal,
+    onOpenChange: closeNoteModal,
   } = useDisclosure();
 
   const {
@@ -81,6 +89,9 @@ const TeacherClassSheduling = () => {
 
   const [deleteSchedule, { isLoading: isCancelling }] =
     useDeleteScheduleMutation();
+  const [addScheduleNote, { isLoading: isSavingNote }] =
+    useAddScheduleNoteMutation();
+  const [noteText, setNoteText] = useState("");
 
   const { user: currentUser } = useSelector((state) => state.user);
 
@@ -199,6 +210,32 @@ const TeacherClassSheduling = () => {
   const handleCancelClass = (schedule) => {
     setSelectedSchedule(schedule);
     onOpenChange(true);
+  };
+
+  const handleAddNote = (schedule, date) => {
+    setSelectedSchedule(schedule);
+    const noteDate = date || new Date().toISOString().split("T")[0];
+    setSelectedNoteDate(noteDate);
+    setNoteText(schedule?.notes?.[noteDate] || "");
+    openNoteModal();
+  };
+
+  const handleSaveNote = async () => {
+    try {
+      if (!selectedSchedule) return;
+      const res = await addScheduleNote({
+        id: selectedSchedule.id,
+        note: noteText,
+        date: selectedNoteDate,
+      });
+      if (res.error)
+        throw new Error(res.error.data?.message || "Failed to save note");
+      successMessage("Note saved successfully");
+      closeNoteModal();
+      setNoteText("");
+    } catch (error) {
+      errorMessage(error.message);
+    }
   };
 
   const canCancel = (schedule) => {
@@ -331,7 +368,22 @@ const TeacherClassSheduling = () => {
               Course: {schedule.courseName}
             </Button>
           )}
+          <Button
+            size="sm"
+            color="success"
+            radius="sm"
+            onPress={() => handleAddNote(schedule, schedule.date)}
+          >
+            Add Note
+          </Button>
         </div>
+
+        {schedule?.notes?.[schedule.date] && (
+          <div className="bg-amber-50 border-l-4 border-success p-3 mb-3 rounded-r-md">
+            <p className="text-sm font-semibold text-amber-800 mb-1">Schedule Note:</p>
+            <p className="text-sm text-amber-900">{schedule.notes[schedule.date]}</p>
+          </div>
+        )}
 
         <h2 className="text-xl font-bold text-gray-800 mb-2">
           {schedule.title}
@@ -669,6 +721,14 @@ const TeacherClassSheduling = () => {
                           Course: {schedule.courseName}
                         </Chip>
                       )}
+                      <Button
+                        size="sm"
+                        color="success"
+                        radius="sm"
+                        onPress={() => handleAddNote(schedule, schedule.date)}
+                      >
+                        Add Note
+                      </Button>
                     </div>
                     <h3 className="text-lg font-bold text-gray-800 mb-2">
                       {schedule.title}
@@ -824,6 +884,40 @@ const TeacherClassSheduling = () => {
               isLoading={isCancelling}
             >
               Yes, Delete
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      <Modal isOpen={isNoteModalOpen} onOpenChange={closeNoteModal} size="md">
+        <ModalContent>
+          <ModalHeader>
+            <h2 className="text-lg font-semibold text-[#06574C]">
+              Note for {selectedSchedule?.title}
+            </h2>
+          </ModalHeader>
+          <ModalBody>
+            <p className="text-sm text-gray-500 mb-2">
+              Date: {selectedNoteDate && new Date(selectedNoteDate).toLocaleDateString()}
+            </p>
+            <Textarea
+              label="Note"
+              placeholder="Enter your note here..."
+              variant="bordered"
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              minRows={4}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={closeNoteModal}>
+              Cancel
+            </Button>
+            <Button
+              color="success"
+              onPress={handleSaveNote}
+              isLoading={isSavingNote}
+            >
+              Save Note
             </Button>
           </ModalFooter>
         </ModalContent>

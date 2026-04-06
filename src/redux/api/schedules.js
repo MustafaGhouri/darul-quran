@@ -61,6 +61,15 @@ export const scheduleApi = createApi({
             invalidatesTags: (result, error, arg) =>
                 error ? [] : ['schedule']
         }),
+        addScheduleNote: builder.mutation({
+            query: ({ id, note, date }) => ({
+                url: `/add-note/${id}`,
+                method: "POST",
+                body: { note, date },
+            }),
+            invalidatesTags: (result, error, arg) =>
+                error ? [] : ['schedule']
+        }),
     }),
 });
 
@@ -70,4 +79,5 @@ export const {
     useCreateScheduleMutation,
     useUpdateScheduleMutation,
     useDeleteScheduleMutation,
+    useAddScheduleNoteMutation,
 } = scheduleApi;
