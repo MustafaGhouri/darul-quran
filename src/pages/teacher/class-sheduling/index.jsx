@@ -374,7 +374,7 @@ const TeacherClassSheduling = () => {
             radius="sm"
             onPress={() => handleAddNote(schedule, schedule.date)}
           >
-            Add Note
+            {schedule?.notes?.[schedule.date] ? "Update Note" : "Add Note"}
           </Button>
         </div>
 
@@ -727,7 +727,7 @@ const TeacherClassSheduling = () => {
                         radius="sm"
                         onPress={() => handleAddNote(schedule, schedule.date)}
                       >
-                        Add Note
+                        {schedule?.notes?.[schedule.date] ? "Update Note" : "Add Note"}
                       </Button>
                     </div>
                     <h3 className="text-lg font-bold text-gray-800 mb-2">
@@ -892,7 +892,7 @@ const TeacherClassSheduling = () => {
         <ModalContent>
           <ModalHeader>
             <h2 className="text-lg font-semibold text-[#06574C]">
-              Note for {selectedSchedule?.title}
+              {selectedSchedule?.notes?.[selectedNoteDate] ? "Update" : "Add"} Note for {selectedSchedule?.title}
             </h2>
           </ModalHeader>
           <ModalBody>
