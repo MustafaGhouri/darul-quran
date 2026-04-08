@@ -467,7 +467,7 @@ const StudentClassSheduling = () => {
                 ) :
                     <details>
                         <summary className="cursor-pointer text-[#406c65] hover:opacity-80 italic underline flex">All Notes</summary>
-                        {Object.keys(schedule.notes).map((date) => (
+                        {Object.keys(schedule?.notes).map((date) => (
                             <div className="bg-amber-50 flex items-center gap-1 flex-wrap border-l-4 border-success p-3 mb-3 rounded-r-md">
                                 <p className="text-sm font-semibold text-amber-800 msb-1">{dateFormatter(date)}:</p>
                                 <p className="text-sm text-amber-900">{schedule.notes[date]}</p>

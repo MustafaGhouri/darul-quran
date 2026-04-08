@@ -159,7 +159,7 @@ export default function AdminLayout() {
             )}
           </button>
         ) : (
-          <header className="bg-linear-to-r from-[#f7f7f7] via-[#ffffff] to-[#ffffff]  gap-3 flex p-2 justify-between msd:justify-end shadow-sm ">
+          <header className="bg-linear-to-r from-[#f7f7f7] via-[#ffffff] to-[#ffffff]  gap-3 flex p-2 justify-between msd:justify-end shadow-sm sticky top-0 z-50">
             {
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
