@@ -145,7 +145,7 @@ export const adminMenu = [
         value: "chat",
       },
       {
-        name: "Support Tickets",
+        name: "Support",
         link: "/admin/tickets",
         value: "support-tickets",
       },
@@ -210,7 +210,7 @@ export const teacherMenu = [
     children: [
       { name: "Announcements", link: "/teacher/announcements" },
       { name: "Notifications", link: "/teacher/notifications" },
-      { name: "Support Tickets" , link: "/teacher/support-tickets" },
+      { name: "Support", link: "/teacher/support-tickets" },
       { name: "FAQs", link: "/teacher/faqs" },
 
     ],
@@ -271,7 +271,7 @@ export const studentMenu = [
     link: "/student/help/messages",
     children: [
       { name: "Chat Center", link: "/student/help/messages" },
-      { name: "Support Tickets  ", link: "/student/support-tickets" },
+      { name: "Support", link: "/student/support-tickets" },
       { name: "FAQs", link: "/student/faqs" },
     ],
   },

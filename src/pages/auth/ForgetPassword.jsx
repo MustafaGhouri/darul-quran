@@ -2,7 +2,7 @@ import { Button, Form, Input } from "@heroui/react";
 import { useState } from "react";
 
 import { api } from "../../services/api";
-import { successMessage } from "../../lib/toast.config";
+import { errorMessage, successMessage } from "../../lib/toast.config";
 
 const ForgetPassword = () => {
   const [email, setEmail] = useState("");
@@ -25,7 +25,7 @@ const ForgetPassword = () => {
 
     try {
       // api.post handles JSON encoding, headers, response.ok check, and error toast
-      await api.post("/admin/forgot-password", { email });
+      await api.post("/auth/forgot-password", { email });
 
       // Success message
       successMessage(
@@ -35,8 +35,7 @@ const ForgetPassword = () => {
       // Do NOT redirect automatically — user must use emailed link
     } catch (err) {
       console.error(err);
-      // Toast handles error message by default, but if you want specific fallback:
-      // toast.error("Server error. Please try again later."); 
+      errorMessage(err.message);
     } finally {
       setLoading(false);
     }
