@@ -17,6 +17,7 @@ import CourseSelect from "../../../components/select/CourseSelect";
 import Swal from "sweetalert2";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { validateSchedule } from "../../../lib/utils";
 
 const CreaterOrUpdateSchedule = () => {
     const [searchParams] = useSearchParams();
@@ -61,131 +62,8 @@ const CreaterOrUpdateSchedule = () => {
     });
     const [createSchedule, { isLoading: isSubmitting, isError }] = useCreateScheduleMutation();
     const [updateSchedule, { isLoading: isUpdating, isError: isError2 }] = useUpdateScheduleMutation();
-    const [deleteSchedule, { isError: isError3 }] = useDeleteScheduleMutation();
 
-    const validateSchedule = () => {
-        const {
-            title,
-            startTime,
-            endTime,
-            scheduleType,
-            date,
-            startDate,
-            endDate,
-            repeatInterval,
-            weeklyDays,
-            teacherId,
-            courseId
-        } = formData;
 
-        // Required fields
-        if (!title || !title.trim()) {
-            return { valid: false, message: "Session title is required" };
-        }
-        if (!startTime || !endTime) {
-            return { valid: false, message: "Start time and end time are required" };
-        }
-        // if (!teacherId) {
-        //     return { valid: false, message: "Please select a teacher" };
-        // }
-
-        // Time validation
-        const start = new Date(`2000-01-01T${startTime}`);
-        const end = new Date(`2000-01-01T${endTime}`);
-        if (end <= start) {
-            return { valid: false, message: "End time must be after start time" };
-        }
-
-        if (scheduleType === "once") {
-            if (!date) {
-                return { valid: false, message: "Please select a date for one-time session" };
-            }
-            const selectedDate = new Date(date);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (selectedDate < today) {
-                return { valid: false, message: "Cannot schedule a session in the past" };
-            }
-        }
-
-        if (scheduleType === "daily" || scheduleType === "weekly") {
-            if (!startDate) {
-                return { valid: false, message: "Start date is required" };
-            }
-
-            const start = new Date(startDate);
-            const end = endDate && new Date(endDate);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            if (start < today) {
-                return { valid: false, message: "Start date cannot be in the past" };
-            }
-            if (end && end < start) {
-                return { valid: false, message: "End date must be after start date" };
-            }
-
-            const dateRangeDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-
-            if (scheduleType === "daily") {
-                const interval = repeatInterval && repeatInterval > 0 ? repeatInterval : 1;
-                const maxSessions = Math.ceil(dateRangeDays / interval);
-
-                if (maxSessions > 365) {
-                    return {
-                        valid: false,
-                        message: `This schedule would create ${maxSessions} sessions. Please reduce the date range or increase the repeat interval to avoid excessive sessions.`
-                    };
-                }
-
-                if (dateRangeDays > 365 && interval === 1) {
-                    return { valid: false, message: "Daily schedules cannot exceed 1 year. Please reduce the date range." };
-                }
-            }
-
-            if (scheduleType === "weekly") {
-                if (!weeklyDays || weeklyDays.length === 0) {
-                    return { valid: false, message: "Please select at least one day of the week" };
-                }
-
-                const interval = repeatInterval && repeatInterval > 0 ? repeatInterval : 1;
-
-                const weeksRange = Math.ceil((end - start) / (1000 * 60 * 60 * 24 * 7));
-
-                if (interval > weeksRange && weeksRange > 0) {
-                    return {
-                        valid: false,
-                        message: `Repeat interval (${interval} weeks) is longer than your date range (${weeksRange} week(s)). This will create only 1 session. Please adjust your dates or interval.`
-                    };
-                }
-
-                const estimatedSessions = Math.ceil(weeksRange / interval) * weeklyDays.length;
-
-                if (estimatedSessions > 200) {
-                    return {
-                        valid: false,
-                        message: `This schedule would create approximately ${estimatedSessions} sessions. Please reduce the date range, decrease selected days, or increase the repeat interval.`
-                    };
-                }
-
-                if (estimatedSessions === 0) {
-                    return {
-                        valid: false,
-                        message: "No valid session dates will be generated. Please check your selected days and date range."
-                    };
-                }
-
-                if (interval >= 4 && weeksRange < 8) {
-                    return {
-                        valid: false,
-                        message: `With a ${interval}-week interval and only ${weeksRange} weeks range, you'll get very few sessions. Consider reducing the interval or extending the date range.`
-                    };
-                }
-            }
-        }
-
-        return { valid: true, message: "" };
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -222,32 +100,6 @@ const CreaterOrUpdateSchedule = () => {
         } catch (error) {
             console.error(error);
             errorMessage("Error submitting form: " + error.message);
-        }
-    };
-
-    const handleDelete = async (id) => {
-        const { isConfirmed } = await Swal.fire({
-            title: "Are you sure?",
-            text: "You won't be able to revert this!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#06574C",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, delete it!",
-        })
-        if (!isConfirmed) return;
-        try {
-            setDeleteLoading(id);
-            const res = await deleteSchedule(id);
-            const error = res?.error?.data;
-            if (error) {
-                throw new Error(error.message || "Operation failed");
-            }
-            successMessage(res.data.message || "Course deleted successfully");
-        } catch (error) {
-            errorMessage("Error deleting session: " + error.message);
-        } finally {
-            setDeleteLoading(null);
         }
     };
 
@@ -295,8 +147,8 @@ const CreaterOrUpdateSchedule = () => {
             meetingLink: item.meetingLink,
             scheduleType: item.scheduleType,
             sessionMode: item.specificStudents?.length > 0 ? 'one-on-one' : 'all',
-            startDate: item?.scheduleDates[0],
-            endDate: item?.scheduleDates[1],
+            startDate: item?.startDate,
+            endDate: item?.endDate ?? null,
             repeatInterval: item.repeatInterval,
             weeklyDays: item.weeklyDays,
             specificStudentIds: item.specificStudents,
@@ -308,18 +160,6 @@ const CreaterOrUpdateSchedule = () => {
             },
         });
     }, [scheduleFromState])
-
-    const copyToClipboard = (text, id) => {
-        navigator.clipboard.writeText(text);
-        setCopiedId(id);
-        successMessage("Link Copied!");
-        setTimeout(() => setCopiedId(null), 2000);
-    };
-
-    // if (!scheduleFromState) {
-    //     navigate("/student/browse-courses");
-    //     return null;
-    // }
 
 
     return (
