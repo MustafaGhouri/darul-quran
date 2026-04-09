@@ -29,6 +29,14 @@ export const getAllowedPaths = (menu) => {
 
 export const dateFormatter = (date, isTime = false) => {
   if (!date) return '';
+
+  const parsedDate = new Date(date);
+
+  if (isNaN(parsedDate.getTime())) {
+    console.warn("Invalid date passed:", date);
+    return date;
+  }
+
   const formatterUS = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
@@ -122,10 +130,10 @@ export const parseInterval = (interval) => {
     const hour = interval.split(":")[0];
     return { number: Number(hour), unit: "hour" };
   }
-  
+
   const parts = interval.toLowerCase().split(/\s+/);
   const result = { number: "", unit: "" };
-  
+
   const unitMap = {
     'year': 'year', 'years': 'year', 'yr': 'year', 'yrs': 'year',
     'mon': 'month', 'mons': 'month', 'month': 'month', 'months': 'month',
@@ -134,17 +142,17 @@ export const parseInterval = (interval) => {
     'minute': 'minute', 'minutes': 'minute', 'min': 'minute', 'mins': 'minute', 'm': 'minute',
     'second': 'second', 'seconds': 'second', 'sec': 'second', 'secs': 'second', 's': 'second'
   };
-  
+
   for (let i = 0; i < parts.length; i += 2) {
     const num = parts[i];
     const rawUnit = parts[i + 1];
-    
+
     if (!num || !rawUnit) continue;
-    
+
     const unit = unitMap[rawUnit] || rawUnit.replace("s", "");
-    
+
     if (!unit) continue;
-    
+
     if (unit === 'year' && !result.number) {
       result.number = Number(num);
       result.unit = 'year';
@@ -162,14 +170,14 @@ export const parseInterval = (interval) => {
       result.unit = 'minute';
     }
   }
-  
+
   if (!result.number) {
     const [num, rawUnit] = interval.split(" ");
     const unit = unitMap[rawUnit?.toLowerCase()] || rawUnit?.toLowerCase()?.replace("s", "");
     result.number = Number(num);
     result.unit = unit;
   }
-  
+
   return result;
 };
 
@@ -195,5 +203,5 @@ export const isEditable = (dateStr, startTime, endTime) => {
 };
 
 export const canReschedule = (schedule) => {
-  return schedule.scheduleDates.every(dateStr => isEditable(dateStr, schedule.startTime,schedule.endTime));
+  return schedule.scheduleDates.every(dateStr => isEditable(dateStr, schedule.startTime, schedule.endTime));
 };
