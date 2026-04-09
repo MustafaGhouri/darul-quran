@@ -63,6 +63,18 @@ export const adminMenu = [
     icon: <CalendarIcon />,
     link: "/admin/class-scheduling",
     value: "class-scheduling",
+    children: [
+      {
+        name: "All Schedule",
+        icon: <CalendarPlus />,
+        link: "/admin/class-scheduling",
+      },
+       {
+        name: "Reschedule Requests",
+        icon: <CalendarPlus />,
+        link: "/admin/reschedule-requests",
+      },
+    ]
   },
   {
     name: "Student Attendance List",
@@ -122,11 +134,6 @@ export const adminMenu = [
     icon: <UserIcon />,
     link: "/admin/profile",
     value: "profile",
-  },
-  {
-    name: "Reschedule Requests",
-    icon: <CalendarPlus />,
-    link: "/admin/reschedule-requests",
   },
   {
     name: "Help and Support",
