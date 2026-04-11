@@ -153,7 +153,7 @@ const Scheduling = () => {
 
   const handleSubmit = async () => {
     // Run comprehensive validation
-    const validation = validateSchedule();
+    const validation = validateSchedule(formData);
     if (!validation.valid) {
       errorMessage(validation.message);
       return;
@@ -961,6 +961,7 @@ const Scheduling = () => {
           const updatedUsers = formData.selectedUsers.map(u => ({ ...u, subscriptionId: true }));
           setFormData({ ...formData, selectedUsers: updatedUsers });
           successMessage("Now you can proceed with scheduling");
+
         }}
       />
 
