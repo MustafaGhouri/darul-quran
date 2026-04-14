@@ -99,7 +99,7 @@ const SupportTicketsStudent = () => {
   return (
     <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 h-full">
       <DashHeading
-        title={"Support Tickets"}
+        title={"Support"}
         desc={"Submit and track your help requests"}
       />
 
@@ -297,9 +297,8 @@ const SupportTicketsStudent = () => {
                       <div>
                         <p className="text-xs text-gray-400 mb-1">Status</p>
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            STATUS_COLORS[selectedTicket.status]?.bg
-                          } ${STATUS_COLORS[selectedTicket.status]?.text}`}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[selectedTicket.status]?.bg
+                            } ${STATUS_COLORS[selectedTicket.status]?.text}`}
                         >
                           {selectedTicket.status.charAt(0).toUpperCase() +
                             selectedTicket.status.slice(1)}

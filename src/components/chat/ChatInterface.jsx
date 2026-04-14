@@ -573,7 +573,7 @@ export default function ChatInterface({
         <ModalContent>
           <ModalHeader>Report conversation</ModalHeader>
           <ModalBody>
-            <p>You will be taken to support tickets where you can describe the issue or report this conversation.</p>
+            <p>You will be taken to support where you can describe the issue or report this conversation.</p>
           </ModalBody>
           <ModalFooter>
             <Button variant="light" onPress={() => setReportModalOpen(false)}>Cancel</Button>

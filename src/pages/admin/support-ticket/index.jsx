@@ -119,7 +119,7 @@ const AdminSupportTickets = () => {
   return (
     <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 min-h-full">
       <DashHeading
-        title={"Support Tickets"}
+        title={"Support"}
         desc={"Manage and respond to student and teacher help requests"}
       />
 
@@ -176,7 +176,7 @@ const AdminSupportTickets = () => {
           <TableBody
             isLoading={isLoading || isFetching}
             loadingContent={<Spinner color="success" />}
-            emptyContent="No support tickets found."
+            emptyContent="No support  found."
           >
             {tickets.map((ticket) => {
               const color = STATUS_COLORS[ticket.status] || STATUS_COLORS.open;
