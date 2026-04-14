@@ -8,7 +8,7 @@ import { BiGroup } from "react-icons/bi";
 import { GrAnnounce } from "react-icons/gr";
 import { CiCalendar } from "react-icons/ci";
 import { useSelector } from "react-redux";
-import NotificationPermission from "../../components/NotificationPermission"; 
+import NotificationPermission from "../../components/NotificationPermission";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination as SwiperPagination } from "swiper/modules";
 import "swiper/css";
@@ -23,7 +23,7 @@ import { errorMessage, successMessage } from "../../lib/toast.config";
 import { dateFormatter } from "../../lib/utils";
 import QueryError from "../../components/QueryError";
 import { formatTime12Hour, isClassExpired, isClassLive, getHoursUntilClass, getStatusText } from "../../utils/scheduleHelpers";
-import { useGetStudentDashboardQuery } from "../../redux/api/dashboard"; 
+import { useGetStudentDashboardQuery } from "../../redux/api/dashboard";
 
 const StudentDashboard = () => {
   const { user } = useSelector((state) => state.user);
@@ -237,38 +237,40 @@ const StudentDashboard = () => {
                   <div className="p-4 space-y-3">
                     <div className="flex flex-col flex-1 gap-2">
                       <h1 className="text-lg font-bold text-[#06574C] line-clamp-1">
-                      {item.courseName}
-                    </h1>
+                        {item.courseName}
+                      </h1>
 
-                    <div className="flex justify-between items-center text-sm text-black">
-                      <div className="flex gap-1 items-center ">
-                        {<FaRegAddressCard size={16} />}{" "}
-                        {item.teacherName || "Instructor"}
+                      <div className="flex flex-col gap-2 justify-between items-start text-sm text-black">
+                        <div className="flex gap-1 items-center ">
+                          <span className="text-xs font-semibold text-success">Teacher :</span>
+                          {<FaRegAddressCard size={16} />}{" "}
+                          {item.teacherName || "Instructor"}
+                        </div>
+                        <div className="flex gap-1 items-center ">
+                          <span className="text-xs font-semibold text-success">Enrolled At :</span>
+                          {<CiCalendar size={16} />}{" "}
+                          {dateFormatter(item.enrolledAt, true)}
+                        </div>
+                        <div className="flex justify-between items-center text-sm text-black">
+                          <div className="flex gap-1 items-center ">
+                            <span className="text-xs font-semibold text-success">Expires At :</span>
+                            {<CiCalendar size={16} />}{" "}
+                            {item?.cancelledAt || item?.cancelledat ? dateFormatter(item?.cancelledAt || item?.cancelledat, true) : "Live Time"}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex gap-1 items-center ">
-                        <span className="text-xs font-semibold text-success">Enrolled At :</span>
-                        {<CiCalendar size={16} />}{" "}
-                        {dateFormatter(item.enrolledAt, true)}
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center text-sm text-black">
-                      <div className="flex gap-1 items-center ">
-                        <span className="text-xs font-semibold text-success">Expires At :</span>
-                        {<CiCalendar size={16} />}{" "}
-                        {item?.cancelledAt || item?.cancelledat ? dateFormatter(item?.cancelledAt || item?.cancelledat, true) : "Live Time"}
-                      </div>
-                    </div>
+
                     </div>
                     <div>
                       <div className="flex justify-between items-center text-sm text-black">
                         <span className="text-xs font-semibold text-success">Progress :</span>
                         {item.progress ? item.progress == "not_started" ? "0 %" : item.progress + " %" : "0 %"}
-                      </div> 
+                      </div>
                       <Progress
                         aria-label="Course Progress"
                         size="sm"
                         value={item.progress}
-                        color="success" 
+                        color="success"
                         className="max-w-md"
                       />
                     </div>

@@ -192,13 +192,6 @@ export const teacherMenu = [
   //   icon: <CalendarPlus />,
   //   link: "/teacher/reschedule-requests",
   // },
-  { name: "Chat Center", icon: <TicketIcon />, link: "/teacher/chat" },
-  // {
-  //   name: "Support Tickets  ",
-  //   icon: <TicketsIcon />,
-  //   link: "/teacher/support-tickets"`,
-  // },
-
   {
     name: "Class Schedule",
     icon: <MegaphoneIcon />,
@@ -208,14 +201,27 @@ export const teacherMenu = [
     //   { name: "Reschedule Requests", link: "/teacher/reschedule-requests" },
     // ],
   },
-
+  { name: "Chat Center", icon: <TicketIcon />, link: "/teacher/chat" },
+  // {
+  //   name: "Support Tickets  ",
+  //   icon: <TicketsIcon />,
+  //   link: "/teacher/support-tickets"`,
+  // }
   {
-    name: "Alert Center",
+    name: "Notifications & Announcements",
     icon: <BellRing />,
     link: "/teacher/announcements",
     children: [
       { name: "Announcements", link: "/teacher/announcements" },
       { name: "Notifications", link: "/teacher/notifications" },
+
+    ],
+  },
+  {
+    name: "Help and Support",
+    icon: <FileQuestionIcon />,
+    link: "/teacher/support-tickets",
+    children: [
       { name: "Support", link: "/teacher/support-tickets" },
       { name: "FAQs", link: "/teacher/faqs" },
 
