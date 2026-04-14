@@ -321,12 +321,18 @@ const TeachersDashboard = () => {
               return (
                 <div key={item.id} className="col-span-12 md:col-span-6 lg:col-span-4 ">
                   <div className="w-full bg-white rounded-lg shadow-sm border border-gray-100/50 flex flex-col h-full">
-                    <div className="relative w-full h-48 overflow-hidden rounded-t-lg">
-                      <img
-                        src={item.thumbnail}
-                        alt={item.courseName}
-                        className="w-full h-full object-cover rounded-lg  "
-                      />
+                    <div className={`relative w-full h-48 overflow-hidden rounded-t-lg ${item.thumbnail ? "" : "bg-[linear-gradient(110.57deg,rgba(241,194,172,0.25)_0.4%,rgba(149,196,190,0.25)_93.82%)] rounded-b-lg"}`}>
+                      {item.thumbnail ? (
+                        <img
+                          src={item.thumbnail}
+                          alt={item.courseName}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <p className="text-gray-400 text-sm">No Thumbnail</p>
+                        </div>
+                      )}
                       <Button
                         size="sm"
                         radius="sm"
@@ -513,7 +519,7 @@ const TeachersDashboard = () => {
                             </Button>
                           );
                         }
-                        
+
                         return (
                           <Button
                             startContent={<Lock size={20} />}
@@ -583,10 +589,10 @@ const TeachersDashboard = () => {
           </Button>
         </div>
 
-        <QuizModal 
-          isOpen={isQuizModalOpen} 
-          setIsOpen={setIsQuizModalOpen} 
-          // Not passing courseId, so CourseSelect will be shown in the modal
+        <QuizModal
+          isOpen={isQuizModalOpen}
+          setIsOpen={setIsQuizModalOpen}
+        // Not passing courseId, so CourseSelect will be shown in the modal
         />
 
         <Drawer
