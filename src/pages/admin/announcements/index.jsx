@@ -311,11 +311,11 @@ const Announcements = () => {
         desc={"Manage and send announcements to your organization"}
       />
       <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
-        <div className="flex  items-center gap-2">
+        <div className="flex  items-center gap-2 max-sm:w-full">
           <Select
             label="Role"
             labelPlacement="outside"
-            className="min-w-[120px]"
+            className="min-w-[120px] max-sm:w-full"
             radius="sm"
             selectedKeys={[sendToFilter]}
             placeholder="Select Audience"
@@ -336,7 +336,7 @@ const Announcements = () => {
             label="Delivery Type"
             labelPlacement="outside"
             radius="sm"
-            className="min-w-[120px]"
+            className="min-w-[120px] max-sm:w-full"
             selectedKeys={[deliveryFilter]}
             selectorIcon={<ListFilterIcon />}
             placeholder="Delivery Type"
@@ -359,7 +359,7 @@ const Announcements = () => {
           radius="sm"
           size="lg"
           onPress={() => handleOpen()}
-          className="bg-[#06574C] text-white"
+          className="bg-[#06574C] text-white max-sm:w-full"
         >
           Create Announcement
         </Button>

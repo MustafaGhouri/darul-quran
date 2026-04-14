@@ -246,7 +246,7 @@ const UserManagement = () => {
         }
       />
       <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
-        <div className="flex max-md:flex-wrap items-center gap-2">
+        <div className="flex max-md:flex-wrap items-center gap-2 max-md:w-full">
           <Select
             className="min-w-[120px]"
             radius="sm"
