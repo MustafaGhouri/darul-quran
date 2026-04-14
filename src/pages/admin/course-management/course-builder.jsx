@@ -510,7 +510,7 @@ const CourseBuilder = () => {
           }}
         >
           <Tab
-            className="h-20"
+            className="h-20 max-md:justify-start"
             key="info"
             title={
               <div className="flex gap-3 justify-between items-center">
@@ -940,17 +940,17 @@ const CourseBuilder = () => {
                     size="lg"
                     startContent={<FolderDot color="#06574C" size={16} />}
                     variant="bordered"
-                    className="border-[#06574C] w-78  sm:w-40 text-[#06574C]"
+                    className="border-[#06574C] max-sm:w-full md:w-40 text-[#06574C]"
                     type="submit"
                     onPress={() => setPendingAction("save-1")}
                     isLoading={loadingAction === "save-1"}
                   >
                     Save Progress
                   </Button>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-3 max-sm:w-full">
                     <Button
                       size="lg"
-                      className="bg-[#06574C] w-full text-white sm:w-35"
+                      className="bg-[#06574C] max-sm:w-full text-white md:w-35"
                       type="submit"
                       onPress={() => setPendingAction("next-1")}
                       isLoading={loadingAction === "next-1"}
@@ -1001,7 +1001,7 @@ const CourseBuilder = () => {
             </motion.div>
           </Tab>
           <Tab
-            className="h-20"
+            className="h-20 max-md:justify-start"
             key="content"
             title={
               <div className="flex gap-3  justify-between items-center">
@@ -1099,7 +1099,7 @@ const CourseBuilder = () => {
             </motion.div>
           </Tab>
           <Tab
-            className="h-20"
+            className="h-20 max-md:justify-start"
             key="pricing"
             title={
               <div className="flex gap-3 justify-between items-center">

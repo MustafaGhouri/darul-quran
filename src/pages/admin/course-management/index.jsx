@@ -158,7 +158,7 @@ const CourseManagement = () => {
     />
   }
   return (
-    <div className="bg-white sm:bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
+    <div className="bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3">
       <DashHeading desc={"Manage and monitor course catalog"} />
       <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
         <div className="flex max-md:flex-wrap items-center gap-2">
@@ -303,7 +303,7 @@ const CourseManagement = () => {
                   <TableCell>
                     <div className="min-w-0 flex items-center">
                       <Link to={'/admin/help/reviews?id=' + classItem?.id} className="font-medium flex gap-1 items-center truncate max-w-[220px] ">
-                        {classItem?.rating>0 && <IoStarSharp size={18} color="#FDD835" />}
+                        {classItem?.rating > 0 && <IoStarSharp size={18} color="#FDD835" />}
                         {classItem?.rating || "No ratings"}
                       </Link>
                     </div>
@@ -354,7 +354,7 @@ const CourseManagement = () => {
             ))}
           </Select>
           <span className="min-w-56">Out of {data?.total}</span>
-        </div>
+        </div        >
         <Pagination
           className=""
           showControls

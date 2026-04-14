@@ -373,13 +373,13 @@ const Scheduling = () => {
   };
 
   return (
-    <div className="bg-white bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 ">
+    <div className="bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 ">
       <DashHeading
         title={"Schedule Live Classes"}
         desc={"Manage and organize your upcoming live sessions"}
       />
-      <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
-        <div className="flex max-md:flex-wrap items-center gap-2">
+      <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center max-md:w-full">
+        <div className="flex max-md:flex-wrap items-center gap-2 max-md:w-full">
           <Select
             className="min-w-[150px]"
             radius="sm"
@@ -403,23 +403,25 @@ const Scheduling = () => {
             }
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap flex-col md:flex-row max-md:w-full">
           <Button
             as={Link}
             to={`/${user.role}/class-scheduling?calender=true`}
             radius="sm"
-            size="sm"
+            size="md"
             startContent={<CalendarIcon color="white" size={15} />}
             color="success"
+            className="max-md:w-full"
           >
             Calender View
           </Button>
           <Button
             startContent={<PlusIcon />}
             radius="sm"
-            size="sm"
+            size="md"
             color="success"
             onPress={openCreateModal}
+            className="max-md:w-full"
           >
             Schedule New
           </Button>
