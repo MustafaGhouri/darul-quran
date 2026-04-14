@@ -21,7 +21,7 @@ const MultiApiDevTools = () => {
   };
 
   return (
-    <div className="fixed bottom-12 right-6 z-99999 font-sans">
+    <div className="fixed bottom-18 right-6 z-99999 font-sans">
       <button
         onClick={() => setOpen(!open)}
         className="px-4 py-2 rounded-xl shadow-md bg-white border border-[#406c65] text-[#406c65] font-semibold hover:bg-[#406c65] hover:text-white transition"

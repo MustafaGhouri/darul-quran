@@ -265,33 +265,31 @@ const CreaterOrUpdateSchedule = () => {
                         }
                     />
                 )}
-
+                {(formData.scheduleType === "daily" || formData.scheduleType === "weekly") && <div className="flex gap-3">
+                    <Input
+                        type="date"
+                        label="Start Date"
+                        variant="bordered"
+                        labelPlacement="outside"
+                        isRequired={formData.scheduleType === "daily"}
+                        value={formData.startDate}
+                        onChange={(e) =>
+                            setFormData({ ...formData, startDate: e.target.value })
+                        }
+                    />
+                    <Input
+                        type="date"
+                        label="End Date (optional)"
+                        variant="bordered"
+                        labelPlacement="outside"
+                        value={formData.endDate}
+                        onChange={(e) =>
+                            setFormData({ ...formData, endDate: e.target.value })
+                        }
+                    />
+                </div>}
                 {formData.scheduleType === "daily" && (
                     <>
-                        <div className="flex gap-3">
-                            <Input
-                                type="date"
-                                label="Start Date"
-                                variant="bordered"
-                                labelPlacement="outside"
-                                isRequired={formData.scheduleType === "daily"}
-                                value={formData.startDate}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, startDate: e.target.value })
-                                }
-                            />
-                            <Input
-                                type="date"
-                                label="End Date (optional)"
-                                variant="bordered"
-                                labelPlacement="outside"
-                                value={formData.endDate}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, endDate: e.target.value })
-                                }
-                            />
-                        </div>
-
                         <Input
                             type="number"
                             label="Repeat Every (Days)"
@@ -310,29 +308,6 @@ const CreaterOrUpdateSchedule = () => {
 
                 {formData.scheduleType === "weekly" && (
                     <>
-                        <div className="flex gap-3">
-                            <Input
-                                type="date"
-                                label="Start Date"
-                                variant="bordered"
-                                isRequired={formData.scheduleType === "weekly"}
-                                value={formData.startDate}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, startDate: e.target.value })
-                                }
-                            />
-                            <Input
-                                type="date"
-                                label="End Date"
-                                variant="bordered"
-                                isRequired={formData.scheduleType === "weekly"}
-                                value={formData.endDate}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, endDate: e.target.value })
-                                }
-                            />
-                        </div>
-
                         <Input
                             type="number"
                             label="Repeat Every (Weeks)"
