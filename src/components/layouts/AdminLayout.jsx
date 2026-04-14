@@ -3,33 +3,19 @@ import Sidebar from "../dashboard-components/sidebar";
 import { Suspense, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  Input,
-  Spinner,
-  User,
-} from "@heroui/react";
-import {
-  ChevronDown,
   MenuIcon,
   Plus,
-  Search,
   SidebarClose,
   SidebarOpen,
 } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import Loader from "../Loader";
 import NotificationPopover from "../dashboard-components/NotificationPopover";
-import { MdLogout } from "react-icons/md";
-import { clearUser } from "../../redux/reducers/user";
-import { errorMessage, successMessage } from "../../lib/toast.config";
+import PageSearch from "../dashboard-components/PageSearch";
 import LogoutToggule from "../dashboard-components/LogoutToggule";
 
 export default function AdminLayout() {
   const { user, loading } = useSelector((s) => s?.user);
-  const dispatch = useDispatch();
 
   const { pathname } = useLocation();
 
@@ -37,7 +23,6 @@ export default function AdminLayout() {
     const saved = localStorage.getItem("sidebarOpen");
     return saved ? saved === "true" : true;
   });
-  const [searchOpen, setSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -159,7 +144,7 @@ export default function AdminLayout() {
             )}
           </button>
         ) : (
-          <header className="bg-linear-to-r from-[#f7f7f7] via-[#ffffff] to-[#ffffff]  gap-3 flex p-2 justify-between msd:justify-end shadow-sm sticky top-0 z-50">
+          <header className="bg-linear-to-r from-[#f7f7f7] via-[#ffffff] to-[#ffffff]  gap-3 flex p-2 justify-between msd:justify-end shadow-sm sticky top-0 z-30">
             {
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -185,89 +170,9 @@ export default function AdminLayout() {
             </button>
             <div className="flex relative items-center gap-2">
 
-              <div className="relative flex items-center gap-2">
-                <input
-                  type="search"
-                  placeholder="Search here..."
-                  className={`
-                                      absolsute left-0 sm:hidden h-10 px-3 rounded-full border border-gray-300 shadow-sm
-                                      transition-all duration-300 ease-in-out bg-white
-                                      ${searchOpen ? "w-[70%]  opacity-100" : "w-0 absolute opacity-0 px-0"}
-                                    `}
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setSearchOpen((prev) => !prev)}
-                  className="relative sm:hidden inline-flex items-center justify-center p-3 bg-white rounded-full shadow-sm hover:shadow-md"
-                  aria-label="Search"
-                >
-                  <Search color="#406C65" size={20} />
-                </button>
-                <Input
-                  endContent={<Search color="#9A9A9A" />}
-                  type="search"
-                  className="max-w-lg max-sm:hidden min-w-sm"
-                  placeholder="Search here..."
-                />
-              </div>
+              <PageSearch
+              />
               <NotificationPopover />
-              {/* <Dropdown
-                                showArrow
-                                className="mx-3 w-full"
-                                classNames={{
-                                    base: "before:bg-default-200", // change arrow background
-                                    content:
-                                        "py-1 px-1 border border-default-200 bg-linear-to-br from-white to-default-200 dark:from-default-50 dark:to-black",
-                                }}
-                            >
-                                <DropdownTrigger className="mx-2 shadow-lg shadow-[#1a5850]/10">
-                                    <div className="px-2 py-1.5 cursor-pointer border rounded-full border-[#1a5850]/10 hover:bg-[#1a5850]/5 transition-colors">
-                                        <div className="flex items-center gap-3 px-1">
-                                            <User
-                                                avatarProps={{
-                                                    src: user?.avatar,
-                                                    alt: "user",
-                                                    size: "sm",
-                                                    className: "shrink-0",
-                                                }}
-                                                name={user?.firstName + " " + user?.lastName}
-                                                classNames={{
-                                                    description: "text-gray-500 wrap-break-word line-clamp-1 w-32 overflow-hidden",
-                                                    name: "text-gray-700 font-semibold wrap-break-word line-clamp-1 w-32 overflow-hidden",
-                                                }}
-                                                description={
-                                                    user?.email
-                                                }
-                                            />
-
-                                            <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />
-                                        </div>
-                                    </div>
-                                </DropdownTrigger>
-                                <DropdownMenu
-                                    aria-label="User Options"
-                                    variant="faded"
-                                >
-                                    <DropdownItem
-                                        key="logout"
-                                        className="hover:text-white! text-[#323232] hover:bg-[#406C65]!"
-                                        startContent={
-                                            loggingOut ? (
-                                                <Spinner color="success" size="sm" />
-                                            ) : (
-                                                <span className="w-5">
-                                                    <MdLogout size={18} />
-                                                </span>
-                                            )
-                                        }
-                                        onClick={handleLogout}
-                                        disabled={loggingOut}
-                                    >
-                                        Logout
-                                    </DropdownItem>
-                                </DropdownMenu>
-                            </Dropdown> */}
               <LogoutToggule />
             </div>
           </header>

@@ -135,7 +135,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   return (
     <div
       ref={sideBarRef}
-      className="w-full z-5 h-full bg-[#1a5850] text-white flex flex-col"
+      className="w-full z-60 h-full bg-[#1a5850] text-white flex flex-col"
     >
       <div
         className="px-3 py-2 flex justify-center  border-white/10 cursor-pointer border-b"

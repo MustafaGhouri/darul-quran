@@ -408,7 +408,7 @@ const Scheduling = () => {
             as={Link}
             to={`/${user.role}/class-scheduling?calender=true`}
             radius="sm"
-            size="md"
+            size="sm"
             startContent={<CalendarIcon color="white" size={15} />}
             color="success"
           >
@@ -417,7 +417,7 @@ const Scheduling = () => {
           <Button
             startContent={<PlusIcon />}
             radius="sm"
-            size="md"
+            size="sm"
             color="success"
             onPress={openCreateModal}
           >

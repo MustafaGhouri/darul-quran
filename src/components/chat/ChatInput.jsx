@@ -57,8 +57,9 @@ export default function ChatInput({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 text-gray-500 hover:text-teal-600 rounded-full hover:bg-gray-100 transition-colors shrink-0"
+          className="p-2 disabled:cursor-not-allowed text-gray-500 hover:text-teal-600 rounded-full hover:bg-gray-100 transition-colors shrink-0"
           aria-label="Attach file"
+          disabled={disabled}
         >
           <Paperclip size={22} />
         </button>
@@ -78,7 +79,7 @@ export default function ChatInput({
           className="shrink-0 p-2 rounded-full bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           aria-label="Send"
         >
-          <Send size={20} className="-rotate-45" />
+          <Send size={20} className="rotate-39" />
         </button>
       </div>
     </div>

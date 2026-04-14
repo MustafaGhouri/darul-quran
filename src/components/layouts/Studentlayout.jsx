@@ -3,26 +3,15 @@ import Sidebar from "../dashboard-components/sidebar";
 import { Suspense, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  Input,
-  Spinner,
-  User,
-} from "@heroui/react";
-import {
-  ChevronDown,
   MenuIcon,
   Plus,
-  Search,
   SidebarClose,
   SidebarOpen,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import Loader from "../Loader";
 import NotificationPopover from "../dashboard-components/NotificationPopover";
-import { MdLogout } from "react-icons/md";
+import PageSearch from "../dashboard-components/PageSearch";
 import LogoutToggule from "../dashboard-components/LogoutToggule";
 
 export default function StudentLayout() {
@@ -34,7 +23,6 @@ export default function StudentLayout() {
     const saved = localStorage.getItem("sidebarOpen");
     return saved ? saved === "true" : true;
   });
-  const [searchOpen, setSearchOpen] = useState(false);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -117,7 +105,7 @@ export default function StudentLayout() {
               )}
             </button>
           ) : (
-            <header className="bg-linear-to-r from-[#f7f7f7] via-[#ffffff] to-[#ffffff]  gap-3 flex p-2 justify-between msd:justify-end shadow-sm sticky top-0 z-50">
+            <header className="bg-linear-to-r from-[#f7f7f7] via-[#ffffff] to-[#ffffff]  gap-3 flex p-2 justify-between msd:justify-end shadow-sm sticky top-0 z-30">
               {
                 <button
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -142,32 +130,7 @@ export default function StudentLayout() {
                 {isSidebarOpen ? <Plus className="rotate-45" /> : <MenuIcon />}
               </button>
               <div className="flex items-center gap-2">
-                <div className="relative flex items-center gap-2">
-                  <input
-                    type="search"
-                    placeholder="Search here..."
-                    className={`
-                                      absolsute left-0 sm:hidden h-10 px-3 rounded-full border border-gray-300 shadow-sm
-                                      transition-all duration-300 ease-in-out bg-white
-                                      ${searchOpen ? "w-[70%]  opacity-100" : "w-0 absolute opacity-0 px-0"}
-                                    `}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setSearchOpen((prev) => !prev)}
-                    className="relative sm:hidden inline-flex items-center justify-center p-3 bg-white rounded-full shadow-sm hover:shadow-md"
-                    aria-label="Search"
-                  >
-                    <Search color="#406C65" size={20} />
-                  </button>
-                  <Input
-                    endContent={<Search color="#9A9A9A" />}
-                    type="search"
-                    className="max-w-lg max-sm:hidden min-w-sm"
-                    placeholder="Search here..."
-                  />
-                </div>
+                <PageSearch />
                 <NotificationPopover />
                 <LogoutToggule />
               </div>

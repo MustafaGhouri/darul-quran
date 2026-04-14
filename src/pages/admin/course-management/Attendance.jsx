@@ -113,7 +113,7 @@ const Attendance = () => {
 
   const exportCourseAttendance = () => {
     if (!attendanceData?.courses || attendanceData.courses.length === 0) {
-     errorMessage("No data to export");
+      errorMessage("No data to export");
       return;
     }
 
@@ -206,7 +206,7 @@ const Attendance = () => {
     ].join("\n");
 
     downloadCSV(csvContent, "top_performing_students.csv");
-   successMessage("Top performing students data exported successfully");
+    successMessage("Top performing students data exported successfully");
   };
 
   const downloadCSV = (csvContent, filename) => {
@@ -229,30 +229,20 @@ const Attendance = () => {
       />
 
       {/* Filters */}
-      <div className="bg-[#EBD4C9] flex-wrap gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="bg-[#EBD4C9] flex-col sm:flex-row gap-2 p-2 sm:p-4 rounded-lg my-3 flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row flex-wrap w-full gap-2">
           <Input
             type="text"
             placeholder="Search courses..."
             value={search}
             onChange={handleSearchChange}
-            className="min-w-[200px] flex-1"
+            className="w-full sm:flex-1 min-w-[200px] "
             radius="sm"
           />
-          {/* <Select
-            className="min-w-[130px]  flex-1"
-            radius="sm"
-            selectedKeys={[status]}
-            onSelectionChange={(keys) => setStatus(Array.from(keys)[0])}
-            placeholder="Select status"
-          >
-            {statuses.map((statusOption) => (
-              <SelectItem key={statusOption.key}>{statusOption.label}</SelectItem>
-            ))}
-          </Select> */}
+
           <Select
             radius="sm"
-            className="min-w-[150px]  flex-1"
+            className="w-full sm:flex-1 min-w-40"
             selectedKeys={[sort]}
             onSelectionChange={(keys) => setSort(Array.from(keys)[0])}
             selectorIcon={<ListFilterIcon />}
@@ -262,28 +252,20 @@ const Attendance = () => {
               <SelectItem key={option.key}>{option.label}</SelectItem>
             ))}
           </Select>
+
           <Select
             radius="sm"
             placeholder="Select Type"
             title="Select Type"
-            className="w-xl flex-1"
+            className="w-full sm:flex-1 min-w-40"
             onSelectionChange={(k) => {
               const keys = [...k];
               setType(keys[0]);
             }}
-          // defaultSelectedKeys={["all"]}
           >
-            <SelectItem key="all" value="all" className="capitalize">
-              All Courses
-            </SelectItem>
-
-            <SelectItem key="one_time" value="one_time" className="capitalize">
-              One Time Paid
-            </SelectItem>
-
-            <SelectItem key="live" value="live" className="capitalize">
-              Live Classes
-            </SelectItem>
+            <SelectItem key="all">All Courses</SelectItem>
+            <SelectItem key="one_time">One Time Paid</SelectItem>
+            <SelectItem key="live">Live Classes</SelectItem>
           </Select>
         </div>
         <Button
@@ -323,7 +305,7 @@ const Attendance = () => {
           {attendanceData?.courses?.map((course) => (
             <TableRow key={course.id}>
               <TableCell className="px-4 flex items-center gap-2">
-                    {course.courseName}
+                {course.courseName}
               </TableCell>
 
               <TableCell>
