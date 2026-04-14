@@ -15,6 +15,7 @@ import {
     useDisclosure,
     Tabs,
     Tab,
+    Tooltip,
 } from "@heroui/react";
 import { CiCalendar } from "react-icons/ci";
 import { Clock, Lock, Video, Calendar as CalendarIcon, User, MapPin } from "lucide-react";
@@ -244,12 +245,12 @@ const StudentClassSheduling = () => {
         const scheduleDates = schedule.scheduleDates?.length > 0
             ? schedule.scheduleDates
             : (schedule.date ? [schedule.date] : []);
-        
+
         if (scheduleDates.length === 0) return false;
 
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
-        
+
         // Normalize dates to YYYY-MM-DD format for comparison
         const normalizedDates = scheduleDates.map(d => {
             try {
@@ -260,11 +261,12 @@ const StudentClassSheduling = () => {
                 return d;
             }
         });
-        
+
         // Get all upcoming dates (today or in the future)
         const upcomingDates = normalizedDates.filter(d => d >= todayStr);
 
-        if (upcomingDates.length === 0) return false;
+        // If NO upcoming dates (all sessions are completed/expired), allow reschedule
+        if (upcomingDates.length === 0) return true;
 
         // Check if ALL upcoming sessions are more than 4 hours away
         return upcomingDates.every(dateStr => {
@@ -277,12 +279,12 @@ const StudentClassSheduling = () => {
         const scheduleDates = schedule.scheduleDates?.length > 0
             ? schedule.scheduleDates
             : (schedule.date ? [schedule.date] : []);
-        
+
         if (scheduleDates.length === 0) return false;
 
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
-        
+
         // Normalize dates to YYYY-MM-DD format for comparison
         const normalizedDates = scheduleDates.map(d => {
             try {
@@ -293,7 +295,7 @@ const StudentClassSheduling = () => {
                 return d;
             }
         });
-        
+
         const upcomingDates = normalizedDates.filter(d => d >= todayStr);
 
         if (upcomingDates.length === 0) return false;
@@ -553,17 +555,22 @@ const StudentClassSheduling = () => {
                                 {isExpired ? "Ended" : "Locked"}
                             </Button>
                         )}
-                        {canResched && (
+                        <Tooltip
+                            content="Schedule can only be rescheduled before 4 hours of the start time."
+                            isDisabled={canResched}
+                            placement="top"
+                        >
                             <Button
                                 radius="sm"
                                 size="md"
                                 variant="bordered"
                                 color="success"
+                                isDisabled={!canResched}
                                 onPress={() => handleRequestReschedule(schedule)}
                             >
                                 Reschedule
                             </Button>
-                        )}
+                        </Tooltip>
 
                         {/* {canCanc && !isExpired && (
                             <Button
@@ -661,9 +668,16 @@ const StudentClassSheduling = () => {
                             scheduleData?.schedules?.map((i) => (
                                 <div key={i.id} className="mb-6">
                                     <DashHeading
-                                        title={i.scheduleDates?.length === 1 ? new Date(i.scheduleDates[0]).toDateString() : (new Date(i.scheduleDates[0]).toDateString()
-                                            + ' to ' +
-                                            new Date(i.scheduleDates[i.scheduleDates?.length - 1]).toDateString())}
+                                        title={"Course: " + i.courseName}
+                                        desc={
+                                            i.scheduleDates?.length === 1
+                                                ? new Date(i.scheduleDates[0]).toDateString()
+                                                : new Date(i.scheduleDates[0]).toDateString() +
+                                                " - to - " +
+                                                new Date(
+                                                    i.scheduleDates[i.scheduleDates?.length - 1],
+                                                ).toDateString()
+                                        }
                                     />
                                     <div className="mt-3">
                                         <ScheduleCard key={i.id} schedule={i} type="normal" />
