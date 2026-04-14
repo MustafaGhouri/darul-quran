@@ -319,7 +319,7 @@ export default function ChatInterface({
       });
       return;
     }
-    
+
     const text = message.trim();
     const ready = attachedAttachment && attachedAttachment.url && !attachedAttachment.uploading;
     const hasAttachment = !!ready;
@@ -527,7 +527,7 @@ export default function ChatInterface({
                       "Unblock" :
                       legacyChat?.isBlocked ? "Blocked" : "Block"}
                   </button></li>
-                  <li><button type="button" onClick={() => setReportModalOpen(true)} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-500 hover:bg-gray-100 rounded-lg"><FiFlag className="text-lg" /> Report</button></li>
+                  {currentUser === "admin" && <li><button type="button" onClick={() => setReportModalOpen(true)} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-500 hover:bg-gray-100 rounded-lg"><FiFlag className="text-lg" /> Report</button></li>}
                   <li><button type="button" className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg" onClick={handleBack}><FiXCircle className="text-lg" /> Close Chat</button></li>
                 </ul>
               ) : (
@@ -552,15 +552,15 @@ export default function ChatInterface({
             </div>
             <div className="flex-1">
               <h4 className="font-semibold text-sm text-red-800 mb-1">
-                {legacyChat?.blockedBy == currentUserId 
-                  ? "You blocked this conversation" 
-                  : legacyChat?.blockedByName 
+                {legacyChat?.blockedBy == currentUserId
+                  ? "You blocked this conversation"
+                  : legacyChat?.blockedByName
                     ? `${legacyChat.blockedByName} blocked this conversation`
                     : "This conversation is blocked"}
               </h4>
               <p className="text-xs text-red-700">
-                {legacyChat?.blockedBy == currentUserId 
-                  ? "You can unblock this user from the menu to resume messaging." 
+                {legacyChat?.blockedBy == currentUserId
+                  ? "You can unblock this user from the menu to resume messaging."
                   : "You cannot send messages in this conversation. The user who blocked this conversation can unblock it."}
               </p>
             </div>
@@ -641,16 +641,16 @@ export default function ChatInterface({
       <Modal isOpen={blockModalOpen} onOpenChange={setBlockModalOpen}>
         <ModalContent>
           <ModalHeader>{(legacyChat?.isBlocked && legacyChat?.blockedBy == currentUserId) ?
-                      "Unblock" :
-                      legacyChat?.isBlocked ? "Blocked" : "Block"} user?</ModalHeader>
+            "Unblock" :
+            legacyChat?.isBlocked ? "Blocked" : "Block"} user?</ModalHeader>
           <ModalBody>
             <p>This user will no longer be able to start new conversations with you. You can unblock them later from settings.</p>
           </ModalBody>
           <ModalFooter>
             <Button variant="light" onPress={() => setBlockModalOpen(false)}>Cancel</Button>
             <Button isLoading={blocking} color="danger" onPress={handleBlock}>{(legacyChat?.isBlocked && legacyChat?.blockedBy == currentUserId) ?
-                      "Unblock" :
-                      legacyChat?.isBlocked ? "Blocked" : "Block"}</Button>
+              "Unblock" :
+              legacyChat?.isBlocked ? "Blocked" : "Block"}</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
