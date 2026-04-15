@@ -1,6 +1,6 @@
 'use client'
 import { Button, Chip, Popover, PopoverContent, PopoverTrigger, useSelect } from '@heroui/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FaRegBell } from 'react-icons/fa6'
 import { useGetNotificationsQuery, useMarkAsReadMutation } from '../../redux/api/notifications'
 import { useSelector } from 'react-redux'
@@ -10,6 +10,8 @@ import { dateFormatter } from '../../lib/utils'
 const NotificationPopover = ({ isHomeMob = false }) => {
     const { pathname } = useLocation();
     const [isOpen, setIsOpen] = useState(false);
+    const [hasNewNotifications, setHasNewNotifications] = useState(false);
+    const [initialUnreadCount, setInitialUnreadCount] = useState(0);
     const { user } = useSelector((state) => state.user);
     const currentUser = user || {};
     const userId = user?.id;
@@ -24,13 +26,29 @@ const NotificationPopover = ({ isHomeMob = false }) => {
         limit: 20,
         page: 1
     }, {
-        skip: !canAccessNotifications
+        skip: !canAccessNotifications,
+        pollingInterval: 60000  // Poll every 30 seconds for new notifications
     });
 
     const [markAsRead] = useMarkAsReadMutation();
 
     const unreadNotifications = notificationsData?.data || [];
     const unreadCount = notificationsData?.pagination?.unreadCount || 0;
+    
+    // Track initial unread count on page load
+    useEffect(() => {
+        if (notificationsData && initialUnreadCount === 0) {
+            setInitialUnreadCount(unreadCount || unreadNotifications.length);
+        }
+        
+        // Check if there are more unread notifications than when page first loaded
+        if (notificationsData) {
+            const currentUnread = unreadCount || unreadNotifications.length;
+            if (currentUnread > initialUnreadCount) {
+                setHasNewNotifications(true);
+            }
+        }
+    }, [notificationsData, initialUnreadCount, unreadCount, unreadNotifications.length]);
     const isHome = [
         "/",
         "/property-listing",
@@ -65,11 +83,11 @@ const NotificationPopover = ({ isHomeMob = false }) => {
                         <FaRegBell
                             className={(isHome.includes(pathname) && !isHomeMob)
                                 ? "text-white"
-                                : (unreadCount > 0 || unreadNotifications.length > 0) ? "text-red-600" : " text-[#406C65]"
+                                : (hasNewNotifications || unreadCount > 0 || unreadNotifications.length > 0) ? "text-red-600" : " text-[#406C65]"
                             }
                             size={20}
                         />
-                        {(unreadCount || unreadNotifications.length) > 0 && < span className="pointer-events-none absolute -top-1 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1.2 rounded-full bg-red-600 text-white text-[10px] font-semibold leading-none ring-2 ring-white z-10">
+                        {(hasNewNotifications || unreadCount || unreadNotifications.length) > 0 && < span className="pointer-events-none absolute -top-1 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] px-1.2 rounded-full bg-red-600 text-white text-[10px] font-semibold leading-none ring-2 ring-white z-10">
                             {unreadCount || unreadNotifications.length}
                         </span>}
                     </button>
@@ -89,7 +107,7 @@ const NotificationPopover = ({ isHomeMob = false }) => {
                             variant="flat"
                             className="bg-[#d0ded7] shrink-0 text-white font-bold"
                         >
-                            {unreadCount || unreadNotifications.length}
+                            {hasNewNotifications || unreadCount || unreadNotifications.length}
                         </Chip>
                     </div>
                 </div>
