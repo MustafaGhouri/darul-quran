@@ -51,6 +51,7 @@ const CourseDetails = () => {
 
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollment, setEnrollment] = useState(null);
+  const [enrollCheckLoading, setEnrollCheckLoading] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [overview, setOverview] = useState(null);
   const [shouldFetchOverview, setShouldFetchOverview] = useState(true);
@@ -84,6 +85,7 @@ const CourseDetails = () => {
 
   const checkEnrollmentStatus = async () => {
     try {
+      setEnrollCheckLoading(true);
       const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/check-enrollment/${course.id}`, {
         method: 'GET',
         headers: {
@@ -98,6 +100,8 @@ const CourseDetails = () => {
       }
     } catch (error) {
       console.error("Failed to check enrollment", error);
+    } finally {
+      setEnrollCheckLoading(false);
     }
   };
 
@@ -256,9 +260,9 @@ const CourseDetails = () => {
                         startContent={<MessageCircle size={16} />}
                         to={"/student/help/messages"}
                         as={Link}
-                        // onPress={() =>
-                        //   navigate("/student/help/messages")
-                        // }
+                      // onPress={() =>
+                      //   navigate("/student/help/messages")
+                      // }
                       >
                         Chat with Amin
                       </Button>
@@ -366,7 +370,7 @@ const CourseDetails = () => {
                     radius="sm"
                     size="sm"
                     className="w-full bg-[#06574C] text-white"
-                    onPress={() => navigate("/student/dashboard")}
+                    onPress={() => navigate(`/student/course/${id}/learn`)}
                   >
                     Go to Course
                   </Button>
@@ -378,7 +382,7 @@ const CourseDetails = () => {
                       color="success"
                       className="w-full"
                       onPress={handleEnroll}
-                      isLoading={enrolling}
+                      isLoading={enrolling||enrollCheckLoading}
                     >
                       {course?.type === 'one_time' ? "Enroll Now" : "Subscribe Now"}
                     </Button>

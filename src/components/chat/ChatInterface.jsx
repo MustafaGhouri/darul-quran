@@ -283,7 +283,7 @@ export default function ChatInterface({
       setChatRestricted(data.isRestricted);
       addToast({
         title: data.isRestricted ? "Chat restricted" : "Chat unrestricted",
-        description: data.isRestricted 
+        description: data.isRestricted
           ? "Teacher and student can no longer send messages in this chat."
           : "Chat has been unrestricted. Teacher and student can now send messages.",
         color: "success",
@@ -579,17 +579,23 @@ export default function ChatInterface({
               {!isTeacherAndStudent ? (
                 <ul className="py-1">
                   <li><button type="button" onClick={() => setContactModalOpen(true)} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg"><FiPhone className="text-lg" /> Contact Info</button></li>
-                  <li><button type="button" onClick={toggleMute} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg"><FiBellOff className="text-lg" /> {isMuted ? "Unmute" : "Mute"}</button></li>
-                  {currentUser.role !== "student" && <li><button
-                    type="button"
-                    onClick={() => setBlockModalOpen(true)}
-                    disabled={(legacyChat?.isBlocked && legacyChat?.blockedBy != currentUserId)}
-                    className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-500 hover:bg-gray-100 rounded-lg"><FiUserX className="text-lg" />
-                    {(legacyChat?.isBlocked && legacyChat?.blockedBy == currentUserId) ?
-                      "Unblock" :
-                      legacyChat?.isBlocked ? "Blocked" : "Block"}
-                  </button></li>}
-                  {currentUser.role !== "admin" && <li><button type="button" onClick={() => setReportModalOpen(true)} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-500 hover:bg-gray-100 rounded-lg"><FiFlag className="text-lg" /> Report</button></li>}
+                  {legacyChat.otherUserRole !== "admin" &&
+                    <>
+                      <li><button type="button" onClick={toggleMute} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg"><FiBellOff className="text-lg" /> {isMuted ? "Unmute" : "Mute"}</button></li>
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => setBlockModalOpen(true)}
+                          disabled={(legacyChat?.isBlocked && legacyChat?.blockedBy != currentUserId)}
+                          className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-500 hover:bg-gray-100 rounded-lg"><FiUserX className="text-lg" />
+                          {(legacyChat?.isBlocked && legacyChat?.blockedBy == currentUserId) ?
+                            "Unblock" :
+                            legacyChat?.isBlocked ? "Blocked" : "Block"}
+                        </button>
+                      </li>
+                      {currentUser?.role!=="admin" && <li><button type="button" onClick={() => setReportModalOpen(true)} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-500 hover:bg-gray-100 rounded-lg"><FiFlag className="text-lg" /> Report</button></li>}
+                    </>
+                  }
                   <li><button type="button" className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg" onClick={handleBack}><FiXCircle className="text-lg" /> Close Chat</button></li>
                 </ul>
               ) : (
@@ -639,12 +645,12 @@ export default function ChatInterface({
             </div>
             <div className="flex-1">
               <h4 className="font-semibold text-sm text-orange-800 mb-1">
-                {isAdminView 
+                {isAdminView
                   ? "This chat has been restricted"
                   : "Admin has restricted this chat"}
               </h4>
               <p className="text-xs text-orange-700">
-                {isAdminView 
+                {isAdminView
                   ? "Teacher and student can no longer send messages in this conversation."
                   : "You cannot send messages in this conversation. An admin has restricted this chat. Contact an admin if you believe this is an error."}
               </p>
@@ -760,7 +766,7 @@ export default function ChatInterface({
           <ModalContent>
             <ModalHeader>{chatRestricted ? "Unrestrict" : "Restrict"} chat?</ModalHeader>
             <ModalBody>
-              <p>{chatRestricted 
+              <p>{chatRestricted
                 ? "Unrestricting will allow the teacher and student to send messages again."
                 : "Restricting will prevent the teacher and student from sending messages in this chat. They will see a notification that the chat has been restricted by an admin."}</p>
             </ModalBody>
