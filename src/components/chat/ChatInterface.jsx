@@ -434,7 +434,7 @@ export default function ChatInterface({
             dispatch(appendMessageToChat({ chatId: data.data.chatId, message: serverMsg }));
           }
           if ((chatId == null || chatId === undefined) && data.data.chatId != null) {
-            onChatCreated?.(data.data.chatId);
+            onChatCreated?.(data.data.chatId, data.data.chat);
           }
           dispatch(updateChatPreview({
             chat: {
@@ -678,7 +678,19 @@ export default function ChatInterface({
         ) : displayMessages.length > 0 ? (
           (() => {
             let lastDateKey = "";
-            return displayMessages.map((msg, index) => {
+            const uniqueMessages = [];
+            const seenIds = new Set();
+            for (const m of displayMessages) {
+                const mid = m.id || m.tempId;
+                if (mid && !seenIds.has(mid)) {
+                    uniqueMessages.push(m);
+                    seenIds.add(mid);
+                } else if (!mid) {
+                    uniqueMessages.push(m);
+                }
+            }
+
+            return uniqueMessages.map((msg, index) => {
               const dateKey = getMessageDateKey(msg.createdAt);
               const showDate = dateKey && dateKey !== lastDateKey;
               if (showDate) lastDateKey = dateKey;

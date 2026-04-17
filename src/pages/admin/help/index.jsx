@@ -174,8 +174,19 @@ export default function HelpMessages() {
     }
     : null;
 
-  const handleChatCreated = (newChatId) => {
-    setSelectedChat((prev) => (prev && prev.id == null ? { ...prev, id: newChatId } : prev));
+  const handleChatCreated = (newChatId, chatInfo) => {
+    if (chatInfo) {
+      setChatsLocal((prev) => {
+        const otherExists = prev.find((c) => c.id === newChatId);
+        if (otherExists) return prev;
+        // Also remove the virtual version of this chat if it exists
+        return [chatInfo, ...prev.filter((c) => c.id !== null || Number(c.otherUserId) !== Number(chatInfo.otherUserId))];
+      });
+      setSelectedChat(chatInfo);
+    } else {
+      setSelectedChat((prev) => (prev && prev.id == null ? { ...prev, id: newChatId } : prev));
+    }
+    fetchChats();
     navigate(`${messagesBasePath}/${newChatId}`, { replace: true });
   };
 
@@ -278,7 +289,7 @@ export default function HelpMessages() {
                   key={chat.id}
                   className={`
                     flex items-start gap-3 px-4 py-4 cursor-pointer transition-colors hover:opacity-65 border-b border-b-gray-200 
-                    ${chat.id === selectedChat?.id ? "bg-[#EBD4C9] border-l-4 border-l-[#D28E3D]" : ""}
+                    ${(chat.id === selectedChat?.id && (chat.id !== null || chat.otherUserId === selectedChat?.otherUserId)) ? "bg-[#EBD4C9] border-l-4 border-l-[#D28E3D]" : ""}
                   `}
                   onClick={() => handleSelectChat(chat)}
                 >
