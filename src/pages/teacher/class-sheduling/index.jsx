@@ -45,6 +45,7 @@ import {
   useAddScheduleNoteMutation,
 } from "../../../redux/api/schedules";
 import { useCreateRescheduleRequestMutation, useGetRescheduleRequestsQuery, useApproveRescheduleRequestMutation, useRejectRescheduleRequestMutation } from "../../../redux/api/reschedule";
+import { useGetAllCancellationRequestsQuery, useUpdateCancellationRequestStatusMutation } from "../../../redux/api/cancellation";
 import { Bell } from "lucide-react";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
 import {
@@ -81,6 +82,14 @@ const TeacherClassSheduling = () => {
   const [adminResponse, setAdminResponse] = useState("");
   const [actionType, setActionType] = useState(null);
 
+  // Cancellation requests state
+  const [cancellationPage, setCancellationPage] = useState(1);
+  const [cancellationStatusFilter, setCancellationStatusFilter] = useState("all");
+  const [selectedCancellationRequest, setSelectedCancellationRequest] = useState(null);
+  const [isCancellationResponseModalOpen, setIsCancellationResponseModalOpen] = useState(false);
+  const [teacherResponse, setTeacherResponse] = useState("");
+  const [cancellationActionType, setCancellationActionType] = useState(null);
+
   const { onOpenChange, isOpen } = useDisclosure();
   const {
     isOpen: isDateModalOpen,
@@ -96,6 +105,11 @@ const TeacherClassSheduling = () => {
     isOpen: isRescheduleModalOpen,
     onOpen: openRescheduleModal,
     onOpenChange: closeRescheduleModal,
+  } = useDisclosure();
+  const {
+    isOpen: isCancellationModalOpen,
+    onOpen: openCancellationModal,
+    onOpenChange: closeCancellationModal,
   } = useDisclosure();
 
   const {
@@ -126,6 +140,16 @@ const TeacherClassSheduling = () => {
 
   const [approveRequest, { isLoading: isApproving }] = useApproveRescheduleRequestMutation();
   const [rejectRequest, { isLoading: isRejecting }] = useRejectRescheduleRequestMutation();
+
+  // Fetch cancellation requests for teacher's classes
+  const { data: cancellationData, isFetching: isCancellationLoading, refetch: refetchCancellations } = useGetAllCancellationRequestsQuery({
+    page: cancellationPage.toString(),
+    limit: "50",
+    status: cancellationStatusFilter,
+    scheduleId: selectedScheduleId,
+  }, { skip: !selectedScheduleId });
+
+  const [updateCancellationStatus, { isLoading: isUpdatingCancellation }] = useUpdateCancellationRequestStatusMutation();
 
   const { user: currentUser } = useSelector((state) => state.user);
 
@@ -329,6 +353,55 @@ const TeacherClassSheduling = () => {
     }
   };
 
+  // Cancellation request handlers
+  const handleViewCancellationRequests = (schedule) => {
+    setSelectedSchedule(schedule);
+    setSelectedCancellationRequest(null);
+    setSelectedScheduleId(schedule?.id);
+    setTeacherResponse("");
+    setIsCancellationResponseModalOpen(false);
+    openCancellationModal();
+  };
+
+  const handleApproveCancellationClick = async (request) => {
+    setSelectedCancellationRequest(request);
+    setCancellationActionType("approve");
+    setTeacherResponse(`Your cancellation request has been approved.`);
+    setIsCancellationResponseModalOpen(true);
+  };
+
+  const handleRejectCancellationClick = (request) => {
+    setSelectedCancellationRequest(request);
+    setCancellationActionType("reject");
+    setTeacherResponse("");
+    setIsCancellationResponseModalOpen(true);
+  };
+
+  const handleSubmitCancellationResponse = async () => {
+    if (!selectedCancellationRequest) return;
+
+    if (cancellationActionType === "reject" && (!teacherResponse || teacherResponse.trim().length === 0)) {
+      errorMessage("Please provide a reason for rejection");
+      return;
+    }
+
+    try {
+      await updateCancellationStatus({
+        id: selectedCancellationRequest.id,
+        status: cancellationActionType === "approve" ? "approved" : "rejected",
+        teacherResponse,
+      }).unwrap();
+
+      successMessage(`Cancellation request ${cancellationActionType === "approve" ? "approved" : "rejected"} successfully`);
+      setIsCancellationResponseModalOpen(false);
+      setSelectedCancellationRequest(null);
+      setTeacherResponse("");
+      refetchCancellations();
+    } catch (error) {
+      errorMessage(error?.data?.message || "Failed to process request");
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       pending: "warning",
@@ -337,14 +410,6 @@ const TeacherClassSheduling = () => {
       cancelled: "default",
     };
     return colors[status] || "default";
-  };
-
-  // Get pending requests count for a schedule
-  const getPendingRequestsCount = (scheduleId) => {
-    if (!rescheduleData?.requests) return 0;
-    return rescheduleData.requests.filter(
-      (req) => req.scheduleId === scheduleId && req.status === "pending"
-    ).length;
   };
 
   const canCancel = (schedule) => {
@@ -541,9 +606,9 @@ const TeacherClassSheduling = () => {
 
         <Divider className="my-4" />
 
-        <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 flex items-center justify-center bg-[#95C4BE33] rounded-full">
+            <div className="h-12 w-12 flex items-center justify-center bg-[#95C4BE33] rounded-full shrink-0">
               <FaRegAddressCard color="#06574C" size={24} />
             </div>
             <div>
@@ -555,11 +620,11 @@ const TeacherClassSheduling = () => {
               )}
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 justify-start md:justify-end w-full md:w-auto">
             {canJoin ? (
               <Button
                 radius="sm"
-                size="md"
+                size="sm"
                 variant="solid"
                 className="bg-[#1570E8] text-white"
                 startContent={<LuSquareArrowOutUpRight size={18} />}
@@ -573,7 +638,7 @@ const TeacherClassSheduling = () => {
             ) : (
               <Button
                 radius="sm"
-                size="md"
+                size="sm"
                 variant="solid"
                 className="bg-[#9A9A9A] text-white"
                 startContent={<Lock size={18} />}
@@ -591,7 +656,7 @@ const TeacherClassSheduling = () => {
                 >
                   <Button
                     radius="sm"
-                    size="md"
+                    size="sm"
                     variant="bordered"
                     color="success"
                     isDisabled={!canReschedule(schedule)}
@@ -606,34 +671,56 @@ const TeacherClassSheduling = () => {
                 </Tooltip>
                 <Button
                   radius="sm"
-                  size="md"
+                  size="sm"
                   variant="bordered"
                   color="warning"
                   onPress={() => handleViewRescheduleRequests(schedule)}
                   startContent={
                     <div className="relative">
                       <Bell size={16} />
-                      {getPendingRequestsCount(schedule.id) > 0 && (
+                      {schedule.pendingRescheduleCount > 0 && (
                         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-                          {getPendingRequestsCount(schedule.id)}
+                          {schedule.pendingRescheduleCount}
                         </span>
                       )}
                     </div>
                   }
                 >
                   View Requests
-                  {getPendingRequestsCount(schedule.id) > 0 && (
-                    <span className="ml-1">({getPendingRequestsCount(schedule.id)})</span>
+                  {schedule.pendingRescheduleCount > 0 && (
+                    <span className="ml-1">({schedule.pendingRescheduleCount})</span>
                   )}
                 </Button>
                 <Button
                   radius="sm"
-                  size="md"
+                  size="sm"
+                  variant="bordered"
+                  color="danger"
+                  onPress={() => handleViewCancellationRequests(schedule)}
+                  startContent={
+                    <div className="relative">
+                      <Bell size={16} />
+                      {schedule.pendingCancellationCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                          {schedule.pendingCancellationCount}
+                        </span>
+                      )}
+                    </div>
+                  }
+                >
+                  View Cancellations
+                  {schedule.pendingCancellationCount > 0 && (
+                    <span className="ml-1">({schedule.pendingCancellationCount})</span>
+                  )}
+                </Button>
+                <Button
+                  radius="sm"
+                  size="sm"
                   variant="bordered"
                   color="danger"
                   onPress={() => handleCancelClass(schedule)}
                 >
-                  Cancel
+                  Delete
                 </Button>
               </>
             )}
@@ -1296,6 +1383,237 @@ const TeacherClassSheduling = () => {
               isLoading={isApproving || isRejecting}
             >
               {isApproving || isRejecting ? "Processing..." : actionType === "approve" ? "Approve" : "Reject"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Cancellation Requests Management Modal */}
+      <Modal
+        isOpen={isCancellationModalOpen}
+        onOpenChange={closeCancellationModal}
+        size="5xl"
+        scrollBehavior="inside"
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <h2 className="text-xl font-bold text-[#06574C]">Cancellation Requests</h2>
+            <p className="text-sm text-gray-500 font-normal">
+              Manage student cancellation requests for {selectedSchedule?.title}
+            </p>
+          </ModalHeader>
+          <ModalBody>
+            <div className="flex flex-wrap gap-4 mb-4 items-center justify-between">
+              <Select
+                label="Filter by Status"
+                selectedKeys={[cancellationStatusFilter]}
+                onSelectionChange={(keys) => {
+                  setCancellationStatusFilter(Array.from(keys)[0]);
+                  setCancellationPage(1);
+                }}
+                className="max-w-xs"
+                size="sm"
+              >
+                <SelectItem key="all" value="all">All Requests</SelectItem>
+                <SelectItem key="pending" value="pending">Pending</SelectItem>
+                <SelectItem key="approved" value="approved">Approved</SelectItem>
+                <SelectItem key="rejected" value="rejected">Rejected</SelectItem>
+              </Select>
+
+              <Button
+                size="sm"
+                variant="flat"
+                onPress={() => refetchCancellations()}
+                className="bg-[#06574C] text-white"
+              >
+                Refresh
+              </Button>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <Table
+                removeWrapper
+                isHeaderSticky
+                aria-label="Cancellation Requests Table"
+                classNames={{
+                  base: "w-full bg-white rounded-lg min-h-[30vh] overflow-x-scroll w-full no-scrollbar max-h-[400px] shadow-md",
+                  th: "font-bold bg-[#EBD4C9] p-3 text-sm text-[#333333] capitalize tracking-widest ",
+                  td: "py-3 items-center whitespace-nowrap",
+                  tr: "border-b border-default-200",
+                }}
+              >
+                <TableHeader>
+                  <TableColumn key="student">Student</TableColumn>
+                  <TableColumn key="type">Type</TableColumn>
+                  <TableColumn key="dates">Dates</TableColumn>
+                  <TableColumn key="reason">Reason</TableColumn>
+                  <TableColumn key="status">Status</TableColumn>
+                  <TableColumn key="requestedAt">Requested At</TableColumn>
+                  <TableColumn key="actions" align="center">Actions</TableColumn>
+                </TableHeader>
+                <TableBody
+                  loadingContent={<Spinner color="success" />}
+                  loadingState={isCancellationLoading ? 'loading' : 'idle'}
+                  emptyContent={
+                    <div className="text-center py-10">
+                      <CalendarIcon className="mx-auto mb-4 text-gray-400" size={48} />
+                      <p className="text-gray-500 text-lg">No cancellation requests found</p>
+                    </div>
+                  }
+                  items={cancellationData?.requests || []}
+                >
+                  {(request) => (
+                    <TableRow key={request.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-sm">{request.studentName}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Chip size="sm" variant="flat" color={request.cancellationType === "whole" ? "danger" : "warning"}>
+                          {request.cancellationType === "whole" ? "Whole Schedule" : "Specific Dates"}
+                        </Chip>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-xs">
+                          {request.cancellationType === "whole" ? (
+                            "All sessions"
+                          ) : (
+                            <div className="max-w-[150px] truncate" title={(request.cancellationDates || []).join(", ")}>
+                              {request.cancellationDates?.map((date, index) => (
+                                <span key={index}>
+                                  {date}
+                                  {index < request.cancellationDates.length - 1 && <br />}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm max-w-xs truncate" title={request.reason}>
+                          {request.reason || "-"}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <Chip size="sm" variant="flat" color={getStatusColor(request.status)}>
+                          {request.status}
+                        </Chip>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm">
+                          {new Date(request.requestedAt).toLocaleDateString()}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2 justify-center">
+                          {request.status === "pending" && (
+                            <>
+                              <Button
+                                size="sm"
+                                color="success"
+                                variant="flat"
+                                onPress={() => handleApproveCancellationClick(request)}
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                color="danger"
+                                variant="flat"
+                                onPress={() => handleRejectCancellationClick(request)}
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                          {request.status !== "pending" && (
+                            <Chip size="sm" variant="flat">
+                              {request.status}
+                            </Chip>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+
+              {cancellationData?.totalPages > 1 && (
+                <div className="flex justify-center mt-4 p-4">
+                  <Pagination
+                    total={cancellationData.totalPages}
+                    page={cancellationPage}
+                    onChange={setCancellationPage}
+                    color="primary"
+                    showControls
+                  />
+                </div>
+              )}
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={() => closeCancellationModal()}>
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Cancellation Response Modal */}
+      <Modal
+        isOpen={isCancellationResponseModalOpen}
+        onClose={() => setIsCancellationResponseModalOpen(false)}
+        size="md"
+      >
+        <ModalContent>
+          <ModalHeader>
+            <h2 className="text-lg font-semibold">
+              {cancellationActionType === "approve" ? "Approve Cancellation" : "Reject Cancellation"}
+            </h2>
+          </ModalHeader>
+          <ModalBody>
+            {selectedCancellationRequest && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Student:</strong> {selectedCancellationRequest.studentName}
+                </p>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">Cancellation Type:</p>
+                  <p className="text-sm font-medium">
+                    {selectedCancellationRequest.cancellationType === "whole" ? "Whole Schedule" : `Specific Dates: ${(selectedCancellationRequest.cancellationDates || []).join(", ")}`}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <Textarea
+              label={cancellationActionType === "approve" ? "Approval Message" : "Rejection Reason"}
+              placeholder={
+                cancellationActionType === "approve"
+                  ? "Add a message for the student (optional)"
+                  : "Please provide a reason for rejection"
+              }
+              value={teacherResponse}
+              onChange={(e) => setTeacherResponse(e.target.value)}
+              minRows={4}
+              isRequired={cancellationActionType === "reject"}
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="flat"
+              onPress={() => setIsCancellationResponseModalOpen(false)}
+              isDisabled={isUpdatingCancellation}
+            >
+              Cancel
+            </Button>
+            <Button
+              color={cancellationActionType === "approve" ? "success" : "danger"}
+              onPress={handleSubmitCancellationResponse}
+              isLoading={isUpdatingCancellation}
+            >
+              {isUpdatingCancellation ? "Processing..." : cancellationActionType === "approve" ? "Approve" : "Reject"}
             </Button>
           </ModalFooter>
         </ModalContent>

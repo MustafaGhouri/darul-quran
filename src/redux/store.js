@@ -11,6 +11,7 @@ import { enrollmentAdminApi } from "./api/enrollmentAdmin";
 import { rescheduleApi } from "./api/reschedule";
 import { supportTicketApi } from "./api/supportTickets";
 import { paymentApi } from "./api/payments";
+import { cancellationApi } from "./api/cancellation";
 import { analyticsApi } from "./api/analytics";
 import { faqAPI } from "./api/faq";
 import chatReducer from "./reducers/chat";
@@ -28,6 +29,7 @@ export const apiRegistry = {
   rescheduleApi,
   supportTicketApi,
   paymentApi,
+  cancellationApi,
   analyticsApi,
   faqAPI
 };
@@ -44,6 +46,7 @@ export const store = configureStore({
     [rescheduleApi.reducerPath]: rescheduleApi.reducer,
     [supportTicketApi.reducerPath]: supportTicketApi.reducer,
     [paymentApi.reducerPath]: paymentApi.reducer,
+    [cancellationApi.reducerPath]: cancellationApi.reducer,
     [analyticsApi.reducerPath]: analyticsApi.reducer,
     [faqAPI.reducerPath]: faqAPI.reducer,
     user: userReducer,
@@ -62,6 +65,7 @@ export const store = configureStore({
     rescheduleApi.middleware,
     supportTicketApi.middleware,
     paymentApi.middleware,
+    cancellationApi.middleware,
     analyticsApi.middleware,
     faqAPI.middleware,
   ],

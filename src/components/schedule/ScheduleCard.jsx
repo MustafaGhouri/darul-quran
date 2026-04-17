@@ -15,7 +15,9 @@ export const ScheduleCard = ({
     showTeacherName = true,
     actionButtons = null,
     showRescheduleButton = false,
-    canReschedule = true
+    showCancellationButton = false,
+    canReschedule = true,
+    onRequestCancellation,
 }) => {
     // console.log(schedule, "schedule");
     const live = isClassLive(schedule);
@@ -31,9 +33,9 @@ export const ScheduleCard = ({
                 "Content-Type": "application/json",
             },
             credentials: 'include',
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 courseId: schedule.courseId,
-                liveScheduleId: schedule.id 
+                liveScheduleId: schedule.id
             })
         });
         const data = await res.json();
@@ -98,6 +100,18 @@ export const ScheduleCard = ({
                     size="sm"
                 >
                     📅 Request Reschedule
+                </Button>
+            )}
+
+            {/* Cancellation Request Button */}
+            {showCancellationButton && (
+                <Button
+                    className="w-full bg-[#8B0000] text-white mb-3"
+                    onPress={() => onRequestCancellation && onRequestCancellation(schedule)}
+                    radius="sm"
+                    size="sm"
+                >
+                    ❌ Request Cancellation
                 </Button>
             )}
 

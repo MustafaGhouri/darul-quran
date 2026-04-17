@@ -26,7 +26,9 @@ import {
     useGetScheduleQuery,
 } from "../../../redux/api/schedules";
 import { useCreateRescheduleRequestMutation } from "../../../redux/api/reschedule";
+import { useCreateCancellationRequestMutation } from "../../../redux/api/cancellation";
 import { RescheduleRequestModal } from "../../../components/schedule/RescheduleRequestModal";
+import { CancellationRequestModal } from "../../../components/schedule/CancellationRequestModal";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
 import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatusText, getStatusTextForSingleDate, getHoursUntilClass, formatRemainingTime } from "../../../utils/scheduleHelpers";
 import { useSelector } from "react-redux";
@@ -51,6 +53,7 @@ const StudentClassSheduling = () => {
     });
 
     const [createRescheduleRequest, { isLoading: isRescheduling }] = useCreateRescheduleRequestMutation();
+    const [createCancellationRequest, { isLoading: isCancelling }] = useCreateCancellationRequestMutation();
 
     const { user: currentUser } = useSelector((state) => state.user);
     const { isOpen: isDateModalOpen, onOpen: openDateModal, onOpenChange: closeDateModal } = useDisclosure();
@@ -231,13 +234,14 @@ const StudentClassSheduling = () => {
         setIsCancelModalOpen(true);
     };
 
-    const confirmCancelClass = async () => {
+    const handleSubmitCancellationRequest = async (requestData) => {
         try {
-            successMessage("Class cancellation request submitted. Admin will be notified.");
+            await createCancellationRequest(requestData).unwrap();
+            successMessage("Cancellation request submitted successfully!");
             setIsCancelModalOpen(false);
             setSelectedSchedule(null);
         } catch (error) {
-            errorMessage(error?.data?.message || "Failed to cancel class");
+            errorMessage(error?.data?.message || "Failed to submit cancellation request");
         }
     };
 
@@ -515,9 +519,9 @@ const StudentClassSheduling = () => {
 
                 <Divider className="my-4" />
 
-                <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+                <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
                     <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 flex items-center justify-center bg-[#95C4BE33] rounded-full">
+                        <div className="h-12 w-12 flex items-center justify-center bg-[#95C4BE33] rounded-full shrink-0">
                             <FaRegAddressCard color="#06574C" size={24} />
                         </div>
                         <div>
@@ -529,11 +533,11 @@ const StudentClassSheduling = () => {
                             )}
                         </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 justify-start md:justify-end w-full md:w-auto">
                         {canJoin ? (
                             <Button
                                 radius="sm"
-                                size="md"
+                                size="sm"
                                 variant="solid"
                                 className="bg-[#1570E8] text-white"
                                 startContent={<LuSquareArrowOutUpRight size={18} />}
@@ -546,7 +550,7 @@ const StudentClassSheduling = () => {
                         ) : (
                             <Button
                                 radius="sm"
-                                size="md"
+                                size="sm"
                                 variant="solid"
                                 className="bg-[#9A9A9A] text-white"
                                 startContent={<Lock size={18} />}
@@ -562,7 +566,7 @@ const StudentClassSheduling = () => {
                         >
                             <Button
                                 radius="sm"
-                                size="md"
+                                size="sm"
                                 variant="bordered"
                                 color="success"
                                 isDisabled={!canResched}
@@ -572,17 +576,17 @@ const StudentClassSheduling = () => {
                             </Button>
                         </Tooltip>
 
-                        {/* {canCanc && !isExpired && (
+                        {canCanc && !isExpired && (
                             <Button
                                 radius="sm"
-                                size="md"
+                                size="sm"
                                 variant="bordered"
                                 color="danger"
                                 onPress={() => handleCancelClass(schedule)}
                             >
                                 Cancel
                             </Button>
-                        )} */}
+                        )}
                     </div>
                 </div>
             </div>
@@ -965,60 +969,16 @@ const StudentClassSheduling = () => {
                 isSubmitting={isRescheduling}
             />
 
-            <Modal
+            <CancellationRequestModal
                 isOpen={isCancelModalOpen}
                 onClose={() => {
                     setIsCancelModalOpen(false);
                     setSelectedSchedule(null);
                 }}
-                size="md"
-            >
-                <ModalContent>
-                    <ModalHeader>
-                        <h2 className="text-lg font-semibold text-[#06574C]">Cancel Class</h2>
-                    </ModalHeader>
-                    <ModalBody>
-                        {selectedSchedule && (
-                            <>
-                                <p className="text-gray-700">
-                                    Are you sure you want to cancel your enrollment for this class?
-                                </p>
-                                <div className="bg-gray-50 p-3 rounded-lg mt-3">
-                                    <p className="font-semibold text-sm">{selectedSchedule.title}</p>
-                                    <p className="text-sm text-gray-600">
-                                        {(parseDateFromDB(selectedSchedule.date) || new Date(selectedSchedule.date)).toLocaleDateString()} at{" "}
-                                        {formatTime12Hour(selectedSchedule.startTime)}
-                                    </p>
-                                </div>
-                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
-                                    <p className="text-sm text-amber-800">
-                                        <strong>⚠️ Note:</strong> This action will notify the admin. You may lose your spot in this class.
-                                    </p>
-                                </div>
-                            </>
-                        )}
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button
-                            variant="flat"
-                            onPress={() => {
-                                setIsCancelModalOpen(false);
-                                setSelectedSchedule(null);
-                            }}
-                        // isDisabled={isCancelling}
-                        >
-                            No, Keep It
-                        </Button>
-                        <Button
-                            color="danger"
-                            onPress={confirmCancelClass}
-                        // isLoading={isCancelling}
-                        >
-                            Yes, Cancel
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+                schedule={selectedSchedule}
+                onSubmit={handleSubmitCancellationRequest}
+                isSubmitting={isCancelling}
+            />
         </div>
     );
 };

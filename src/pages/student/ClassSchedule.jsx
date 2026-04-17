@@ -6,6 +6,8 @@ import { ScheduleCard } from "../../components/schedule/ScheduleCard";
 import { RescheduleRequestModal } from "../../components/schedule/RescheduleRequestModal";
 import { errorMessage, successMessage } from "../../lib/toast.config";
 import { useCreateRescheduleRequestMutation } from "../../redux/api/reschedule";
+import { CancellationRequestModal } from "../../components/schedule/CancellationRequestModal";
+import { useCreateCancellationRequestMutation } from "../../redux/api/cancellation";
 
 const StudentClassSchedule = () => {
     const [schedules, setSchedules] = useState([]);
@@ -13,8 +15,10 @@ const StudentClassSchedule = () => {
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedSchedule, setSelectedSchedule] = useState(null);
     const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+    const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false);
 
-    const [createRescheduleRequest, { isLoading: isSubmitting }] = useCreateRescheduleRequestMutation();
+    const [createRescheduleRequest, { isLoading: isSubmittingReschedule }] = useCreateRescheduleRequestMutation();
+    const [createCancellationRequest, { isLoading: isSubmittingCancellation }] = useCreateCancellationRequestMutation();
 
     useEffect(() => {
         fetchData();
@@ -96,6 +100,22 @@ const StudentClassSchedule = () => {
         }
     };
 
+    const handleRequestCancellation = (schedule) => {
+        setSelectedSchedule(schedule);
+        setIsCancellationModalOpen(true);
+    };
+
+    const handleSubmitCancellationRequest = async (requestData) => {
+        try {
+            await createCancellationRequest(requestData).unwrap();
+            successMessage("Cancellation request submitted successfully!");
+            setIsCancellationModalOpen(false);
+            setSelectedSchedule(null);
+        } catch (error) {
+            errorMessage(error?.data?.message || "Failed to submit cancellation request");
+        }
+    };
+
     // Check if student can reschedule (more than 4 hours before class)
     const canReschedule = (schedule) => {
         const scheduleDateTime = new Date(`${schedule.date}T${schedule.startTime}`);
@@ -132,6 +152,8 @@ const StudentClassSchedule = () => {
                             showRescheduleButton={true}
                             canReschedule={canReschedule(schedule)}
                             onRequestReschedule={handleRequestReschedule}
+                            showCancellationButton={true}
+                            onRequestCancellation={handleRequestCancellation}
                         />
                     ))}
                 </div>
@@ -145,7 +167,18 @@ const StudentClassSchedule = () => {
                 }}
                 schedule={selectedSchedule}
                 onSubmit={handleSubmitRescheduleRequest}
-                isSubmitting={isSubmitting}
+                isSubmitting={isSubmittingReschedule}
+            />
+
+            <CancellationRequestModal
+                isOpen={isCancellationModalOpen}
+                onClose={() => {
+                    setIsCancellationModalOpen(false);
+                    setSelectedSchedule(null);
+                }}
+                schedule={selectedSchedule}
+                onSubmit={handleSubmitCancellationRequest}
+                isSubmitting={isSubmittingCancellation}
             />
         </div>
     );
