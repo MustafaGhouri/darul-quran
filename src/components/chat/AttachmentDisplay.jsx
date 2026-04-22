@@ -28,7 +28,7 @@ export default function AttachmentDisplay({ attachment, variant = "received" }) 
   // Image: inline preview
   if (type === "image" && attachment.url) {
     return (
-      <div className="rounded-xl overflow-hidden max-w-[280px]">
+      <div className="overflow-hidden max-w-[280px]">
         <a href={attachment.url} target="_blank" rel="noopener noreferrer" className="block">
           <img
             src={attachment.url}

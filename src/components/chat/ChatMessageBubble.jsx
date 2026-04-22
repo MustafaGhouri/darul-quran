@@ -33,7 +33,7 @@ export default function ChatMessageBubble({
               <AttachmentDisplay attachment={attachment} variant={isSent ? "sent" : "received"} />
             </div>
           )}
-          {showText && <p className="m-0 break-words">{text}</p>}
+          {showText && <p className="m-0 wrap-break-word">{text}</p>}
           <div className="flex items-center justify-end gap-1.5 mt-1">
             <span className={`text-[11px] ${isSent ? "text-white/80" : "text-gray-400"}`}>
               {time}

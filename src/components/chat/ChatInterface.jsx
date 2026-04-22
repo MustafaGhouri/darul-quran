@@ -318,8 +318,8 @@ export default function ChatInterface({
   };
 
   const handleFileSelect = async (file) => {
-    const previousUrl = attachedAttachment?.url;
-    if (previousUrl) await deleteUploadedFile(previousUrl);
+    // const previousUrl = attachedAttachment?.url;
+    // if (previousUrl) await deleteUploadedFile(previousUrl);
 
     setAttachedAttachment({ file, uploading: true });
     try {
@@ -341,12 +341,15 @@ export default function ChatInterface({
         return;
       }
       const type = data.mimeType?.startsWith("image/") ? "image" : data.mimeType?.startsWith("video/") ? "video" : "file";
-      setAttachedAttachment({
+      const attachmentData = {
         url: data.url,
         name: data.name || file.name,
         size: data.size != null ? `${(data.size / 1024).toFixed(1)} KB` : "",
         type,
-      });
+      };
+
+      setAttachedAttachment(attachmentData);
+      return attachmentData;
     } catch (err) {
       addToast({ title: "Upload failed", color: "danger", placement: "bottom-right" });
       setAttachedAttachment(null);
@@ -359,7 +362,13 @@ export default function ChatInterface({
     setAttachedAttachment(null);
   };
 
-  const sendMessage = async () => {
+  const sendMessage = async (file) => {
+    let currentAttachment = attachedAttachment;
+    if (file) {
+      setSending(true);
+      currentAttachment = await handleFileSelect(file);
+    }
+
     // Prevent sending if chat is restricted by admin
     if (chatRestricted) {
       addToast({
@@ -383,11 +392,12 @@ export default function ChatInterface({
     }
 
     const text = message.trim();
-    const ready = attachedAttachment && attachedAttachment.url && !attachedAttachment.uploading;
+    const ready = currentAttachment && currentAttachment.url && !currentAttachment.uploading;
     const hasAttachment = !!ready;
     if (!text && !hasAttachment) return;
+
     if (isRealChat && otherUser?.id) {
-      const attachmentData = ready ? { url: attachedAttachment.url, name: attachedAttachment.name, size: attachedAttachment.size, type: attachedAttachment.type } : null;
+      const attachmentData = ready ? { url: currentAttachment.url, name: currentAttachment.name, size: currentAttachment.size, type: currentAttachment.type } : null;
       const filePayload = attachmentData ? JSON.stringify(attachmentData) : "";
       const textToSend = text || (hasAttachment ? "Attachment" : "");
       const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -593,7 +603,7 @@ export default function ChatInterface({
                             legacyChat?.isBlocked ? "Blocked" : "Block"}
                         </button>
                       </li>
-                      {currentUser?.role!=="admin" && <li><button type="button" onClick={() => setReportModalOpen(true)} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-500 hover:bg-gray-100 rounded-lg"><FiFlag className="text-lg" /> Report</button></li>}
+                      {currentUser?.role !== "admin" && <li><button type="button" onClick={() => setReportModalOpen(true)} className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] text-red-500 hover:bg-gray-100 rounded-lg"><FiFlag className="text-lg" /> Report</button></li>}
                     </>
                   }
                   <li><button type="button" className="flex items-center gap-3 w-full text-left px-3 py-2 text-[15px] hover:bg-gray-100 rounded-lg" onClick={handleBack}><FiXCircle className="text-lg" /> Close Chat</button></li>
@@ -664,7 +674,7 @@ export default function ChatInterface({
         className="flex-1 overflow-y-auto px-4 pb-4 space-y-4"
         onScroll={handleScroll}
         ref={messagesTopRef}
-        style={{ paddingBottom: showInputArea ? '100px' : '16px' }}
+        style={{ paddingBottom: showInputArea ? '30px' : '16px' }}
       >
         {loadingOlder && (
           <div className="flex justify-center py-2">
@@ -681,13 +691,13 @@ export default function ChatInterface({
             const uniqueMessages = [];
             const seenIds = new Set();
             for (const m of displayMessages) {
-                const mid = m.id || m.tempId;
-                if (mid && !seenIds.has(mid)) {
-                    uniqueMessages.push(m);
-                    seenIds.add(mid);
-                } else if (!mid) {
-                    uniqueMessages.push(m);
-                }
+              const mid = m.id || m.tempId;
+              if (mid && !seenIds.has(mid)) {
+                uniqueMessages.push(m);
+                seenIds.add(mid);
+              } else if (!mid) {
+                uniqueMessages.push(m);
+              }
             }
 
             return uniqueMessages.map((msg, index) => {
@@ -818,11 +828,12 @@ export default function ChatInterface({
       ) : null}
 
       {showInputArea && (
-        <div className="sticky bottom-0 left-0 right-0 bg-[#d2ebe5] px-4 py-3 border-t border-gray-300 shadow-lg z-10">
+        <div className="sticky bottom-0 left-0 right-0 bg-[#d2ebe5] px-4 py-1 border-t border-gray-300 shadow-lg z-10">
           <ChatInput
             message={message}
             onMessageChange={setMessage}
             attachedAttachment={attachedAttachment}
+            setAttachedAttachment={setAttachedAttachment}
             onFileSelect={handleFileSelect}
             onRemoveAttachment={handleRemoveAttachment}
             onSend={sendMessage}

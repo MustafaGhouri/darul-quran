@@ -116,32 +116,39 @@ const PageSearch = () => {
 
   // Flatten menu items into searchable list
   const allPages = useMemo(() => {
-    const pages = [];
+  const pagesMap = new Map();
 
-    filteredMenu.forEach((item) => {
-      // Add parent item
-      pages.push({
+  filteredMenu.forEach((item) => {
+    // 1. Process Parent
+    if (item.link) {
+      const parentLink = item.link.trim().replace(/\/$/, "");
+      pagesMap.set(parentLink, {
         name: item.name,
         link: item.link,
         description: pageDescriptions[item.link] || "",
         icon: item.icon,
       });
+    }
 
-      // Add children items
-      if (item.children) {
-        item.children.forEach((child) => {
-          pages.push({
+    // 2. Process Children (They will overwrite parents with the same link)
+    if (item.children) {
+      item.children.forEach((child) => {
+        if (child.link) {
+          const childLink = child.link.trim().replace(/\/$/, "");
+          pagesMap.set(childLink, {
             name: child.name,
             link: child.link,
             description: pageDescriptions[child.link] || "",
             icon: child.icon || item.icon,
           });
-        });
-      }
-    });
+        }
+      });
+    }
+  });
 
-    return pages;
-  }, [filteredMenu]);
+  // Convert the Map values (which are now unique and prioritized) back to an array
+  return Array.from(pagesMap.values());
+}, [filteredMenu]);
 
   // Filter pages based on search query
   const filteredPages = useMemo(() => {

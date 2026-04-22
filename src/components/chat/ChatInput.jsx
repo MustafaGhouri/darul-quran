@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Paperclip, Send } from "lucide-react";
 import AttachmentPreview from "./AttachmentPreview";
 
@@ -11,6 +11,7 @@ export default function ChatInput({
   message,
   onMessageChange,
   attachedAttachment,
+  setAttachedAttachment,
   onFileSelect,
   onRemoveAttachment,
   onSend,
@@ -19,21 +20,20 @@ export default function ChatInput({
   onInvalidFile,
 }) {
   const fileInputRef = useRef(null);
-
   const hasReadyAttachment = attachedAttachment && "url" in attachedAttachment && !attachedAttachment.uploading;
-  const canSend = !disabled && (message.trim() || hasReadyAttachment);
+  const canSend = !disabled && (message.trim() || !!attachedAttachment?.file);
 
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    const isImage = file.type.startsWith("image/");
-    const isVideo = file.type.startsWith("video/");
-    if (isImage || isVideo) {
-      onFileSelect(file);
-    } else {
-      onInvalidFile?.();
-    }
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file) return;
+      const isImage = file.type.startsWith("image/");
+      const isVideo = file.type.startsWith("video/");
+      if (isImage || isVideo) {
+        setAttachedAttachment({ file });
+      } else {
+        onInvalidFile?.();
+      }
   };
 
   return (
@@ -67,15 +67,15 @@ export default function ChatInput({
           type="text"
           value={message}
           onChange={(e) => onMessageChange(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && onSend()}
+          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && onSend(attachedAttachment?.file)}
           placeholder="Message"
           disabled={disabled}
           className="flex-1 min-w-0 py-2 text-sm bg-transparent border-none outline-none placeholder-gray-400"
         />
         <button
           type="button"
-          onClick={onSend}
-          disabled={!canSend || sending||disabled}
+          onClick={()=>onSend(attachedAttachment?.file)}
+          disabled={!canSend || sending || disabled}
           className="shrink-0 p-2 rounded-full bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           aria-label="Send"
         >
