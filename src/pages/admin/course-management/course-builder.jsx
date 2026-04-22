@@ -248,7 +248,7 @@ const CourseBuilder = () => {
   });
 
   // console.log(formData);
-  const coursepreview = useMemo(() => {
+  const coursepreview = useMemo(() => {    
     return [
       { title: "Title:", desc: formData?.course_name || "Add Tittle" },
       {
@@ -275,7 +275,7 @@ const CourseBuilder = () => {
       {
         title: "Duration:",
         desc:
-          formData?.duration === null
+          !formData?.duration 
             ? "Ongoing"
             : `${parseInterval(formData?.duration).number} ${parseInterval(formData?.duration).unit}` ||
             "Add Duration",
@@ -482,7 +482,7 @@ const CourseBuilder = () => {
       />
       <div className="flex w-full flex-col my-3">
         <Tabs
-          isDisabled={data?.course?.status !== "published"}
+          isDisabled={data?.course?.status === "draft"}
           className="w-full  md:inline-block py-2 opacity-100!"
           aria-label="Disabled Options"
           // disabledKeys={["info" , "pricing" , "content"]}
