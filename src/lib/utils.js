@@ -259,7 +259,16 @@ export const validateSchedule = (formData) => {
     if (!startDate) {
       return { valid: false, message: "Start date is required" };
     }
+    if (end) {
+      const maxRangeDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
+      if (maxRangeDays > 28) {
+        return {
+          valid: false,
+          message: "Schedule cannot exceed 28 days. Please select a shorter date range."
+        };
+      }
+    }
     const start = new Date(startDate);
     const end = endDate && new Date(endDate);
     const today = new Date();
