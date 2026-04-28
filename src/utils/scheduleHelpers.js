@@ -342,13 +342,100 @@ export const getUpcomingSchedules = (schedules) => {
  */
 export const formatRemainingTime = (hoursUntil) => {
     if (hoursUntil === null || hoursUntil < 0) return "";
-    
+
     const h = Math.floor(hoursUntil);
     const m = Math.round((hoursUntil % 1) * 60);
-    
+
     if (h < 1) {
         return `${m}m`;
     }
     
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
 };
+
+/**
+ * Group and sort schedules by date, splitting into upcoming and previous
+ * @param {Array} schedules - Array of schedule objects
+ * @param {string} filterType - "all", "zoom", or "video"
+ * @returns {Object} { upcoming: { dateKey: [schedules] }, previous: { dateKey: [schedules] } }
+ */
+export const groupAndSortSchedulesByDate = (schedules, filterType = "all") => {
+    if (!schedules) return { upcoming: {}, previous: {} };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
+
+    const grouped = {};
+
+    schedules.forEach((schedule) => {
+        // Filter by type (Zoom/Video)
+        if (filterType !== "all") {
+            if (filterType === "zoom" && !schedule.meetingLink) return;
+            if (filterType === "video" && schedule.meetingLink) return;
+        }
+
+        const datesToProcess = schedule.scheduleDates?.length > 0
+            ? schedule.scheduleDates
+            : (schedule.date ? [schedule.date] : []);
+
+        if (!datesToProcess.length) return;
+
+        datesToProcess.forEach((scheduleDate) => {
+            const dateStr = typeof scheduleDate === 'string' ? scheduleDate : scheduleDate?.date;
+            if (!dateStr) return;
+
+            // Use the same logic as parseDateFromDB to ensure consistency
+            let dateKey = "";
+            if (dateStr.includes("-") && dateStr.length === 10) {
+                dateKey = dateStr;
+            } else {
+                const parts = dateStr.split("-");
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10);
+                    let year = parseInt(parts[2], 10);
+                    if (year < 100) year += 2000;
+                    dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                } else {
+                    try {
+                        const d = new Date(dateStr);
+                        if (!isNaN(d.getTime())) {
+                            dateKey = d.toISOString().split('T')[0];
+                        } else {
+                            return;
+                        }
+                    } catch (e) {
+                        return;
+                    }
+                }
+            }
+
+            if (!grouped[dateKey]) {
+                grouped[dateKey] = [];
+            }
+
+            grouped[dateKey].push({
+                ...schedule,
+                date: dateStr,
+                startTime: typeof scheduleDate === 'object' ? (scheduleDate.startTime || schedule.startTime) : schedule.startTime,
+                endTime: typeof scheduleDate === 'object' ? (scheduleDate.endTime || schedule.endTime) : schedule.endTime,
+            });
+        });
+    });
+
+    const upcoming = {};
+    const previous = {};
+
+    const sortedDateKeys = Object.keys(grouped).sort();
+
+    sortedDateKeys.forEach(key => {
+        if (key >= todayStr) {
+            upcoming[key] = grouped[key];
+        } else {
+            previous[key] = grouped[key];
+        }
+    });
+
+    return { all: grouped, upcoming, previous };
+}

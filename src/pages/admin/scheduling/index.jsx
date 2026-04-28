@@ -762,9 +762,9 @@ const Scheduling = () => {
               </ModalHeader>
               <ModalBody>
                 {!isEdit && (
-                  <p className="text-xs text-gray-500 mb-2">Zoom link and password will be auto-generated upon creation.</p>
+                  <p className="text-xs text-gray-500 msb-2">Zoom link and password will be auto-generated upon creation.</p>
                 )}
-
+                <p className="text-xs text-warning mb-2">Note: 29th, 30th and 31st dates wil be block for every month.</p>
                 <div className="flex gap-2 mb-4">
                   <Button
                     radius="sm"

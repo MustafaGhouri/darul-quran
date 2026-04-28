@@ -61,6 +61,8 @@ import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { canReschedule, dateFormatter } from "../../../lib/utils";
 import QueryError from "../../../components/QueryError";
+import { groupAndSortSchedulesByDate } from "../../../utils/scheduleHelpers";
+import SchedulesByDateList from "../../../components/schedule/SchedulesByDateList";
 
 const TeacherClassSheduling = () => {
   const navigate = useNavigate();
@@ -205,65 +207,11 @@ const TeacherClassSheduling = () => {
     }
   };
   const schedulesByDate = useMemo(() => {
-    if (!scheduleData?.schedules) return {};
-
-    const grouped = {};
-    scheduleData.schedules.forEach((schedule) => {
-      if (filterType !== "all") {
-        if (filterType === "zoom" && !schedule.meetingLink) return;
-        if (filterType === "video" && schedule.meetingLink) return;
-      }
-
-      // Iterate through scheduleDates array instead of deprecated date field
-      if (!schedule.scheduleDates?.length) return;
-
-      schedule.scheduleDates.forEach((scheduleDate) => {
-        // Handle both string dates and object dates
-        const dateStr =
-          typeof scheduleDate === "string" ? scheduleDate : scheduleDate?.date;
-        const parsedDate = parseDateFromDB(dateStr);
-        if (!parsedDate || isNaN(parsedDate.getTime())) return;
-
-        const dateKey = parsedDate.toLocaleDateString("en-US", {
-          weekday: "long",
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        });
-
-        if (!grouped[dateKey]) {
-          grouped[dateKey] = [];
-        }
-        // Add schedule with its specific date info
-        grouped[dateKey].push({
-          ...schedule,
-          date: dateStr,
-          startTime:
-            typeof scheduleDate === "object"
-              ? scheduleDate.startTime || schedule.startTime
-              : schedule.startTime,
-          endTime:
-            typeof scheduleDate === "object"
-              ? scheduleDate.endTime || schedule.endTime
-              : schedule.endTime,
-        });
-      });
-    });
-
-    const sortedDates = Object.keys(grouped).sort((a, b) => {
-      return new Date(a) - new Date(b);
-    });
-
-    const sortedGrouped = {};
-    sortedDates.forEach((date) => {
-      sortedGrouped[date] = grouped[date];
-    });
-
-    return sortedGrouped;
+    return groupAndSortSchedulesByDate(scheduleData?.schedules, filterType);
   }, [scheduleData, filterType]);
 
-  //formatted dates
-  const scheduleDates = Object.keys(schedulesByDate);
+  // lookup for calendar and other utilities
+  const schedulesByDateAll = schedulesByDate.all;
 
   const handleCancelClass = (schedule) => {
     setSelectedSchedule(schedule);
@@ -434,14 +382,9 @@ const TeacherClassSheduling = () => {
     setSelectedDate(date);
 
     // Find schedules for this date
-    const dateKey = date.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
+    const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-    const schedules = schedulesByDate[dateKey] || [];
+    const schedules = schedulesByDate.all[dateKey] || [];
     setSchedulesForSelectedDate(schedules);
     openDateModal();
   };
@@ -773,28 +716,13 @@ const TeacherClassSheduling = () => {
               <div className="flex justify-center items-center py-20">
                 <Spinner size="lg" color="success" />
               </div>
-            ) : scheduleDates.length === 0 ? (
-              <div className="bg-white rounded-lg p-8 text-center">
-                <CalendarIcon
-                  className="mx-auto mb-4 text-gray-400"
-                  size={48}
-                />
-                <p className="text-gray-500">No classes scheduled</p>
-              </div>
             ) : (
-              scheduleDates.map((dateKey) => (
-                <div key={dateKey} className="m b-6">
-                  <DashHeading
-                    title={dateKey}
-                    desc={`${schedulesByDate[dateKey].length} ${schedulesByDate[dateKey].length === 1 ? "class" : "classes"} scheduled`}
-                  />
-                  <div className="mtd-3">
-                    {schedulesByDate[dateKey].map((schedule) => (
-                      <ScheduleCard key={schedule.id} schedule={schedule} />
-                    ))}
-                  </div>
-                </div>
-              ))
+              <SchedulesByDateList 
+                groupedSchedules={schedulesByDate} 
+                renderCard={(schedule) => (
+                  <ScheduleCard key={`${schedule.id}-${schedule.date}`} schedule={schedule} type="allDates" />
+                )} 
+              />
             )}
           </div>
         ) : (

@@ -183,8 +183,9 @@ const CreaterOrUpdateSchedule = () => {
             </div>
             <Form onSubmit={handleSubmit} className="bg-white w-full px-2 sm:px-4 py-6 rounded-md space-y-3">
                 {!isEdit && (
-                    <p className="text-xs text-gray-500 mb-2">Zoom link and password will be auto-generated upon creation.</p>
+                    <p className="text-xs text-gray-500 b-2">Zoom link and password will be auto-generated upon creation.</p>
                 )}
+                <p className="text-xs text-warning mb-2">Note: 29th, 30th and 31st dates wil be block for every month.</p>
 
                 <div className="flex gap-2 mb-4">
                     <Button
