@@ -199,7 +199,7 @@ const CreaterOrUpdateSchedule = () => {
             const payload = {
                 ...formData,
                 weeklyDays: formData.weeklyDays?.map(String),
-                specificDates: formData.specificDates.length > 0 ? sdPayload : [],
+                specificDates: formData.specificDates.length > 0 ? sdPayload : {},
             };
 
             if (user?.role === "teacher") payload.teacherId = user.id;
