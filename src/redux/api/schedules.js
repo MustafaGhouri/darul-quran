@@ -79,6 +79,15 @@ export const scheduleApi = createApi({
             invalidatesTags: (result, error, arg) =>
                 error ? [] : ['schedule']
         }),
+        quickReschedule: builder.mutation({
+            query: ({ id, date, startTime, endTime }) => ({
+                url: `/quick-reschedule/${id}`,
+                method: "PATCH",
+                body: { date, startTime, endTime },
+            }),
+            invalidatesTags: (result, error, arg) =>
+                error ? [] : ['schedule']
+        }),
     }),
 });
 
@@ -90,4 +99,5 @@ export const {
     useDeleteScheduleMutation,
     useAddScheduleNoteMutation,
     useRespondToScheduleMutation,
+    useQuickRescheduleMutation,
 } = scheduleApi;

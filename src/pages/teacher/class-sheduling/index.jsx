@@ -43,6 +43,8 @@ import {
   useGetScheduleQuery,
   useDeleteScheduleMutation,
   useAddScheduleNoteMutation,
+  useUpdateScheduleMutation,
+  useQuickRescheduleMutation,
 } from "../../../redux/api/schedules";
 import { useCreateRescheduleRequestMutation, useGetRescheduleRequestsQuery, useApproveRescheduleRequestMutation, useRejectRescheduleRequestMutation } from "../../../redux/api/reschedule";
 import { useGetAllCancellationRequestsQuery, useUpdateCancellationRequestStatusMutation } from "../../../redux/api/cancellation";
@@ -91,6 +93,16 @@ const TeacherClassSheduling = () => {
   const [isCancellationResponseModalOpen, setIsCancellationResponseModalOpen] = useState(false);
   const [teacherResponse, setTeacherResponse] = useState("");
   const [cancellationActionType, setCancellationActionType] = useState(null);
+
+  // Quick Reschedule state
+  const [isQuickRescheduleModalOpen, setIsQuickRescheduleModalOpen] = useState(false);
+  const [quickRescheduleData, setQuickRescheduleData] = useState({
+    date: "",
+    startTime: "",
+    endTime: "",
+  });
+  const [updateSchedule, { isLoading: isUpdatingSchedule }] = useUpdateScheduleMutation();
+  const [quickReschedule, { isLoading: isQuickRescheduling }] = useQuickRescheduleMutation();
 
   const { onOpenChange, isOpen } = useDisclosure();
   const {
@@ -350,6 +362,38 @@ const TeacherClassSheduling = () => {
     }
   };
 
+  const handleQuickRescheduleClick = (schedule, defaultDate = null) => {
+    setSelectedSchedule(schedule);
+    const dateToUse = defaultDate || schedule.scheduleDates?.[0] || "";
+    const existingTiming = schedule.specificDates?.[dateToUse];
+
+    setQuickRescheduleData({
+      date: dateToUse,
+      startTime: existingTiming?.startTime || schedule.startTime,
+      endTime: existingTiming?.endTime || schedule.endTime,
+    });
+    setIsQuickRescheduleModalOpen(true);
+  };
+
+  const handleQuickRescheduleSubmit = async () => {
+    try {
+      if (!selectedSchedule || !quickRescheduleData.date) return;
+
+      const res = await quickReschedule({
+        id: selectedSchedule.id,
+        date: quickRescheduleData.date,
+        startTime: quickRescheduleData.startTime,
+        endTime: quickRescheduleData.endTime,
+      }).unwrap();
+
+      successMessage("Schedule updated successfully");
+      setIsQuickRescheduleModalOpen(false);
+      setSelectedSchedule(null);
+    } catch (error) {
+      errorMessage(error?.data?.message || "Failed to reschedule: " + error.message);
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       pending: "warning",
@@ -485,7 +529,7 @@ const TeacherClassSheduling = () => {
     const isExpired = isClassExpired(schedule);
     const canJoin = isLive && schedule.meetingLink;
     return (
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-3 hover:shadow-md transition-shadow">
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-3 hover:shadow-md transition-shadow relative">
         <div className="flex flex-wrap gap-2 mb-3">
           {getClassStatusBadge(
             schedule,
@@ -596,13 +640,14 @@ const TeacherClassSheduling = () => {
               )}
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 justify-start md:justify-end w-full md:w-auto">
+          <div className="flex flex-wrap gap-2 justify-start md:justify-end w-full md:w-auto md:max-w-2xl">
             {canJoin ? (
               <Button
+              className="!px-0 !border-0"
                 radius="sm"
                 size="sm"
                 variant="solid"
-                className="bg-[#1570E8] text-white"
+                // className="bg-[#1570E8] text-white"
                 startContent={<LuSquareArrowOutUpRight size={18} />}
                 as={Link}
                 to={schedule.meetingLink}
@@ -619,6 +664,7 @@ const TeacherClassSheduling = () => {
               >
                 <span>
               <Button
+              
                 radius="sm"
                 size="sm"
                 variant="solid"
@@ -632,6 +678,7 @@ const TeacherClassSheduling = () => {
               </Tooltip>
             )}
             <>
+            <div className=" absolute top-5 right-5">
               <Tooltip
                 isDisabled={canReschedule(schedule)}
                 color="success"
@@ -646,7 +693,7 @@ const TeacherClassSheduling = () => {
                   // isDisabled={!canReschedule(schedule)}
                   onPress={() => {
                     if (!canReschedule(schedule)) {
-                     errorMessage("You can only reschedule a class before 4 hours of the start time.")
+                      errorMessage("You can only reschedule a class before 4 hours of the start time.")
                       return
                     }
                     navigate("/teacher/class-scheduling/manage", {
@@ -654,9 +701,34 @@ const TeacherClassSheduling = () => {
                     })
                   }}
                 >
-                  Reschedule
+                 Manage Reschedule
                 </Button>
                 </span>
+              </Tooltip>
+              </div>
+              <Tooltip
+              isDisabled={canReschedule(schedule)}
+                color="success"
+                content="Schedule can only be rescheduled before 4 hours of the start time."
+              >
+                <span>
+                <Button
+                radius="sm"
+                size="sm"
+                variant="bordered"
+                color="success"
+                onPress={() => 
+                 { if (!canReschedule(schedule)) {
+                      errorMessage("You can only reschedule a class before 4 hours of the start time.")
+                      return
+                    }
+                    handleQuickRescheduleClick(schedule)
+                  }
+                }
+              >
+                Quick Reschedule
+              </Button>
+              </span>
               </Tooltip>
               <Button
                 radius="sm"
@@ -914,6 +986,15 @@ const TeacherClassSheduling = () => {
                         onPress={() => handleAddNote(schedule, schedule.date)}
                       >
                         {schedule?.notes?.[schedule.date] ? "Update Note" : "Add Note"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        color="primary"
+                        variant="flat"
+                        radius="sm"
+                        onPress={() => handleQuickRescheduleClick(schedule, schedule.date)}
+                      >
+                        Quick Reschedule
                       </Button>
                     </div>
                     <h3 className="text-lg font-bold text-gray-800 mb-2">
@@ -1560,6 +1641,84 @@ const TeacherClassSheduling = () => {
               isLoading={isUpdatingCancellation}
             >
               {isUpdatingCancellation ? "Processing..." : cancellationActionType === "approve" ? "Approve" : "Reject"}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      {/* Quick Reschedule Modal */}
+      <Modal
+        isOpen={isQuickRescheduleModalOpen}
+        onOpenChange={setIsQuickRescheduleModalOpen}
+        size="md"
+      >
+        <ModalContent>
+          <ModalHeader>
+            <h2 className="text-lg font-semibold text-[#06574C]">
+              Quick Reschedule: {selectedSchedule?.title}
+            </h2>
+          </ModalHeader>
+          <ModalBody>
+            <div className="space-y-4">
+              <Select
+                label="Select Date"
+                placeholder="Select a date to reschedule"
+                selectedKeys={[quickRescheduleData.date]}
+                onChange={(e) => {
+                  const date = e.target.value;
+                  const existingTiming = selectedSchedule?.specificDates?.[date];
+                  setQuickRescheduleData({
+                    ...quickRescheduleData,
+                    date,
+                    startTime: existingTiming?.startTime || selectedSchedule.startTime,
+                    endTime: existingTiming?.endTime || selectedSchedule.endTime,
+                  });
+                }}
+                variant="bordered"
+                isRequired
+              >
+                {selectedSchedule?.scheduleDates?.map((date) => (
+                  <SelectItem key={date} value={date}>
+                    {dateFormatter(date)}
+                  </SelectItem>
+                ))}
+              </Select>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  type="time"
+                  label="Start Time"
+                  value={quickRescheduleData.startTime}
+                  onChange={(e) => setQuickRescheduleData({ ...quickRescheduleData, startTime: e.target.value })}
+                  variant="bordered"
+                  isRequired
+                />
+                <Input
+                  type="time"
+                  label="End Time"
+                  value={quickRescheduleData.endTime}
+                  onChange={(e) => setQuickRescheduleData({ ...quickRescheduleData, endTime: e.target.value })}
+                  variant="bordered"
+                  isRequired
+                />
+              </div>
+
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-md">
+                <p className="text-xs text-blue-700">
+                  <strong>Note:</strong> This will only update the timing for the selected date. Other dates in the schedule will remain unchanged.
+                </p>
+              </div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={() => setIsQuickRescheduleModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              color="success"
+              onPress={handleQuickRescheduleSubmit}
+              isLoading={isQuickRescheduling}
+            >
+              Update Timing
             </Button>
           </ModalFooter>
         </ModalContent>
