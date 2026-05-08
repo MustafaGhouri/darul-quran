@@ -100,6 +100,10 @@ const TeacherClassSheduling = () => {
     date: "",
     startTime: "",
     endTime: "",
+    replaceWith: "",
+    shouldShowSelect: false,
+    scheduleTitle: "",
+    courseTitle: ""
   });
   const [updateSchedule, { isLoading: isUpdatingSchedule }] = useUpdateScheduleMutation();
   const [quickReschedule, { isLoading: isQuickRescheduling }] = useQuickRescheduleMutation();
@@ -364,13 +368,17 @@ const TeacherClassSheduling = () => {
 
   const handleQuickRescheduleClick = (schedule, defaultDate = null) => {
     setSelectedSchedule(schedule);
-    const dateToUse = defaultDate || schedule.scheduleDates?.[0] || "";
+    const dateToUse = defaultDate || "";
     const existingTiming = schedule.specificDates?.[dateToUse];
 
     setQuickRescheduleData({
+      shouldShowSelect: !dateToUse,
       date: dateToUse,
       startTime: existingTiming?.startTime || schedule.startTime,
       endTime: existingTiming?.endTime || schedule.endTime,
+      replaceWith: dateToUse || "",
+      scheduleTitle: schedule.title,
+      courseTitle: schedule.course?.courseName || "",
     });
     setIsQuickRescheduleModalOpen(true);
   };
@@ -384,6 +392,7 @@ const TeacherClassSheduling = () => {
         date: quickRescheduleData.date,
         startTime: quickRescheduleData.startTime,
         endTime: quickRescheduleData.endTime,
+        replaceWith: quickRescheduleData.replaceWith || null,
       }).unwrap();
 
       successMessage("Schedule updated successfully");
@@ -569,7 +578,7 @@ const TeacherClassSheduling = () => {
               : `${dateFormatter(schedule.scheduleDates[0])} - to - ${schedule?.isDateGenerated ? "On Going" : dateFormatter(schedule.scheduleDates[schedule.scheduleDates.length - 1])}`}
           </p>
         )}
-       
+
         <div className="flex flex-wrap gap-4 mb-4">
           <div className="flex text-[#666666] text-sm items-center gap-2">
             {type === "normal" ? (
@@ -586,7 +595,7 @@ const TeacherClassSheduling = () => {
             <p className="text-[#666666] text-md">
               {formatTime12Hour(schedule.startTime)} -{" "}
               {formatTime12Hour(schedule.endTime)}  {""}
-              - Scheduled days timings 
+              - Scheduled days timings
             </p>
           </div>
         </div>
@@ -643,11 +652,10 @@ const TeacherClassSheduling = () => {
           <div className="flex flex-wrap gap-2 justify-start md:justify-end w-full md:w-auto md:max-w-2xl">
             {canJoin ? (
               <Button
-              className="!px-0 !border-0"
                 radius="sm"
                 size="sm"
                 variant="solid"
-                // className="bg-[#1570E8] text-white"
+                className="bg-[#1570E8] text-white"
                 startContent={<LuSquareArrowOutUpRight size={18} />}
                 as={Link}
                 to={schedule.meetingLink}
@@ -658,77 +666,77 @@ const TeacherClassSheduling = () => {
               </Button>
             ) : (
               <Tooltip
-              isDisabled={isExpired}
-              color="danger"
-              content={isExpired ? "The schedule has ended" : "Schedule has not started yet."}
+                isDisabled={isExpired}
+                color="danger"
+                content={isExpired ? "The schedule has ended" : "Schedule has not started yet."}
               >
                 <span>
-              <Button
-              
-                radius="sm"
-                size="sm"
-                variant="solid"
-                className="bg-[#9A9A9A] text-white"
-                startContent={<Lock size={18} />}
-                isDisabled={!isExpired}
-              >
-                {isExpired ? "Ended" : "Locked"}
-              </Button>
-              </span>
+                  <Button
+
+                    radius="sm"
+                    size="sm"
+                    variant="solid"
+                    className="bg-[#9A9A9A] text-white"
+                    startContent={<Lock size={18} />}
+                    isDisabled={!isExpired}
+                  >
+                    {isExpired ? "Ended" : "Locked"}
+                  </Button>
+                </span>
               </Tooltip>
             )}
             <>
-            <div className=" absolute top-5 right-5">
+              <div className=" absolute top-5 right-5">
+                <Tooltip
+                  isDisabled={canReschedule(schedule)}
+                  color="success"
+                  content="Schedule can only be rescheduled before 4 hours of the start time."
+                >
+                  <span>
+                    <Button
+                      radius="sm"
+                      size="sm"
+                      variant="bordered"
+                      color="success"
+                      // isDisabled={!canReschedule(schedule)}
+                      onPress={() => {
+                        if (!canReschedule(schedule)) {
+                          errorMessage("You can only reschedule a class before 4 hours of the start time.")
+                          return
+                        }
+                        navigate("/teacher/class-scheduling/manage", {
+                          state: schedule,
+                        })
+                      }}
+                    >
+                      Manage Reschedule
+                    </Button>
+                  </span>
+                </Tooltip>
+              </div>
               <Tooltip
                 isDisabled={canReschedule(schedule)}
                 color="success"
                 content="Schedule can only be rescheduled before 4 hours of the start time."
               >
                 <span>
-                <Button
-                  radius="sm"
-                  size="sm"
-                  variant="bordered"
-                  color="success"
-                  // isDisabled={!canReschedule(schedule)}
-                  onPress={() => {
-                    if (!canReschedule(schedule)) {
-                      errorMessage("You can only reschedule a class before 4 hours of the start time.")
-                      return
+                  <Button
+                    radius="sm"
+                    size="sm"
+                    variant="bordered"
+                    color="success"
+                    onPress={() => {
+                      if (!canReschedule(schedule)) {
+                        errorMessage("You can only reschedule a class before 4 hours of the start time.")
+                        return
+                      }
+                      handleQuickRescheduleClick(schedule, (type !== "normal" ? schedule.date : undefined))
                     }
-                    navigate("/teacher/class-scheduling/manage", {
-                      state: schedule,
-                    })
-                  }}
-                >
-                 Manage Reschedule
-                </Button>
+                    }
+                  >
+                    Quick Reschedule
+                  </Button>
                 </span>
-              </Tooltip>
-              </div>
-              <Tooltip
-              isDisabled={canReschedule(schedule)}
-                color="success"
-                content="Schedule can only be rescheduled before 4 hours of the start time."
-              >
-                <span>
-                <Button
-                radius="sm"
-                size="sm"
-                variant="bordered"
-                color="success"
-                onPress={() => 
-                 { if (!canReschedule(schedule)) {
-                      errorMessage("You can only reschedule a class before 4 hours of the start time.")
-                      return
-                    }
-                    handleQuickRescheduleClick(schedule)
-                  }
-                }
-              >
-                Quick Reschedule
-              </Button>
-              </span>
               </Tooltip>
               <Button
                 radius="sm"
@@ -1654,12 +1662,12 @@ const TeacherClassSheduling = () => {
         <ModalContent>
           <ModalHeader>
             <h2 className="text-lg font-semibold text-[#06574C]">
-              Quick Reschedule: {selectedSchedule?.title}
+              Quick Reschedule <br />  {quickRescheduleData?.scheduleTitle}
             </h2>
           </ModalHeader>
           <ModalBody>
             <div className="space-y-4">
-              <Select
+              {quickRescheduleData?.shouldShowSelect ? <Select
                 label="Select Date"
                 placeholder="Select a date to reschedule"
                 selectedKeys={[quickRescheduleData.date]}
@@ -1682,6 +1690,7 @@ const TeacherClassSheduling = () => {
                   </SelectItem>
                 ))}
               </Select>
+                : <p className="text-sm text-[#06574C]">Selected Date to Reschedule: {dateFormatter(quickRescheduleData.date)}</p>}
 
               <div className="grid grid-cols-2 gap-4">
                 <Input
@@ -1702,9 +1711,18 @@ const TeacherClassSheduling = () => {
                 />
               </div>
 
+              <Input
+                type="date"
+                label="Move to New Date (Optional)"
+                placeholder="Select a new date"
+                onChange={(e) => setQuickRescheduleData({ ...quickRescheduleData, replaceWith: e.target.value })}
+                variant="bordered"
+                description="Leave blank to keep the original date."
+              />
+
               <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-md">
                 <p className="text-xs text-blue-700">
-                  <strong>Note:</strong> This will only update the timing for the selected date. Other dates in the schedule will remain unchanged.
+                  <strong>Note:</strong> This will update the timing (and optionally the date) for the selected occurrence. Other occurrences will remain unchanged.
                 </p>
               </div>
             </div>

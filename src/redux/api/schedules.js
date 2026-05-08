@@ -80,10 +80,10 @@ export const scheduleApi = createApi({
                 error ? [] : ['schedule']
         }),
         quickReschedule: builder.mutation({
-            query: ({ id, date, startTime, endTime }) => ({
+            query: ({ id, date, startTime, endTime, replaceWith }) => ({
                 url: `/quick-reschedule/${id}`,
                 method: "PATCH",
-                body: { date, startTime, endTime },
+                body: { date, startTime, endTime, replaceWith },
             }),
             invalidatesTags: (result, error, arg) =>
                 error ? [] : ['schedule']
