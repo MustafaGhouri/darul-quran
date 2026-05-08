@@ -88,6 +88,24 @@ export const scheduleApi = createApi({
             invalidatesTags: (result, error, arg) =>
                 error ? [] : ['schedule']
         }),
+        addExtraDate: builder.mutation({
+            query: ({ id, date, startTime, endTime }) => ({
+                url: `/${id}/add-extra-date`,
+                method: "POST",
+                body: { date, startTime, endTime },
+            }),
+            invalidatesTags: (result, error, arg) =>
+                error ? [] : ['schedule']
+        }),
+        removeExtraDate: builder.mutation({
+            query: ({ id, date }) => ({
+                url: `/${id}/remove-extra-date`,
+                method: "POST",
+                body: { date },
+            }),
+            invalidatesTags: (result, error, arg) =>
+                error ? [] : ['schedule']
+        }),
     }),
 });
 
@@ -100,4 +118,6 @@ export const {
     useAddScheduleNoteMutation,
     useRespondToScheduleMutation,
     useQuickRescheduleMutation,
+    useAddExtraDateMutation,
+    useRemoveExtraDateMutation,
 } = scheduleApi;
