@@ -576,7 +576,7 @@ const TeachersDashboard = () => {
             as={Link}
             to="/teacher/class-scheduling"
           >
-            Shedule New Class
+            Schedule New Class
           </Button>
           <Button
             radius="sm"
