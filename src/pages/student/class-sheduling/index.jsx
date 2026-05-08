@@ -110,6 +110,7 @@ const StudentClassSheduling = () => {
             successMessage("Response submitted successfully");
             setIsDenyModalOpen(false);
             setDenyReason("");
+            navigate('/student/class-scheduling');
             setTargetScheduleId(null);
         } catch (error) {
             errorMessage(error?.data?.message || "Failed to submit response");
@@ -133,6 +134,7 @@ const StudentClassSheduling = () => {
             setIsDenyModalOpen(false);
             setDenyReason("");
             setTargetScheduleId(null);
+            navigate('/student/class-scheduling');
         } catch (error) {
             errorMessage(error?.data?.message || "Failed to submit response");
         }
@@ -520,7 +522,7 @@ const StudentClassSheduling = () => {
                     </p>
                 )}
 
-               
+
                 <div className="flex flex-wrap gap-4 mb-4">
                     <div className="flex text-[#666666] text-sm items-center gap-2">
                         {type === 'normal' ? "CreatedAt: " : <CiCalendar color="#666666" size={20} />}
@@ -569,7 +571,7 @@ const StudentClassSheduling = () => {
                 </details>
                 }
 
-                 {type === 'normal' && schedule?.specificDates && Object.keys(schedule.specificDates).length > 0 && (
+                {type === 'normal' && schedule?.specificDates && Object.keys(schedule.specificDates).length > 0 && (
                     <div className="mb-4">
                         <p className="text-xs font-semibold text-[#06574C] mb-2 uppercase tracking-wider">Only Specific Date  Shedule:</p>
                         <div className="flex flex-wrap gap-2">
@@ -1049,7 +1051,7 @@ const StudentClassSheduling = () => {
                 isSubmitting={isCancelling}
             />
 
-            <Modal isOpen={isDenyModalOpen} onOpenChange={setIsDenyModalOpen}>
+            <Modal isOpen={isDenyModalOpen} onOpenChange={(v) => { setIsDenyModalOpen(v); navigate('/student/class-scheduling'); }}>
                 <ModalContent>
                     <ModalHeader className="flex flex-col gap-1">
                         <h2 className="text-xl font-bold text-success">Approve OR Decline Schedule</h2>

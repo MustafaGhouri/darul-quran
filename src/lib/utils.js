@@ -202,16 +202,22 @@ export const isEditable = (dateStr, startTime, endTime) => {
   return hoursUntil < 0 || hoursUntil > 4;
 };
 
-export const canReschedule = (schedule) => {
-  return schedule.scheduleDates.every(dateStr => {
+export const canReschedule = (schedule, dateStr = null) => {
+  const checkDate = (dStr) => {
     let currentStartTime = schedule.startTime;
     let currentEndTime = schedule.endTime;
-    if (schedule.specificDates && schedule.specificDates[dateStr]) {
-       currentStartTime = schedule.specificDates[dateStr].startTime || currentStartTime;
-       currentEndTime = schedule.specificDates[dateStr].endTime || currentEndTime;
+    if (schedule.specificDates && schedule.specificDates[dStr]) {
+      currentStartTime = schedule.specificDates[dStr].startTime || currentStartTime;
+      currentEndTime = schedule.specificDates[dStr].endTime || currentEndTime;
     }
-    return isEditable(dateStr, currentStartTime, currentEndTime);
-  });
+    return isEditable(dStr, currentStartTime, currentEndTime);
+  };
+
+  if (dateStr) {
+    return checkDate(dateStr);
+  }
+
+  return schedule.scheduleDates.every(d => checkDate(d));
 };
 
 const isBlockedDay = (date) => {

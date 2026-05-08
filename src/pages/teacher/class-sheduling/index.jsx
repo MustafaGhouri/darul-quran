@@ -688,7 +688,7 @@ const TeacherClassSheduling = () => {
             <>
               <div className=" absolute top-5 right-5">
                 <Tooltip
-                  isDisabled={canReschedule(schedule)}
+                  isDisabled={canReschedule(schedule, (type !== "normal" ? schedule.date : null))}
                   color="success"
                   content="Schedule can only be rescheduled before 4 hours of the start time."
                 >
@@ -700,7 +700,7 @@ const TeacherClassSheduling = () => {
                       color="success"
                       // isDisabled={!canReschedule(schedule)}
                       onPress={() => {
-                        if (!canReschedule(schedule)) {
+                        if (!canReschedule(schedule, (type !== "normal" ? schedule.date : null))) {
                           errorMessage("You can only reschedule a class before 4 hours of the start time.")
                           return
                         }
@@ -715,7 +715,7 @@ const TeacherClassSheduling = () => {
                 </Tooltip>
               </div>
               <Tooltip
-                isDisabled={canReschedule(schedule)}
+                isDisabled={canReschedule(schedule, (type !== "normal" ? schedule.date : null))}
                 color="success"
                 content="Schedule can only be rescheduled before 4 hours of the start time."
               >
@@ -725,8 +725,9 @@ const TeacherClassSheduling = () => {
                     size="sm"
                     variant="bordered"
                     color="success"
+                    // isDisabled={!canReschedule(schedule)}
                     onPress={() => {
-                      if (!canReschedule(schedule)) {
+                      if (!canReschedule(schedule, (type !== "normal" ? schedule.date : null))) {
                         errorMessage("You can only reschedule a class before 4 hours of the start time.")
                         return
                       }
