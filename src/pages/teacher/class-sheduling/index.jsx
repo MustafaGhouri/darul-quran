@@ -45,8 +45,6 @@ import {
   useAddScheduleNoteMutation,
   useUpdateScheduleMutation,
   useQuickRescheduleMutation,
-  useAddExtraDateMutation,
-  useRemoveExtraDateMutation,
 } from "../../../redux/api/schedules";
 import { useCreateRescheduleRequestMutation, useGetRescheduleRequestsQuery, useApproveRescheduleRequestMutation, useRejectRescheduleRequestMutation } from "../../../redux/api/reschedule";
 import { useGetAllCancellationRequestsQuery, useUpdateCancellationRequestStatusMutation } from "../../../redux/api/cancellation";
@@ -105,16 +103,6 @@ const TeacherClassSheduling = () => {
   });
   const [updateSchedule, { isLoading: isUpdatingSchedule }] = useUpdateScheduleMutation();
   const [quickReschedule, { isLoading: isQuickRescheduling }] = useQuickRescheduleMutation();
-  const [addExtraDate, { isLoading: isAddingExtraDate }] = useAddExtraDateMutation();
-  const [removeExtraDate, { isLoading: isRemovingExtraDate }] = useRemoveExtraDateMutation();
-
-  // Add Extra Date state
-  const [isExtraDateModalOpen, setIsExtraDateModalOpen] = useState(false);
-  const [extraDateData, setExtraDateData] = useState({
-    date: "",
-    startTime: "",
-    endTime: "",
-  });
 
   const { onOpenChange, isOpen } = useDisclosure();
   const {
@@ -406,50 +394,6 @@ const TeacherClassSheduling = () => {
     }
   };
 
-  const handleAddExtraDateClick = (schedule) => {
-    setSelectedSchedule(schedule);
-    setExtraDateData({
-      date: new Date().toISOString().split("T")[0],
-      startTime: schedule.startTime,
-      endTime: schedule.endTime,
-    });
-    setIsExtraDateModalOpen(true);
-  };
-
-  const handleAddExtraDateSubmit = async () => {
-    try {
-      if (!selectedSchedule || !extraDateData.date) return;
-
-      const res = await addExtraDate({
-        id: selectedSchedule.id,
-        date: extraDateData.date,
-        startTime: extraDateData.startTime,
-        endTime: extraDateData.endTime,
-      }).unwrap();
-
-      successMessage("Extra date added successfully");
-      setIsExtraDateModalOpen(false);
-      setSelectedSchedule(null);
-    } catch (error) {
-      errorMessage(error?.data?.message || "Failed to add extra date: " + error.message);
-    }
-  };
-
-  const handleRemoveExtraDate = async (scheduleId, date) => {
-    if (!window.confirm(`Are you sure you want to remove the extra date ${dateFormatter(date)}?`)) return;
-    try {
-      const res = await removeExtraDate({
-        id: scheduleId,
-        date,
-      }).unwrap();
-      successMessage("Extra date removed successfully");
-    } catch (error) {
-      errorMessage(error?.data?.message || "Failed to remove extra date: " + error.message);
-    }
-  };
-
-
-
   const getStatusColor = (status) => {
     const colors = {
       pending: "warning",
@@ -625,7 +569,7 @@ const TeacherClassSheduling = () => {
               : `${dateFormatter(schedule.scheduleDates[0])} - to - ${schedule?.isDateGenerated ? "On Going" : dateFormatter(schedule.scheduleDates[schedule.scheduleDates.length - 1])}`}
           </p>
         )}
-
+       
         <div className="flex flex-wrap gap-4 mb-4">
           <div className="flex text-[#666666] text-sm items-center gap-2">
             {type === "normal" ? (
@@ -642,50 +586,25 @@ const TeacherClassSheduling = () => {
             <p className="text-[#666666] text-md">
               {formatTime12Hour(schedule.startTime)} -{" "}
               {formatTime12Hour(schedule.endTime)}  {""}
-              - Scheduled days timings
+              - Scheduled days timings 
             </p>
           </div>
         </div>
-
-        {type === 'normal' && schedule?.extraDates && schedule.extraDates.length > 0 && (
+        {type === 'normal' && schedule?.specificDates && Object.keys(schedule.specificDates).length > 0 && (
           <div className="mb-4">
-            <p className="text-sm font-semibold text-blue-600 mb-2 uppercase tracking-wider">Extra Dates Added:</p>
+            <p className="text-sm font-semibold text-[#06574C] mb-2 uppercase tracking-wider">Only Specific Dates Schedule:</p>
             <div className="flex flex-wrap gap-2">
-              {schedule.extraDates.map((date, index) => (
-                <Chip
+              {Object.entries(schedule.specificDates).map(([date, times], index) => (
+                <p
                   key={index}
-                  size="sm"
-                  variant="flat"
-                  color="primary"
-                  onClose={() => handleRemoveExtraDate(schedule.id, date)}
-                  className="bg-blue-50"
+                  className="text-[#666666] text-md line-clamp-2"
                 >
-                  {dateFormatter(date)}
-                  {schedule.specificDates?.[date] && ` (${formatTime12Hour(schedule.specificDates[date].startTime)} - ${formatTime12Hour(schedule.specificDates[date].endTime)})`}
-                </Chip>
+                  {dateFormatter(date)} ({formatTime12Hour(times.startTime)} - {formatTime12Hour(times.endTime)})
+                </p>
               ))}
             </div>
           </div>
         )}
-
-        {type === 'normal' && schedule?.specificDates && Object.keys(schedule.specificDates).filter(d => !schedule.extraDates?.includes(d)).length > 0 && (
-          <div className="mb-4">
-            <p className="text-sm font-semibold text-[#06574C] mb-2 uppercase tracking-wider">Rescheduled Dates:</p>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(schedule.specificDates)
-                .filter(([date]) => !schedule.extraDates?.includes(date))
-                .map(([date, times], index) => (
-                  <p
-                    key={index}
-                    className="text-[#666666] text-sm"
-                  >
-                    {dateFormatter(date)} ({formatTime12Hour(times.startTime)} - {formatTime12Hour(times.endTime)})
-                  </p>
-                ))}
-            </div>
-          </div>
-        )}
-
 
 
         {schedule.notes && type !== "normal" ? schedule?.notes?.[schedule.date] && (
@@ -724,7 +643,7 @@ const TeacherClassSheduling = () => {
           <div className="flex flex-wrap gap-2 justify-start md:justify-end w-full md:w-auto md:max-w-2xl">
             {canJoin ? (
               <Button
-                className="!px-0 !border-0"
+              className="!px-0 !border-0"
                 radius="sm"
                 size="sm"
                 variant="solid"
@@ -739,87 +658,78 @@ const TeacherClassSheduling = () => {
               </Button>
             ) : (
               <Tooltip
-                isDisabled={isExpired}
-                color="danger"
-                content={isExpired ? "The schedule has ended" : "Schedule has not started yet."}
+              isDisabled={isExpired}
+              color="danger"
+              content={isExpired ? "The schedule has ended" : "Schedule has not started yet."}
               >
                 <span>
-                  <Button
-
-                    radius="sm"
-                    size="sm"
-                    variant="solid"
-                    className="bg-[#9A9A9A] text-white"
-                    startContent={<Lock size={18} />}
-                    isDisabled={!isExpired}
-                  >
-                    {isExpired ? "Ended" : "Locked"}
-                  </Button>
-                </span>
+              <Button
+              
+                radius="sm"
+                size="sm"
+                variant="solid"
+                className="bg-[#9A9A9A] text-white"
+                startContent={<Lock size={18} />}
+                isDisabled={!isExpired}
+              >
+                {isExpired ? "Ended" : "Locked"}
+              </Button>
+              </span>
               </Tooltip>
             )}
             <>
-              <div className=" absolute top-5 right-5">
-                <Tooltip
-                  isDisabled={canReschedule(schedule)}
-                  color="success"
-                  content="Schedule can only be rescheduled before 4 hours of the start time."
-                >
-                  <span>
-                    <Button
-                      radius="sm"
-                      size="sm"
-                      variant="bordered"
-                      color="success"
-                      // isDisabled={!canReschedule(schedule)}
-                      onPress={() => {
-                        if (!canReschedule(schedule)) {
-                          errorMessage("You can only reschedule a class before 4 hours of the start time.")
-                          return
-                        }
-                        navigate("/teacher/class-scheduling/manage", {
-                          state: schedule,
-                        })
-                      }}
-                    >
-                      Manage Reschedule
-                    </Button>
-                  </span>
-                </Tooltip>
-              </div>
+            <div className=" absolute top-5 right-5">
               <Tooltip
                 isDisabled={canReschedule(schedule)}
                 color="success"
                 content="Schedule can only be rescheduled before 4 hours of the start time."
               >
                 <span>
-                  <Button
-                    radius="sm"
-                    size="sm"
-                    variant="bordered"
-                    color="success"
-                    onPress={() => {
-                      if (!canReschedule(schedule)) {
-                        errorMessage("You can only reschedule a class before 4 hours of the start time.")
-                        return
-                      }
-                      handleQuickRescheduleClick(schedule)
+                <Button
+                  radius="sm"
+                  size="sm"
+                  variant="bordered"
+                  color="success"
+                  // isDisabled={!canReschedule(schedule)}
+                  onPress={() => {
+                    if (!canReschedule(schedule)) {
+                      errorMessage("You can only reschedule a class before 4 hours of the start time.")
+                      return
                     }
-                    }
-                  >
-                    Quick Reschedule
-                  </Button>
+                    navigate("/teacher/class-scheduling/manage", {
+                      state: schedule,
+                    })
+                  }}
+                >
+                 Manage Reschedule
+                </Button>
                 </span>
               </Tooltip>
-              <Button
+              </div>
+              <Tooltip
+              isDisabled={canReschedule(schedule)}
+                color="success"
+                content="Schedule can only be rescheduled before 4 hours of the start time."
+              >
+                <span>
+                <Button
                 radius="sm"
                 size="sm"
                 variant="bordered"
-                color="primary"
-                onPress={() => handleAddExtraDateClick(schedule)}
+                color="success"
+                onPress={() => 
+                 { if (!canReschedule(schedule)) {
+                      errorMessage("You can only reschedule a class before 4 hours of the start time.")
+                      return
+                    }
+                    handleQuickRescheduleClick(schedule)
+                  }
+                }
               >
-                Add Extra Date
+                Quick Reschedule
               </Button>
+              </span>
+              </Tooltip>
               <Button
                 radius="sm"
                 size="sm"
@@ -905,12 +815,11 @@ const TeacherClassSheduling = () => {
         title="My Course's Schedules"
         desc="View and manage your upcoming live course's schedules"
       />
-      <div className="flex items-center max-sm: flex-wrap gap-2">
+      <div className="flex items-center max-sm:flex-wrap gap-2">
         <Tabs
           color="success"
           variant="underlined"
           selectedKey={viewType}
-          size="sm"
           onSelectionChange={setViewType}
         >
           <Tab key="normal" title="View Schedule By Course" />
@@ -1814,76 +1723,7 @@ const TeacherClassSheduling = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-
-      {/* Add Extra Date Modal */}
-      <Modal
-        isOpen={isExtraDateModalOpen}
-        onOpenChange={setIsExtraDateModalOpen}
-        size="md"
-      >
-        <ModalContent>
-          <ModalHeader>
-            <h2 className="text-lg font-semibold text-[#06574C]">
-              Add Extra Date: {selectedSchedule?.title}
-            </h2>
-          </ModalHeader>
-          <ModalBody>
-            <div className="space-y-4">
-              <Input
-                type="date"
-                label="Select Date"
-                value={extraDateData.date}
-                onChange={(e) => setExtraDateData({ ...extraDateData, date: e.target.value })}
-                variant="bordered"
-                isRequired
-                min={new Date().toISOString().split("T")[0]}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  type="time"
-                  label="Start Time"
-                  value={extraDateData.startTime}
-                  onChange={(e) => setExtraDateData({ ...extraDateData, startTime: e.target.value })}
-                  variant="bordered"
-                  isRequired
-                />
-                <Input
-                  type="time"
-                  label="End Time"
-                  value={extraDateData.endTime}
-                  onChange={(e) => setExtraDateData({ ...extraDateData, endTime: e.target.value })}
-                  variant="bordered"
-                  isRequired
-                />
-              </div>
-
-              <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-r-md">
-                <p className="text-xs text-green-700">
-                  <strong>Note:</strong> This will add a one-off date to this recurring schedule. Recurrence rules will not be modified.
-                </p>
-                <p className="text-xs text-green-700 mt-1">
-                  <strong>Zoom Note:</strong> Standalone Zoom meeting support for extra dates is coming soon.
-                </p>
-              </div>
-            </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onPress={() => setIsExtraDateModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              color="success"
-              onPress={handleAddExtraDateSubmit}
-              isLoading={isAddingExtraDate}
-            >
-              Add Date
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
     </div>
-
   );
 };
 
