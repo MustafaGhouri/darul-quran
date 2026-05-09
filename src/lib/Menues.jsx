@@ -223,9 +223,9 @@ export const teacherMenu = [
     icon: <FileQuestionIcon />,
     link: "/teacher/support-tickets",
     children: [
+      { name: "Chat Center", link: "/teacher/chat" },
       { name: "Support", link: "/teacher/support-tickets" },
       { name: "FAQs", link: "/teacher/faqs" },
-       { name: "Chat Center", link: "/teacher/chat" },
     ],
   },
   // { name: 'Announcements', icon: <MegaphoneIcon />, link: '/teacher/announcements' },
