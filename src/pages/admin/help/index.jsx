@@ -256,9 +256,9 @@ export default function HelpMessages() {
                   <Headphones size={20} />
                 </button>
               )}
-              <button className="flex items-center justify-center w-10 h-10 rounded-full border border-teal-200 hover:bg-gray-50 transition-colors">
+              {/* <button className="flex items-center justify-center w-10 h-10 rounded-full border border-teal-200 hover:bg-gray-50 transition-colors">
                 <Edit size={20} className="text-teal-700" />
-              </button>
+              </button> */}
             </div>
           </div>
 
