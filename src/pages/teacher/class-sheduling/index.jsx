@@ -686,7 +686,7 @@ const TeacherClassSheduling = () => {
               </Tooltip>
             )}
             <>
-              <div className=" absolute top-5 right-5">
+              <div className="md:absolute top-5 right-5">
                 <Tooltip
                   isDisabled={canReschedule(schedule, (type !== "normal" ? schedule.date : null))}
                   color="success"
@@ -824,17 +824,18 @@ const TeacherClassSheduling = () => {
         title="My Course's Schedules"
         desc="View and manage your upcoming live course's schedules"
       />
-      <div className="flex items-center max-sm:flex-wrap gap-2">
+      {/* <div className="flex items-center max-sm:flex-wrap gap-2"> */}
         <Tabs
           color="success"
           variant="underlined"
           selectedKey={viewType}
+          className="flex items-center max-sm: flex-wrap gap-2"
           onSelectionChange={setViewType}
         >
           <Tab key="normal" title="View Schedule By Course" />
           <Tab key="allDates" title="View Schedule By Date" />
         </Tabs>
-      </div>
+      {/* </div> */}
       <div className="grid grid-cols-12 gap-4 items-start mt-4">
         {viewType === "allDates" ? (
           <div className="col-span-12 lg:col-span-8 order-2 lg:order-1">
