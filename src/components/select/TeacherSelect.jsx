@@ -23,6 +23,8 @@ const TeacherSelect = ({
     isDisabled = false,
     isMultiple = false,
     courseTeacherId,
+    errorMessage,
+    isRequired = false,
 }) => {
     const [searchValue, setSearchValue] = useState("");
     const [selectedIds, setSelectedIds] = useState(Array.isArray(initialValue) ? initialValue.map(Number) : (initialValue ? [Number(initialValue)] : []));
@@ -126,16 +128,18 @@ const TeacherSelect = ({
         <div className="w-full relative" ref={containerRef}>
             {label && (
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    {label}
+                    {label} {isRequired && <span className="text-red-500">*</span>}
                 </label>
             )}
             <div
                 className={`
                     relative w-full min-h-12 px-3 py-2 bg-white border-2 rounded-xl cursor-pointer
                     transition-all duration-200 ease-out
-                    ${isOpen
-                        ? 'border-[#406c65] ring-4 ring-[#406c65]/10 shadow-lg shadow-blue-500/20'
-                        : 'border-gray-200 hover:border-gray-300'
+                    ${errorMessage 
+                        ? 'border-red-500 ring-4 ring-red-500/10' 
+                        : isOpen
+                            ? 'border-[#406c65] ring-4 ring-[#406c65]/10 shadow-lg shadow-blue-500/20'
+                            : 'border-gray-200 hover:border-gray-300'
                     }
                 `}
                 onClick={() => !isDisabled && setIsOpen(!isOpen)}
@@ -263,6 +267,11 @@ const TeacherSelect = ({
                         )}
                     </div>
                 </div>
+            )}
+            {errorMessage && (
+                <p className="mt-1.5 text-xs text-red-500 animate-in fade-in slide-in-from-top-1 duration-200">
+                    {errorMessage}
+                </p>
             )}
         </div>
     );

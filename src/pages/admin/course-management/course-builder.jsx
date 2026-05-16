@@ -246,6 +246,7 @@ const CourseBuilder = () => {
     is_free: false, // Free/Paid toggle
     video_count: 0, // Number of videos
   });
+  const [teacherError, setTeacherError] = useState("");
 
   // console.log(formData);
   const coursepreview = useMemo(() => {    
@@ -291,6 +292,9 @@ const CourseBuilder = () => {
 
   // handle change
   const handleChange = (name, value) => {
+    if (name === "teacher_id" && value) {
+      setTeacherError("");
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -298,6 +302,12 @@ const CourseBuilder = () => {
   };
   const handleSubmitTab1 = async (e) => {
     e.preventDefault();
+
+    if (!formData.teacher_id) {
+      setTeacherError("Please select a teacher ");
+      // Scroll to the teacher select if possible or just stop
+      return;
+    }
     setLoadingAction(pendingAction);
 
     const urlMap = {};
@@ -727,8 +737,11 @@ const CourseBuilder = () => {
                       </div>
                       <div className="pt-6">
                         <TeacherSelect
+                          label="Teacher"
+                          isRequired
                           onChange={(id) => handleChange("teacher_id", id)}
                           initialValue={formData.teacher_id}
+                          errorMessage={teacherError}
                         />
                       </div>
                       <div className="my-4">
@@ -1195,9 +1208,9 @@ const CourseBuilder = () => {
                           handleChange("enroll_number", e.target.value)
                         }
                       />
-                      <span className="text-xs text-[#06574C]">
+                      {/* <span className="text-xs text-[#06574C]">
                         Leave empty for unlimited enrollments
-                      </span>
+                      </span> */}
                       <div className="my-3 text-xl font-bold">
                         Publish Status
                       </div>

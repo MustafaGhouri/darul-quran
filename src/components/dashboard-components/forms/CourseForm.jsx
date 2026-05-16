@@ -137,9 +137,9 @@ const CreateCourse = ({ initialData = {} }) => {
                                                 // }
                                             type="number"
                                         />
-                                        <span className='text-xs text-[#06574C]'>
+                                        {/* <span className='text-xs text-[#06574C]'>
                                             Leave empty for unlimited enrollments
-                                        </span>
+                                        </span> */}
                                         </div>
                                     </div>
                                     <div className="flex w-full flex-wrap md:flex-nowrap mb-6 md:mb-0 gap-4">
