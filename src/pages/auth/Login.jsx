@@ -18,8 +18,8 @@ import { analyticsEvents } from "../../lib/analytics";
 const Login = () => {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("admin@admin.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   // const { isOpen, onOpen, onClose } = useDisclosure();
@@ -27,12 +27,6 @@ const Login = () => {
 
   const [loading, setLoading] = useState(false);
   const [modalType, setModalType] = useState("success");
-
-  const rolesWithEmail = [
-    { label: "Admin", key: "admin@admin.com" },
-    { label: "Teacher", key: "dawoodhashmi197@gmail.com" },
-    { label: "Student", key: "dawoodhashmi2006@gmail.com" }
-  ];
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -104,25 +98,6 @@ const Login = () => {
             onSubmit={handleLogin}
             className="w-full space-y-5 lg:space-y-6 items-center justify-center"
           >
-            <div className="w-full space-y-2">
-              <p className="text-sm lg:text-base text-[#3F3F44]">
-                Choose Account Role
-              </p>
-              <Select
-                defaultSelectedKeys={new Set([rolesWithEmail[0].key])}
-                placeholder="Select role to login"
-                onSelectionChange={(k) => {
-                  const keys = [...k];
-                  setEmail(keys[0]);
-                }}
-                className={`${!(rolesWithEmail.map((item) => item.key)?.includes(email))?'opacity-40':""}`}
-                items={rolesWithEmail}
-              >
-                {(item) => (
-                  <SelectItem key={item.key} value={item.key} textValue={item.label}>{item.label}</SelectItem>
-                )}
-              </Select>
-            </div>
             <div className="w-full space-y-2">
               <p className="text-sm lg:text-base text-[#3F3F44]">
                 Enter Your Email
