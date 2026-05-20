@@ -98,7 +98,7 @@ const Announcements = () => {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     
-    if (!course || !announcementType || !description || !delivery)  {
+    if (!course || !announcementType || !delivery)  {
       errorMessage("Please fill all required fields");
       return;
     }
@@ -106,7 +106,7 @@ const Announcements = () => {
     const payload = new FormData();
     payload.append("userId", user?.id);
     payload.append("title", announcementType);
-    payload.append("description", description);
+    payload.append("description", description || "");
     payload.append("type", announcementType);
     payload.append("delivery", delivery); 
     payload.append("sendTo", "students");

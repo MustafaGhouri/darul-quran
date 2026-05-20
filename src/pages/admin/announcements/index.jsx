@@ -230,7 +230,7 @@ const Announcements = () => {
 
     const rawForm = new FormData(e.currentTarget);
     const data = Object.fromEntries(rawForm.entries());
-    if (!data.description || !data.delivery || !data.sendTo || !data.title) {
+    if (!data.delivery || !data.sendTo || !data.title) {
       errorMessage("Please fill all fields");
       return;
     }
@@ -239,7 +239,7 @@ const Announcements = () => {
     const payload = new FormData();
     payload.append("userId", user?.id);
     payload.append("title", data.title);
-    payload.append("description", data.description);
+    payload.append("description", data.description || "");
     payload.append("delivery", data.delivery);
     payload.append("sendTo", data.sendTo);
     payload.append("isFeatured", isFeatured);

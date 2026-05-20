@@ -112,7 +112,7 @@ const TeachersDashboard = () => {
   const [description, setDescription] = useState("");
   const [delivery, setDelivery] = useState("");
   const handleAnnouncement = async (onClose) => {
-    if (!course || !announcement || !description || !delivery) {
+    if (!course || !announcement || !delivery) {
       errorMessage("Please fill all fields");
       return;
     }
@@ -121,7 +121,7 @@ const TeachersDashboard = () => {
       const formData = new FormData();
       formData.append("userId", currentUser.id);
       formData.append("title", announcement);
-      formData.append("description", description);
+      formData.append("description", description || "");
       formData.append("type", announcement);
       formData.append("delivery", delivery); // Changed to "Both" so it sends push notification
       formData.append("isFeatured", false);
