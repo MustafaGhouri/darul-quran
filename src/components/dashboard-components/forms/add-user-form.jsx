@@ -294,7 +294,7 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
     { label: "Message Center Or Chat", value: "/admin/help/messages" },
     { label: "Teacher & Student Chat", value: "/admin/help/chat" },
     { label: "Reviews", value: "/admin/help/reviews" },
-    { label: "FAQs", value: "/admin/help/faqs" },
+    { label: "FAQs", value: "/admin/faqs" },
   ];
   const handleToggle = (permission = '', checked = false) => {
     setSelectedPermissions((prev) =>
