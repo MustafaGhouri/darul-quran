@@ -48,6 +48,7 @@ const Announcements = () => {
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null); 
   const [course, setCourse] = useState("");
   const [announcementType, setAnnouncementType] = useState("");
+  const [title, setTitle] = useState("");
   const [delivery, setDelivery] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState([]);
@@ -71,13 +72,15 @@ const Announcements = () => {
     if (announcement) {
       setSelectedAnnouncement(announcement); 
       setCourse(announcement.courseId || "");
-      setAnnouncementType(announcement.title || "");
+      setAnnouncementType(announcement.type || "");
+      setTitle(announcement.title || "");
       setDelivery(announcement.delivery || "");
       setDescription(announcement.description || "");
     } else {
       setSelectedAnnouncement(null); 
       setCourse("");
       setAnnouncementType("");
+      setTitle("");
       setDelivery("");
       setDescription("");
       setFiles([]);
@@ -89,6 +92,7 @@ const Announcements = () => {
     setSelectedAnnouncement(null); 
     setCourse("");
     setAnnouncementType("");
+    setTitle("");
     setDelivery("");
     setDescription("");
     setFiles([]);
@@ -105,7 +109,7 @@ const Announcements = () => {
 
     const payload = new FormData();
     payload.append("userId", user?.id);
-    payload.append("title", announcementType);
+    payload.append("title", title || "");
     payload.append("description", description || "");
     payload.append("type", announcementType);
     payload.append("delivery", delivery); 
@@ -207,7 +211,7 @@ const Announcements = () => {
                           )}
                         </div>
                         <h3 className="text-lg font-bold text-[#06574C]">
-                          {item.title}
+                          {item.title || item.type || "Announcement"}
                         </h3>
                       </div>
                       <span className="text-xs text-gray-400 font-medium whitespace-nowrap bg-gray-100 px-2 py-1 rounded-full">
@@ -315,6 +319,15 @@ const Announcements = () => {
                       label="Select Course" 
                       initialValue={course}
                       onChange={(val) => setCourse(val)} 
+                    />
+                    <Input
+                      label="Title (optional)"
+                      type="text"
+                      labelPlacement="outside"
+                      placeholder="Enter title (optional)"
+                      variant="bordered"
+                      value={title}
+                      onValueChange={setTitle}
                     />
                     <div className="flex gap-3 w-full">
                       <Select

@@ -230,8 +230,8 @@ const Announcements = () => {
 
     const rawForm = new FormData(e.currentTarget);
     const data = Object.fromEntries(rawForm.entries());
-    if (!data.delivery || !data.sendTo || !data.title) {
-      errorMessage("Please fill all fields");
+    if (!data.delivery || !data.sendTo) {
+      errorMessage("Please fill all required fields");
       return;
     }
 
@@ -435,7 +435,7 @@ const Announcements = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-900 line-clamp-1">
-                        {announcement.title}
+                        {announcement.title || announcement.type || "Announcement"}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 break-all">
                         {announcement.description}
@@ -586,11 +586,11 @@ const Announcements = () => {
                 >
                   <div className="flex flex-col gap-3 w-full">
                     <Input
-                      label="Title"
+                      label="Title (optional)"
                       type="text"
                       name="title"
                       labelPlacement="outside"
-                      placeholder="Enter title"
+                      placeholder="Enter title (optional)"
                       variant="bordered"
                       defaultValue={selectedAnnouncement?.title}
                     />
