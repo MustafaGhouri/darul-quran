@@ -435,7 +435,7 @@ const Announcements = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-900 line-clamp-1">
-                        {announcement.title || announcement.type || "Announcement"}
+                        {announcement.title }
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 break-all">
                         {announcement.description}
