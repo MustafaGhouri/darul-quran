@@ -375,11 +375,8 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
                 pattern='^\+?[0-9]+$'
                 size="lg"
                 label="Phone Number"
-                placeholder="e.g., 07XXX XXXXXX"
-                isRequired
-                errorMessage="Please enter a valid phone number"
-                // validate={validatePhoneNumber}
-                description={selectedCountryValue === "Pakistan" ? "Format: 07XXX XXXXXX (11 digits)" : "Enter valid phone number"}
+                placeholder="e.g., 07XXX XXXXXX"  
+                // description={selectedCountryValue === "Pakistan" ? "Format: 07XXX XXXXXX (11 digits)" : "Enter valid phone number"}
               />
             </div>
           </div>
