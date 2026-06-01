@@ -69,7 +69,7 @@ const AddStudentModal = ({ isOpen, onClose }) => {
 
     const handleCitySelect = (key) => {
         setSelectedCity(key);
-        setCityInputValue(key);
+        setCityInputValue(key || "");
     };
 
     const handleSubmit = async () => {
@@ -179,7 +179,6 @@ const AddStudentModal = ({ isOpen, onClose }) => {
                                     onSelectionChange={handleCitySelect}
                                     onInputChange={setCityInputValue}
                                     inputValue={cityInputValue}
-                                    isRequired
                                     value={formData.city}
                                     onChange={(e) => setFormData({...formData, city: e.target.value})}
                                 >

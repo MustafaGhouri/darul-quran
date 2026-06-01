@@ -211,11 +211,18 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
   };
 
   const handleCitySelect = (key) => {
-    // Since city names might not be unique globally, but are within country, we search in availableCities
+    if (!key) {
+      setSelectedCity(null);
+      setCityInputValue("");
+      return;
+    }
     const city = availableCities?.find(c => c.city === key);
     if (city?.city) {
       setSelectedCity(city?.city);
       setCityInputValue(city?.city);
+    } else {
+      setSelectedCity(null);
+      setCityInputValue("");
     }
   };
 
@@ -242,7 +249,7 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
         email: data.email,
         phone_number: data.phoneNumber,
         country: selectedCountry?.name,
-        city: selectedCity,
+        city: selectedCity || null,
         role: selectedRoleValue,
         is_active: isSelected,
         permissions: selectedPermissions,
@@ -395,9 +402,7 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
                 selectedKey={selectedCountry?.isoCode || null}
                 inputValue={countryInputValue}
                 onInputChange={setCountryInputValue}
-                onSelectionChange={handleCountrySelect}
-                isRequired
-                errorMessage="Please select a country"
+                onSelectionChange={handleCountrySelect}  
               >
                 {(country) => (
                   <AutocompleteItem
@@ -424,8 +429,6 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
                 inputValue={cityInputValue}
                 onInputChange={setCityInputValue}
                 onSelectionChange={handleCitySelect}
-                isRequired
-                errorMessage="Please select a city"
               >
                 {(city) => (
                   <AutocompleteItem
@@ -484,7 +487,6 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
                     )}
                   </span>
                 }
-                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           )}

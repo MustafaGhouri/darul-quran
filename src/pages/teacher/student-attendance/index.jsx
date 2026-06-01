@@ -304,7 +304,7 @@ const StudentAttendance = () => {
           </div>
         </div>
       )}
-      <div className="bg-white px-4 py-3 rounded-lg my-3">
+      {/* <div className="bg-white px-4 py-3 rounded-lg my-3">
         <h1 className="text-xl font-bold mb-4">Top Performing Students</h1>
 
         {isTopStudentsLoading ? (
@@ -358,7 +358,7 @@ const StudentAttendance = () => {
               ))}
             </div>
           )}
-      </div>
+      </div> */}
 
       <Modal
         isOpen={isDetailModalOpen}
