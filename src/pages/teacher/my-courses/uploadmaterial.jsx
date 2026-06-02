@@ -1,5 +1,5 @@
 import { Button, Form, Input, Select, SelectItem } from "@heroui/react";
-import { Video } from "lucide-react";
+import { Video, Link2 } from "lucide-react";
 import { LuClipboardList } from "react-icons/lu";
 import { IoEyeOutline } from "react-icons/io5";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
@@ -8,13 +8,15 @@ import Videos, {
   Assignments,
   PdfAndNotes,
   Quizzes,
+  Links,
 } from "../../../components/dashboard-components/forms/ContentUpload";
 import { GoLightBulb, GoRocket } from "react-icons/go";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import CourseSelect from "../../../components/select/CourseSelect";
-import { useGetCourseFilesQuery } from "../../../redux/api/courses";
-import { useSearchParams } from "react-router-dom";
+import { useGetCourseFilesQuery, useUpdateCourseMutation } from "../../../redux/api/courses";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import QueryError from "../../../components/QueryError";
+import { errorMessage, successMessage } from "../../../lib/toast.config";
 
 const UploadMaterial = () => {
   const [searchParams] = useSearchParams();
@@ -22,11 +24,48 @@ const UploadMaterial = () => {
   const [files, setFiles] = useState([]);
   const [courseId, setCourseId] = useState(courseIdFromQuery || null);
   const { data, error, isLoading, refetch } = useGetCourseFilesQuery({ courseId, page: 1, search: "", includeCourse: false }, { skip: !courseId });
+  
+  const navigate = useNavigate();
+  const [linkTitle, setLinkTitle] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
+  const addLinkRef = useRef(null);
+  const [updateCourse, { isLoading: isPublishing }] = useUpdateCourseMutation();
+
   useEffect(() => {
     if (data?.results) {
       setFiles(data?.results);
     }
   }, [data?.results]);
+
+  const handlePublishCourse = async () => {
+    if (!courseId) {
+      errorMessage("Please select a course first");
+      return;
+    }
+    
+    try {
+      if (linkTitle.trim() || linkUrl.trim()) {
+        if (!linkTitle.trim() || !linkUrl.trim()) {
+          errorMessage("Both Link Title and URL are required to add a link");
+          return;
+        }
+        if (addLinkRef.current) {
+          await addLinkRef.current();
+        }
+      }
+
+      const res = await updateCourse({ id: courseId, data: { status: "published" } }).unwrap();
+      if (res?.success) {
+        successMessage("Course published successfully!");
+        navigate("/teacher/courses");
+      } else {
+        errorMessage(res?.message || "Failed to publish course");
+      }
+    } catch (err) {
+      console.error("Publish/Link save error:", err);
+      errorMessage(err?.message || "Failed to publish course");
+    }
+  };
 
   const cardsData = [
     {
@@ -57,6 +96,12 @@ const UploadMaterial = () => {
       // changeText: "-0%",
       changeColor: "text-[#9A9A9A]",
     },
+    {
+      title: "Links",
+      value: (files?.filter((f) => f.fileType === "link")).length || 0,
+      icon: <Link2 color="#06574C" size={22} />,
+      changeColor: "text-[#9A9A9A]",
+    },
   ];
 
   if (error) {
@@ -74,7 +119,7 @@ const UploadMaterial = () => {
         title={"Upload Materials"}
         desc={"Manage all your teaching materials easily from here"}
       />
-      <div className="pb-4 gap-5  overflow-x-auto grid grid-cols-1 sm:grid-cols-4">
+      <div className="pb-4 gap-5  overflow-x-auto grid grid-cols-1 sm:grid-cols-5">
         {cardsData.map((item, index) => (
           <div
             key={index}
@@ -129,6 +174,17 @@ const UploadMaterial = () => {
           setFiles={setFiles}
         />
         )}
+        <Links
+          courseId={courseId}
+          files={files}
+          setFiles={setFiles}
+          title={linkTitle}
+          setTitle={setLinkTitle}
+          linkUrl={linkUrl}
+          setLinkUrl={setLinkUrl}
+          showAddButton={false}
+          onAddLinkRef={addLinkRef}
+        />
         <div className="p-5 my-5 bg-[#95C4BE33] rounded-md flex justify-between items-center">
           <div>
             <h1 className="text-[#06574C] font-medium text-lg">
@@ -155,8 +211,11 @@ const UploadMaterial = () => {
             variant="flat"
             className="bg-[#06574C] text-white"
             startContent={<GoRocket size={20} />}
+            onPress={handlePublishCourse}
+            isLoading={isPublishing}
+            isDisabled={isPublishing}
           >
-            Pusblish Course
+            Publish Course
           </Button>
         </div>
       </>

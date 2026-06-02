@@ -73,6 +73,22 @@ export default function LessonFileViewer({
       );
     }
 
+    if (file.fileType === "link" || mimeType === "link") {
+      return (
+        <div className="flex flex-col items-center justify-center h-full gap-4 text-white p-6">
+          <h2 className="text-2xl font-semibold">{file.title || "External Link"}</h2>
+          <a
+            href={fileUrl.replace("?raw=1", "")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-6 py-3 bg-[#06574C] text-white rounded-md hover:bg-opacity-90 transition-colors"
+          >
+            Open Link in New Tab
+          </a>
+        </div>
+      );
+    }
+
     return (
       <div className="flex items-center justify-center h-full">
         <a

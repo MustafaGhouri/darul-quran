@@ -27,12 +27,14 @@ import {
   ScrollText,
   Trash2Icon,
   Video,
+  Link2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Videos, {
   Assignments,
   PdfAndNotes,
   Quizzes,
+  Links,
 } from "../../../components/dashboard-components/forms/ContentUpload";
 import { useSearchParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
@@ -196,6 +198,11 @@ const CourseBuilder = () => {
       title: "Assignments",
       count: (files?.filter((f) => f.fileType === "assignments")).length || 0,
       icone: <ScrollText size={20} color="#06574C" />,
+    },
+    {
+      title: "Links",
+      count: (files?.filter((f) => f.fileType === "link")).length || 0,
+      icone: <Link2 size={20} color="#06574C" />,
     },
   ];
   const [categories, setCategories] = useState([]);
@@ -1040,7 +1047,7 @@ const CourseBuilder = () => {
               animate="show"
               transition={{ when: "beforeChildren" }}
             >
-              <div className="w-full grid grid-cols-2 md:grid-cols-4 py-4 gap-2">
+              <div className="w-full grid grid-cols-2 md:grid-cols-5 py-4 gap-2">
                 {card.map((item, i) => (
                   <div
                     key={i}
@@ -1072,6 +1079,7 @@ const CourseBuilder = () => {
                 setFiles={setFiles}
               />
               <Quizzes courseId={courseId} files={files} setFiles={setFiles} />
+              <Links courseId={courseId} files={files} setFiles={setFiles} />
               <div className="p-3 my-5 bg-[#95C4BE33] rounded-md flex justify-between items-center">
                 <div>
                   <h1 className="text-[#06574C] font-medium text-lg">

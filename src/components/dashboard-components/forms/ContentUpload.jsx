@@ -69,15 +69,16 @@ export const countPdfPagesLight = async (file) => {
     return matches ? matches.length : 0;
 };
 
-const handleUploadFile = async ({ title, file, fileType, courseId, duration = 0, pages = 0 }) => {
+const handleUploadFile = async ({ title, file, fileType, courseId, duration = 0, pages = 0, linkUrl }) => {
     try {
         const formData = new FormData();
-        formData.append("file", file);
-        formData.append("title", title || file.name);
+        if (file) formData.append("file", file);
+        formData.append("title", title || (file ? file.name : 'Link'));
         formData.append("fileType", fileType);
         formData.append("courseId", courseId);
         if (duration) formData.append("duration", duration);
         if (pages) formData.append("pages", pages);
+        if (linkUrl) formData.append("linkUrl", linkUrl);
 
         const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/course-files`, {
             method: "PATCH",
@@ -787,6 +788,196 @@ export function Quizzes({ files = [], setFiles, courseId }) {
                 handleUpdateFile={handleUpdateFile}
 
             />
+        </div>
+    );
+}
+
+import { Input } from "@heroui/react";
+import { Link as LinkIcon } from "lucide-react";
+
+export function Links({
+    files,
+    setFiles,
+    courseId,
+    title: propTitle,
+    setTitle: propSetTitle,
+    linkUrl: propLinkUrl,
+    setLinkUrl: propSetLinkUrl,
+    showAddButton = true,
+    onAddLinkRef,
+}) {
+    const [localTitle, localSetTitle] = useState("");
+    const [localLinkUrl, localSetLinkUrl] = useState("");
+
+    const title = propTitle !== undefined ? propTitle : localTitle;
+    const setTitle = propSetTitle !== undefined ? propSetTitle : localSetTitle;
+    const linkUrl = propLinkUrl !== undefined ? propLinkUrl : localLinkUrl;
+    const setLinkUrl = propSetLinkUrl !== undefined ? propSetLinkUrl : localSetLinkUrl;
+
+    const [isUploading, setIsUploading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(null);
+
+    const updateDocument = async (id, field, value) => {
+        const prevFiles = [...files];
+        setFiles((prev) =>
+            prev.map((doc) => (doc.id === id ? { ...doc, [field]: value } : doc))
+        );
+
+        if (courseId) {
+            try {
+                await handleUpdateFile(id, { [field]: value });
+            } catch (err) {
+                errorMessage("Failed to update link");
+                setFiles(prevFiles);
+            }
+        }
+    };
+
+    const handleAddLink = async () => {
+        if (!title.trim() || !linkUrl.trim()) {
+            errorMessage("Title and URL are required");
+            return;
+        }
+
+        setIsUploading(true);
+
+        try {
+            const fileRes = await handleUploadFile({
+                title: title.trim(),
+                fileType: "link",
+                courseId,
+                linkUrl: linkUrl.trim(),
+            });
+
+            successMessage("Link added successfully");
+            setFiles((prev) => [...prev, fileRes]);
+            setTitle("");
+            setLinkUrl("");
+            return fileRes;
+        } catch (err) {
+            console.error("Failed to add link", err);
+            errorMessage("Failed to add link: " + err?.message);
+            throw err;
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (onAddLinkRef) {
+            onAddLinkRef.current = handleAddLink;
+        }
+    }, [title, linkUrl, courseId, setFiles, onAddLinkRef]);
+
+    const linkFiles = files?.filter((f) => f.fileType === "link");
+
+    return (
+        <div className="bg-white rounded-lg my-2 w-full">
+            <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+                <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">Links</h1>
+            </div>
+
+            <div className="mx-auto max-w-7xl px-4 pb-3 sm:px-6">
+                <div className="space-y-4 my-4">
+                    {linkFiles?.map((document) => (
+                        <div
+                            key={document.id}
+                            className={`rounded-lg p-4 sm:p-6 transition-all ${document.status === "scheduled"
+                                ? "bg-[#F5E3DA]"
+                                : "bg-[#95C4BE33]"
+                                }`}
+                        >
+                            <div className="flex flex-col sm:flex-row sm:gap-6">
+                                <LinkIcon color="#06574C" className="bg-[#F5F5F5] p-3 rounded-full size-16" />
+
+                                <div className="flex flex-1 flex-col justify-between gap-1">
+                                    <input
+                                        variant="light"
+                                        type="text"
+                                        defaultValue={document.title}
+                                        className="text-lg outline-none font-semibold sm:text-xl bg-transparent"
+                                        onBlur={(e) => {
+                                            if (document.title === e.target.value) return;
+                                            updateDocument(document.id, "title", e.target.value)
+                                        }}
+                                    />
+                                    <input
+                                        variant="light"
+                                        type="text"
+                                        defaultValue={document.url}
+                                        className="outline-none bg-transparent text-[#06574C] underline text-sm"
+                                        placeholder="Edit URL"
+                                        onBlur={(e) => {
+                                            if (document.url === e.target.value) return;
+                                            updateDocument(document.id, "url", e.target.value)
+                                        }}
+                                    />
+                                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                        <span className="inline-flex items-center gap-1">{document.status}</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap gap-3 items-end sm:items-center">
+                                    <IntervalInput
+                                        initialValue={document?.releasedAt}
+                                        onUpdate={(interval) => updateDocument(document.id, "releasedAt", interval)}
+                                    />
+                                    <div className="flex items-center gap-2">
+                                        <Button as={Link} target="_blank" to={document.url} radius="sm" variant="flat" color="default" isIconOnly>
+                                            <ExternalLink className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            radius="sm"
+                                            variant="flat"
+                                            isIconOnly
+                                            color="danger"
+                                            isLoading={isDeleting === document.id}
+                                            isDisabled={isDeleting === document.id}
+                                            onPress={() => deleteDocument(document.id, setFiles, setIsDeleting)}
+                                        >
+                                            <Trash2 color="#fb2c36" className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="mt-4 p-4 border rounded-lg bg-gray-50">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Link</h3>
+                    <div className="flex flex-col gap-4">
+                        <Input
+                            label="Link Title"
+                            placeholder="e.g. Reference Material (Google sheet)"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            variant="bordered"
+                            fullWidth
+                        />
+                        <Input
+                            label="URL"
+                            placeholder="https://..."
+                            value={linkUrl}
+                            onChange={(e) => setLinkUrl(e.target.value)}
+                            variant="bordered"
+                            fullWidth
+                        />
+                        {showAddButton && (
+                            <div className="flex justify-end mt-2">
+                                <Button
+                                    onPress={handleAddLink}
+                                    className="bg-[#06574C] text-white"
+                                    isLoading={isUploading}
+                                    startContent={!isUploading && <Plus size={16} />}
+                                >
+                                    Add Link
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
