@@ -75,7 +75,7 @@ const StudentAttendanceList = () => {
 
         <Input
           label="Search Student"
-          placeholder="Search by name, email or course..."
+          placeholder="Search by name."
           labelPlacement="outside"
           size="lg"
           radius="lg"
@@ -120,7 +120,7 @@ const StudentAttendanceList = () => {
                     </div>
                     <div className="flex flex-col">
                       <span className="font-semibold text-gray-800 line-clamp-1">{item.studentName}</span>
-                      <span className="text-xs text-gray-500 font-normal">{item.email}</span>
+                      {/* <span className="text-xs text-gray-500 font-normal">{item.email}</span> */}
                     </div>
                   </div>
                 </TableCell>
