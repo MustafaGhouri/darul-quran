@@ -219,7 +219,7 @@ export const teacherMenu = [
     ],
   },
   {
-    name: "Help and Support",
+    name: "Chat and Support",
     icon: <FileQuestionIcon />,
     link: "/teacher/support-tickets",
     children: [
