@@ -54,6 +54,16 @@ const StudentClassSheduling = () => {
     const [viewType, setViewType] = useState('allDates');
     const [selectedDate, setSelectedDate] = useState(null);
     const [schedulesForSelectedDate, setSchedulesForSelectedDate] = useState([]);
+    const [, setScheduleClock] = useState(Date.now());
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            setScheduleClock(Date.now());
+        }, 30 * 1000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
     const { data: scheduleData, isLoading, isFetching, refetch, error } = useGetScheduleQuery({
         page: "1",
         limit: "10",

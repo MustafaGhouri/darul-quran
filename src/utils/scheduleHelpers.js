@@ -2,6 +2,8 @@
  * Schedule Helper Utilities - Reusable across all dashboards
  */
 
+export const CLASS_JOIN_UNLOCK_MINUTES = 10;
+
 /**
  * Parse date from string (supports YYYY-MM-DD and DD-M-YY formats)
  * @param {string} dateStr - Date string 
@@ -124,10 +126,12 @@ export const isClassLive = (schedule, type = 'multiple') => {
         const [endHour, endMin] = endTimeStr.split(":");
 
         const startTime = new Date(`${today}T${startHour}:${startMin}:00`);
+        const unlockTime = new Date(startTime);
+        unlockTime.setMinutes(unlockTime.getMinutes() - CLASS_JOIN_UNLOCK_MINUTES);
         const endTime = new Date(`${today}T${endHour}:${endMin}:00`);
 
         const now = new Date();
-        return now >= startTime && now <= endTime;
+        return now >= unlockTime && now <= endTime;
     } else {
         if (!schedule) return false;
 
@@ -170,10 +174,12 @@ export const isClassLive = (schedule, type = 'multiple') => {
         // Create date objects using the actual schedule date (today) and the time
         const [year, month, day] = today.split("-").map(Number);
         const startTime = new Date(year, month - 1, day, parseInt(startHour), parseInt(startMin));
+        const unlockTime = new Date(startTime);
+        unlockTime.setMinutes(unlockTime.getMinutes() - CLASS_JOIN_UNLOCK_MINUTES);
         const endTime = new Date(year, month - 1, day, parseInt(endHour), parseInt(endMin));
 
         const now = new Date();
-        return now >= startTime && now <= endTime;
+        return now >= unlockTime && now <= endTime;
     }
 };
 

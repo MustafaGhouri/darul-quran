@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
   Button,
@@ -76,6 +76,15 @@ const TeacherClassSheduling = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedNoteDate, setSelectedNoteDate] = useState(null);
   const [schedulesForSelectedDate, setSchedulesForSelectedDate] = useState([]);
+  const [, setScheduleClock] = useState(Date.now());
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setScheduleClock(Date.now());
+    }, 30 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   // Reschedule requests state
   const [selectedScheduleId, setSelectedScheduleId] = useState(null);
