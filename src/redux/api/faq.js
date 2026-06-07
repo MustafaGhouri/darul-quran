@@ -5,16 +5,18 @@ export const faqAPI = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/faqs`,
     credentials: "include",
-    prepareHeaders: (headers, { getState }) => {
-      const tokenFromState = getState().user?.token;
-      const finalToken = tokenFromState || localStorage.getItem("token");
+    //only need this if dommian is not same as backend for sfari & incoginito browser
+        // prepareHeaders: (headers, { getState }) => {
+        //     const tokenFromState = getState().user?.token;
 
-      if (finalToken) {
-        headers.set("Authorization", `Bearer ${finalToken}`);
-      }
+        //     const finalToken = tokenFromState || localStorage.getItem("token");
 
-      return headers;
-    },
+        //     if (finalToken) {
+        //         headers.set("Authorization", `Bearer ${finalToken}`);
+        //     }
+
+        //     return headers;
+        // },
   }),
   tagTypes: ["faq"],
   endpoints: (builder) => ({
