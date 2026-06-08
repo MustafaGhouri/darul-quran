@@ -426,7 +426,7 @@ const CourseBuilder = () => {
       discountPercentage: formData.discount_percentage,
       status: formData.status,
       isFree: formData.is_free,
-      studentIds: formData.student_ids,
+      student_ids: formData.student_ids,
     };
     try {
       const data = await updateCourse({
