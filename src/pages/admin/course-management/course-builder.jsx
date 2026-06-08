@@ -710,7 +710,7 @@ const CourseBuilder = () => {
                       <div className="flex items-center pt-2 gap-3 flex-wrap">
                         <div className="flex items-center gap-2">
                           <p className="text-md text-[#06574C]">
-                            {formData.is_free ? "Free" : "Paid"}
+                            Paid
                           </p>
                           <Switch
                             color="success"
@@ -846,7 +846,7 @@ const CourseBuilder = () => {
                           onUpdate={(interval) =>
                             handleChange("interval", interval)
                           }
-                          units={["week", "month"]}
+                          units={["week", "month","day"]}
                         />
                       )}
                     </div>
