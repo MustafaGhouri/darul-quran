@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+    import { useState, useMemo, useEffect } from "react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
     Button,
@@ -774,7 +774,7 @@ const StudentClassSheduling = () => {
                 }
 
                 {/* Sidebar - Calendar & Filters */}
-                <div className="col-span-12 sm:sticky top-2 order-1 lg:order-2  lg:col-span-4 space-y-4 mb-4">
+                <div className="col-span-12 lg:sticky top-2 order-1 lg:order-2  lg:col-span-4 space-y-4 mb-4">
                     {/* Quick Stats Card */}
                     {/* <div className="bg-white p-4 rounded-lg shadow-sm">
                         <h3 className="text-sm font-semibold text-gray-700 mb-3">Schedule Overview</h3>

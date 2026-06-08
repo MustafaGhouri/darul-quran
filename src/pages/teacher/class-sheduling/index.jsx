@@ -900,7 +900,7 @@ const TeacherClassSheduling = () => {
         )}
 
         {/* Sidebar - Calendar & Filters */}
-        <div className="col-span-12 sm:sticky order-1 lg:order-2 top-2 lg:col-span-4 space-y-4 mb-4">
+        <div className="col-span-12 lg:sticky order-1 lg:order-2 top-2 lg:col-span-4 space-y-4 mb-4">
           <div className="bg-white w-full space-y-4 p-4 rounded-lg shadow-sm">
             <Button
               startContent={<PlusIcon />}
