@@ -43,7 +43,7 @@ import { GrAnnounce, GrAttachment, GrClose, GrSend } from "react-icons/gr";
 import { CiCalendar } from "react-icons/ci";
 import { IoAlertCircleOutline } from "react-icons/io5";
 import { Link, useNavigate } from "react-router-dom";
-import { formatTime12Hour, isClassLive, isClassExpired, getHoursUntilClass, formatRemainingTime } from "../../utils/scheduleHelpers";
+import { formatTime12Hour, isClassLive, isClassExpired, getHoursUntilClass, formatRemainingTime, getScheduleStart, getScheduleEnd } from "../../utils/scheduleHelpers";
 import NotificationPermission from "../../components/NotificationPermission";
 import { useSelector } from "react-redux";
 import { errorMessage } from "../../lib/toast.config";
@@ -314,8 +314,11 @@ const TeachersDashboard = () => {
                 <p className="text-gray-500 text-lg italic">No active courses found.</p>
               </div>
             ) : activeCourses.map((item, index) => {
-              const nextClassTime = item.nextClass?.date
-                ? `${new Date(item.nextClass.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${formatTime12Hour(item.nextClass.startTime)}`
+              const nextClassStart = item.nextClass?.date
+                ? getScheduleStart({ ...item.nextClass, timezone: item.timezone }, item.nextClass.date)
+                : null;
+              const nextClassTime = nextClassStart
+                ? `${nextClassStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${formatTime12Hour(nextClassStart)}`
                 : "No upcoming classes";
 
               return (
@@ -434,7 +437,13 @@ const TeachersDashboard = () => {
               No today classes found.
             </div>
           ) : upcomingClasses.map((item, index) => {
-            const today = new Date();
+            const allDates = item.schedule_dates || item.scheduleDates || [];
+            const todayStr = new Date().toISOString().split('T')[0];
+            const upcomingDates = allDates.filter(d => d >= todayStr);
+            const nextClassDate = upcomingDates.length > 0 ? upcomingDates.sort()[0] : (allDates[0] || item.date);
+            const classStart = getScheduleStart({ ...item, date: nextClassDate }, nextClassDate);
+            const classEnd = getScheduleEnd({ ...item, date: nextClassDate }, nextClassDate);
+            const displayDate = classStart || new Date();
             return (
               <div
                 key={index}
@@ -445,8 +454,8 @@ const TeachersDashboard = () => {
                   <div className="flex flex-col md:flex-row gap-3 md:items-center justify-center">
                     <div className="h-20 w-20 rounded-full shadow-xl flex flex-col items-center justify-center bg-white">
                       <p className="text-[16px] text-[#06574C] font-semibold">
-                        {dateFormatter(today)?.split(",")[0]} <br />
-                        {dateFormatter(today)?.split(",")[1]?.split("20")[0]}
+                        {dateFormatter(displayDate)?.split(",")[0]} <br />
+                        {dateFormatter(displayDate)?.split(",")[1]?.split("20")[0]}
                       </p>
                     </div>
                     <div>
@@ -456,7 +465,7 @@ const TeachersDashboard = () => {
                       <div className="flex flex-wrap max-md:my-3 md:items-center mb-2 gap-5 text-sm text-[#666666]">
                         <div className="flex items-center gap-1 ">
                           <Clock size={20} />
-                          {formatTime12Hour(item.start_time)} - {formatTime12Hour(item.end_time)}
+                          {formatTime12Hour(classStart)} - {formatTime12Hour(classEnd)}
                         </div>
                         <div className="flex items-center gap-1 ">
                           <Video size={20} />
@@ -475,13 +484,8 @@ const TeachersDashboard = () => {
                       const live = isClassLive(item);
                       const expired = isClassExpired(item);
 
-                      // Get the next upcoming class date
-                      const allDates = item.schedule_dates || item.scheduleDates || [];
-                      const todayStr = new Date().toISOString().split('T')[0];
-                      const upcomingDates = allDates.filter(d => d >= todayStr);
-                      const nextClassDate = upcomingDates.length > 0 ? upcomingDates.sort()[0] : (allDates[0] || item.date);
                       const dateStr = nextClassDate?.includes('T') ? nextClassDate.split('T')[0] : nextClassDate;
-                      const hoursUntil = getHoursUntilClass(dateStr, item.start_time || item.startTime);
+                      const hoursUntil = getHoursUntilClass(dateStr, classStart || item.start_time || item.startTime);
 
                       if (expired) {
                         return (

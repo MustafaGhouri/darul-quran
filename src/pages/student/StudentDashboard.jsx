@@ -22,7 +22,7 @@ import { useGetAllAnnouncementQuery } from "../../redux/api/announcements";
 import { errorMessage, successMessage } from "../../lib/toast.config";
 import { dateFormatter } from "../../lib/utils";
 import QueryError from "../../components/QueryError";
-import { formatTime12Hour, isClassExpired, isClassLive, getHoursUntilClass, getStatusText } from "../../utils/scheduleHelpers";
+import { formatTime12Hour, isClassExpired, isClassLive, getHoursUntilClass, getStatusText, getScheduleStart, getScheduleEnd } from "../../utils/scheduleHelpers";
 import { useGetStudentDashboardQuery } from "../../redux/api/dashboard";
 
 
@@ -376,7 +376,9 @@ const StudentDashboard = () => {
                         const todayStr = new Date().toISOString().split('T')[0];
                         const upcomingDates = allDates.filter(d => d >= todayStr);
                         const nextClassDate = upcomingDates.length > 0 ? upcomingDates.sort()[0] : (allDates[0] || item.date);
-                        const classDateObj = nextClassDate ? new Date(nextClassDate) : today;
+                        const classDateObj = nextClassDate
+                          ? (getScheduleStart({ ...item, date: nextClassDate }, nextClassDate) || new Date(nextClassDate))
+                          : today;
                         return (
                           <p className="text-[16px] text-[#06574C] font-semibold">
                             {dateFormatter(classDateObj)?.split(",")[0]} <br />
@@ -392,7 +394,13 @@ const StudentDashboard = () => {
                       <div className="flex flex-wrap max-md:my-3 md:items-center mb-2 gap-5 text-sm text-[#666666]">
                         <div className="flex items-center gap-1 ">
                           <Clock size={20} />
-                          {formatTime12Hour(item.start_time)} - {formatTime12Hour(item.end_time)}
+                          {(() => {
+                            const allDates = item.schedule_dates || item.scheduleDates || [];
+                            const todayStr = new Date().toISOString().split('T')[0];
+                            const upcomingDates = allDates.filter(d => d >= todayStr);
+                            const nextClassDate = upcomingDates.length > 0 ? upcomingDates.sort()[0] : (allDates[0] || item.date);
+                            return `${formatTime12Hour(getScheduleStart({ ...item, date: nextClassDate }, nextClassDate))} - ${formatTime12Hour(getScheduleEnd({ ...item, date: nextClassDate }, nextClassDate))}`;
+                          })()}
                         </div>
                         <div className="flex items-center gap-1 ">
                           <Video size={20} />
@@ -518,7 +526,7 @@ const StudentDashboard = () => {
                         {item.title}
                       </div>
                       <div className=" text-xs text-[#666666]">
-                        <p>{dateFormatter(item.date)}</p>
+                        <p>{dateFormatter(getScheduleStart(item) || item.date)}</p>
                       </div>
                       <div className=" max-w-4xl text-sm text-[#666666] line-clamp-2">
                         <p>{item.description}</p>

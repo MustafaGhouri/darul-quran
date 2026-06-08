@@ -33,7 +33,7 @@ import {
 } from "@heroui/react";
 import { CalendarIcon, Copy, Trash2, PlusIcon, User, Bell } from "lucide-react";
 
-import { getStatusColor, getStatusText, formatTime12Hour } from "../../../utils/scheduleHelpers";
+import { getStatusColor, getStatusText, formatTime12Hour, getScheduleStart, getScheduleEnd, formatTime24 } from "../../../utils/scheduleHelpers";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
 import { canReschedule, dateFormatter, debounce, limits, validateSchedule } from "../../../lib/utils";
 import TeacherSelect from "../../../components/select/TeacherSelect";
@@ -195,7 +195,8 @@ const Scheduling = () => {
       let response;
       const payload = {
         ...formData,
-        weeklyDays: formData.weeklyDays.map(String)
+        weeklyDays: formData.weeklyDays.map(String),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       }
 
       if (user?.role === "teacher") {
@@ -285,8 +286,8 @@ const Scheduling = () => {
       id: item.id,
       title: item.title,
       date: dateStr,
-      startTime: item.startTime,
-      endTime: item.endTime,
+      startTime: formatTime24(getScheduleStart(item)) || item.startTime,
+      endTime: formatTime24(getScheduleEnd(item)) || item.endTime,
       description: item.description,
       teacherId: item.teacherId ? item.teacherId : null,
       courseId: item.courseId ? item.courseId : null,
@@ -553,8 +554,8 @@ const Scheduling = () => {
                   <Popover>
                     <PopoverTrigger>
                       <span className="cursor-pointer font-medium">
-                        {item.scheduleDates?.length > 1 ? `${dateFormatter(item.scheduleDates[0])} - ${dateFormatter(item?.scheduleDates[item.scheduleDates?.length - 1])}`
-                          : dateFormatter(item.scheduleDates[0])
+                        {item.scheduleDates?.length > 1 ? `${dateFormatter(getScheduleStart({ ...item, date: item.scheduleDates[0] }, item.scheduleDates[0]) || item.scheduleDates[0])} - ${dateFormatter(getScheduleStart({ ...item, date: item?.scheduleDates[item.scheduleDates?.length - 1] }, item?.scheduleDates[item.scheduleDates?.length - 1]) || item?.scheduleDates[item.scheduleDates?.length - 1])}`
+                          : dateFormatter(getScheduleStart({ ...item, date: item.scheduleDates[0] }, item.scheduleDates[0]) || item.scheduleDates[0])
                         }
                       </span>
                     </PopoverTrigger>
@@ -609,7 +610,7 @@ const Scheduling = () => {
                   )}
                 </TableCell>
                 <TableCell>
-                  <div className="text-gray-500 text-sm">{formatTime12Hour(item.startTime)} - {formatTime12Hour(item.endTime)}</div>
+                  <div className="text-gray-500 text-sm">{formatTime12Hour(getScheduleStart(item))} - {formatTime12Hour(getScheduleEnd(item))}</div>
                 </TableCell>
                 <TableCell className="text-center">
                   {item.specificStudents?.length > 0 ? 'One-on-one' : 'All'}

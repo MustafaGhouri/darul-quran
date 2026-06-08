@@ -29,10 +29,9 @@ import OverviewCards from "../../components/dashboard-components/OverviewCards";
 import { Link, useNavigate } from "react-router-dom";
 import NotificationPermission from "../../components/NotificationPermission";
 import { useGetAdminDashboardQuery } from "../../redux/api/dashboard";
-import { convertTo12hrsFormat } from "../../lib/utils";
 import { useSelector } from "react-redux";
 import QueryError from "../../components/QueryError";
-import { isClassExpired, isClassLive } from "../../utils/scheduleHelpers";
+import { formatTime12Hour, getScheduleEnd, getScheduleStart, isClassExpired, isClassLive } from "../../utils/scheduleHelpers";
 import { AiOutlineEye } from "react-icons/ai";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
@@ -277,7 +276,7 @@ const AdminDashboard = () => {
                       subtitle: classItem.description,
                       teacher: "Teacher", // Add placeholder if needed
                       email: "",
-                      time: `${classItem.start_time} - ${classItem.end_time}`,
+                      time: `${formatTime12Hour(getScheduleStart(classItem))} - ${formatTime12Hour(getScheduleEnd(classItem))}`,
                       enrolled: "N/A",
                       status: classItem.status || "Scheduled",
                     }}
@@ -335,8 +334,8 @@ const AdminDashboard = () => {
                       </TableCell>
                       <TableCell>
                         <span className="font-medium">
-                          {convertTo12hrsFormat(classItem.start_time)} -{" "}
-                          {convertTo12hrsFormat(classItem.end_time)}
+                          {formatTime12Hour(getScheduleStart(classItem))} -{" "}
+                          {formatTime12Hour(getScheduleEnd(classItem))}
                         </span>
                       </TableCell>
                       <TableCell>

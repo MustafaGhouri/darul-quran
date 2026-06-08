@@ -1,3 +1,87 @@
+import { fromZonedTime } from "date-fns-tz";
+
+const normalizeDateKey = (date) => {
+    if (!date) return "";
+    const value = String(date);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+    if (value.includes("T")) return value.split("T")[0];
+    const parsed = new Date(value);
+    return isNaN(parsed.getTime()) ? value : parsed.toISOString().split("T")[0];
+};
+
+const getScheduleDateKey = (schedule, dateKey = null) => {
+    if (dateKey) return normalizeDateKey(dateKey);
+    if (schedule?.date) return normalizeDateKey(schedule.date);
+    if (schedule?.startDate || schedule?.start_date) return normalizeDateKey(schedule.startDate || schedule.start_date);
+    const dates = schedule?.scheduleDates || schedule?.schedule_dates || [];
+    return normalizeDateKey(dates[0]);
+};
+
+const getSpecificTiming = (schedule, dateKey = null) => {
+    const key = getScheduleDateKey(schedule, dateKey);
+    return key && schedule?.specificDates?.[key] ? schedule.specificDates[key] : null;
+};
+
+const getZonedDateTime = (schedule, field, dateKey = null) => {
+    if (!schedule) return null;
+
+    const specificTiming = getSpecificTiming(schedule, dateKey);
+    const requestedDate = getScheduleDateKey(schedule, dateKey);
+    const baseDate = normalizeDateKey(schedule?.startDate || schedule?.start_date || schedule?.date);
+    const canUseScheduleIso = !requestedDate || !baseDate || requestedDate === baseDate;
+    const isoValue =
+        specificTiming?.[`${field}DateTime`] ||
+        (canUseScheduleIso ? schedule?.[`${field}DateTime`] : null) ||
+        (canUseScheduleIso ? schedule?.[`${field}_date_time`] : null);
+
+    if (isoValue) {
+        const date = new Date(isoValue);
+        if (!isNaN(date.getTime())) return date;
+    }
+
+    const timezone = schedule.timezone || "Europe/London";
+    const scheduleDate = requestedDate;
+    const time =
+        specificTiming?.[`${field}Time`] ||
+        specificTiming?.[`${field}_time`] ||
+        schedule?.[`${field}Time`] ||
+        schedule?.[`${field}_time`];
+
+    if (!scheduleDate || !time) return null;
+
+    return fromZonedTime(`${scheduleDate} ${String(time).slice(0, 5)}`, timezone);
+};
+
+export const formatTime24 = (dateTime) => {
+    if (!dateTime) return "";
+    if (typeof dateTime === "string") return dateTime.slice(0, 5);
+
+    return dateTime?.toLocaleTimeString(
+        "en-GB",
+        {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+        }
+    );
+};
+
+export const getScheduleStart = (schedule, dateKey = null) => {
+    return getZonedDateTime(schedule, "start", dateKey);
+};
+
+export const getScheduleEnd = (schedule, dateKey = null) => {
+    return getZonedDateTime(schedule, "end", dateKey);
+};
+
+const getScheduleRange = (schedule, dateKey = null) => {
+    const start = getZonedDateTime(schedule, "start", dateKey);
+    const end = getZonedDateTime(schedule, "end", dateKey);
+    if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+    return { start, end };
+};
+
+
 /**
  * Schedule Helper Utilities - Reusable across all dashboards
  */
@@ -42,7 +126,16 @@ const parseDateFromDB = (dateStr) => {
  */
 export const formatTime12Hour = (time24) => {
     if (!time24) return '';
-    const parts = time24.split(':');
+
+    if (time24 instanceof Date) {
+        return time24.toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+        });
+    }
+
+    const parts = String(time24).split(':');
     if (parts.length < 2) return time24;
     const [hours, minutes] = parts;
     const hour = parseInt(hours);
@@ -93,6 +186,15 @@ const getNextScheduleDate = (scheduleDates) => {
  */
 export const isClassLive = (schedule, type = 'multiple') => {
     if (!schedule) return false;
+    const today = getTodayStr();
+    const range = getScheduleRange(schedule, type === "single" ? schedule.date : today);
+    if (range) {
+        const unlockTime = new Date(range.start);
+        unlockTime.setMinutes(unlockTime.getMinutes() - CLASS_JOIN_UNLOCK_MINUTES);
+        const now = new Date();
+        return now >= unlockTime && now <= range.end;
+    }
+
     if (type === 'multiple') {
         let scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
 
@@ -110,15 +212,8 @@ export const isClassLive = (schedule, type = 'multiple') => {
 
         if (!isTodayInSchedule(scheduleDates)) return false;
 
-        let startTimeStr = schedule.startTime || schedule.start_time;
-        let endTimeStr = schedule.endTime || schedule.end_time;
-
-        const today = getTodayStr();
-
-        if (schedule.specificDates && schedule.specificDates[today]) {
-            startTimeStr = schedule.specificDates[today].startTime || startTimeStr;
-            endTimeStr = schedule.specificDates[today].endTime || endTimeStr;
-        }
+        let startTimeStr = formatTime24(getScheduleStart(schedule));
+        let endTimeStr = formatTime24(getScheduleEnd(schedule));
 
         if (!startTimeStr || !endTimeStr) return false;
 
@@ -161,8 +256,8 @@ export const isClassLive = (schedule, type = 'multiple') => {
 
         if (!isTodayInSchedule(scheduleDates)) return false;
 
-        const startTimeStr = schedule.startTime || schedule.start_time;
-        const endTimeStr = schedule.endTime || schedule.end_time;
+        const startTimeStr = formatTime24(getScheduleStart(schedule, todayStr));
+        const endTimeStr = formatTime24(getScheduleEnd(schedule, todayStr));
 
         if (!startTimeStr || !endTimeStr) return false;
 
@@ -216,12 +311,10 @@ export const isClassExpired = (schedule) => {
 
     // Only today or past dates remain - check if today's class has ended
     if (scheduleDates.includes(todayStr)) {
-        let endTimeStr = schedule.endTime || schedule.end_time;
+        const range = getScheduleRange(schedule, todayStr);
+        if (range) return new Date() > range.end;
 
-        if (schedule.specificDates && schedule.specificDates[todayStr]) {
-            endTimeStr = schedule.specificDates[todayStr].endTime || endTimeStr;
-        }
-
+        let endTimeStr = formatTime24(getScheduleEnd(schedule));
         if (!endTimeStr) return true;
 
         const [endHour, endMin] = endTimeStr.split(":");
@@ -257,31 +350,16 @@ export const getStatusText = (schedule) => {
     const todayStr = getTodayStr();
     const now = new Date();
 
-    const [startHour, startMin] = (schedule.startTime || "").split(":").map(Number);
-    const [endHour, endMin] = (schedule.endTime || "").split(":").map(Number);
-
     // Check if today is in the schedule
     if (scheduleDates.includes(todayStr)) {
-        let currentStartTime = schedule.startTime;
-        let currentEndTime = schedule.endTime;
+        const range = getScheduleRange(schedule, todayStr);
+        if (!range) return "upcoming";
 
-        if (schedule.specificDates && schedule.specificDates[todayStr]) {
-            currentStartTime = schedule.specificDates[todayStr].startTime || currentStartTime;
-            currentEndTime = schedule.specificDates[todayStr].endTime || currentEndTime;
-        }
-
-        const [startHour, startMin] = (currentStartTime || "").split(":").map(Number);
-        const [endHour, endMin] = (currentEndTime || "").split(":").map(Number);
-
-        const [year, month, day] = todayStr.split("-").map(Number);
-        const startTime = new Date(year, month - 1, day, startHour, startMin);
-        const endTime = new Date(year, month - 1, day, endHour, endMin);
-
-        if (now >= startTime && now <= endTime) {
+        if (now >= range.start && now <= range.end) {
             return "live";
         }
 
-        if (now < startTime) {
+        if (now < range.start) {
             return "upcoming";
         }
         // Today's class has ended, but check if there are future dates
@@ -306,10 +384,20 @@ export const getStatusText = (schedule) => {
 export const getStatusTextForSingleDate = (date, startTime, endTime) => {
     const now = new Date();
     const todayStr = getTodayStr();
+    const dateKey = normalizeDateKey(date);
+    const range = startTime instanceof Date && endTime instanceof Date
+        ? { start: startTime, end: endTime }
+        : getScheduleRange({ date: dateKey, startTime, endTime }, dateKey);
 
     // If today is not the schedule date
-    if (date !== todayStr) {
-        return todayStr < date ? "upcoming" : "completed";
+    if (dateKey !== todayStr && !range) {
+        return todayStr < dateKey ? "upcoming" : "completed";
+    }
+
+    if (range) {
+        if (now >= range.start && now <= range.end) return "live";
+        if (now < range.start) return "upcoming";
+        return "completed";
     }
 
     // Parse time
@@ -317,7 +405,7 @@ export const getStatusTextForSingleDate = (date, startTime, endTime) => {
     const [endHour, endMin] = endTime.split(":").map(Number);
 
     // Create LOCAL date objects correctly
-    const [year, month, day] = date.split("-").map(Number);
+    const [year, month, day] = dateKey.split("-").map(Number);
 
     const start = new Date(year, month - 1, day, startHour, startMin);
     const end = new Date(year, month - 1, day, endHour, endMin);
@@ -343,11 +431,13 @@ export const getHoursUntilClass = (date, startTime) => {
     if (!date || !startTime) return null;
 
     const now = new Date();
-    const [year, month, day] = date.split("-").map(Number);
-    const [startHour, startMin] = startTime.split(":").map(Number);
+    if (startTime instanceof Date) {
+        return (startTime - now) / (1000 * 60 * 60);
+    }
 
-    const scheduleStart = new Date(year, month - 1, day, startHour, startMin);
-    const hoursUntil = (scheduleStart - now) / (1000 * 60 * 60);
+    const range = getScheduleRange({ date, startTime, endTime: startTime }, date);
+    if (!range) return null;
+    const hoursUntil = (range.start - now) / (1000 * 60 * 60);
 
     return hoursUntil;
 };
@@ -376,7 +466,7 @@ export const formatRemainingTime = (hoursUntil) => {
     if (h < 1) {
         return `${m}m`;
     }
-    
+
     return m > 0 ? `${h}h ${m}m` : `${h}h`;
 };
 
@@ -389,9 +479,7 @@ export const formatRemainingTime = (hoursUntil) => {
 export const groupAndSortSchedulesByDate = (schedules, filterType = "all") => {
     if (!schedules) return { upcoming: {}, previous: {} };
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split('T')[0];
+    const todayStr = getTodayStr();
 
     const grouped = {};
 
@@ -438,23 +526,31 @@ export const groupAndSortSchedulesByDate = (schedules, filterType = "all") => {
                 }
             }
 
-            if (!grouped[dateKey]) {
-                grouped[dateKey] = [];
-            }
-
-            let finalStartTime = typeof scheduleDate === 'object' ? (scheduleDate.startTime || schedule.startTime) : schedule.startTime;
-            let finalEndTime = typeof scheduleDate === 'object' ? (scheduleDate.endTime || schedule.endTime) : schedule.endTime;
-
-            if (schedule.specificDates && schedule.specificDates[dateKey]) {
-                finalStartTime = schedule.specificDates[dateKey].startTime || finalStartTime;
-                finalEndTime = schedule.specificDates[dateKey].endTime || finalEndTime;
-            }
-
-            grouped[dateKey].push({
+            const specificTiming = schedule.specificDates?.[dateKey];
+            const scheduleForDate = {
                 ...schedule,
-                date: dateStr,
-                startTime: finalStartTime,
-                endTime: finalEndTime,
+                date: dateKey,
+                startTime: specificTiming?.startTime || (typeof scheduleDate === 'object' ? scheduleDate.startTime : null) || schedule.startTime,
+                endTime: specificTiming?.endTime || (typeof scheduleDate === 'object' ? scheduleDate.endTime : null) || schedule.endTime,
+            };
+            const start = getScheduleStart(scheduleForDate, dateKey);
+            const end = getScheduleEnd(scheduleForDate, dateKey);
+            const displayDateKey = start
+                ? `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`
+                : dateKey;
+
+            if (!grouped[displayDateKey]) {
+                grouped[displayDateKey] = [];
+            }
+
+            grouped[displayDateKey].push({
+                ...schedule,
+                date: displayDateKey,
+                sourceDate: dateKey,
+                startTime: formatTime24(start) || scheduleForDate.startTime,
+                endTime: formatTime24(end) || scheduleForDate.endTime,
+                startDateTime: start?.toISOString(),
+                endDateTime: end?.toISOString(),
             });
         });
     });

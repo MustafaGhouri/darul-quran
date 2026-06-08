@@ -1,4 +1,4 @@
-    import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
     Button,
@@ -32,7 +32,7 @@ import { useCreateCancellationRequestMutation } from "../../../redux/api/cancell
 import { RescheduleRequestModal } from "../../../components/schedule/RescheduleRequestModal";
 import { CancellationRequestModal } from "../../../components/schedule/CancellationRequestModal";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
-import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatusText, getStatusTextForSingleDate, getHoursUntilClass, formatRemainingTime } from "../../../utils/scheduleHelpers";
+import { formatTime12Hour, isClassLive, isClassExpired, getStatusColor, getStatusText, getStatusTextForSingleDate, getHoursUntilClass, formatRemainingTime, getScheduleStart, getScheduleEnd } from "../../../utils/scheduleHelpers";
 import { useSelector } from "react-redux";
 import { dateFormatter } from "../../../lib/utils";
 import CustomCalendar from "../../../components/teacher/CustomCalendar";
@@ -302,17 +302,14 @@ const StudentClassSheduling = () => {
         if (!todayDate) return true; // Not today (Past or Future)
 
         // It's today, check the 4-hour rule or if it's already ended
-        let currentStartTime = schedule.startTime;
-        let currentEndTime = schedule.endTime;
-        if (schedule.specificDates && schedule.specificDates[todayDate]) {
-            currentStartTime = schedule.specificDates[todayDate].startTime || currentStartTime;
-            currentEndTime = schedule.specificDates[todayDate].endTime || currentEndTime;
-        }
-
+        let currentStartTime = getScheduleStart(schedule, todayDate);
+        let currentEndTime = getScheduleEnd(schedule, todayDate);
         const hoursUntil = getHoursUntilClass(todayDate, currentStartTime);
         if (hoursUntil !== null && hoursUntil > 4) return true;
 
-        if (currentEndTime) {
+        if (currentEndTime instanceof Date) {
+            if (now > currentEndTime) return true;
+        } else if (currentEndTime) {
             const [endHour, endMin] = currentEndTime.split(":").map(Number);
             const endDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHour, endMin);
             if (now > endDateTime) return true;
@@ -337,17 +334,14 @@ const StudentClassSheduling = () => {
 
         if (!todayDate) return true; // Not today (Past or Future)
 
-        let currentStartTime = schedule.startTime;
-        let currentEndTime = schedule.endTime;
-        if (schedule.specificDates && schedule.specificDates[todayDate]) {
-            currentStartTime = schedule.specificDates[todayDate].startTime || currentStartTime;
-            currentEndTime = schedule.specificDates[todayDate].endTime || currentEndTime;
-        }
-
+        let currentStartTime = getScheduleStart(schedule, todayDate);
+        let currentEndTime = getScheduleEnd(schedule, todayDate);
         const hoursUntil = getHoursUntilClass(todayDate, currentStartTime);
         if (hoursUntil !== null && hoursUntil > 4) return true;
 
-        if (currentEndTime) {
+        if (currentEndTime instanceof Date) {
+            if (now > currentEndTime) return true;
+        } else if (currentEndTime) {
             const [endHour, endMin] = currentEndTime.split(":").map(Number);
             const endDateTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endHour, endMin);
             if (now > endDateTime) return true;
@@ -362,8 +356,8 @@ const StudentClassSheduling = () => {
         let isExpired = false;
 
         if (type === 'single') {
-            status = getStatusTextForSingleDate(schedule.date, schedule.startTime, schedule.endTime);
-            hoursUntil = getHoursUntilClass(schedule.date, schedule.startTime);
+            status = getStatusTextForSingleDate(schedule.date, getScheduleStart(schedule), getScheduleEnd(schedule));
+            hoursUntil = getHoursUntilClass(schedule.date, getScheduleStart(schedule));
             const todayStr = new Date().toISOString().split('T')[0];
             isExpired = schedule.date < todayStr || (schedule.date === todayStr && hoursUntil !== null && hoursUntil < 0);
         } else {
@@ -376,17 +370,11 @@ const StudentClassSheduling = () => {
 
             if (upcomingDates.length > 0) {
                 const nextDate = upcomingDates.sort()[0];
-                let currentStartTime = schedule.startTime;
-                if (schedule.specificDates && schedule.specificDates[nextDate]) {
-                    currentStartTime = schedule.specificDates[nextDate].startTime || currentStartTime;
-                }
+                let currentStartTime = getScheduleStart(schedule, nextDate);
                 hoursUntil = getHoursUntilClass(nextDate, currentStartTime);
             } else if (scheduleDates.length > 0) {
                 const lastDate = scheduleDates[scheduleDates.length - 1];
-                let currentStartTime = schedule.startTime;
-                if (schedule.specificDates && schedule.specificDates[lastDate]) {
-                    currentStartTime = schedule.specificDates[lastDate].startTime || currentStartTime;
-                }
+                let currentStartTime = getScheduleStart(schedule, lastDate);
                 hoursUntil = getHoursUntilClass(lastDate, currentStartTime);
             }
             isExpired = isClassExpired(schedule);
@@ -412,10 +400,11 @@ const StudentClassSheduling = () => {
         let status = '';
         let hoursUntil = null;
         let isExpired = false;
-
+        const  startTime = getScheduleStart(schedule);
+        const endTime = getScheduleEnd(schedule);
         if (type === 'single') {
-            status = getStatusTextForSingleDate(schedule.date, schedule.startTime, schedule.endTime);
-            hoursUntil = getHoursUntilClass(schedule.date, schedule.startTime);
+            status = getStatusTextForSingleDate(schedule.date, startTime, endTime);
+            hoursUntil = getHoursUntilClass(schedule.date, startTime);
             const todayStr = new Date().toISOString().split('T')[0];
             isExpired = schedule.date < todayStr || (schedule.date === todayStr && hoursUntil !== null && hoursUntil < 0);
         } else {
@@ -428,17 +417,11 @@ const StudentClassSheduling = () => {
 
             if (upcomingDates.length > 0) {
                 const nextDate = upcomingDates.sort()[0];
-                let currentStartTime = schedule.startTime;
-                if (schedule.specificDates && schedule.specificDates[nextDate]) {
-                    currentStartTime = schedule.specificDates[nextDate].startTime || currentStartTime;
-                }
+                let currentStartTime = startTime;
                 hoursUntil = getHoursUntilClass(nextDate, currentStartTime);
             } else if (scheduleDates.length > 0) {
                 const lastDate = scheduleDates[scheduleDates.length - 1];
-                let currentStartTime = schedule.startTime;
-                if (schedule.specificDates && schedule.specificDates[lastDate]) {
-                    currentStartTime = schedule.specificDates[lastDate].startTime || currentStartTime;
-                }
+                let currentStartTime = startTime;
                 hoursUntil = getHoursUntilClass(lastDate, currentStartTime);
             }
             isExpired = isClassExpired(schedule);
@@ -527,8 +510,8 @@ const StudentClassSheduling = () => {
                 {type === 'normal' && (
                     <p className="text-[#666666] text-sm mb-4 line-clamp-2">
                         {schedule.scheduleDates?.length === 1
-                            ? dateFormatter(schedule.scheduleDates[0])
-                            : `${dateFormatter(schedule.scheduleDates[0])} - to - ${schedule?.isDateGenerated ? 'On Going' : dateFormatter(schedule.scheduleDates[schedule.scheduleDates.length - 1])}`}
+                            ? dateFormatter(getScheduleStart({ ...schedule, date: schedule.scheduleDates[0] }, schedule.scheduleDates[0]) || schedule.scheduleDates[0])
+                            : `${dateFormatter(getScheduleStart({ ...schedule, date: schedule.scheduleDates[0] }, schedule.scheduleDates[0]) || schedule.scheduleDates[0])} - to - ${schedule?.isDateGenerated ? 'On Going' : dateFormatter(getScheduleStart({ ...schedule, date: schedule.scheduleDates[schedule.scheduleDates.length - 1] }, schedule.scheduleDates[schedule.scheduleDates.length - 1]) || schedule.scheduleDates[schedule.scheduleDates.length - 1])}`}
                     </p>
                 )}
 
@@ -537,14 +520,14 @@ const StudentClassSheduling = () => {
                     <div className="flex text-[#666666] text-sm items-center gap-2">
                         {type === 'normal' ? "CreatedAt: " : <CiCalendar color="#666666" size={20} />}
                         <p className="text-[#666666] text-sm">
-                            {dateFormatter(schedule.date)}
+                            {dateFormatter(getScheduleStart(schedule) || schedule.date)}
                         </p>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <Clock color="#666666" size={18} />
                         <p className="text-[#666666] text-sm">
-                            {formatTime12Hour(schedule.startTime)} - {formatTime12Hour(schedule.endTime)}
+                            {formatTime12Hour(getScheduleStart(schedule))} - {formatTime12Hour(getScheduleEnd(schedule))}
                         </p>{""}
                         {type !== "normal" && <p className="text-[#666666] text-sm">Scheduled Days Timing</p>}
                     </div>
@@ -590,7 +573,7 @@ const StudentClassSheduling = () => {
                                     key={index}
                                     className="text-[#666666] text-md line-clamp-2"
                                 >
-                                    {dateFormatter(date)} ({formatTime12Hour(times.startTime)} - {formatTime12Hour(times.endTime)})
+                                    {dateFormatter(getScheduleStart({ ...schedule, date, startTime: times.startTime }, date) || date)} ({formatTime12Hour(getScheduleStart({ ...schedule, date, startTime: times.startTime }, date))} - {formatTime12Hour(getScheduleEnd({ ...schedule, date, endTime: times.endTime }, date))})
                                 </p>
                             ))}
                         </div>
@@ -756,12 +739,12 @@ const StudentClassSheduling = () => {
                                         title={"Course: " + i.courseName}
                                         desc={
                                             i.scheduleDates?.length === 1
-                                                ? new Date(i.scheduleDates[0]).toDateString()
-                                                : new Date(i.scheduleDates[0]).toDateString() +
+                                                ? (getScheduleStart({ ...i, date: i.scheduleDates[0] }, i.scheduleDates[0]) || new Date(i.scheduleDates[0])).toDateString()
+                                                : (getScheduleStart({ ...i, date: i.scheduleDates[0] }, i.scheduleDates[0]) || new Date(i.scheduleDates[0])).toDateString() +
                                                 " - to - " +
-                                                new Date(
+                                                (getScheduleStart({ ...i, date: i.scheduleDates[i.scheduleDates?.length - 1] }, i.scheduleDates[i.scheduleDates?.length - 1]) || new Date(
                                                     i.scheduleDates[i.scheduleDates?.length - 1],
-                                                ).toDateString()
+                                                )).toDateString()
                                         }
                                     />
                                     <div className="mt-3">
@@ -945,13 +928,13 @@ const StudentClassSheduling = () => {
                                             <div className="flex items-center gap-2 text-gray-600 text-sm">
                                                 <CiCalendar size={18} />
                                                 <span>
-                                                    {dateFormatter(schedule.date)}
+                                                    {dateFormatter(getScheduleStart(schedule) || schedule.date)}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2 text-gray-600 text-sm">
                                                 <Clock size={18} />
                                                 <span>
-                                                    {formatTime12Hour(schedule.startTime)} - {formatTime12Hour(schedule.endTime)}
+                                                    {formatTime12Hour(getScheduleStart(schedule))} - {formatTime12Hour(getScheduleEnd(schedule))}
                                                 </span>
                                             </div>
                                             {schedule.notes && schedule?.notes?.["2026-04-07"] &&
@@ -1079,7 +1062,7 @@ const StudentClassSheduling = () => {
                                                 key={index}
                                                 className="text-[#666666] text-sm line-clamp-2"
                                             >
-                                                {dateFormatter(date)} ({formatTime12Hour(times.startTime)} - {formatTime12Hour(times.endTime)})
+                                                {dateFormatter(getScheduleStart({ ...targetSchedule, date, startTime: times.startTime }, date) || date)} ({formatTime12Hour(getScheduleStart({ ...targetSchedule, date, startTime: times.startTime }, date))} - {formatTime12Hour(getScheduleEnd({ ...targetSchedule, date, endTime: times.endTime }, date))})
                                             </p>
                                         </div>
                                     ))}

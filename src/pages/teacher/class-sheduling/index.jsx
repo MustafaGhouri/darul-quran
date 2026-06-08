@@ -58,6 +58,9 @@ import {
   getStatusText,
   getStatusTextForSingleDate,
   getHoursUntilClass,
+  getScheduleStart,
+  getScheduleEnd,
+  formatTime24,
 } from "../../../utils/scheduleHelpers";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -383,8 +386,8 @@ const TeacherClassSheduling = () => {
     setQuickRescheduleData({
       shouldShowSelect: !dateToUse,
       date: dateToUse,
-      startTime: existingTiming?.startTime || schedule.startTime,
-      endTime: existingTiming?.endTime || schedule.endTime,
+      startTime: existingTiming?.startTime || formatTime24(getScheduleStart(schedule, dateToUse)) || schedule.startTime,
+      endTime: existingTiming?.endTime || formatTime24(getScheduleEnd(schedule, dateToUse)) || schedule.endTime,
       replaceWith: dateToUse || "",
       scheduleTitle: schedule.title,
       courseTitle: schedule.course?.courseName || "",
@@ -426,16 +429,7 @@ const TeacherClassSheduling = () => {
     const parsedDate = parseDateFromDB(schedule.date);
     const dateStr = parsedDate ? parsedDate.toISOString().split("T")[0] : schedule.date;
 
-    let currentStartTime = schedule.startTime;
-    if (schedule.specificDates && schedule.specificDates[dateStr]) {
-      currentStartTime = schedule.specificDates[dateStr].startTime || currentStartTime;
-    }
-
-    const scheduleDateTime = parsedDate
-      ? new Date(
-        `${dateStr}T${currentStartTime}`,
-      )
-      : new Date(`${schedule.date}T${currentStartTime}`);
+    const scheduleDateTime = getScheduleStart(schedule, dateStr) || new Date(`${dateStr}T${schedule.startTime}`);
     const now = new Date();
     const hoursUntilClass = (scheduleDateTime - now) / (1000 * 60 * 60);
     return hoursUntilClass > 0;
@@ -466,10 +460,10 @@ const TeacherClassSheduling = () => {
     if (type === "single") {
       status = getStatusTextForSingleDate(
         schedule.date,
-        schedule.startTime,
-        schedule.endTime,
+        getScheduleStart(schedule),
+        getScheduleEnd(schedule),
       );
-      hoursUntil = getHoursUntilClass(schedule.date, schedule.startTime);
+      hoursUntil = getHoursUntilClass(schedule.date, getScheduleStart(schedule));
       const todayStr = new Date().toISOString().split("T")[0];
       isExpired =
         schedule.date < todayStr ||
@@ -482,17 +476,11 @@ const TeacherClassSheduling = () => {
 
       if (upcomingDates.length > 0) {
         const nextDate = upcomingDates.sort()[0];
-        let currentStartTime = schedule.startTime;
-        if (schedule.specificDates && schedule.specificDates[nextDate]) {
-          currentStartTime = schedule.specificDates[nextDate].startTime || currentStartTime;
-        }
+        let currentStartTime = getScheduleStart(schedule, nextDate);
         hoursUntil = getHoursUntilClass(nextDate, currentStartTime);
       } else if (scheduleDates.length > 0) {
         const lastDate = scheduleDates[scheduleDates.length - 1];
-        let currentStartTime = schedule.startTime;
-        if (schedule.specificDates && schedule.specificDates[lastDate]) {
-          currentStartTime = schedule.specificDates[lastDate].startTime || currentStartTime;
-        }
+        let currentStartTime = getScheduleStart(schedule, lastDate);
         hoursUntil = getHoursUntilClass(lastDate, currentStartTime);
       }
       isExpired = isClassExpired(schedule);
@@ -583,8 +571,8 @@ const TeacherClassSheduling = () => {
         {type === "normal" && (
           <p className="text-[#666666] text-sm mb-4 line-clamp-2">
             {schedule.scheduleDates?.length === 1
-              ? dateFormatter(schedule.scheduleDates[0])
-              : `${dateFormatter(schedule.scheduleDates[0])} - to - ${schedule?.isDateGenerated ? "On Going" : dateFormatter(schedule.scheduleDates[schedule.scheduleDates.length - 1])}`}
+              ? dateFormatter(getScheduleStart({ ...schedule, date: schedule.scheduleDates[0] }, schedule.scheduleDates[0]) || schedule.scheduleDates[0])
+              : `${dateFormatter(getScheduleStart({ ...schedule, date: schedule.scheduleDates[0] }, schedule.scheduleDates[0]) || schedule.scheduleDates[0])} - to - ${schedule?.isDateGenerated ? "On Going" : dateFormatter(getScheduleStart({ ...schedule, date: schedule.scheduleDates[schedule.scheduleDates.length - 1] }, schedule.scheduleDates[schedule.scheduleDates.length - 1]) || schedule.scheduleDates[schedule.scheduleDates.length - 1])}`}
           </p>
         )}
 
@@ -602,8 +590,8 @@ const TeacherClassSheduling = () => {
           <div className="flex items-center gap-2">
             <Clock color="#666666" size={18} />
             <p className="text-[#666666] text-md">
-              {formatTime12Hour(schedule.startTime)} -{" "}
-              {formatTime12Hour(schedule.endTime)}  {""}
+              {formatTime12Hour(getScheduleStart(schedule))} -{" "}
+              {formatTime12Hour(getScheduleEnd(schedule))}  {""}
               - Scheduled days timings
             </p>
           </div>
@@ -617,7 +605,7 @@ const TeacherClassSheduling = () => {
                   key={index}
                   className="text-[#666666] text-md line-clamp-2"
                 >
-                  {dateFormatter(date)} ({formatTime12Hour(times.startTime)} - {formatTime12Hour(times.endTime)})
+                  {dateFormatter(getScheduleStart({ ...schedule, date, startTime: times.startTime }, date) || date)} ({formatTime12Hour(getScheduleStart({ ...schedule, date, startTime: times.startTime }, date))} - {formatTime12Hour(getScheduleEnd({ ...schedule, date, endTime: times.endTime }, date))})
                 </p>
               ))}
             </div>
@@ -882,12 +870,12 @@ const TeacherClassSheduling = () => {
                     title={"Course: " + i.courseName}
                     desc={
                       i.scheduleDates?.length === 1
-                        ? new Date(i.scheduleDates[0]).toDateString()
-                        : new Date(i.scheduleDates[0]).toDateString() +
+                        ? (getScheduleStart({ ...i, date: i.scheduleDates[0] }, i.scheduleDates[0]) || new Date(i.scheduleDates[0])).toDateString()
+                        : (getScheduleStart({ ...i, date: i.scheduleDates[0] }, i.scheduleDates[0]) || new Date(i.scheduleDates[0])).toDateString() +
                         " - to - " +
-                        new Date(
+                        (getScheduleStart({ ...i, date: i.scheduleDates[i.scheduleDates?.length - 1] }, i.scheduleDates[i.scheduleDates?.length - 1]) || new Date(
                           i.scheduleDates[i.scheduleDates?.length - 1],
-                        ).toDateString()
+                        )).toDateString()
                     }
                   />
                   <div className="mt-d3">
@@ -1038,7 +1026,7 @@ const TeacherClassSheduling = () => {
                           return hasSpecificDate ? (
                             <span>{dateFormatter(selectedDate)}</span>
                           ) : (
-                            <span>{dateFormatter(schedule.date)}</span>
+                            <span>{dateFormatter(getScheduleStart(schedule) || schedule.date)}</span>
                           );
                         })()}
                       </div>
@@ -1052,9 +1040,9 @@ const TeacherClassSheduling = () => {
                             const specificTime = schedule.specificDates?.[dateKey];
 
                             return (specificTime && specificTime.startTime && specificTime.endTime) ? (
-                              `${formatTime12Hour(specificTime.startTime)} - ${formatTime12Hour(specificTime.endTime)}`
+                              `${formatTime12Hour(getScheduleStart({ ...schedule, date: dateKey, startTime: specificTime.startTime }, dateKey))} - ${formatTime12Hour(getScheduleEnd({ ...schedule, date: dateKey, endTime: specificTime.endTime }, dateKey))}`
                             ) : (
-                              `${formatTime12Hour(schedule.startTime)} - ${formatTime12Hour(schedule.endTime)}`
+                              `${formatTime12Hour(getScheduleStart(schedule, dateKey))} - ${formatTime12Hour(getScheduleEnd(schedule, dateKey))}`
                             );
                           })()}
                         </span>
@@ -1121,7 +1109,7 @@ const TeacherClassSheduling = () => {
                   </p>
                   <p className="text-sm text-gray-600">
                     {/* {(parseDateFromDB(selectedSchedule.date) || new Date(selectedSchedule.date)).toLocaleDateString()} at{" "} */}
-                    {formatTime12Hour(selectedSchedule.startTime)} - {formatTime12Hour(selectedSchedule.endTime)}
+                    {formatTime12Hour(getScheduleStart(selectedSchedule))} - {formatTime12Hour(getScheduleEnd(selectedSchedule))}
                   </p>
                 </div>
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-3">
@@ -1688,8 +1676,8 @@ const TeacherClassSheduling = () => {
                   setQuickRescheduleData({
                     ...quickRescheduleData,
                     date,
-                    startTime: existingTiming?.startTime || selectedSchedule.startTime,
-                    endTime: existingTiming?.endTime || selectedSchedule.endTime,
+                    startTime: existingTiming?.startTime || formatTime24(getScheduleStart(selectedSchedule, date)) || selectedSchedule.startTime,
+                    endTime: existingTiming?.endTime || formatTime24(getScheduleEnd(selectedSchedule, date)) || selectedSchedule.endTime,
                   });
                 }}
                 variant="bordered"

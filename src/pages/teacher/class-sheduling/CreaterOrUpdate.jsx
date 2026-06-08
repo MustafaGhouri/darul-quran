@@ -18,6 +18,7 @@ import CourseSelect from "../../../components/select/CourseSelect";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { validateSchedule } from "../../../lib/utils";
+import { getScheduleStart, getScheduleEnd, formatTime24 } from "../../../utils/scheduleHelpers";
 
 // ── SmartTimeInput ──────────────────────────────────────────────────────────
 // Keeps its own local value so the parent doesn't re-render on every keystroke.
@@ -104,8 +105,8 @@ const CreaterOrUpdateSchedule = () => {
             id: item.id,
             title: item.title,
             date: dateStr,
-            startTime: item.startTime,
-            endTime: item.endTime,
+            startTime: formatTime24(getScheduleStart(item)) || item.startTime,
+            endTime: formatTime24(getScheduleEnd(item)) || item.endTime,
             description: item.description,
             teacherId: item.teacherId || null,
             courseId: item.courseId || null,
@@ -200,6 +201,7 @@ const CreaterOrUpdateSchedule = () => {
                 ...formData,
                 weeklyDays: formData.weeklyDays?.map(String),
                 specificDates: formData.specificDates.length > 0 ? sdPayload : {},
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
             };
 
             if (user?.role === "teacher") payload.teacherId = user.id;
@@ -360,7 +362,7 @@ const CreaterOrUpdateSchedule = () => {
                             type="date" label="Start Date" variant="bordered" labelPlacement="outside"
                             isRequired={formData.scheduleType === "daily"}
                             // isDisabled={hasSpecificDates}
-                            value={formData.startDate }
+                            value={formData.startDate}
                             onChange={set("startDate")}
                         />
                         <Input
