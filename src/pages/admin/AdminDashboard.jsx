@@ -348,18 +348,18 @@ const AdminDashboard = () => {
                           const live = isClassLive(classItem);
                           const expired = isClassExpired(classItem);
 
-                          if (expired) {
-                            return (
-                              <Button
-                                startContent={<Check size={20} />}
-                                size="sm"
-                                className="bg-gray-400 w-32 text-white rounded-md"
-                                isDisabled
-                              >
-                                Completed
-                              </Button>
-                            );
-                          } else if (live && classItem.meeting_link) {
+                          // if (expired) {
+                          //   return (
+                          //     <Button
+                          //       startContent={<Check size={20} />}
+                          //       size="sm"
+                          //       className="bg-gray-400 w-32 text-white rounded-md"
+                          //       isDisabled
+                          //     >
+                          //       Completed
+                          //     </Button>
+                          //   );
+                          // } else if (live && classItem.meeting_link) {
                             return (
                               <Button
                                 startContent={<Video size={20} />}
@@ -372,28 +372,28 @@ const AdminDashboard = () => {
                                 Start Class
                               </Button>
                             );
-                          } else if (classItem.meeting_link) {
-                            return (
-                              <Button
-                                startContent={<Clock size={20} />}
-                                size="sm"
-                                className="bg-[#06574C] w-32 text-white rounded-md"
-                                isDisabled
-                              >
-                                Locked
-                              </Button>
-                            );
-                          } else {
-                            return (
-                              <Button
-                                startContent={<AiOutlineEye size={22} />}
-                                size="sm"
-                                className="bg-[#06574C] w-32 text-white rounded-md"
-                              >
-                                Details
-                              </Button>
-                            );
-                          }
+                          // } else if (classItem.meeting_link) {
+                          //   return (
+                          //     <Button
+                          //       startContent={<Clock size={20} />}
+                          //       size="sm"
+                          //       className="bg-[#06574C] w-32 text-white rounded-md"
+                          //       isDisabled
+                          //     >
+                          //       Locked
+                          //     </Button>
+                          //   );
+                          // } else {
+                          //   return (
+                          //     <Button
+                          //       startContent={<AiOutlineEye size={22} />}
+                          //       size="sm"
+                          //       className="bg-[#06574C] w-32 text-white rounded-md"
+                          //     >
+                          //       Details
+                          //     </Button>
+                          //   );
+                          // }
                         })()}
                       </TableCell>
                     </TableRow>
