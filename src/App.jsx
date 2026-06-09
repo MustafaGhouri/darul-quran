@@ -181,7 +181,7 @@ function App() {
   );
   const { incomingMessage, activeChatId } = useSelector((state) => state?.chat ?? {});
   const { permission, isSubscribed, isSupported: isSupportedPush, requestPermission, subscribeToPush } = useNotifications();
-  
+
   useEffect(() => {
     if (isSupportedPush && isAuthenticated) {
       if (permission !== "granted") {
@@ -256,9 +256,9 @@ function App() {
   useEffect(() => {
     async function loadUser() {
       try {
-        const finalToken = localStorage.getItem("token") || token;
         const headers = {};
-        if (finalToken) headers["Authorization"] = `Bearer ${finalToken}`;
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+        if (timezone) headers["Timezone"] = `Bearer ${timezone}`;
 
         const res = await fetch(
           import.meta.env.VITE_PUBLIC_SERVER_URL + "/api/auth/me",
@@ -325,14 +325,14 @@ function App() {
 
 
   useEffect(() => {
-        const queryParams = new URLSearchParams(location.search);
-        const action = queryParams.get("action");
-        const scheduleId = queryParams.get("scheduleId");
+    const queryParams = new URLSearchParams(location.search);
+    const action = queryParams.get("action");
+    const scheduleId = queryParams.get("scheduleId");
 
-        if (action === "deny" && scheduleId) {
-             sessionStorage.setItem("rescheduling_redirecting", window?.location?.href);
-        }
-    }, [location.search]);
+    if (action === "deny" && scheduleId) {
+      sessionStorage.setItem("rescheduling_redirecting", window?.location?.href);
+    }
+  }, [location.search]);
 
 
 
@@ -347,7 +347,7 @@ function App() {
     </div>
   );
 
-   
+
   return (
     <HeroUIProvider>
       <ErrorBoundary>
