@@ -9,8 +9,29 @@ const normalizeDateKey = (date) => {
     return isNaN(parsed.getTime()) ? value : parsed.toISOString().split("T")[0];
 };
 
+const getScheduleOccurrences = (schedule) => {
+    const occurrences = schedule?.scheduleOccurrences || schedule?.schedule_occurrences || [];
+    return Array.isArray(occurrences) ? occurrences : [];
+};
+
+const getScheduleOccurrence = (schedule, dateKey = null) => {
+    const occurrences = getScheduleOccurrences(schedule);
+    if (!occurrences.length) return null;
+
+    const hasExplicitDate = Boolean(dateKey);
+    const key = normalizeDateKey(dateKey || schedule?.date);
+    if (!key) return occurrences[0];
+
+    return occurrences.find((occurrence) =>
+        normalizeDateKey(occurrence?.date) === key ||
+        normalizeDateKey(occurrence?.sourceDate || occurrence?.source_date) === key
+    ) || (hasExplicitDate ? null : occurrences[0]);
+};
+
 const getScheduleDateKey = (schedule, dateKey = null) => {
     if (dateKey) return normalizeDateKey(dateKey);
+    const occurrence = getScheduleOccurrence(schedule);
+    if (occurrence?.date) return normalizeDateKey(occurrence.date);
     if (schedule?.date) return normalizeDateKey(schedule.date);
     if (schedule?.startDate || schedule?.start_date) return normalizeDateKey(schedule.startDate || schedule.start_date);
     const dates = schedule?.scheduleDates || schedule?.schedule_dates || [];
@@ -19,17 +40,21 @@ const getScheduleDateKey = (schedule, dateKey = null) => {
 
 const getSpecificTiming = (schedule, dateKey = null) => {
     const key = getScheduleDateKey(schedule, dateKey);
-    return key && schedule?.specificDates?.[key] ? schedule.specificDates[key] : null;
+    const specificDates = schedule?.specificDates || schedule?.specific_dates || {};
+    return key && specificDates?.[key] ? specificDates[key] : null;
 };
 
 const getZonedDateTime = (schedule, field, dateKey = null) => {
     if (!schedule) return null;
 
+    const occurrence = getScheduleOccurrence(schedule, dateKey);
     const specificTiming = getSpecificTiming(schedule, dateKey);
     const requestedDate = getScheduleDateKey(schedule, dateKey);
     const baseDate = normalizeDateKey(schedule?.startDate || schedule?.start_date || schedule?.date);
     const canUseScheduleIso = !requestedDate || !baseDate || requestedDate === baseDate;
     const isoValue =
+        occurrence?.[`${field}DateTime`] ||
+        occurrence?.[`${field}_date_time`] ||
         specificTiming?.[`${field}DateTime`] ||
         (canUseScheduleIso ? schedule?.[`${field}DateTime`] : null) ||
         (canUseScheduleIso ? schedule?.[`${field}_date_time`] : null);
@@ -42,6 +67,8 @@ const getZonedDateTime = (schedule, field, dateKey = null) => {
     const timezone = schedule.timezone || "Europe/London";
     const scheduleDate = requestedDate;
     const time =
+        occurrence?.[`${field}Time`] ||
+        occurrence?.[`${field}_time`] ||
         specificTiming?.[`${field}Time`] ||
         specificTiming?.[`${field}_time`] ||
         schedule?.[`${field}Time`] ||
@@ -79,6 +106,18 @@ const getScheduleRange = (schedule, dateKey = null) => {
     const end = getZonedDateTime(schedule, "end", dateKey);
     if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) return null;
     return { start, end };
+};
+
+const getScheduleOccurrenceRanges = (schedule) => {
+    const occurrences = getScheduleOccurrences(schedule);
+    return occurrences
+        .map((occurrence) => {
+            const key = occurrence?.sourceDate || occurrence?.source_date || occurrence?.date;
+            const range = getScheduleRange(schedule, key);
+            return range ? { ...range, occurrence } : null;
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.start - b.start);
 };
 
 
@@ -186,6 +225,16 @@ const getNextScheduleDate = (scheduleDates) => {
  */
 export const isClassLive = (schedule, type = 'multiple') => {
     if (!schedule) return false;
+    const occurrenceRanges = getScheduleOccurrenceRanges(schedule);
+    if (occurrenceRanges.length) {
+        const now = new Date();
+        return occurrenceRanges.some(({ start, end }) => {
+            const unlockTime = new Date(start);
+            unlockTime.setMinutes(unlockTime.getMinutes() - CLASS_JOIN_UNLOCK_MINUTES);
+            return now >= unlockTime && now <= end;
+        });
+    }
+
     const today = getTodayStr();
     const range = getScheduleRange(schedule, type === "single" ? schedule.date : today);
     if (range) {
@@ -285,6 +334,11 @@ export const isClassLive = (schedule, type = 'multiple') => {
  */
 export const isClassExpired = (schedule) => {
     if (!schedule) return false;
+    const occurrenceRanges = getScheduleOccurrenceRanges(schedule);
+    if (occurrenceRanges.length) {
+        const now = new Date();
+        return occurrenceRanges.every(({ end }) => now > end);
+    }
 
     let scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
 
@@ -344,6 +398,18 @@ export const getStatusColor = (schedule) => {
  * @returns {string} Status text: "live", "upcoming", or "completed"
  */
 export const getStatusText = (schedule) => {
+    const occurrenceRanges = getScheduleOccurrenceRanges(schedule);
+    if (occurrenceRanges.length) {
+        const now = new Date();
+        if (occurrenceRanges.some(({ start, end }) => now >= start && now <= end)) {
+            return "live";
+        }
+        if (occurrenceRanges.some(({ end }) => now <= end)) {
+            return "upcoming";
+        }
+        return "completed";
+    }
+
     const scheduleDates = schedule.scheduleDates || schedule.schedule_dates || [];
     if (!scheduleDates.length) return "completed";
 
@@ -490,14 +556,19 @@ export const groupAndSortSchedulesByDate = (schedules, filterType = "all") => {
             if (filterType === "video" && schedule.meetingLink) return;
         }
 
-        const datesToProcess = schedule.scheduleDates?.length > 0
-            ? schedule.scheduleDates
-            : (schedule.date ? [schedule.date] : []);
+        const occurrences = getScheduleOccurrences(schedule);
+        const datesToProcess = occurrences.length > 0
+            ? occurrences
+            : (schedule.scheduleDates?.length > 0
+                ? schedule.scheduleDates
+                : (schedule.date ? [schedule.date] : []));
 
         if (!datesToProcess.length) return;
 
         datesToProcess.forEach((scheduleDate) => {
-            const dateStr = typeof scheduleDate === 'string' ? scheduleDate : scheduleDate?.date;
+            const dateStr = typeof scheduleDate === 'string'
+                ? scheduleDate
+                : (scheduleDate?.sourceDate || scheduleDate?.source_date || scheduleDate?.date);
             if (!dateStr) return;
 
             // Use the same logic as parseDateFromDB to ensure consistency
@@ -526,12 +597,15 @@ export const groupAndSortSchedulesByDate = (schedules, filterType = "all") => {
                 }
             }
 
-            const specificTiming = schedule.specificDates?.[dateKey];
+            const specificDates = schedule.specificDates || schedule.specific_dates || {};
+            const specificTiming = specificDates?.[dateKey];
             const scheduleForDate = {
                 ...schedule,
                 date: dateKey,
                 startTime: specificTiming?.startTime || (typeof scheduleDate === 'object' ? scheduleDate.startTime : null) || schedule.startTime,
                 endTime: specificTiming?.endTime || (typeof scheduleDate === 'object' ? scheduleDate.endTime : null) || schedule.endTime,
+                startDateTime: typeof scheduleDate === 'object' ? scheduleDate.startDateTime || scheduleDate.start_date_time : schedule.startDateTime,
+                endDateTime: typeof scheduleDate === 'object' ? scheduleDate.endDateTime || scheduleDate.end_date_time : schedule.endDateTime,
             };
             const start = getScheduleStart(scheduleForDate, dateKey);
             const end = getScheduleEnd(scheduleForDate, dateKey);

@@ -647,7 +647,7 @@ const TeacherClassSheduling = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 justify-start md:justify-end w-full md:w-auto md:max-w-2xl">
-            {/* {canJoin ? ( */}
+            {canJoin ? (
               <Button
                 radius="sm"
                 size="sm"
@@ -661,7 +661,7 @@ const TeacherClassSheduling = () => {
               >
                 Join Zoom
               </Button>
-            {/* ) : (
+            ) : (
               <Tooltip
                 isDisabled={isExpired}
                 color="danger"
@@ -681,7 +681,7 @@ const TeacherClassSheduling = () => {
                   </Button>
                 </span>
               </Tooltip>
-            )} */}
+            )}
             <>
               <div className="md:absolute top-5 right-5">
                 <Tooltip
