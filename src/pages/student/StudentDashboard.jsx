@@ -419,18 +419,18 @@ const StudentDashboard = () => {
                       const live = isClassLive(item);
                       const expired = isClassExpired(item);
 
-                      // if (expired) {
-                      //   return (
-                      //     <Button
-                      //       startContent={<Check size={20} />}
-                      //       size="sm"
-                      //       className="bg-gray-400 w-32 text-white rounded-md"
-                      //       isDisabled
-                      //     >
-                      //       Completed
-                      //     </Button>
-                      //   );
-                      // } else if (live && item.meeting_link) {
+                      if (expired) {
+                        return (
+                          <Button
+                            startContent={<Check size={20} />}
+                            size="sm"
+                            className="bg-gray-400 w-32 text-white rounded-md"
+                            isDisabled
+                          >
+                            Completed
+                          </Button>
+                        );
+                      } else if (live && item.meeting_link) {
                         return (
                           <Button
                             startContent={<Video size={20} />}
@@ -445,28 +445,28 @@ const StudentDashboard = () => {
                             Start Class
                           </Button>
                         );
-                      // } else if (item.meeting_link) {
-                      //   return (
-                      //     <Button
-                      //       startContent={<Clock size={20} />}
-                      //       size="sm"
-                      //       className="bg-[#06574C] w-32 text-white rounded-md"
-                      //       isDisabled
-                      //     >
-                      //       Locked
-                      //     </Button>
-                      //   );
-                      // } else {
-                      //   return (
-                      //     <Button
-                      //       startContent={<AiOutlineEye size={22} />}
-                      //       size="sm"
-                      //       className="bg-[#06574C] w-32 text-white rounded-md"
-                      //     >
-                      //       Details
-                      //     </Button>
-                      //   );
-                      // }
+                      } else if (item.meeting_link) {
+                        return (
+                          <Button
+                            startContent={<Clock size={20} />}
+                            size="sm"
+                            className="bg-[#06574C] w-32 text-white rounded-md"
+                            isDisabled
+                          >
+                            Locked
+                          </Button>
+                        );
+                      } else {
+                        return (
+                          <Button
+                            startContent={<AiOutlineEye size={22} />}
+                            size="sm"
+                            className="bg-[#06574C] w-32 text-white rounded-md"
+                          >
+                            Details
+                          </Button>
+                        );
+                      }
                     })()}
                   </div>
                 </div>
