@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
     useGetVapidPublicKeyQuery,
     useSubscribeMutation,
     useUnsubscribeMutation,
 } from "../redux/api/notifications";
+
+const getDeviceInfo = () =>
+    `${navigator.userAgent} - ${navigator.platform}`;
 
 /**
  * Custom hook for managing push notifications
@@ -16,6 +19,8 @@ export const useNotifications = () => {
     );
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [subscription, setSubscription] = useState(null);
+    const [subscriptionChecked, setSubscriptionChecked] = useState(false);
+    const subscribingRef = useRef(false);
 
     const { data: vapidData } = useGetVapidPublicKeyQuery();
     const [subscribe] = useSubscribeMutation();
@@ -46,9 +51,26 @@ export const useNotifications = () => {
         return outputArray;
     };
 
+    const syncSubscriptionToBackend = useCallback(
+        async (pushSubscription) => {
+            const response = await subscribe({
+                subscription: pushSubscription.toJSON(),
+                deviceInfo: getDeviceInfo(),
+            }).unwrap();
+
+            setSubscription(pushSubscription);
+            setIsSubscribed(true);
+            return response;
+        },
+        [subscribe]
+    );
+
     // Check current subscription status
-    const checkSubscription = async () => {
-        if (!isSupported()) return false;
+    const checkSubscription = useCallback(async () => {
+        if (!isSupported()) {
+            setSubscriptionChecked(true);
+            return false;
+        }
 
         try {
             const registration = await navigator.serviceWorker.ready;
@@ -58,18 +80,20 @@ export const useNotifications = () => {
                 setSubscription(existingSubscription);
                 setIsSubscribed(true);
                 return true;
-            } else {
-                setIsSubscribed(false);
-                return false;
             }
+
+            setIsSubscribed(false);
+            return false;
         } catch (error) {
             console.error("Error checking subscription:", error);
             return false;
+        } finally {
+            setSubscriptionChecked(true);
         }
-    };
+    }, []);
 
     // Request notification permission
-    const requestPermission = async () => {
+    const requestPermission = useCallback(async () => {
         if (!isSupported()) {
             throw new Error("Push notifications are not supported in this browser");
         }
@@ -82,52 +106,51 @@ export const useNotifications = () => {
             console.error("Error requesting permission:", error);
             throw error;
         }
-    };
+    }, []);
 
     // Subscribe to push notifications
-    const subscribeToPush = async () => {
+    const subscribeToPush = useCallback(async () => {
+        if (subscribingRef.current) return;
+
         if (!isSupported()) {
             throw new Error("Push notifications are not supported");
         }
 
-        if (permission !== "granted") {
-            const newPermission = await requestPermission();
-            if (newPermission !== "granted") {
-                throw new Error("Notification permission denied");
-            }
-        }
-
-        if (!vapidData?.publicKey) {
-            throw new Error("VAPID public key not available");
-        }
+        subscribingRef.current = true;
 
         try {
+            let currentPermission = permission;
+            if (currentPermission !== "granted") {
+                currentPermission = await Notification.requestPermission();
+                setPermission(currentPermission);
+                if (currentPermission !== "granted") {
+                    throw new Error("Notification permission denied");
+                }
+            }
+
+            if (!vapidData?.publicKey) {
+                throw new Error("VAPID public key not available");
+            }
+
             const registration = await navigator.serviceWorker.ready;
 
-            // Subscribe to push notifications
-            const pushSubscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(vapidData.publicKey),
-            });
+            // Reuse existing browser subscription — don't create a new one
+            let pushSubscription = await registration.pushManager.getSubscription();
+            if (!pushSubscription) {
+                pushSubscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidData.publicKey),
+                });
+            }
 
-            // Get device info
-            const deviceInfo = `${navigator.userAgent} - ${navigator.platform}`;
-
-            // Send subscription to backend
-            const response = await subscribe({
-                subscription: pushSubscription.toJSON(),
-                deviceInfo,
-            }).unwrap();
-
-            setSubscription(pushSubscription);
-            setIsSubscribed(true);
-
-            return response;
+            return await syncSubscriptionToBackend(pushSubscription);
         } catch (error) {
             console.error("Error subscribing to push notifications:", error);
             throw error;
+        } finally {
+            subscribingRef.current = false;
         }
-    };
+    }, [permission, vapidData?.publicKey, syncSubscriptionToBackend]);
 
     // Unsubscribe from push notifications
     const unsubscribeFromPush = async () => {
@@ -184,6 +207,7 @@ export const useNotifications = () => {
         isSupported: isSupported(),
         permission,
         isSubscribed,
+        subscriptionChecked,
         subscription,
         requestPermission,
         subscribeToPush,

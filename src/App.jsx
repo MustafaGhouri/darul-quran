@@ -180,19 +180,24 @@ function App() {
     (state) => state?.user
   );
   const { incomingMessage, activeChatId } = useSelector((state) => state?.chat ?? {});
-  const { permission, isSubscribed, isSupported: isSupportedPush, requestPermission, subscribeToPush } = useNotifications();
+  const {
+    permission,
+    isSubscribed,
+    subscriptionChecked,
+    isSupported: isSupportedPush,
+    requestPermission,
+    subscribeToPush,
+  } = useNotifications();
 
   useEffect(() => {
-    if (isSupportedPush && isAuthenticated) {
-      if (permission !== "granted") {
-        requestPermission();
-        console.log("requestPermission", permission);
-      } else if (permission === "granted" && !isSubscribed) {
-        subscribeToPush();
-        console.log("subscribeToPush", permission);
-      }
+    if (!isSupportedPush || !isAuthenticated || !subscriptionChecked) return;
+
+    if (permission !== "granted") {
+      requestPermission();
+    } else if (!isSubscribed) {
+      subscribeToPush();
     }
-  }, [isSupportedPush, isAuthenticated, permission, isSubscribed, requestPermission, subscribeToPush]);
+  }, [isSupportedPush, isAuthenticated, subscriptionChecked, permission, isSubscribed, requestPermission, subscribeToPush]);
   // Toast when new message arrives and user is not viewing that chat (clickable → open chat)
   useEffect(() => {
     if (!incomingMessage?.message || !user?.id) return;
