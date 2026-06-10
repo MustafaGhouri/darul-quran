@@ -5,6 +5,7 @@ import { MdLogout } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { errorMessage, successMessage } from "../../lib/toast.config";
+import { useNotifications } from "../../hooks/useNotifications";
 import { clearUser } from "../../redux/reducers/user";
 
 export default function LogoutToggule() {
@@ -12,6 +13,7 @@ export default function LogoutToggule() {
     const dispatch = useDispatch();
     const { pathname } = useLocation();
     const [loggingOut, setLoggingOut] = useState(false);
+    const { unsubscribeFromPush, checkSubscription } = useNotifications();
 
     const getRoleFromPath = (pathname) => {
         if (pathname.startsWith("/admin")) return "admin";
@@ -36,10 +38,21 @@ export default function LogoutToggule() {
 
             if (!res.ok) throw new Error(data?.message || "Logout failed");
 
+            try {
+                await checkSubscription();
+                await unsubscribeFromPush();
+                successMessage("Successfully unsubscribed from notifications");
+            } catch (error) {
+                if (error?.message !== "No active subscription found") {
+                    console.error("Error unsubscribing from notifications:", error);
+                    errorMessage("Failed to unsubscribe from notifications");
+                }
+            }
+
             successMessage(data?.message || "Logout successful");
             dispatch(clearUser());
             localStorage.removeItem("token");
-            // location.href = '/'
+            window.location.href = "/";
         } catch (error) {
             console.log(error);
             errorMessage(error.message);
