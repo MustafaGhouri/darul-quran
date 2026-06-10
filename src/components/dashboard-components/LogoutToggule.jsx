@@ -20,7 +20,7 @@ export default function LogoutToggule() {
   const dispatch = useDispatch();
   const { pathname } = useLocation();
   const [loggingOut, setLoggingOut] = useState(false);
-  const { unsubscribeFromPush, checkSubscription } = useNotifications();
+  const { deactivatePushOnLogout } = useNotifications();
 
   const getRoleFromPath = (pathname) => {
     if (pathname.startsWith("/admin")) return "admin";
@@ -35,14 +35,9 @@ export default function LogoutToggule() {
     setLoggingOut(true);
     try {
       try {
-        await checkSubscription();
-        await unsubscribeFromPush();
-        console.log("Successfully unsubscribed from notifications"); // add this line for console logn
-        successMessage("Successfully unsubscribed from notifications");
+        await deactivatePushOnLogout();
       } catch (error) {
-        if (error?.message !== "No active subscription found") {
-          console.log("Error unsubscribing from notifications:", error);
-        }
+        console.log("Error deactivating push on logout:", error);
       }
       const res = await fetch(
         import.meta.env.VITE_PUBLIC_SERVER_URL + `/api/auth/logout`,

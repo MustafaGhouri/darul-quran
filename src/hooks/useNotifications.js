@@ -152,19 +152,46 @@ export const useNotifications = () => {
         }
     }, [permission, vapidData?.publicKey, syncSubscriptionToBackend]);
 
-    // Unsubscribe from push notifications
-    const unsubscribeFromPush = async () => {
-        if (!subscription) {
-            throw new Error("No active subscription found");
-        }
+    const getBrowserSubscription = useCallback(async () => {
+        if (!isSupported()) return null;
+        const registration = await navigator.serviceWorker.ready;
+        return registration.pushManager.getSubscription();
+    }, []);
+
+    // Logout: deactivate on server only — keep browser subscription for re-login
+    const deactivatePushOnLogout = useCallback(async () => {
+        if (!isSupported()) return false;
 
         try {
-            // Unsubscribe from push manager
-            await subscription.unsubscribe();
+            const browserSubscription = await getBrowserSubscription();
+            if (!browserSubscription) return false;
 
-            // Notify backend
             await unsubscribe({
-                endpoint: subscription.endpoint,
+                endpoint: browserSubscription.endpoint,
+            }).unwrap();
+
+            setIsSubscribed(false);
+            return true;
+        } catch (error) {
+            console.error("Error deactivating push on logout:", error);
+            throw error;
+        }
+    }, [getBrowserSubscription, unsubscribe]);
+
+    // Full unsubscribe (user turns off notifications in settings)
+    const unsubscribeFromPush = useCallback(async () => {
+        try {
+            const browserSubscription =
+                subscription || (await getBrowserSubscription());
+
+            if (!browserSubscription) {
+                throw new Error("No active subscription found");
+            }
+
+            await browserSubscription.unsubscribe();
+
+            await unsubscribe({
+                endpoint: browserSubscription.endpoint,
             }).unwrap();
 
             setSubscription(null);
@@ -175,7 +202,7 @@ export const useNotifications = () => {
             console.error("Error unsubscribing from push notifications:", error);
             throw error;
         }
-    };
+    }, [subscription, getBrowserSubscription, unsubscribe]);
 
     // Check subscription on mount
     useEffect(() => {
@@ -212,6 +239,7 @@ export const useNotifications = () => {
         requestPermission,
         subscribeToPush,
         unsubscribeFromPush,
+        deactivatePushOnLogout,
         checkSubscription,
     };
 };
