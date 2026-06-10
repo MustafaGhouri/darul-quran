@@ -42,7 +42,6 @@ export default function LogoutToggule() {
       } catch (error) {
         if (error?.message !== "No active subscription found") {
           console.log("Error unsubscribing from notifications:", error);
-          errorMessage("Failed to unsubscribe from notifications");
         }
       }
       const res = await fetch(
