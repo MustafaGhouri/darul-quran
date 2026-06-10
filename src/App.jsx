@@ -181,23 +181,18 @@ function App() {
   );
   const { incomingMessage, activeChatId } = useSelector((state) => state?.chat ?? {});
   const {
-    permission,
-    isSubscribed,
     subscriptionChecked,
     isSupported: isSupportedPush,
-    requestPermission,
-    subscribeToPush,
+    reactivatePushOnLogin,
   } = useNotifications();
 
   useEffect(() => {
     if (!isSupportedPush || !isAuthenticated || !subscriptionChecked) return;
 
-    if (permission !== "granted") {
-      requestPermission();
-    } else if (!isSubscribed) {
-      subscribeToPush();
-    }
-  }, [isSupportedPush, isAuthenticated, subscriptionChecked, permission, isSubscribed, requestPermission, subscribeToPush]);
+    reactivatePushOnLogin().catch((error) => {
+      console.error("Error reactivating push on login:", error);
+    });
+  }, [isSupportedPush, isAuthenticated, subscriptionChecked, reactivatePushOnLogin]);
   // Toast when new message arrives and user is not viewing that chat (clickable → open chat)
   useEffect(() => {
     if (!incomingMessage?.message || !user?.id) return;

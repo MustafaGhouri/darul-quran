@@ -178,6 +178,26 @@ export const useNotifications = () => {
         }
     }, [getBrowserSubscription, unsubscribe]);
 
+    // Re-login: re-sync existing browser subscription to backend
+    const reactivatePushOnLogin = useCallback(async () => {
+        if (!isSupported()) return false;
+
+        let perm = Notification.permission;
+        if (perm !== "granted") {
+            perm = await requestPermission();
+            if (perm !== "granted") return false;
+        }
+
+        const browserSubscription = await getBrowserSubscription();
+        if (browserSubscription) {
+            await syncSubscriptionToBackend(browserSubscription);
+            return true;
+        }
+
+        await subscribeToPush();
+        return true;
+    }, [getBrowserSubscription, syncSubscriptionToBackend, subscribeToPush, requestPermission]);
+
     // Full unsubscribe (user turns off notifications in settings)
     const unsubscribeFromPush = useCallback(async () => {
         try {
@@ -240,6 +260,7 @@ export const useNotifications = () => {
         subscribeToPush,
         unsubscribeFromPush,
         deactivatePushOnLogout,
+        reactivatePushOnLogin,
         checkSubscription,
     };
 };
