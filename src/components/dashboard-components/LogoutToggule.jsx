@@ -35,7 +35,7 @@ export default function LogoutToggule() {
     setLoggingOut(true);
     try {
       try {
-        await deactivatePushOnLogout();
+        if (import.meta.env.VITE_NODE_ENV === "production") await deactivatePushOnLogout();
       } catch (error) {
         console.log("Error deactivating push on logout:", error);
       }
