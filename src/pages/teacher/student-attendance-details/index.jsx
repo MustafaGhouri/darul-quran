@@ -17,23 +17,20 @@ import {
 } from "@heroui/react";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import { useState, useMemo, useCallback } from "react";
-import { useSelector } from "react-redux";
-import { ArrowLeft, Clock, Calendar, BookOpen, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, BookOpen, AlertCircle, CheckCircle } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import CourseSelect from "../../../components/select/CourseSelect";
 import { useGetIndividualStudentAttendanceHistoryQuery } from "../../../redux/api/attendance";
 import { dateFormatter } from "../../../lib/utils";
 import { formatTime12Hour } from "../../../utils/scheduleHelpers";
-import { getLocalTimeZone, today } from "@internationalized/date";
 
 const StudentAttendanceDetails = () => {
     const { studentId } = useParams();
     const navigate = useNavigate();
-    const { user } = useSelector((state) => state.user);
 
     const [courseId, setCourseId] = useState('');
     const [dateRange, setDateRange] = useState(null);
-    const [selectedAttendance, setSelectedAttendance] = useState(null);
+    const [selectedDateGroup, setSelectedDateGroup] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Formatting date helper for API
@@ -45,7 +42,7 @@ const StudentAttendanceDetails = () => {
     const startDate = formatDateForApi(dateRange?.start);
     const endDate = formatDateForApi(dateRange?.end);
 
-    const { data, isLoading, isFetching } = useGetIndividualStudentAttendanceHistoryQuery({
+    const { data, isFetching } = useGetIndividualStudentAttendanceHistoryQuery({
         studentId,
         courseId,
         startDate,
@@ -62,8 +59,11 @@ const StudentAttendanceDetails = () => {
         let isLate = false;
         let isEarly = false;
 
-        if (item.status === 'Attended') {
+        const normalizedStatus = String(item.status || '').toLowerCase();
+
+        if (normalizedStatus === 'attended' || normalizedStatus === 'present') {
             statusColor = "success";
+            displayStatus = item.status || "Present";
 
             if (item.joinedAt && item.startTime) {
                 const joinedTime = new Date(item.joinedAt);
@@ -87,7 +87,8 @@ const StudentAttendanceDetails = () => {
             } else if (item.joinedAt) {
                 notes = `Joined at ${new Date(item.joinedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
             }
-        } else if (item.status === 'Missed') {
+        } else if (normalizedStatus === 'missed' || normalizedStatus === 'absent') {
+            displayStatus = item.status || "Missed";
             notes = "No attendance recorded";
         }
 
@@ -95,35 +96,63 @@ const StudentAttendanceDetails = () => {
     }, []);
 
     // Memoize grouped attendance by date for efficient rendering
-    const attendanceByDate = useMemo(() => {
-        const grouped = {};
+    const groupedAttendance = useMemo(() => {
+        const grouped = new Map();
+
         history.forEach((item) => {
             const dateKey = item.date.split('T')[0];
-            if (!grouped[dateKey]) {
-                grouped[dateKey] = [];
+
+            if (!grouped.has(dateKey)) {
+                grouped.set(dateKey, {
+                    dateKey,
+                    date: item.date,
+                    records: [],
+                });
             }
-            grouped[dateKey].push(item);
+
+            grouped.get(dateKey).records.push(item);
         });
-        return grouped;
+
+        return Array.from(grouped.values()).sort(
+            (a, b) => new Date(b.dateKey).getTime() - new Date(a.dateKey).getTime(),
+        );
     }, [history]);
 
+    const getSummaryStatus = useCallback((records) => {
+        const normalizedStatuses = records.map((record) => String(record.status || '').toLowerCase());
+        const presentCount = normalizedStatuses.filter((status) => status === 'present' || status === 'attended').length;
+        const missedCount = normalizedStatuses.filter((status) => status === 'missed' || status === 'absent').length;
+
+        if (records.length === 0) {
+            return { label: "No Records", color: "default" };
+        }
+
+        if (presentCount === records.length) {
+            return { label: "Present", color: "success" };
+        }
+
+        if (missedCount === records.length) {
+            return { label: "Missed", color: "danger" };
+        }
+
+        return { label: "Mixed", color: "warning" };
+    }, []);
+
     // Handle opening modal with attendance details
-    const handleViewDetails = (item) => {
-        setSelectedAttendance(item);
+    const handleViewDetails = (dateGroup) => {
+        setSelectedDateGroup(dateGroup);
         setIsModalOpen(true);
     };
 
-    // Render status chip for main table
-    const renderStatusChip = (item) => {
-        const { statusColor, displayStatus } = getAttendanceStatus(item);
+    const renderStatusChip = (status) => {
         return (
             <Chip
                 size="sm"
                 variant="flat"
-                color={statusColor}
+                color={status.color}
                 className="font-semibold px-2"
             >
-                {displayStatus}
+                {status.label}
             </Chip>
         );
     };
@@ -187,41 +216,43 @@ const StudentAttendanceDetails = () => {
                         <TableColumn>ACTIONS</TableColumn>
                     </TableHeader>
                     <TableBody
-                        items={history}
+                        items={groupedAttendance}
                         loadingState={isFetching ? 'loading' : 'idle'}
                         loadingContent={<Spinner color="success" size="lg" />}
                         emptyContent={"No attendance records found"}
                     >
-                        {(item) => (
-                            <TableRow key={`${item.date}-${item.scheduleId}`}>
+                        {(dateGroup) => {
+                            const summaryStatus = getSummaryStatus(dateGroup.records);
+
+                            return (
+                            <TableRow key={dateGroup.dateKey}>
                                 <TableCell className="text-gray-600 font-medium">
                                     <div className="flex items-center gap-2">
                                         <Calendar size={16} className="text-gray-400" />
-                                        {dateFormatter(item.date)}
+                                        {dateFormatter(dateGroup.date)}
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <Chip
-                                        size="sm"
-                                        variant="flat"
-                                        color={item.status === 'present' ? 'success' : 'danger'}
-                                        className="font-semibold px-2 capitalize"
-                                    >
-                                        {item.status}
-                                    </Chip>
+                                    <div className="flex items-center gap-2">
+                                        {renderStatusChip(summaryStatus)}
+                                        <span className="text-xs text-gray-500">
+                                            {dateGroup.records.length} record{dateGroup.records.length > 1 ? "s" : ""}
+                                        </span>
+                                    </div>
                                 </TableCell>
                                 <TableCell>
                                     <Button
                                         size="sm"
                                         variant="bordered"
                                         color="success"
-                                        onPress={() => handleViewDetails(item)}
+                                        onPress={() => handleViewDetails(dateGroup)}
                                     >
                                         View Details
                                     </Button>
                                 </TableCell>
                             </TableRow>
-                        )}
+                            );
+                        }}
                     </TableBody>
                 </Table>
             </div>
@@ -243,7 +274,7 @@ const StudentAttendanceDetails = () => {
                                 </div>
                             </ModalHeader>
                             <ModalBody>
-                                {selectedAttendance && (
+                                {selectedDateGroup && (
                                     <div className="space-y-4 py-2">
                                         {/* Date Section */}
                                         <div className="bg-gray-50 rounded-lg p-4">
@@ -252,140 +283,109 @@ const StudentAttendanceDetails = () => {
                                                 <span className="font-semibold text-gray-700">Date</span>
                                             </div>
                                             <p className="text-gray-600 ml-6">
-                                                {dateFormatter(selectedAttendance.date)}
+                                                {dateFormatter(selectedDateGroup.date)}
                                             </p>
                                         </div>
 
-                                        {/* Course Information */}
-                                        <div className="bg-gray-50 rounded-lg p-4">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <BookOpen size={18} className="text-[#06574C]" />
-                                                <span className="font-semibold text-gray-700">Course Information</span>
-                                            </div>
-                                            <div className="ml-6 space-y-1">
-                                                <p className="text-gray-800 font-medium">
-                                                    {selectedAttendance.courseName || "N/A"}
-                                                </p>
-                                                {selectedAttendance.courseId && (
-                                                    <p className="text-sm text-gray-500">
-                                                        Course ID: {selectedAttendance.courseId}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Schedule Information */}
-                                        <div className="bg-gray-50 rounded-lg p-4">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Clock size={18} className="text-[#06574C]" />
-                                                <span className="font-semibold text-gray-700">Schedule Details</span>
-                                            </div>
-                                            <div className="ml-6 space-y-2">
-                                                <p className="text-gray-800 font-medium">
-                                                    {selectedAttendance.title || "N/A"}
-                                                </p>
-                                                <div className="flex items-center gap-4 text-sm text-gray-600">
-                                                    <span className="flex items-center gap-1">
-                                                        <Clock size={14} />
-                                                        Start: {formatTime12Hour(selectedAttendance.startTime)}
+                                        {selectedDateGroup.records.map((attendance, index) => (
+                                            <div key={`${attendance.scheduleId || index}-${attendance.joinedAt || attendance.date}`} className="rounded-lg border border-gray-100 bg-white p-4 shadow-sm">
+                                                <div className="mb-4 flex items-center justify-between gap-3">
+                                                    <span className="font-semibold text-gray-800">
+                                                        Record {index + 1}
                                                     </span>
-                                                    <span className="flex items-center gap-1">
-                                                        <Clock size={14} />
-                                                        End: {formatTime12Hour(selectedAttendance.endTime)}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Attendance Status */}
-                                        <div className="bg-gray-50 rounded-lg p-4">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <CheckCircle size={18} className="text-[#06574C]" />
-                                                <span className="font-semibold text-gray-700">Attendance Status</span>
-                                            </div>
-                                            <div className="ml-6 space-y-2">
-                                                <div className="flex items-center gap-3">
                                                     <Chip
                                                         size="sm"
                                                         variant="flat"
-                                                        color={selectedAttendance.status === 'present' ? 'success' : 'danger'}
+                                                        color={String(attendance.status || '').toLowerCase() === 'present' || String(attendance.status || '').toLowerCase() === 'attended' ? 'success' : 'danger'}
                                                         className="font-semibold px-2 capitalize"
                                                     >
-                                                        {selectedAttendance.status}
+                                                        {attendance.status}
                                                     </Chip>
                                                 </div>
-                                                {selectedAttendance.joinedAt && (
+
+                                                {/* Course Information */}
+                                                <div className="mb-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <BookOpen size={18} className="text-[#06574C]" />
+                                                        <span className="font-semibold text-gray-700">Course Information</span>
+                                                    </div>
+                                                    <div className="ml-6 space-y-1">
+                                                        <p className="text-gray-800 font-medium">
+                                                            {attendance.courseName || "N/A"}
+                                                        </p>
+                                                        {attendance.courseId && (
+                                                            <p className="text-sm text-gray-500">
+                                                                Course ID: {attendance.courseId}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Schedule Information */}
+                                                <div className="mb-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <Clock size={18} className="text-[#06574C]" />
+                                                        <span className="font-semibold text-gray-700">Schedule Details</span>
+                                                    </div>
+                                                    <div className="ml-6 space-y-2">
+                                                        <p className="text-gray-800 font-medium">
+                                                            {attendance.title || "N/A"}
+                                                        </p>
+                                                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                                            <span className="flex items-center gap-1">
+                                                                <Clock size={14} />
+                                                                Start: {formatTime12Hour(attendance.startTime)}
+                                                            </span>
+                                                            <span className="flex items-center gap-1">
+                                                                <Clock size={14} />
+                                                                End: {formatTime12Hour(attendance.endTime)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Attendance Status */}
+                                                <div className="mb-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <CheckCircle size={18} className="text-[#06574C]" />
+                                                        <span className="font-semibold text-gray-700">Attendance Status</span>
+                                                    </div>
+                                                    <div className="ml-6 space-y-2">
+                                                {attendance.joinedAt && (
                                                     <p className="text-sm text-gray-600">
                                                         <span className="font-medium">Joined at:</span>{" "}
-                                                        {new Date(selectedAttendance.joinedAt).toLocaleTimeString([], {
+                                                        {new Date(attendance.joinedAt).toLocaleTimeString([], {
                                                             hour: '2-digit',
                                                             minute: '2-digit',
                                                             hour12: true
                                                         })}
                                                     </p>
                                                 )}
-                                                {selectedAttendance.leftAt && (
+                                                {attendance.leftAt && (
                                                     <p className="text-sm text-gray-600">
                                                         <span className="font-medium">Left at:</span>{" "}
-                                                        {new Date(selectedAttendance.leftAt).toLocaleTimeString([], {
+                                                        {new Date(attendance.leftAt).toLocaleTimeString([], {
                                                             hour: '2-digit',
                                                             minute: '2-digit',
                                                             hour12: true
                                                         })}
                                                     </p>
                                                 )}
-                                            </div>
-                                        </div>
-
-                                        {/* Late/Early Analysis */}
-                                        {selectedAttendance.status === 'Attended' && selectedAttendance.joinedAt && (
-                                            <div className="bg-gray-50 rounded-lg p-4">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <AlertCircle size={18} className="text-[#06574C]" />
-                                                    <span className="font-semibold text-gray-700">Timing Analysis</span>
+                                                    </div>
                                                 </div>
-                                                <div className="ml-6 space-y-2">
-                                                    {getAttendanceStatus(selectedAttendance).isLate && (
-                                                        <div className="flex items-start gap-2">
-                                                            <XCircle size={16} className="text-orange-500 mt-0.5" />
-                                                            <p className="text-sm text-gray-700">
-                                                                <span className="font-medium text-orange-600">Late Arrival:</span>{" "}
-                                                                Joined 15+ minutes after scheduled start time
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                    {getAttendanceStatus(selectedAttendance).isEarly && (
-                                                        <div className="flex items-start gap-2">
-                                                            <CheckCircle size={16} className="text-green-500 mt-0.5" />
-                                                            <p className="text-sm text-gray-700">
-                                                                <span className="font-medium text-green-600">Early Arrival:</span>{" "}
-                                                                Joined before scheduled start time
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                    {!getAttendanceStatus(selectedAttendance).isLate && !getAttendanceStatus(selectedAttendance).isEarly && (
-                                                        <div className="flex items-start gap-2">
-                                                            <CheckCircle size={16} className="text-green-500 mt-0.5" />
-                                                            <p className="text-sm text-gray-700">
-                                                                <span className="font-medium text-green-600">On Time:</span>{" "}
-                                                                Joined within the grace period
-                                                            </p>
-                                                        </div>
-                                                    )}
+
+                                                {/* Notes */}
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <AlertCircle size={18} className="text-[#06574C]" />
+                                                        <span className="font-semibold text-gray-700">Notes</span>
+                                                    </div>
+                                                    <p className="text-gray-600 ml-6 italic">
+                                                        {getAttendanceStatus(attendance).notes}
+                                                    </p>
                                                 </div>
                                             </div>
-                                        )}
-
-                                        {/* Notes */}
-                                        <div className="bg-gray-50 rounded-lg p-4">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <AlertCircle size={18} className="text-[#06574C]" />
-                                                <span className="font-semibold text-gray-700">Notes</span>
-                                            </div>
-                                            <p className="text-gray-600 ml-6 italic">
-                                                {getAttendanceStatus(selectedAttendance).notes}
-                                            </p>
-                                        </div>
+                                        ))}
                                     </div>
                                 )}
                             </ModalBody>
