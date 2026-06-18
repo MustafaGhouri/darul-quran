@@ -903,9 +903,9 @@ export default function ChatInterface({
               <p className="text-sm text-gray-500 mb-1">To</p>
               <p className="text-sm font-medium text-gray-800">
                 {displayUser?.name || "Student"}
-                {displayUser?.email ? (
+                {/* {displayUser?.email ? (
                   <span className="text-gray-500 font-normal"> ({displayUser.email})</span>
-                ) : null}
+                ) : null} */}
               </p>
             </div>
             <Textarea
