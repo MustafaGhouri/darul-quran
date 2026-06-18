@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { messages as mockMessages } from "../../lib/constants";
 import { FiMoreVertical, FiXCircle, FiPhone, FiBellOff, FiUserX, FiFlag, FiEye, FiLock } from "react-icons/fi";
-import { Popover, PopoverContent, PopoverTrigger, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, addToast } from "@heroui/react";
+import { Popover, PopoverContent, PopoverTrigger, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Textarea, addToast } from "@heroui/react";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -60,6 +60,9 @@ export default function ChatInterface({
   const [restrictModalOpen, setRestrictModalOpen] = useState(false);
   const [restricting, setRestricting] = useState(false);
   const [chatRestricted, setChatRestricted] = useState(isRestricted);
+  const [lateEmailModalOpen, setLateEmailModalOpen] = useState(false);
+  const [lateEmailMessage, setLateEmailMessage] = useState("");
+  const [sendingLateEmail, setSendingLateEmail] = useState(false);
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
   const messagesTopRef = useRef(null);
@@ -504,6 +507,64 @@ export default function ChatInterface({
     if (el.scrollTop < 80 && hasMoreOlder && !loadingOlder) loadOlderMessages();
   };
 
+  const buildLateEmailMessage = () => {
+    const studentFirstName = (displayUser?.name || "Student").split(" ")[0];
+    const teacherName = [currentUser?.firstName, currentUser?.lastName].filter(Boolean).join(" ").trim() || "Your teacher";
+    return `Dear ${studentFirstName},\n\nYou are late for the class. Please join as soon as possible.\n\nRegards,\n${teacherName}`;
+  };
+
+  const handleOpenLateEmailModal = () => {
+    setLateEmailMessage(buildLateEmailMessage());
+    setLateEmailModalOpen(true);
+  };
+
+  const handleSendLateEmail = async () => {
+    if (!otherUser?.id || !lateEmailMessage.trim()) {
+      addToast({ title: "Message is required", color: "warning", placement: "bottom-right" });
+      return;
+    }
+
+    setSendingLateEmail(true);
+    try {
+      const finalToken = localStorage.getItem("token");
+      const headers = { "Content-Type": "application/json" };
+      if (finalToken) headers["Authorization"] = `Bearer ${finalToken}`;
+
+      const res = await fetch(`${API}/api/chat/send-student-email`, {
+        method: "POST",
+        credentials: "include",
+        headers,
+        body: JSON.stringify({
+          studentId: otherUser.id,
+          message: lateEmailMessage.trim(),
+          chatId: chatId ?? undefined,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to send email");
+      }
+
+      addToast({ title: "Email sent successfully", color: "success", placement: "bottom-right" });
+      setLateEmailModalOpen(false);
+    } catch (error) {
+      addToast({
+        title: error.message || "Failed to send email",
+        color: "danger",
+        placement: "bottom-right",
+      });
+    } finally {
+      setSendingLateEmail(false);
+    }
+  };
+
+  const showEmailButton =
+    isRealChat &&
+    !isAdminView &&
+    currentUser?.role === "teacher" &&
+    otherUser?.role === "student";
+
   const showInputArea = showInput && !adminViewMode && (isRealChat || !isTeacherAndStudent);
 
   return (
@@ -834,6 +895,45 @@ export default function ChatInterface({
         </Modal>
       ) : null}
 
+      <Modal isOpen={lateEmailModalOpen} onOpenChange={setLateEmailModalOpen} size="lg">
+        <ModalContent>
+          <ModalHeader>Send Late-Class Email</ModalHeader>
+          <ModalBody className="gap-4">
+            <div>
+              <p className="text-sm text-gray-500 mb-1">To</p>
+              <p className="text-sm font-medium text-gray-800">
+                {displayUser?.name || "Student"}
+                {displayUser?.email ? (
+                  <span className="text-gray-500 font-normal"> ({displayUser.email})</span>
+                ) : null}
+              </p>
+            </div>
+            <Textarea
+              label="Message"
+              value={lateEmailMessage}
+              onValueChange={setLateEmailMessage}
+              minRows={6}
+              maxRows={12}
+              placeholder="Write your message..."
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="light" onPress={() => setLateEmailModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              className="bg-teal-600 text-white"
+              isLoading={sendingLateEmail}
+              onPress={handleSendLateEmail}
+              isDisabled={!lateEmailMessage.trim()}
+            >
+              Send Email
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
       {showInputArea && (
         <div className="sticky bottom-0 left-0 right-0 bg-[#d2ebe5] px-4 py-1 border-t border-gray-300 shadow-lg z-10">
           <ChatInput
@@ -846,6 +946,8 @@ export default function ChatInterface({
             onSend={sendMessage}
             sending={sending}
             disabled={legacyChat?.isBlocked}
+            showEmailButton={showEmailButton}
+            onEmailClick={handleOpenLateEmailModal}
             onInvalidFile={() =>
               addToast({
                 title: "Only images and videos are allowed",

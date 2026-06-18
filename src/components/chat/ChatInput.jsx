@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Paperclip, Send } from "lucide-react";
+import { useRef } from "react";
+import { Mail, Paperclip, Send } from "lucide-react";
 import AttachmentPreview from "./AttachmentPreview";
 
 /**
@@ -18,6 +18,8 @@ export default function ChatInput({
   sending,
   disabled,
   onInvalidFile,
+  showEmailButton = false,
+  onEmailClick,
 }) {
   const fileInputRef = useRef(null);
   const hasReadyAttachment = attachedAttachment && "url" in attachedAttachment && !attachedAttachment.uploading;
@@ -72,6 +74,17 @@ export default function ChatInput({
           disabled={disabled}
           className="flex-1 min-w-0 py-2 text-sm bg-transparent border-none outline-none placeholder-gray-400"
         />
+        {showEmailButton && (
+          <button
+            type="button"
+            className="p-2 rounded-full bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+            onClick={onEmailClick}
+            disabled={disabled}
+            aria-label="Send email to student"
+          >
+            <Mail className="text-white" size={20} />
+          </button>
+        )}
         <button
           type="button"
           onClick={()=>onSend(attachedAttachment?.file)}
