@@ -14,6 +14,7 @@ import { paymentApi } from "./api/payments";
 import { cancellationApi } from "./api/cancellation";
 import { analyticsApi } from "./api/analytics";
 import { faqAPI } from "./api/faq";
+import { testimonalAPI } from "./api/testimonals";
 import chatReducer from "./reducers/chat";
 
 
@@ -31,7 +32,8 @@ export const apiRegistry = {
   paymentApi,
   cancellationApi,
   analyticsApi,
-  faqAPI
+  faqAPI,
+  testimonalAPI
 };
 export const store = configureStore({
   reducer: {
@@ -49,6 +51,7 @@ export const store = configureStore({
     [cancellationApi.reducerPath]: cancellationApi.reducer,
     [analyticsApi.reducerPath]: analyticsApi.reducer,
     [faqAPI.reducerPath]: faqAPI.reducer,
+    [testimonalAPI.reducerPath]: testimonalAPI.reducer,
     user: userReducer,
     chat: chatReducer,
   },
@@ -68,6 +71,7 @@ export const store = configureStore({
     cancellationApi.middleware,
     analyticsApi.middleware,
     faqAPI.middleware,
+    testimonalAPI.middleware,
   ],
 });
 

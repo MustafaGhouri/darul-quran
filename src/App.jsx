@@ -140,6 +140,7 @@ const TeacherAndStudentChat = lazy(() =>
 );
 const Review = lazy(() => import("./pages/admin/help/review"));
 const Faqs = lazy(() => import("./pages/admin/help/faqs"));
+const Testimonials = lazy(() => import("./pages/testimonials"));
 import { io } from "socket.io-client";
 import AttendanceList from "./pages/student/attendance-list";
 import { BiChat, BiPaperclip } from "react-icons/bi";
@@ -526,6 +527,14 @@ function App() {
               }
             />
             <Route
+              path="/admin/testimonials"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <Testimonials />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/help/messages/:chatId?"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
@@ -671,6 +680,14 @@ function App() {
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <TeacherFaqs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/testimonials"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <Testimonials />
                 </ProtectedRoute>
               }
             />

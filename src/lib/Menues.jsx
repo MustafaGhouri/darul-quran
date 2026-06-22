@@ -104,6 +104,12 @@ export const adminMenu = [
     link: "/admin/analytics",
     value: "analytics",
   },
+  {
+    name: "Testimonials",
+    icon: <MessageSquare />,
+    link: "/admin/testimonials",
+    value: "testimonials",
+  },
   // {
   //   name: "Notifications",
   //   icon: <BellRing />,
@@ -228,6 +234,7 @@ export const teacherMenu = [
       { name: "FAQs", link: "/teacher/faqs" },
     ],
   },
+  { name: "Testimonials", icon: <MessageSquare />, link: "/teacher/testimonials" },
   // { name: 'Announcements', icon: <MegaphoneIcon />, link: '/teacher/announcements' },
   // { name: 'Notifications', icon: <BellRing />, link: '/teacher/notifications' },
   // { name: 'FAQs', icon: <FileQuestionIcon />, link: '/teacher/faqs' },
