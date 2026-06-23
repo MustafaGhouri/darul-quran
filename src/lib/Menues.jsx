@@ -16,6 +16,7 @@ import {
   MessageSquare,
   MessageCircleMore,
   UserIcon,
+  CalendarDaysIcon,
 } from "lucide-react";
 import { RiProgress3Line } from "react-icons/ri";
 import { IoBook } from "react-icons/io5";
@@ -109,6 +110,19 @@ export const adminMenu = [
     icon: <MessageSquare />,
     link: "/admin/testimonials",
     value: "testimonials",
+  },
+  {
+    name: "Events & Retreats",
+    icon: <CalendarDaysIcon />,
+    link: "/admin/events-retreats",
+    value: "events-retreats",
+    children: [
+      {
+        name: "Add Events & Retreats",
+        link: "/admin/events-retreats/manage",
+        value: "add-events-retreats",
+      },
+    ],
   },
   // {
   //   name: "Notifications",
@@ -234,7 +248,7 @@ export const teacherMenu = [
       { name: "FAQs", link: "/teacher/faqs" },
     ],
   },
-  { name: "Testimonials", icon: <MessageSquare />, link: "/teacher/testimonials" },
+  // { name: "Testimonials", icon: <MessageSquare />, link: "/teacher/testimonials" },
   // { name: 'Announcements', icon: <MegaphoneIcon />, link: '/teacher/announcements' },
   // { name: 'Notifications', icon: <BellRing />, link: '/teacher/notifications' },
   // { name: 'FAQs', icon: <FileQuestionIcon />, link: '/teacher/faqs' },

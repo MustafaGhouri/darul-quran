@@ -296,6 +296,8 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
     { label: "Payments & Refunds", value: "/admin/payments" },
     { label: "Support", value: "/admin/tickets" },
     { label: "Analytics", value: "/admin/analytics" },
+    { label: "All Events & Retreats", value: "/admin/events-retreats" },
+    { label: "Add/Edit Events & Retreats", value: "/admin/events-retreats/manage" },
     { label: "Notifications", value: "/admin/notifications" },
     // { label: "Help and Support", value: "/admin/help/messages" },
     { label: "Message Center Or Chat", value: "/admin/help/messages" },

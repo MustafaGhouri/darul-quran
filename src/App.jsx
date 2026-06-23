@@ -141,6 +141,8 @@ const TeacherAndStudentChat = lazy(() =>
 const Review = lazy(() => import("./pages/admin/help/review"));
 const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 const Testimonials = lazy(() => import("./pages/testimonials"));
+const EventsRetreats = lazy(() => import("./pages/admin/events-retreats"));
+const EventRetreatManage = lazy(() => import("./pages/admin/events-retreats/manage"));
 import { io } from "socket.io-client";
 import AttendanceList from "./pages/student/attendance-list";
 import { BiChat, BiPaperclip } from "react-icons/bi";
@@ -531,6 +533,22 @@ function App() {
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <Testimonials />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/events-retreats"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <EventsRetreats />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/events-retreats/manage/:id?"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <EventRetreatManage />
                 </ProtectedRoute>
               }
             />

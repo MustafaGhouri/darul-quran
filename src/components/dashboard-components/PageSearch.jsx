@@ -17,6 +17,8 @@ const pageDescriptions = {
   "/admin/attendance-list": "Student attendance list and tracking",
   "/admin/payments": "Manage payments, subscriptions and refunds",
   "/admin/analytics": "View analytics and reports",
+  "/admin/events-retreats": "View and manage events and retreats",
+  "/admin/events-retreats/manage": "Add or edit events and retreats",
   "/admin/notifications": "Manage system notifications",
   "/admin/announcements": "Create and manage announcements",
   "/admin/profile": "View and edit your profile",
