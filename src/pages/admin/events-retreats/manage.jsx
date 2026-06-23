@@ -6,6 +6,7 @@ import {
   Select,
   SelectItem,
   Spinner,
+  Switch,
   Textarea,
 } from "@heroui/react";
 import { FiArrowLeft, FiSave } from "react-icons/fi";
@@ -31,6 +32,7 @@ const initialFormData = {
   seats: "",
   link: "",
   linkType: "registration",
+  isfeatured: false,
 };
 
 const linkTypes = [
@@ -66,6 +68,7 @@ const EventRetreatManage = () => {
       seats: String(data.data.seats ?? ""),
       link: data.data.link || "",
       linkType: data.data.linkType || "registration",
+      isfeatured: Boolean(data.data.isfeatured),
     });
     setImageFiles(data.data.image ? [data.data.image] : []);
   }, [data]);
@@ -146,7 +149,7 @@ const EventRetreatManage = () => {
         onSubmit={handleSubmit}
         className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 space-y-5"
       >
-        <div className="grid grid-cols-1  gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 items-center justify-center gap-5">
           <Input
             label="Title"
             placeholder="Enter event or retreat title"
@@ -156,7 +159,18 @@ const EventRetreatManage = () => {
             onChange={(e) => updateField("title", e.target.value)}
             isRequired
           />
-          <FileDropzone
+          <Switch
+            radius="sm"
+            color="success"
+            className="mt-3"
+            isSelected={formData.isfeatured}
+            onValueChange={(value) => updateField("isfeatured", value)}
+          >
+            {formData.isfeatured ? "Featured" : "Not Featured"}
+          </Switch>
+        </div>
+          <div>
+            <FileDropzone
             label="Upload Event Image"
             text="PNG, JPG or WEBP"
             files={imageFiles}
@@ -167,8 +181,7 @@ const EventRetreatManage = () => {
             height="120px"
             showFilesNamesThere={false}
           />
-        </div>
-
+          </div>
         <Textarea
           label="Description"
           placeholder="Add details about the event or retreat"

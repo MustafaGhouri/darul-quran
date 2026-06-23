@@ -79,6 +79,7 @@ const EventsRetreats = () => {
               <TableColumn>Location</TableColumn>
               <TableColumn>Seats</TableColumn>
               <TableColumn>Link Type</TableColumn>
+              <TableColumn>Featured</TableColumn>
               <TableColumn align="end">Actions</TableColumn>
             </TableHeader>
             <TableBody items={events}>
@@ -116,6 +117,15 @@ const EventsRetreats = () => {
                   <TableCell>
                     <Chip size="sm" variant="flat" color="success" className="capitalize">
                       {item.linkType || "registration"}
+                    </Chip>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      color={item.isfeatured ? "success" : "default"}
+                    >
+                      {item.isfeatured ? "Featured" : "No"}
                     </Chip>
                   </TableCell>
                   <TableCell>
