@@ -61,6 +61,7 @@ import {
   getScheduleStart,
   getScheduleEnd,
   formatTime24,
+  isScheduleDateCancelled,
 } from "../../../utils/scheduleHelpers";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -68,6 +69,7 @@ import { canReschedule, dateFormatter } from "../../../lib/utils";
 import QueryError from "../../../components/QueryError";
 import { groupAndSortSchedulesByDate } from "../../../utils/scheduleHelpers";
 import SchedulesByDateList from "../../../components/schedule/SchedulesByDateList";
+import CancelSpecificDatesModal from "../../../components/schedule/CancelSpecificDatesModal";
 
 const TeacherClassSheduling = () => {
   const navigate = useNavigate();
@@ -108,6 +110,7 @@ const TeacherClassSheduling = () => {
 
   // Quick Reschedule state
   const [isQuickRescheduleModalOpen, setIsQuickRescheduleModalOpen] = useState(false);
+  const [isCancelSpecificDatesModalOpen, setIsCancelSpecificDatesModalOpen] = useState(false);
   const [quickRescheduleData, setQuickRescheduleData] = useState({
     date: "",
     startTime: "",
@@ -244,6 +247,11 @@ const TeacherClassSheduling = () => {
   const handleCancelClass = (schedule) => {
     setSelectedSchedule(schedule);
     onOpenChange(true);
+  };
+
+  const handleCancelSpecificDates = (schedule) => {
+    setSelectedSchedule(schedule);
+    setIsCancelSpecificDatesModalOpen(true);
   };
 
   const handleAddNote = (schedule, date) => {
@@ -452,7 +460,15 @@ const TeacherClassSheduling = () => {
     openDateModal();
   };
 
-  const getClassStatusBadge = (schedule, type = "single") => {
+  const getClassStatusBadge = (schedule, type = "single", isCancelled = false) => {
+    if (isCancelled) {
+      return (
+        <Chip size="sm" variant="solid" color="danger" className="font-semibold">
+          Cancelled
+        </Chip>
+      );
+    }
+
     let status = "";
     let hoursUntil = null;
     let isExpired = false;
@@ -533,13 +549,33 @@ const TeacherClassSheduling = () => {
       type === "normal" ? "multiple" : "single",
     );
     const isExpired = isClassExpired(schedule);
-    const canJoin = isLive && schedule.meetingLink;
+    const isCancelled = isScheduleDateCancelled(
+      schedule,
+      type !== "normal" ? schedule.date : null,
+    );
+    const canJoin = isLive && schedule.meetingLink && !isCancelled;
+    const cardDateKey = type !== "normal" ? schedule.date : null;
+    const cancelledDates = schedule.cancelSpecific || schedule.cancel_specific || [];
+
     return (
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 mb-3 hover:shadow-md transition-shadow relative">
+      <div
+        className={`p-4 rounded-lg mb-3 relative transition-shadow ${
+          isCancelled
+            ? "bg-red-50/90 border-2 border-dashed border-red-300 shadow-none"
+            : "bg-white border border-gray-100 shadow-sm hover:shadow-md"
+        }`}
+      >
+        {isCancelled && (
+          <div className="mb-3 px-3 py-2 bg-red-100 border border-red-200 rounded-md text-red-800 text-sm font-medium">
+            This class date has been cancelled. Students will not see it on their schedule.
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-2 mb-3">
           {getClassStatusBadge(
             schedule,
             type === "normal" ? "multiple" : "single",
+            isCancelled,
           )}
           {schedule.courseName && (
             <Button
@@ -560,13 +596,30 @@ const TeacherClassSheduling = () => {
           </Button>
         </div>
 
-        <h2 className="text-xl font-bold text-gray-800 mb-2">
+        <h2 className={`text-xl font-bold mb-2 ${isCancelled ? "text-gray-500 line-through decoration-red-400" : "text-gray-800"}`}>
           {schedule.title}
         </h2>
         {schedule.description && (
-          <p className="text-[#666666] text-sm mb-4 line-clamp-2">
+          <p className={`text-sm mb-4 line-clamp-2 ${isCancelled ? "text-gray-400 line-through" : "text-[#666666]"}`}>
             {schedule.description}
           </p>
+        )}
+        {type === "normal" && cancelledDates.length > 0 && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm font-semibold text-red-700 mb-2">
+              {cancelledDates.length} cancelled date{cancelledDates.length > 1 ? "s" : ""}:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {cancelledDates.map((dateKey) => (
+                <Chip key={dateKey} size="sm" color="danger" variant="flat">
+                  {dateFormatter(dateKey)}
+                </Chip>
+              ))}
+            </div>
+            <p className="text-xs text-red-600 mt-2">
+              Switch to &quot;View Schedule By Date&quot; to see cancelled dates in context.
+            </p>
+          </div>
         )}
         {type === "normal" && (
           <p className="text-[#666666] text-sm mb-4 line-clamp-2">
@@ -588,10 +641,10 @@ const TeacherClassSheduling = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Clock color="#666666" size={18} />
-            <p className="text-[#666666] text-md">
-              {formatTime12Hour(getScheduleStart(schedule))} -{" "}
-              {formatTime12Hour(getScheduleEnd(schedule))}  {""}
+            <Clock color={isCancelled ? "#dc2626" : "#666666"} size={18} />
+            <p className={`text-md ${isCancelled ? "text-gray-400 line-through" : "text-[#666666]"}`}>
+              {formatTime12Hour(getScheduleStart(schedule, cardDateKey))} -{" "}
+              {formatTime12Hour(getScheduleEnd(schedule, cardDateKey))}  {""}
               - Scheduled days timings
             </p>
           </div>
@@ -633,7 +686,7 @@ const TeacherClassSheduling = () => {
         <Divider className="my-4" />
 
         <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <div className="h-12 w-12 flex items-center justify-center bg-[#95C4BE33] rounded-full shrink-0">
               <FaRegAddressCard color="#06574C" size={24} />
             </div>
@@ -646,8 +699,19 @@ const TeacherClassSheduling = () => {
               )}
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 justify-start md:justify-end w-full md:w-auto md:max-w-2xl">
-            {canJoin ? (
+          <div className="flex flex-wrap gap-2 justify-start md:justify-end w-full md:w-auto">
+            {isCancelled ? (
+              <Button
+                radius="sm"
+                size="sm"
+                variant="flat"
+                color="danger"
+                isDisabled
+                className="font-semibold"
+              >
+                Class Cancelled
+              </Button>
+            ) : canJoin ? (
               <Button
                 radius="sm"
                 size="sm"
@@ -669,7 +733,6 @@ const TeacherClassSheduling = () => {
               >
                 <span>
                   <Button
-
                     radius="sm"
                     size="sm"
                     variant="solid"
@@ -682,10 +745,35 @@ const TeacherClassSheduling = () => {
                 </span>
               </Tooltip>
             )}
-            <>
-              <div className="md:absolute top-5 right-5">
+            {!isCancelled && (
+              <>
+                <div className="md:absolute top-5 right-5">
+                  <Tooltip
+                    isDisabled={canReschedule(schedule, cardDateKey)}
+                    color="success"
+                    content="Schedule can only be rescheduled before 4 hours of the start time."
+                  >
+                    <span>
+                      <Button
+                        radius="sm"
+                        size="sm"
+                        variant="bordered"
+                        color="success"
+                        onPress={() => {
+                          if (!canReschedule(schedule, cardDateKey)) {
+                            errorMessage("You can only reschedule a class before 4 hours of the start time.");
+                            return;
+                          }
+                          navigate("/teacher/class-scheduling/manage", { state: schedule });
+                        }}
+                      >
+                        Manage Reschedule
+                      </Button>
+                    </span>
+                  </Tooltip>
+                </div>
                 <Tooltip
-                  isDisabled={canReschedule(schedule, (type !== "normal" ? schedule.date : null))}
+                  isDisabled={canReschedule(schedule, cardDateKey)}
                   color="success"
                   content="Schedule can only be rescheduled before 4 hours of the start time."
                 >
@@ -695,101 +783,82 @@ const TeacherClassSheduling = () => {
                       size="sm"
                       variant="bordered"
                       color="success"
-                      // isDisabled={!canReschedule(schedule)}
                       onPress={() => {
-                        if (!canReschedule(schedule, (type !== "normal" ? schedule.date : null))) {
-                          errorMessage("You can only reschedule a class before 4 hours of the start time.")
-                          return
+                        if (!canReschedule(schedule, cardDateKey)) {
+                          errorMessage("You can only reschedule a class before 4 hours of the start time.");
+                          return;
                         }
-                        navigate("/teacher/class-scheduling/manage", {
-                          state: schedule,
-                        })
+                        handleQuickRescheduleClick(schedule, cardDateKey || undefined);
                       }}
                     >
-                      Manage Reschedule
+                      Quick Reschedule
                     </Button>
                   </span>
                 </Tooltip>
-              </div>
-              <Tooltip
-                isDisabled={canReschedule(schedule, (type !== "normal" ? schedule.date : null))}
-                color="success"
-                content="Schedule can only be rescheduled before 4 hours of the start time."
-              >
-                <span>
-                  <Button
-                    radius="sm"
-                    size="sm"
-                    variant="bordered"
-                    color="success"
-                    // isDisabled={!canReschedule(schedule)}
-                    onPress={() => {
-                      if (!canReschedule(schedule, (type !== "normal" ? schedule.date : null))) {
-                        errorMessage("You can only reschedule a class before 4 hours of the start time.")
-                        return
-                      }
-                      handleQuickRescheduleClick(schedule, (type !== "normal" ? schedule.date : undefined))
-                    }
-                    }
-                  >
-                    Quick Reschedule
-                  </Button>
-                </span>
-              </Tooltip>
-              <Button
-                radius="sm"
-                size="sm"
-                variant="bordered"
-                color="warning"
-                onPress={() => handleViewRescheduleRequests(schedule)}
-                startContent={
-                  <div className="relative">
-                    <Bell size={16} />
-                    {schedule.pendingRescheduleCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-                        {schedule.pendingRescheduleCount}
-                      </span>
-                    )}
-                  </div>
-                }
-              >
-                View Requests
-                {schedule.pendingRescheduleCount > 0 && (
-                  <span className="ml-1">({schedule.pendingRescheduleCount})</span>
-                )}
-              </Button>
-              <Button
-                radius="sm"
-                size="sm"
-                variant="bordered"
-                color="danger"
-                onPress={() => handleViewCancellationRequests(schedule)}
-                startContent={
-                  <div className="relative">
-                    <Bell size={16} />
-                    {schedule.pendingCancellationCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-                        {schedule.pendingCancellationCount}
-                      </span>
-                    )}
-                  </div>
-                }
-              >
-                View Cancellations
-                {schedule.pendingCancellationCount > 0 && (
-                  <span className="ml-1">({schedule.pendingCancellationCount})</span>
-                )}
-              </Button>
-              <Button
-                radius="sm"
-                size="sm"
-                variant="bordered"
-                color="danger"
-                onPress={() => handleCancelClass(schedule)}
-              >
-                Cancel
-              </Button>
-            </>
+                <Button
+                  radius="sm"
+                  size="sm"
+                  variant="bordered"
+                  color="warning"
+                  onPress={() => handleViewRescheduleRequests(schedule)}
+                  startContent={
+                    <div className="relative">
+                      <Bell size={16} />
+                      {schedule.pendingRescheduleCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                          {schedule.pendingRescheduleCount}
+                        </span>
+                      )}
+                    </div>
+                  }
+                >
+                  View Requests
+                  {schedule.pendingRescheduleCount > 0 && (
+                    <span className="ml-1">({schedule.pendingRescheduleCount})</span>
+                  )}
+                </Button>
+                <Button
+                  radius="sm"
+                  size="sm"
+                  variant="bordered"
+                  color="danger"
+                  onPress={() => handleViewCancellationRequests(schedule)}
+                  startContent={
+                    <div className="relative">
+                      <Bell size={16} />
+                      {schedule.pendingCancellationCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                          {schedule.pendingCancellationCount}
+                        </span>
+                      )}
+                    </div>
+                  }
+                >
+                  View Cancellations
+                  {schedule.pendingCancellationCount > 0 && (
+                    <span className="ml-1">({schedule.pendingCancellationCount})</span>
+                  )}
+                </Button>
+                <Button
+                  radius="sm"
+                  size="sm"
+                  variant="bordered"
+                  color="danger"
+                  onPress={() => handleCancelSpecificDates(schedule)}
+                >
+                  Cancel Specific Dates
+                </Button>
+                <Button
+                  radius="sm"
+                  size="sm"
+                  variant="bordered"
+                  color="danger"
+                  onPress={() => handleCancelClass(schedule)}
+                >
+                  Cancel
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -970,13 +1039,24 @@ const TeacherClassSheduling = () => {
               </div>
             ) : (
               <div className="flex flex-col gap-4">
-                {schedulesForSelectedDate.map((schedule) => (
+                {schedulesForSelectedDate.map((schedule) => {
+                  const dateCancelled = isScheduleDateCancelled(schedule, schedule.date);
+                  return (
                   <div
                     key={schedule.id}
-                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    className={`rounded-lg p-4 transition-shadow ${
+                      dateCancelled
+                        ? "bg-red-50/90 border-2 border-dashed border-red-300"
+                        : "bg-white border border-gray-200 hover:shadow-md"
+                    }`}
                   >
+                    {dateCancelled && (
+                      <div className="mb-3 px-3 py-2 bg-red-100 border border-red-200 rounded-md text-red-800 text-sm font-medium">
+                        This class date has been cancelled.
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {getClassStatusBadge(schedule, "single")}
+                      {getClassStatusBadge(schedule, "single", dateCancelled)}
                       {schedule.courseName && (
                         <Chip
                           size="sm"
@@ -994,6 +1074,7 @@ const TeacherClassSheduling = () => {
                       >
                         {schedule?.notes?.[schedule.date] ? "Update Note" : "Add Note"}
                       </Button>
+                      {!dateCancelled && (
                       <Button
                         size="sm"
                         color="primary"
@@ -1003,13 +1084,14 @@ const TeacherClassSheduling = () => {
                       >
                         Quick Reschedule
                       </Button>
+                      )}
                     </div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">
+                    <h3 className={`text-lg font-bold mb-2 ${dateCancelled ? "text-gray-500 line-through decoration-red-400" : "text-gray-800"}`}>
                       {schedule.title}
                     </h3>
 
                     {schedule.description && (
-                      <p className="text-gray-600 text-sm mb-3">
+                      <p className={`text-sm mb-3 ${dateCancelled ? "text-gray-400 line-through" : "text-gray-600"}`}>
                         {schedule.description}
                       </p>
                     )}
@@ -1068,7 +1150,8 @@ const TeacherClassSheduling = () => {
 
                     <Divider className="my-3" />
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ModalBody>
@@ -1740,6 +1823,16 @@ const TeacherClassSheduling = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      <CancelSpecificDatesModal
+        schedule={selectedSchedule}
+        isOpen={isCancelSpecificDatesModalOpen}
+        onClose={() => {
+          setIsCancelSpecificDatesModalOpen(false);
+          setSelectedSchedule(null);
+        }}
+        onSuccess={() => refetch()}
+      />
     </div>
   );
 };

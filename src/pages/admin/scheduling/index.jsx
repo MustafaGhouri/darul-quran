@@ -47,6 +47,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useApproveRescheduleRequestMutation, useGetRescheduleRequestsQuery, useRejectRescheduleRequestMutation } from "../../../redux/api/reschedule";
 import { useGetAllCancellationRequestsQuery, useUpdateCancellationRequestStatusMutation } from "../../../redux/api/cancellation";
+import CancelSpecificDatesModal from "../../../components/schedule/CancelSpecificDatesModal";
 
 const Scheduling = () => {
   const [searchParams] = useSearchParams();
@@ -87,6 +88,7 @@ const Scheduling = () => {
   const [isCancellationResponseModalOpen, setIsCancellationResponseModalOpen] = useState(false);
   const [adminCancellationResponse, setAdminCancellationResponse] = useState("");
   const [cancellationActionType, setCancellationActionType] = useState(null);
+  const [isCancelSpecificDatesModalOpen, setIsCancelSpecificDatesModalOpen] = useState(false);
 
   // Pagination & Filtering (Basic Implementation)
   const [statusFilter, setStatusFilter] = useState("all");
@@ -131,7 +133,7 @@ const Scheduling = () => {
     },
   });
 
-  const { data, isFetching } = useGetScheduleQuery({
+  const { data, isFetching, refetch } = useGetScheduleQuery({
     page: page,
     limit: limit,
     search,
@@ -404,6 +406,11 @@ const Scheduling = () => {
     setAdminCancellationResponse("");
     setIsCancellationResponseModalOpen(false);
     openCancellationModal();
+  };
+
+  const handleCancelSpecificDates = (schedule) => {
+    setSelectedSchedule(schedule);
+    setIsCancelSpecificDatesModalOpen(true);
   };
 
   const handleApproveCancellationClick = async (request) => {
@@ -700,6 +707,15 @@ const Scheduling = () => {
                       {item.pendingCancellationCount > 0 && (
                         <span className="ml-1">({item.pendingCancellationCount})</span>
                       )}
+                    </Button>
+                    <Button
+                      radius="sm"
+                      size="sm"
+                      variant="bordered"
+                      color="danger"
+                      onPress={() => handleCancelSpecificDates(item)}
+                    >
+                      Cancel Dates
                     </Button>
                     <Button
                       radius="sm"
@@ -1551,6 +1567,15 @@ const Scheduling = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      <CancelSpecificDatesModal
+        schedule={selectedSchedule}
+        isOpen={isCancelSpecificDatesModalOpen}
+        onClose={() => {
+          setIsCancelSpecificDatesModalOpen(false);
+        }}
+        onSuccess={() => refetch()}
+      />
     </div>
   );
 };

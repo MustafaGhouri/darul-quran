@@ -194,7 +194,9 @@ const StudentClassSheduling = () => {
     };
 
     const schedulesByDate = useMemo(() => {
-        return groupAndSortSchedulesByDate(scheduleData?.schedules, filterType);
+        return groupAndSortSchedulesByDate(scheduleData?.schedules, filterType, {
+            excludeCancelled: true,
+        });
     }, [scheduleData, filterType]);
 
     // lookup for calendar and other utilities

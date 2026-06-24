@@ -89,6 +89,15 @@ export const scheduleApi = createApi({
             invalidatesTags: (result, error, arg) =>
                 error ? [] : ['schedule']
         }),
+        cancelSpecificDates: builder.mutation({
+            query: ({ id, dates, reason }) => ({
+                url: `/cancel-specific-dates/${id}`,
+                method: "PATCH",
+                body: { dates, reason },
+            }),
+            invalidatesTags: (result, error, arg) =>
+                error ? [] : ['schedule']
+        }),
     }),
 });
 
@@ -101,4 +110,5 @@ export const {
     useAddScheduleNoteMutation,
     useRespondToScheduleMutation,
     useQuickRescheduleMutation,
+    useCancelSpecificDatesMutation,
 } = scheduleApi;

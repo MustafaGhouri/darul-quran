@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Button, Divider } from "@heroui/react";
+import { Button, Divider, Chip } from "@heroui/react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { DashHeading } from "../dashboard-components/DashHeading";
+import { isScheduleDateCancelled } from "../../utils/scheduleHelpers";
 
 /**
  * Reusable component to display schedules grouped by date
@@ -26,17 +27,37 @@ const SchedulesByDateList = ({ groupedSchedules, renderCard }) => {
         });
     };
 
-    const renderDateGroup = (dateKey, schedules) => (
-        <div key={dateKey} className="mb-6">
-            <DashHeading
-                title={formatDate(dateKey)}
-                desc={`${schedules.length} ${schedules.length === 1 ? "class" : "classes"} scheduled`}
-            />
+    const renderDateGroup = (dateKey, schedules) => {
+        const allCancelled =
+            schedules.length > 0 &&
+            schedules.every((schedule) => isScheduleDateCancelled(schedule, schedule.date));
+
+        return (
+        <div
+            key={dateKey}
+            className={`mb-6 rounded-lg ${allCancelled ? "bg-red-50/60 border border-red-200 p-3" : ""}`}
+        >
+            <div className="flex flex-wrap items-center gap-2">
+                <DashHeading
+                    title={formatDate(dateKey)}
+                    desc={
+                        allCancelled
+                            ? "Cancelled — class will not run on this date"
+                            : `${schedules.length} ${schedules.length === 1 ? "class" : "classes"} scheduled`
+                    }
+                />
+                {allCancelled && (
+                    <Chip size="sm" color="danger" variant="solid" className="font-semibold">
+                        Cancelled
+                    </Chip>
+                )}
+            </div>
             <div className="mt-3">
                 {schedules.map((schedule) => renderCard(schedule))}
             </div>
         </div>
-    );
+        );
+    };
 
     return (
         <div className="w-full">

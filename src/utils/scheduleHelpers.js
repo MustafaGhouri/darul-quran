@@ -537,12 +537,36 @@ export const formatRemainingTime = (hoursUntil) => {
 };
 
 /**
+ * Check if a schedule occurrence date has been cancelled
+ */
+export const isScheduleDateCancelled = (schedule, dateKey = null) => {
+    const cancelList = schedule?.cancelSpecific || schedule?.cancel_specific || [];
+    if (!cancelList.length) return false;
+
+    const normalized = (value) => {
+        if (!value) return "";
+        const str = String(value);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+        if (str.includes("T")) return str.split("T")[0];
+        const parsed = new Date(str);
+        return Number.isNaN(parsed.getTime()) ? str : parsed.toISOString().split("T")[0];
+    };
+
+    const key = normalized(dateKey || schedule?.date);
+    const sourceKey = normalized(schedule?.sourceDate || schedule?.source_date);
+    const cancelSet = new Set(cancelList.map(normalized));
+
+    return cancelSet.has(key) || (sourceKey && cancelSet.has(sourceKey));
+};
+
+/**
  * Group and sort schedules by date, splitting into upcoming and previous
  * @param {Array} schedules - Array of schedule objects
  * @param {string} filterType - "all", "zoom", or "video"
+ * @param {Object} options - { excludeCancelled: boolean }
  * @returns {Object} { upcoming: { dateKey: [schedules] }, previous: { dateKey: [schedules] } }
  */
-export const groupAndSortSchedulesByDate = (schedules, filterType = "all") => {
+export const groupAndSortSchedulesByDate = (schedules, filterType = "all", options = {}) => {
     if (!schedules) return { upcoming: {}, previous: {} };
 
     const todayStr = getTodayStr();
@@ -570,6 +594,24 @@ export const groupAndSortSchedulesByDate = (schedules, filterType = "all") => {
                 ? scheduleDate
                 : (scheduleDate?.sourceDate || scheduleDate?.source_date || scheduleDate?.date);
             if (!dateStr) return;
+
+            const occurrenceDateKey = typeof scheduleDate === 'object'
+                ? normalizeDateKey(scheduleDate?.date || dateStr)
+                : normalizeDateKey(dateStr);
+            const occurrenceSourceKey = typeof scheduleDate === 'object'
+                ? normalizeDateKey(scheduleDate?.sourceDate || scheduleDate?.source_date)
+                : normalizeDateKey(dateStr);
+
+            if (options.excludeCancelled) {
+                const cancelList = schedule?.cancelSpecific || schedule?.cancel_specific || [];
+                const cancelSet = new Set(cancelList.map(normalizeDateKey));
+                if (
+                    cancelSet.has(occurrenceDateKey) ||
+                    (occurrenceSourceKey && cancelSet.has(occurrenceSourceKey))
+                ) {
+                    return;
+                }
+            }
 
             // Use the same logic as parseDateFromDB to ensure consistency
             let dateKey = "";
