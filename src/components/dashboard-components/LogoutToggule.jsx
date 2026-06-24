@@ -53,6 +53,7 @@ export default function LogoutToggule() {
       successMessage(data?.message || "Logout successful");
       dispatch(clearUser());
       localStorage.removeItem("token");
+      document.cookie = "token=; domain=.darulquranleicester.co.uk; path=/; max-age=0";
       window.location.href = "/";
     } catch (error) {
       console.log(error);

@@ -37,7 +37,6 @@ const Login = () => {
     try {
       const data = await api.post("/auth/login", { email, password, rememberMe });
 
-      // If successful (api.post throws on error)
       dispatch(setUser(data.user));
       successMessage("Login successful");
       const role = data.user.role?.toLowerCase();
@@ -52,18 +51,26 @@ const Login = () => {
         route = "/student/dashboard"
       }
 
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      } else if (data.user?.token) {
-        localStorage.setItem("token", data.user.token);
+      const token = data.token;
+      if (token) {
+        localStorage.setItem("token", token);
+
+        if (import.meta.env.PROD) {
+          document.cookie = [
+            `token=${token}`,
+            `domain=.darulquranleicester.co.uk`,
+            `path=/`,
+            `max-age=${rememberMe ? 7 * 24 * 60 * 60 : 24 * 60 * 60}`,
+            `secure`,
+            `samesite=lax`,
+          ].join("; ");
+        }
       }
 
-      // window.history.replaceState({}, document.title, window.location.pathname);
       navigate(route, { replace: true });
-      location.replace(route)
+
     } catch (error) {
       setModalType("error");
-      // onOpen();
     } finally {
       setLoading(false);
     }
