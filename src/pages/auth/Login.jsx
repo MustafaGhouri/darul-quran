@@ -3,74 +3,146 @@ import {
   Checkbox,
   Form,
   Input,
-  Select,
-  SelectItem,
+  Tab,
+  Tabs,
 } from "@heroui/react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { setUser } from "../../redux/reducers/user";
 import { useDispatch } from "react-redux";
 import { api } from "../../services/api";
-import { successMessage } from "../../lib/toast.config";
+import { successMessage, errorMessage } from "../../lib/toast.config";
 import { analyticsEvents } from "../../lib/analytics";
+
+const PasswordInput = ({ label, value, onChange, placeholder }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <div className="w-full space-y-2">
+      {label && <p className="text-sm lg:text-base text-[#3F3F44]">{label}</p>}
+      <Input
+        className="rounded-md"
+        placeholder={placeholder}
+        value={value}
+        type={showPassword ? "text" : "password"}
+        endContent={
+          <span onClick={() => setShowPassword(!showPassword)}>
+            {showPassword ? (
+              <EyeOffIcon className="cursor-pointer" size={20} />
+            ) : (
+              <EyeIcon className="cursor-pointer" size={20} />
+            )}
+          </span>
+        }
+        onChange={onChange}
+      />
+    </div>
+  );
+};
+
 const Login = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") === "register" ? "register" : "login";
+
+  const handleTabChange = (key) => {
+    const nextTab = String(key);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (nextTab === "login") {
+          next.delete("tab");
+        } else {
+          next.set("tab", nextTab);
+        }
+        return next;
+      },
+      { replace: false },
+    );
+  };
+
+  const [loading, setLoading] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  // const { isOpen, onOpen, onClose } = useDisclosure();
-  const dispatch = useDispatch();
 
-  const [loading, setLoading] = useState(false);
-  const [modalType, setModalType] = useState("success");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const completeAuth = (data, remember) => {
+    dispatch(setUser(data.user));
+
+    const token = data.token;
+    if (token) {
+      localStorage.setItem("token", token);
+
+      if (import.meta.env.PROD) {
+        document.cookie = [
+          `token=${token}`,
+          `domain=.darulquranleicester.co.uk`,
+          `path=/`,
+          `max-age=${remember ? 7 * 24 * 60 * 60 : 24 * 60 * 60}`,
+          `secure`,
+          `samesite=lax`,
+        ].join("; ");
+      }
+    }
+
+    const role = data.user.role?.toLowerCase();
+    analyticsEvents.login(role);
+
+    let route = "/";
+    if (role === "admin") route = "/admin/dashboard";
+    else if (role === "teacher") route = "/teacher/dashboard";
+    else if (role === "student") route = "/student/dashboard";
+
+    navigate(route, { replace: true });
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     if (loading) return;
 
     setLoading(true);
-
     try {
       const data = await api.post("/auth/login", { email, password, rememberMe });
-
-      dispatch(setUser(data.user));
       successMessage("Login successful");
-      const role = data.user.role?.toLowerCase();
-      analyticsEvents.login(role);
+      completeAuth(data, rememberMe);
+    } catch {
+      // Error toast handled by api interceptor
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      let route = '/';
-      if (role === "admin") {
-        route = "/admin/dashboard"
-      } else if (role === "teacher") {
-        route = "/teacher/dashboard"
-      } else if (role === "student") {
-        route = "/student/dashboard"
-      }
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (loading) return;
 
-      const token = data.token;
-      if (token) {
-        localStorage.setItem("token", token);
+    if (registerPassword !== confirmPassword) {
+      errorMessage("Passwords do not match");
+      return;
+    }
 
-        if (import.meta.env.PROD) {
-          document.cookie = [
-            `token=${token}`,
-            `domain=.darulquranleicester.co.uk`,
-            `path=/`,
-            `max-age=${rememberMe ? 7 * 24 * 60 * 60 : 24 * 60 * 60}`,
-            `secure`,
-            `samesite=lax`,
-          ].join("; ");
-        }
-      }
-
-      navigate(route, { replace: true });
-
-    } catch (error) {
-      setModalType("error");
+    setLoading(true);
+    try {
+      const data = await api.post("/auth/student-register", {
+        firstName,
+        lastName,
+        email: registerEmail,
+        password: registerPassword,
+      });
+      successMessage(data.message || "Account created successfully");
+      completeAuth(data, false);
+    } catch {
+      // Error toast handled by api interceptor
     } finally {
       setLoading(false);
     }
@@ -78,8 +150,7 @@ const Login = () => {
 
   return (
     <main className="flex flex-col lg:flex-row w-full min-h-screen">
-      {/* <img src="/icons/login-line.png" alt="Darul Quran" className='  absolute top-1/7 left-1/8 -translate-x-1/2 -translate-y-1/2' /> */}
-      <div className="lg:h-screen w-full lg:max-w-[400px] xl:max-w-[400px] p-6 lg:p-8 flex flex-col items-center justify-between bg-[#06574C]  relative ovexrflow-hidden max-lg:hidden lg:rounded-r-lg">
+      <div className="lg:h-screen w-full lg:max-w-[400px] xl:max-w-[400px] p-6 lg:p-8 flex flex-col items-center justify-between bg-[#06574C] relative ovexrflow-hidden max-lg:hidden lg:rounded-r-lg">
         <img
           src="/icons/logo.png"
           alt="Darul Quran"
@@ -94,90 +165,153 @@ const Login = () => {
         />
         <div className="w-full max-w-xl mx-auto lg:mx-16">
           <h1 className="text-xl sm:text-3xl lg:text-4xl xl:text-[35px] text-[#3F3F44] leading-tight mb-6 lg:mb-8 font-medium">
-            {/* Assalamu 'alaykum, <br /> */}
             <strong>Welcome</strong>
             {""} to{" "}
             <span className="text-[#95C4BE]">Darul Qur'an Leicester </span>
-            {/* - a space to grow, reflect and connect */}
           </h1>
 
-          <Form
-            onSubmit={handleLogin}
-            className="w-full space-y-5 lg:space-y-6 items-center justify-center"
+          <Tabs
+            aria-label="Auth tabs"
+            selectedKey={activeTab}
+            onSelectionChange={handleTabChange}
+            color="success"
+            variant="underlined"
+            classNames={{
+              tabList: "mb-4",
+              tab: "text-[#3F3F44] font-medium",
+              cursor: "bg-[#06574C]",
+            }}
           >
-            <div className="w-full space-y-2">
-              <p className="text-sm lg:text-base text-[#3F3F44]">
-                Enter Your Email
-              </p>
-              <Input
-                className="rounded-md"
-                placeholder="youremail@guru.com"
-                value={email}
-                type="email"
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+            <Tab key="login" title="Login">
+              <Form
+                onSubmit={handleLogin}
+                className="w-full space-y-5 lg:space-y-6 items-center justify-center"
+              >
+                <div className="w-full space-y-2">
+                  <p className="text-sm lg:text-base text-[#3F3F44]">
+                    Enter Your Email
+                  </p>
+                  <Input
+                    className="rounded-md"
+                    placeholder="youremail@example.com"
+                    value={email}
+                    type="email"
+                    isRequired
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
 
-            <div className="w-full space-y-2">
-              <div className="flex justify-between items-center text-sm lg:text-base">
-                <p className="text-[#3F3F44]">Password</p>
-                <Link
-                  to="/auth/forget-password"
-                  className=" cursor-pointer hover:underline"
-                >
-                  Forget Password?
-                </Link>
-              </div>
-              <Input
-                className="rounded-md"
-                placeholder="Enter your password"
-                value={password}
-                type={showPassword ? "text" : "password"}
-                endContent={
-                  <span onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? (
-                      <EyeOffIcon className="cursor-pointer" size={20} />
-                    ) : (
-                      <EyeIcon className="cursor-pointer" size={20} />
-                    )}
-                  </span>
-                }
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div className="w-full">
-              <Checkbox
-                isSelected={rememberMe}
-                onValueChange={setRememberMe}
-                size="sm"
-                color="success"
-                classNames={{
-                  label: "text-[#3F3F44] text-sm lg:text-base",
-                }}
+                <div className="w-full space-y-2">
+                  <div className="flex justify-between items-center text-sm lg:text-base">
+                    <p className="text-[#3F3F44]">Password</p>
+                    <Link
+                      to="/auth/forget-password"
+                      className="cursor-pointer hover:underline"
+                    >
+                      Forget Password?
+                    </Link>
+                  </div>
+                  <PasswordInput
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                  />
+                </div>
+
+                <div className="w-full">
+                  <Checkbox
+                    isSelected={rememberMe}
+                    onValueChange={setRememberMe}
+                    size="sm"
+                    color="success"
+                    classNames={{
+                      label: "text-[#3F3F44] text-sm lg:text-base",
+                    }}
+                  >
+                    Remember Me
+                  </Checkbox>
+                </div>
+
+                <div className="flex max-sm:flex-wrap gap-3 w-full">
+                  <Button
+                    type="submit"
+                    className="w-full text-center text-white rounded-md py-3 bg-[#06574C]"
+                    isLoading={loading}
+                    isDisabled={loading}
+                  >
+                    {loading ? "Logging in..." : "Login"}
+                  </Button>
+                </div>
+              </Form>
+            </Tab>
+
+            <Tab key="register" title="Student Register">
+              <Form
+                onSubmit={handleRegister}
+                className="w-full space-y-4 lg:space-y-5 items-center justify-center"
               >
-                Remember Me
-              </Checkbox>
-            </div>
-            {/* <Link to=""> */}
-            <div className="flex max-sm:flex-wrap gap-3 w-full  ">
-              <Button
-                type="submit"
-                className="w-full text-center text-white rounded-md py-3 bg-[#06574C]"
-                isLoading={loading}
-                isDisabled={loading}
-              >
-                {loading ? "Logging in..." : "Login"}
-              </Button>
-            </div>
-            {/* </Link> */}
-            {/* <div className="text-center text-sm lg:text-base mb-4 text-[#3F3F44]">
-              Or
-            </div> */}
-          </Form>
-          {/* <Button className="w-full text-center bg-white rounded-md py-3 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-2">
-            <img src="/icons/google.png" className="w-6 h-6" alt="" />
-            <span className="text-sm lg:text-base">Sign in with Google</span>
-          </Button> */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                  <div className="space-y-2">
+                    <p className="text-sm lg:text-base text-[#3F3F44]">First Name</p>
+                    <Input
+                      className="rounded-md"
+                      placeholder="First name"
+                      value={firstName}
+                      isRequired
+                      onChange={(e) => setFirstName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm lg:text-base text-[#3F3F44]">Last Name</p>
+                    <Input
+                      className="rounded-md"
+                      placeholder="Last name"
+                      value={lastName}
+                      isRequired
+                      onChange={(e) => setLastName(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="w-full space-y-2">
+                  <p className="text-sm lg:text-base text-[#3F3F44]">Email</p>
+                  <Input
+                    className="rounded-md"
+                    placeholder="youremail@example.com"
+                    value={registerEmail}
+                    type="email"
+                    isRequired
+                    onChange={(e) => setRegisterEmail(e.target.value)}
+                  />
+                </div>
+
+                <PasswordInput
+                  label="Password"
+                  value={registerPassword}
+                  onChange={(e) => setRegisterPassword(e.target.value)}
+                  placeholder="Create a password"
+                />
+
+                <PasswordInput
+                  label="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your password"
+                />
+
+                <div className="flex max-sm:flex-wrap gap-3 w-full">
+                  <Button
+                    type="submit"
+                    className="w-full text-center text-white rounded-md py-3 bg-[#06574C]"
+                    isLoading={loading}
+                    isDisabled={loading}
+                  >
+                    {loading ? "Creating account..." : "Create Student Account"}
+                  </Button>
+                </div>
+              </Form>
+            </Tab>
+          </Tabs>
         </div>
       </div>
     </main>
