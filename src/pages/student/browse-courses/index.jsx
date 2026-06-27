@@ -216,6 +216,7 @@ const BrowseCourses = () => {
                         <SelectItem key="all" value="all" className="capitalize">All Courses</SelectItem>
                         <SelectItem key="one_time" value="one_time" className="capitalize">One Time Paid</SelectItem>
                         <SelectItem key="live" value="live" className="capitalize">Live Classes</SelectItem>
+                        <SelectItem key="in_person" value="in_person" className="capitalize">In-Person Classes</SelectItem>
                       </Select>
                     </div>
 
@@ -401,9 +402,21 @@ const BrowseCourses = () => {
                             {item.difficultyLevel}
                           </span>
                         )}
-                        <Tooltip color="success" content={item.type === 'live' ? 'Contains Live Class, requires subscription' : 'Contains Recorded Lessons, requires onetime payment'}>
+                        <Tooltip color="success" content={
+                          item.type === 'live'
+                            ? 'Contains Live Class, requires subscription'
+                            : item.type === 'in_person'
+                              ? 'In-person classroom course, requires monthly subscription'
+                              : 'Contains Recorded Lessons, requires onetime payment'
+                        }>
                           <span
-                            title={item.type === 'live' ? 'Contains Live Class, requires subscription' : 'Contains Recorded Lessons, requires onetime payment'}
+                            title={
+                              item.type === 'live'
+                                ? 'Contains Live Class, requires subscription'
+                                : item.type === 'in_person'
+                                  ? 'In-person classroom course, requires monthly subscription'
+                                  : 'Contains Recorded Lessons, requires onetime payment'
+                            }
                             className="cursor-pointer text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-600 capitalize">
                             {item.type.replace('_', ' ')}
                           </span>

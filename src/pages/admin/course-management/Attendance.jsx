@@ -266,6 +266,7 @@ const Attendance = () => {
             <SelectItem key="all">All Courses</SelectItem>
             <SelectItem key="one_time">One Time Paid</SelectItem>
             <SelectItem key="live">Live Classes</SelectItem>
+            <SelectItem key="in_person">In-Person Classes</SelectItem>
           </Select>
         </div>
         <Button

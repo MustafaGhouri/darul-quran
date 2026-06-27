@@ -396,7 +396,11 @@ const PaymentsRefunds = () => {
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-gray-600 capitalize">
-                    {item.type === 'live' ? 'Subscription' : 'One-time'}
+                    {item.type === 'live'
+                      ? 'Subscription'
+                      : item.type === 'in_person'
+                        ? 'In-Person Subscription'
+                        : 'One-time'}
                   </span>
                 </TableCell>
                 <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>

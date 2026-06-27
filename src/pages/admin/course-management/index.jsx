@@ -312,6 +312,17 @@ const CourseManagement = () => {
                   <TableCell className="flex items-center gap-2 justify-end">
                     {/* <CourseForm initialData={classItem} /> */}
 
+                    {classItem?.type === "in_person" && (
+                      <Button
+                        as={Link}
+                        to={`/admin/courses-management/waiting-list/${classItem.id}`}
+                        variant="bordered"
+                        color="warning"
+                        size="sm"
+                      >
+                        Waiting List
+                      </Button>
+                    )}
                     <Button
                       variant="bordered"
                       color="success"

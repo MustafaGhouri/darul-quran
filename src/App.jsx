@@ -108,6 +108,9 @@ const Attendance = lazy(() =>
 const CourseBuilder = lazy(() =>
   import("./pages/admin/course-management/course-builder")
 );
+const WaitingList = lazy(() =>
+  import("./pages/admin/course-management/WaitingList")
+);
 
 const UserManagement = lazy(() =>
   import("./pages/admin/user-management")
@@ -419,6 +422,14 @@ function App() {
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <Attendance />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/courses-management/waiting-list/:courseId"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <WaitingList />
                 </ProtectedRoute>
               }
             />

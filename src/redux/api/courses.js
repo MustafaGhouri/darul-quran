@@ -18,7 +18,7 @@ export const courseApi = createApi({
         //     return headers;
         // },
     }),
-    tagTypes: ["course", "reviews", "categories", "courseStudents", "courseAttendance"],
+    tagTypes: ["course", "reviews", "categories", "courseStudents", "courseAttendance", "WaitingList"],
     endpoints: (builder) => ({
         getAllCourses: builder.query({
             query: ({ page, limit, categoryId, sort, categoryIds, search, status, type, difficulties, isFree }) => ({
@@ -186,6 +186,34 @@ export const courseApi = createApi({
                 method: "GET",
             }),
         }),
+        checkInPersonCapacity: builder.query({
+            query: (courseId) => `/in-person/${courseId}/capacity`,
+            providesTags: ["WaitingList"],
+        }),
+        joinWaitingList: builder.mutation({
+            query: (data) => ({
+                url: "/waiting-list/join",
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: data,
+            }),
+            invalidatesTags: ["WaitingList"],
+        }),
+        getWaitingList: builder.query({
+            query: ({ courseId, page = 1, limit = 20 }) => ({
+                url: `/waiting-list/${courseId}`,
+                method: "GET",
+                params: { page, limit },
+            }),
+            providesTags: ["WaitingList"],
+        }),
+        inviteFromWaitingList: builder.mutation({
+            query: (entryId) => ({
+                url: `/waiting-list/${entryId}/invite`,
+                method: "POST",
+            }),
+            invalidatesTags: ["WaitingList"],
+        }),
     }),
 });
 
@@ -212,4 +240,8 @@ export const {
     useSubmitQuizMutation,
     useGetQuizAttemptsQuery,
     useGetCourseRelatedDataQuery,
+    useCheckInPersonCapacityQuery,
+    useJoinWaitingListMutation,
+    useGetWaitingListQuery,
+    useInviteFromWaitingListMutation,
 } = courseApi;

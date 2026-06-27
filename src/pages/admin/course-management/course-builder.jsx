@@ -53,6 +53,44 @@ import { IntervalInput } from "../../../components/dashboard-components/forms/In
 import TeacherSelect from "../../../components/select/TeacherSelect";
 import UserSelect from "../../../components/select/UserSelect";
 import StudentSelect from "../../../components/select/StudentSelect";
+
+const WEEKDAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
+const parseScheduleTimeRange = (value) => {
+  if (!value) return { start: "", end: "" };
+  const parts = value
+    .split(/\s*-\s*|\s+to\s+/i)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length >= 2) {
+    return { start: toTimeInputValue(parts[0]), end: toTimeInputValue(parts[1]) };
+  }
+  return { start: "", end: "" };
+};
+
+const toTimeInputValue = (timeStr) => {
+  if (!timeStr) return "";
+  const trimmed = timeStr.trim();
+  if (/^\d{2}:\d{2}$/.test(trimmed)) return trimmed;
+  const parsed = new Date(`1970-01-01 ${trimmed}`);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toTimeString().slice(0, 5);
+  }
+  return "";
+};
+
+const formatScheduleTimeRange = (start, end) => {
+  if (start && end) return `${start} - ${end}`;
+  return start || end || "";
+};
 const containerVariants = {
   hidden: { opacity: 0, y: 10, scale: 0.98 },
 
@@ -158,6 +196,20 @@ const CourseBuilder = () => {
           type: course.type || "one_time",
           interval: course.interval || "",
           duration: course.duration || "",
+          age_group: course.ageGroup || "",
+          schedule_days: course.scheduleDays || "",
+          ...(() => {
+            const { start, end } = parseScheduleTimeRange(course.scheduleTime || "");
+            return {
+              schedule_start_time: start,
+              schedule_end_time: end,
+              schedule_time: course.scheduleTime || "",
+            };
+          })(),
+          venue: course.venue || "",
+          max_capacity: course.maxCapacity || "",
+          what_to_bring: course.whatToBring || "",
+          start_date: course.startDate || "",
         });
 
         setVideoUrl(course.video || "");
@@ -250,8 +302,17 @@ const CourseBuilder = () => {
     videoDuration: "",
     duration: null,
     interval: null,
-    is_free: false, // Free/Paid toggle
-    video_count: 0, // Number of videos
+    is_free: false,
+    video_count: 0,
+    age_group: "",
+    schedule_days: "",
+    schedule_start_time: "",
+    schedule_end_time: "",
+    schedule_time: "",
+    venue: "",
+    max_capacity: "",
+    what_to_bring: "",
+    start_date: "",
   });
   const [teacherError, setTeacherError] = useState("");
 
@@ -294,7 +355,25 @@ const CourseBuilder = () => {
           `${parseInterval(formData?.interval).number} ${parseInterval(formData?.interval).unit}` ||
           "Add Subscription - Interval",
       },
-    ];
+      formData?.type === "in_person" && {
+        title: "Age Group:",
+        desc: formData?.age_group || "Not set",
+      },
+      formData?.type === "in_person" && {
+        title: "Schedule:",
+        desc:
+          `${formData?.schedule_days || ""} ${formatScheduleTimeRange(formData?.schedule_start_time, formData?.schedule_end_time) || formData?.schedule_time || ""}`.trim() ||
+          "Not set",
+      },
+      formData?.type === "in_person" && {
+        title: "Venue:",
+        desc: formData?.venue || "Not set",
+      },
+      formData?.type === "in_person" && {
+        title: "Enrollment Limit:",
+        desc: formData?.max_capacity || "Unlimited",
+      },
+    ].filter(Boolean);
   }, [categoriesData, formData]);
 
   // handle change
@@ -302,15 +381,19 @@ const CourseBuilder = () => {
     if (name === "teacher_id" && value) {
       setTeacherError("");
     }
+    if (name === "type" && value === "in_person") {
+      setTeacherError("");
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+      ...(name === "type" && value === "in_person" ? { teacher_id: null } : {}),
     }));
   };
   const handleSubmitTab1 = async (e) => {
     e.preventDefault();
 
-    if (!formData.teacher_id) {
+    if (formData.type !== "in_person" && !formData.teacher_id) {
       setTeacherError("Please select a teacher ");
       // Scroll to the teacher select if possible or just stop
       return;
@@ -353,9 +436,10 @@ const CourseBuilder = () => {
 
     const payload = {
       ...formData,
-      previous_lesson: formData.previous_lesson
-        ? parseInt(formData.previous_lesson)
-        : null,
+      previous_lesson:
+        formData.previous_lesson != null && formData.previous_lesson !== ""
+          ? String(formData.previous_lesson)
+          : null,
       enroll_number: formData.enroll_number
         ? parseInt(formData.enroll_number)
         : null,
@@ -366,8 +450,18 @@ const CourseBuilder = () => {
       ).toFixed(2),
       videoUrl: urlMap.video ?? videoUrl ?? null,
       thumbnailurl: urlMap.thumbnail ?? thumbnailUrl ?? null,
-      teacher_id: Number(formData.teacher_id),
+      teacher_id: formData.type === "in_person" ? null : Number(formData.teacher_id),
       is_free: formData.is_free,
+      age_group: formData.age_group || null,
+      schedule_days: formData.schedule_days || null,
+      schedule_time:
+        formatScheduleTimeRange(formData.schedule_start_time, formData.schedule_end_time) ||
+        formData.schedule_time ||
+        null,
+      venue: formData.venue || null,
+      max_capacity: formData.max_capacity ? Number(formData.max_capacity) : null,
+      what_to_bring: formData.what_to_bring || null,
+      start_date: formData.start_date || null,
     };
     try {
       const courseId = searchParams.get("id");
@@ -415,7 +509,7 @@ const CourseBuilder = () => {
       difficultyLevel: formData.difficulty_level,
       description: formData.description,
       coursePrice: formData.course_price,
-      teacherId: formData.teacher_id,
+      teacherId: formData.type === "in_person" ? null : formData.teacher_id,
       accessDuration: formData.access_duration,
       previousLesson: formData.previous_lesson,
       enrollNumber: formData.enroll_number,
@@ -742,15 +836,17 @@ const CourseBuilder = () => {
                           </Select>
                         </div>
                       </div>
-                      <div className="pt-6">
-                        <TeacherSelect
-                          label="Teacher"
-                          isRequired
-                          onChange={(id) => handleChange("teacher_id", id)}
-                          initialValue={formData.teacher_id}
-                          errorMessage={teacherError}
-                        />
-                      </div>
+                      {formData?.type !== "in_person" && (
+                        <div className="pt-6">
+                          <TeacherSelect
+                            label="Teacher"
+                            isRequired
+                            onChange={(id) => handleChange("teacher_id", id)}
+                            initialValue={formData.teacher_id}
+                            errorMessage={teacherError}
+                          />
+                        </div>
+                      )}
                       <div className="my-4">
                         <StudentSelect
                           onChange={(ids) => handleChange("student_ids", ids)}
@@ -821,6 +917,18 @@ const CourseBuilder = () => {
                           >
                             Live Classes
                           </SelectItem>
+                          <SelectItem
+                            description={
+                              <span className="block text-xs text-gray-500">
+                                Physical classroom course with monthly subscription. Admin manages teachers and classroom manually.
+                              </span>
+                            }
+                            key="in_person"
+                            value="in_person"
+                            className="capitalize"
+                          >
+                            In-Person Classes
+                          </SelectItem>
                         </Select>
                       </div>
                       <IntervalInput
@@ -834,20 +942,129 @@ const CourseBuilder = () => {
                           handleChange("duration", interval)
                         }
                       />
-                      {formData?.type === "live" && (
+                      {(formData?.type === "live" || formData?.type === "in_person") && (
                         <IntervalInput
                           label="Subscription Interval"
                           inputWidth={140}
                           toolTipContent={
-                            "How do want to charge student for live sessions on this course"
+                            formData?.type === "in_person"
+                              ? "How often students are charged for this in-person course"
+                              : "How do want to charge student for live sessions on this course"
                           }
                           className="mt-3"
                           initialValue={formData?.interval}
                           onUpdate={(interval) =>
                             handleChange("interval", interval)
                           }
-                          units={["week", "month","day"]}
+                          units={["week", "month", "day"]}
                         />
+                      )}
+                      {formData?.type === "in_person" && (
+                        <div className="mt-4 space-y-4 p-4 bg-[#95C4BE22] rounded-lg border border-[#95C4BE]">
+                          <h2 className="text-[#06574C] font-semibold text-base">
+                            In-Person Course Details
+                          </h2>
+                          <Input
+                            size="lg"
+                            variant="bordered"
+                            label="Age Group"
+                            labelPlacement="outside"
+                            placeholder="e.g. 5-8 years, Teens, Adults"
+                            value={formData.age_group}
+                            onChange={(e) => handleChange("age_group", e.target.value)}
+                          />
+                          <Select
+                            label="Schedule Days"
+                            labelPlacement="outside"
+                            placeholder="Select days"
+                            size="lg"
+                            radius="md"
+                            variant="bordered"
+                            selectionMode="multiple"
+                            selectedKeys={
+                              formData.schedule_days
+                                ? new Set(
+                                    formData.schedule_days
+                                      .split(",")
+                                      .map((day) => day.trim())
+                                      .filter(Boolean),
+                                  )
+                                : new Set()
+                            }
+                            onSelectionChange={(keys) => {
+                              const selected = [...keys];
+                              handleChange("schedule_days", selected.join(", "));
+                            }}
+                          >
+                            {WEEKDAYS.map((day) => (
+                              <SelectItem key={day} value={day}>
+                                {day}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Input
+                              size="lg"
+                              variant="bordered"
+                              label="Start Time"
+                              labelPlacement="outside"
+                              type="time"
+                              value={formData.schedule_start_time}
+                              onChange={(e) =>
+                                handleChange("schedule_start_time", e.target.value)
+                              }
+                            />
+                            <Input
+                              size="lg"
+                              variant="bordered"
+                              label="End Time"
+                              labelPlacement="outside"
+                              type="time"
+                              value={formData.schedule_end_time}
+                              onChange={(e) =>
+                                handleChange("schedule_end_time", e.target.value)
+                              }
+                            />
+                          </div>
+                          <Input
+                            size="lg"
+                            variant="bordered"
+                            label="Venue / Location"
+                            labelPlacement="outside"
+                            placeholder="Full address of the classroom/venue"
+                            value={formData.venue}
+                            onChange={(e) => handleChange("venue", e.target.value)}
+                          />
+                          <Input
+                            size="lg"
+                            variant="bordered"
+                            label="Enrollment Limit"
+                            labelPlacement="outside"
+                            placeholder="e.g. 15"
+                            type="number"
+                            min={1}
+                            value={formData.max_capacity}
+                            onChange={(e) => handleChange("max_capacity", e.target.value)}
+                          />
+                          <Input
+                            size="lg"
+                            variant="bordered"
+                            label="Start Date"
+                            labelPlacement="outside"
+                            type="date"
+                            value={formData.start_date}
+                            onChange={(e) => handleChange("start_date", e.target.value)}
+                          />
+                          <Textarea
+                            size="lg"
+                            variant="bordered"
+                            label="What to Bring (optional)"
+                            labelPlacement="outside"
+                            placeholder="e.g. Comfortable clothing, water bottle, yoga mat"
+                            value={formData.what_to_bring}
+                            onChange={(e) => handleChange("what_to_bring", e.target.value)}
+                          />
+                        </div>
                       )}
                     </div>
                   </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
-import { Avatar, Button, Divider, Pagination, Progress } from "@heroui/react";
+import { Avatar, Button, Divider, Pagination, Progress, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Textarea, useDisclosure } from "@heroui/react";
 import { FaStar, FaUserGraduate } from "react-icons/fa";
 import { IoPlay, IoStarSharp } from "react-icons/io5";
 import { IoIosCheckmark } from "react-icons/io";
@@ -15,7 +15,9 @@ import {
   Check,
   ChevronLeft,
   Clock,
+  MapPin,
   MessageCircle,
+  Users,
 } from "lucide-react";
 import { HiOutlinePlay, HiUserGroup } from "react-icons/hi";
 import { PiFilePdfLight } from "react-icons/pi";
@@ -29,7 +31,7 @@ import { useLocation, useParams, useNavigate, useSearchParams, Link } from "reac
 import { errorMessage, successMessage } from "../../../lib/toast.config";
 import { dateFormatter } from "../../../lib/utils";
 import { analyticsEvents } from "../../../lib/analytics";
-import { useGetCourseByIdQuery, useGetCourseByIdViewQuery, useGetCourseFilesQuery, useGetReviewsQuery } from "../../../redux/api/courses";
+import { useGetCourseByIdViewQuery, useGetCourseFilesQuery, useGetReviewsQuery, useCheckInPersonCapacityQuery, useJoinWaitingListMutation } from "../../../redux/api/courses";
 import RatingStars from "../../../components/RatingStar";
 import QueryError from "../../../components/QueryError";
 
@@ -55,14 +57,29 @@ const CourseDetails = () => {
   const [enrolling, setEnrolling] = useState(false);
   const [overview, setOverview] = useState(null);
   const [shouldFetchOverview, setShouldFetchOverview] = useState(true);
+  const waitingListModal = useDisclosure();
+  const [waitingForm, setWaitingForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
+  const [joiningWaitlist, setJoiningWaitlist] = useState(false);
 
-  const { data, error, isLoading, isError, refetch } = useGetCourseByIdViewQuery({ courseId: id, includeCourse: !courseFromState?.id, teacherId }, { skip: !id });
+  const { data, error, isLoading, isError, refetch } = useGetCourseByIdViewQuery({ courseId: id, includeCourse: true, teacherId }, { skip: !id });
 
   const course = useMemo(() => {
+    if (data?.course) return { ...courseFromState, ...data.course };
     if (courseFromState?.id) return courseFromState;
-    if (data?.course) return data.course;
     return null;
   }, [courseFromState, data]);
+
+  const isInPerson = course?.type === "in_person";
+  const { data: capacityData } = useCheckInPersonCapacityQuery(course?.id, {
+    skip: !course?.id || !isInPerson,
+  });
+  const [joinWaitingList] = useJoinWaitingListMutation();
 
   const { data: reviewData, isLoading: isReviewLoading, isError: reviewIsError, error: reviewError, refetch: reviewRefetch } = useGetReviewsQuery(
     { courseId: id, page, limit, includeOverview: shouldFetchOverview, rating: ratingForSearch },
@@ -147,6 +164,33 @@ const CourseDetails = () => {
       setEnrolling(false);
     }
   };
+
+  const handleJoinWaitingList = async () => {
+    if (!waitingForm.firstName || !waitingForm.lastName || !waitingForm.email) {
+      errorMessage("Please fill in your name and email");
+      return;
+    }
+    try {
+      setJoiningWaitlist(true);
+      await joinWaitingList({
+        courseId: Number(course.id),
+        firstName: waitingForm.firstName,
+        lastName: waitingForm.lastName,
+        email: waitingForm.email,
+        phone: waitingForm.phone || undefined,
+        message: waitingForm.message || undefined,
+      }).unwrap();
+      successMessage("You have been added to the waiting list. We will contact you when a spot opens.");
+      waitingListModal.onClose();
+      setWaitingForm({ firstName: "", lastName: "", email: "", phone: "", message: "" });
+    } catch (err) {
+      errorMessage(err?.data?.message || "Failed to join waiting list");
+    } finally {
+      setJoiningWaitlist(false);
+    }
+  };
+
+  const isCourseFull = isInPerson && capacityData?.isFull;
   const quickStats = [
     {
       title: `${courseFiles?.lessonVideo || 0} Video Lessons`,
@@ -230,21 +274,45 @@ const CourseDetails = () => {
               </div>
               <div className="bg-white rounded-xl p-4 space-y-4 shadow-sm">
                 {/* Instructor Row */}
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="h-14 w-14 flex items-center justify-center bg-[#95C4BE33] rounded-full">
-                      <FaRegAddressCard size={26} color="#06574C" />
+                {!isInPerson ? (
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="h-14 w-14 flex items-center justify-center bg-[#95C4BE33] rounded-full">
+                        <FaRegAddressCard size={26} color="#06574C" />
+                      </div>
+
+                      <div>
+                        <h2 className="text-lg font-semibold text-[#06574C]">
+                          {(course?.first_name || data?.teacher?.firstName) + " " + (course?.last_name || data?.teacher?.lastName)}
+                        </h2>
+                        <p className="text-sm text-[#6B7280]">Teacher</p>
+                      </div>
                     </div>
 
-                    <div>
-                      <h2 className="text-lg font-semibold text-[#06574C]">
-                        {(course?.first_name || data?.teacher?.firstName) + " " + (course?.last_name || data?.teacher?.lastName)}
-                      </h2>
-                      <p className="text-sm text-[#6B7280]">Teacher</p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        radius="sm"
+                        className="bg-[#E6F2F0] text-[#06574C] font-medium px-4"
+                      >
+                        {course?.category_name || course?.categoryName}
+                      </Button>
+                      {(data?.teacher?.id ?? teacherId) && (
+                        <Button
+                          size="sm"
+                          radius="sm"
+                          className="bg-[#06574C] text-white font-medium px-4"
+                          startContent={<MessageCircle size={16} />}
+                          to={"/student/help/messages"}
+                          as={Link}
+                        >
+                          Chat with Amin
+                        </Button>
+                      )}
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2">
+                ) : (
+                  <div className="flex justify-end">
                     <Button
                       size="sm"
                       radius="sm"
@@ -252,30 +320,14 @@ const CourseDetails = () => {
                     >
                       {course?.category_name || course?.categoryName}
                     </Button>
-                    {(data?.teacher?.id ?? teacherId) && (
-                      <Button
-                        size="sm"
-                        radius="sm"
-                        className="bg-[#06574C] text-white font-medium px-4"
-                        startContent={<MessageCircle size={16} />}
-                        to={"/student/help/messages"}
-                        as={Link}
-                      // onPress={() =>
-                      //   navigate("/student/help/messages")
-                      // }
-                      >
-                        Chat with Amin
-                      </Button>
-                    )}
                   </div>
-                </div>
+                )}
 
                 {/* Description */}
                 <p className="text-[#374151] text-sm leading-relaxed">
                   {course?.description.slice(0, 150) + "..."}
                 </p>
 
-                {/* Meta Info */}
                 <div className="flex flex-wrap gap-6 text-sm text-[#6B7280] mt-10">
                   <div>
                     <div className="flex items-center gap-1">
@@ -294,13 +346,53 @@ const CourseDetails = () => {
                       <FiUsers size={16} />
                       <span>{course?.studentCourseCount} students enrolled</span>
                     </div>
-
-                    {/* <div className="flex items-center gap-1">
-                      <Clock size={16} />
-                      <span>12 hours 30 minutes</span>
-                    </div> */}
                   </div>
                 </div>
+
+                {isInPerson && (
+                  <div className="mt-4 p-4 rounded-lg bg-[#95C4BE22] border border-[#95C4BE] space-y-2 text-sm">
+                    <h3 className="font-semibold text-[#06574C] text-base">In-Person Class Details</h3>
+                    {course?.ageGroup && (
+                      <p><span className="font-medium text-[#06574C]">Age Group:</span> {course.ageGroup}</p>
+                    )}
+                    {(course?.scheduleDays || course?.scheduleTime) && (
+                      <p className="flex items-start gap-1">
+                        <Calendar size={16} className="shrink-0 mt-0.5" />
+                        <span>
+                          <span className="font-medium text-[#06574C]">Schedule:</span>{" "}
+                          {[course.scheduleDays, course.scheduleTime].filter(Boolean).join(" · ")}
+                        </span>
+                      </p>
+                    )}
+                    {course?.venue && (
+                      <p className="flex items-start gap-1">
+                        <MapPin size={16} className="shrink-0 mt-0.5" />
+                        <span><span className="font-medium text-[#06574C]">Venue:</span> {course.venue}</span>
+                      </p>
+                    )}
+                    {course?.maxCapacity && (
+                      <p className="flex items-center gap-1">
+                        <Users size={16} />
+                        <span>
+                          <span className="font-medium text-[#06574C]">Enrollment Limit:</span>{" "}
+                          {capacityData?.activeCount ?? course?.studentCourseCount ?? 0} / {course.maxCapacity} spots filled
+                          {isCourseFull && (
+                            <span className="ml-2 text-danger font-medium">(Full)</span>
+                          )}
+                        </span>
+                      </p>
+                    )}
+                    {course?.startDate && (
+                      <p><span className="font-medium text-[#06574C]">Start Date:</span> {dateFormatter(course.startDate)}</p>
+                    )}
+                    {course?.whatToBring && (
+                      <p><span className="font-medium text-[#06574C]">What to Bring:</span> {course.whatToBring}</p>
+                    )}
+                    {!course?.isFree && (
+                      <p><span className="font-medium text-[#06574C]">Monthly Fee:</span> £{course?.coursePrice}/month</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             <div className="col-span-12 md:col-span-4  rounded-lg bg-white ">
@@ -342,6 +434,7 @@ const CourseDetails = () => {
                 <div className="flex justify-between items-center p-3">
                   <div className="flex gap-1 items-center ">
                     <h1 className="text-2xl font-bold text-[#06574C]">£{course?.coursePrice}</h1>
+                    {isInPerson && <span className="text-sm text-gray-500 self-end mb-1">/month</span>}
                     {course?.discountPercentage > 0 && <h1 className="text-lg  text-[#666666]  line-through">
                       £{course?.basePrice}
                     </h1>}
@@ -362,6 +455,7 @@ const CourseDetails = () => {
                     className="w-full bg-[#06574C] text-white"
                     onPress={handleEnroll}
                     isLoading={enrolling}
+                    isDisabled={isCourseFull}
                   >
                     Update Enrollment
                   </Button>
@@ -374,7 +468,21 @@ const CourseDetails = () => {
                   >
                     Go to Course
                   </Button>
-                  : (
+                  : isCourseFull ? (
+                    <div className="space-y-2">
+                      <p className="text-sm text-center text-danger font-medium">
+                        This course is currently full.
+                      </p>
+                      <Button
+                        radius="sm"
+                        size="sm"
+                        className="w-full bg-[#06574C] text-white"
+                        onPress={waitingListModal.onOpen}
+                      >
+                        Join Waiting List
+                      </Button>
+                    </div>
+                  ) : (
                     <Button
                       radius="sm"
                       size="sm"
@@ -431,7 +539,7 @@ const CourseDetails = () => {
         </div>
         <div className="grid grid-cols-12 gap-3 mb-3">
           {/* LEFT SIDE */}
-          <div className="col-span-12 md:col-span-6">
+          <div className={`col-span-12 ${isInPerson ? "md:col-span-12" : "md:col-span-6"}`}>
             <div className="flex flex-col gap-3">
               {/* Student Reviews */}
               <div className="bg-white p-5 rounded-xl">
@@ -532,6 +640,7 @@ const CourseDetails = () => {
           </div>
 
           {/* RIGHT SIDE */}
+          {!isInPerson && (
           <div className="col-span-12 md:col-span-6">
             <div className="bg-white p-5 rounded-xl h-full">
               <h3 className="text-xl font-semibold mb-5">About The Teacher</h3>
@@ -576,9 +685,71 @@ const CourseDetails = () => {
               </p>
             </div>
           </div>
+          )}
         </div>
 
       </div>
+
+      <Modal isOpen={waitingListModal.isOpen} onOpenChange={waitingListModal.onOpenChange} size="lg">
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>Join Waiting List</ModalHeader>
+              <ModalBody className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  This course is currently full. Leave your details and we will contact you when a spot becomes available.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="First Name"
+                    labelPlacement="outside"
+                    isRequired
+                    value={waitingForm.firstName}
+                    onChange={(e) => setWaitingForm((f) => ({ ...f, firstName: e.target.value }))}
+                  />
+                  <Input
+                    label="Last Name"
+                    labelPlacement="outside"
+                    isRequired
+                    value={waitingForm.lastName}
+                    onChange={(e) => setWaitingForm((f) => ({ ...f, lastName: e.target.value }))}
+                  />
+                </div>
+                <Input
+                  label="Email"
+                  labelPlacement="outside"
+                  type="email"
+                  isRequired
+                  value={waitingForm.email}
+                  onChange={(e) => setWaitingForm((f) => ({ ...f, email: e.target.value }))}
+                />
+                <Input
+                  label="Phone (optional)"
+                  labelPlacement="outside"
+                  value={waitingForm.phone}
+                  onChange={(e) => setWaitingForm((f) => ({ ...f, phone: e.target.value }))}
+                />
+                <Textarea
+                  label="Message (optional)"
+                  labelPlacement="outside"
+                  value={waitingForm.message}
+                  onChange={(e) => setWaitingForm((f) => ({ ...f, message: e.target.value }))}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>Cancel</Button>
+                <Button
+                  className="bg-[#06574C] text-white"
+                  isLoading={joiningWaitlist}
+                  onPress={handleJoinWaitingList}
+                >
+                  Submit
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </>
   );
 };
