@@ -95,15 +95,15 @@ const CourseDetails = () => {
   }, [data, shouldFetchOverview]);
 
   useEffect(() => {
-    if (course?.id) {
+    if (id) {
       checkEnrollmentStatus();
     }
-  }, [course]);
+  }, [id]);
 
   const checkEnrollmentStatus = async () => {
     try {
       setEnrollCheckLoading(true);
-      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/check-enrollment/${course.id}`, {
+      const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/course/check-enrollment/${id}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json'
@@ -490,7 +490,7 @@ const CourseDetails = () => {
                       color="success"
                       className="w-full"
                       onPress={handleEnroll}
-                      isLoading={enrolling||enrollCheckLoading}
+                      isLoading={enrolling || enrollCheckLoading}
                     >
                       Enroll Now
                     </Button>
@@ -641,50 +641,50 @@ const CourseDetails = () => {
 
           {/* RIGHT SIDE */}
           {!isInPerson && (
-          <div className="col-span-12 md:col-span-6">
-            <div className="bg-white p-5 rounded-xl h-full">
-              <h3 className="text-xl font-semibold mb-5">About The Teacher</h3>
+            <div className="col-span-12 md:col-span-6">
+              <div className="bg-white p-5 rounded-xl h-full">
+                <h3 className="text-xl font-semibold mb-5">About The Teacher</h3>
 
-              <div className="flex gap-4 mb-5 items-center">
-                <div className="h-20 w-20 rounded-full bg-[#95C4BE33] flex items-center justify-center text-emerald-700">
-                  <HiUserGroup size={28} color="#06574C" />
+                <div className="flex gap-4 mb-5 items-center">
+                  <div className="h-20 w-20 rounded-full bg-[#95C4BE33] flex items-center justify-center text-emerald-700">
+                    <HiUserGroup size={28} color="#06574C" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-xl font-semibold text-emerald-700">
+                      {data?.teacher?.firstName} {data?.teacher?.lastName}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {data?.teacher?.email}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {data?.teacher?.tagline}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-xl font-semibold text-emerald-700">
-                    {data?.teacher?.firstName} {data?.teacher?.lastName}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {data?.teacher?.email}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {data?.teacher?.tagline}
-                  </p>
+                <div className="flex gap-6 text-md text-gray-600 mb-4">
+                  <div className="flex items-center gap-1">
+                    <FaStar className="text-yellow-400" />
+                    <span>{Number(data?.teacher?.rating || 0).toFixed(1)} Teacher Rating</span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <HiUserGroup />
+                    <span>{data?.teacher?.studentCount} students</span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <MdMenuBook />
+                    <span>{data?.teacher?.coursesCount} Courses</span>
+                  </div>
                 </div>
+
+                <p className="text-sm text-[#333333] font-medium mb-2">
+                  {data?.teacher?.bio}
+                </p>
               </div>
-
-              <div className="flex gap-6 text-md text-gray-600 mb-4">
-                <div className="flex items-center gap-1">
-                  <FaStar className="text-yellow-400" />
-                  <span>{Number(data?.teacher?.rating || 0).toFixed(1)} Teacher Rating</span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <HiUserGroup />
-                  <span>{data?.teacher?.studentCount} students</span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <MdMenuBook />
-                  <span>{data?.teacher?.coursesCount} Courses</span>
-                </div>
-              </div>
-
-              <p className="text-sm text-[#333333] font-medium mb-2">
-                {data?.teacher?.bio}
-              </p>
             </div>
-          </div>
           )}
         </div>
 
