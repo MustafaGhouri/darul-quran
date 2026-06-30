@@ -402,7 +402,7 @@ const TeachersDashboard = () => {
       </div>
 
       <div className=" bg-white rounded-lg mb-3 ">
-        <h1 className="p-3 text-xl text-[#333333]">Today's Upcomming Classes</h1>
+        <h1 className="p-3 text-xl text-[#333333]">Today's Upcoming Classes</h1>
         <div className="flex flex-col gap-3">
           {loading ? (
             // 🔥 Skeleton Loader (3 dummy rows)
