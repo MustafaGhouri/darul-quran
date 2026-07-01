@@ -17,6 +17,7 @@ import {
   MessageCircleMore,
   UserIcon,
   CalendarDaysIcon,
+  IdCardIcon,
 } from "lucide-react";
 import { RiProgress3Line } from "react-icons/ri";
 import { IoBook } from "react-icons/io5";
@@ -112,6 +113,12 @@ export const adminMenu = [
     value: "testimonials",
   },
   {
+    name: "View Contact Forms",
+    icon: <IdCardIcon />,
+    link: "/admin/contact-forms",
+    value: "contact-forms",
+  },
+  {
     name: "Events & Retreats",
     icon: <CalendarDaysIcon />,
     link: "/admin/events-retreats",
@@ -130,6 +137,7 @@ export const adminMenu = [
   //   link: "/admin/notifications",
   //   value: "notifications",
   // },
+  
   {
     name: "Notifications & Announcements",
     icon: <BellRing />,
@@ -179,6 +187,7 @@ export const adminMenu = [
       { name: "FAQs", link: "/admin/faqs", value: "faqs" },
     ],
   },
+  
 ];
 export const teacherMenu = [
   { name: "Dashboard", icon: <HomeIcon />, link: "/teacher/dashboard" },
