@@ -146,6 +146,7 @@ const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 const Testimonials = lazy(() => import("./pages/testimonials"));
 const EventsRetreats = lazy(() => import("./pages/admin/events-retreats"));
 const EventRetreatManage = lazy(() => import("./pages/admin/events-retreats/manage"));
+const ContactForms = lazy(() => import("./pages/admin/contact-forms"));
 import { io } from "socket.io-client";
 import AttendanceList from "./pages/student/attendance-list";
 import { BiChat, BiPaperclip } from "react-icons/bi";
@@ -560,6 +561,14 @@ function App() {
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <EventRetreatManage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/contact-forms"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <ContactForms />
                 </ProtectedRoute>
               }
             />

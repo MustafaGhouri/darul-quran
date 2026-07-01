@@ -27,6 +27,7 @@ const pageDescriptions = {
   "/admin/tickets": "Manage support tickets",
   "/admin/help/reviews": "View and manage reviews",
   "/admin/faqs": "Manage frequently asked questions",
+  "/admin/contact-forms": "View website contact form submissions",
 
   // Teacher pages
   "/teacher/dashboard": "Teacher dashboard with overview",
