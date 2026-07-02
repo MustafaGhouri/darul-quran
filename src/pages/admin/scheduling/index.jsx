@@ -70,6 +70,7 @@ const Scheduling = () => {
     onOpenChange: closeRescheduleModal,
   } = useDisclosure();
   const [selectedCourseForEnrolled, setSelectedCourseForEnrolled] = useState(null);
+  const [selectedSpecificStudentIds, setSelectedSpecificStudentIds] = useState(null);
 
   // Reschedule requests state
   const [selectedSchedule, setSelectedSchedule] = useState(null);
@@ -611,11 +612,23 @@ const Scheduling = () => {
                         </div>
                       </PopoverContent>
                     </Popover>
+                  ) : item.specificStudents?.length > 0 ? (
+                    <span
+                      className="text-[#06574C] text-sm font-semibold cursor-pointer underline hover:text-[#06574C]/80"
+                      onClick={() => {
+                        setSelectedCourseForEnrolled(item.courseId);
+                        setSelectedSpecificStudentIds(item.specificStudents);
+                        onEnrolledUsersModalOpen();
+                      }}
+                    >
+                      {item.specificStudents.length} {item.specificStudents.length === 1 ? 'Student' : 'Students'}
+                    </span>
                   ) : (
                     <span
                       className="text-[#06574C] text-sm italic cursor-pointer underline hover:text-[#06574C]/80"
                       onClick={() => {
                         setSelectedCourseForEnrolled(item.courseId);
+                        setSelectedSpecificStudentIds(null);
                         onEnrolledUsersModalOpen();
                       }}
                     >
@@ -1103,10 +1116,13 @@ const Scheduling = () => {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1 text-[#06574C]">
-                Enrolled Students
+                {selectedSpecificStudentIds?.length > 0 ? "Assigned Students" : "Enrolled Students"}
               </ModalHeader>
               <ModalBody>
-                <EnrolledStudentsList courseId={selectedCourseForEnrolled} />
+                <EnrolledStudentsList
+                  courseId={selectedCourseForEnrolled}
+                  studentIds={selectedSpecificStudentIds}
+                />
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
@@ -1592,15 +1608,28 @@ const Scheduling = () => {
   );
 };
 
-const EnrolledStudentsList = ({ courseId }) => {
+const EnrolledStudentsList = ({ courseId, studentIds = null }) => {
+  const isSpecificList = studentIds?.length > 0;
   const { data, isFetching } = useGetAllUserForSelectQuery(
-    { courseId, enrolledStudents: true, limit: 100, page: 1 },
-    { skip: !courseId }
+    {
+      courseId: isSpecificList ? undefined : courseId,
+      enrolledStudents: !isSpecificList,
+      limit: 100,
+      page: 1,
+      initialValues: isSpecificList ? studentIds.join(",") : undefined,
+    },
+    { skip: !isSpecificList && !courseId }
   );
 
   if (isFetching) return <div className="flex justify-center p-4"><Spinner color="success" /></div>;
 
-  if (!data?.users?.length) return <div className="text-center p-4 text-gray-500 text-sm">No students enrolled in this course yet.</div>;
+  if (!data?.users?.length) {
+    return (
+      <div className="text-center p-4 text-gray-500 text-sm">
+        {isSpecificList ? "No assigned students found." : "No students enrolled in this course yet."}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3">
