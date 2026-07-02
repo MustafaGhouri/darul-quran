@@ -5,8 +5,19 @@ import {
     useUnsubscribeMutation,
 } from "../redux/api/notifications";
 
+const PUSH_DEVICE_ID_KEY = "push_device_id";
+
+const getOrCreateDeviceId = () => {
+    let id = localStorage.getItem(PUSH_DEVICE_ID_KEY);
+    if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem(PUSH_DEVICE_ID_KEY, id);
+    }
+    return id;
+};
+
 const getDeviceInfo = () =>
-    `${navigator.userAgent} - ${navigator.platform}`;
+    `${navigator.userAgent} - ${navigator.platform} - ${getOrCreateDeviceId()}`;
 
 /**
  * Custom hook for managing push notifications

@@ -198,8 +198,15 @@ const Scheduling = () => {
       const payload = {
         ...formData,
         weeklyDays: formData.weeklyDays.map(String),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      }
+        sessionMode: formData.sessionMode,
+        specificStudentIds:
+          formData.sessionMode === "one-on-one"
+            ? (formData.specificStudentIds ?? []).map(Number)
+            : [],
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+      delete payload.selectedUsers;
+      delete payload.specificStudents;
 
       if (user?.role === "teacher") {
         payload.teacherId = user.id
@@ -784,16 +791,18 @@ const Scheduling = () => {
                 <p className="text-xs text-warning mb-2">Note: 29th, 30th and 31st dates wil be block for every month.</p>
                 <div className="flex gap-2 mb-4">
                   <Button
+                    type="button"
                     radius="sm"
                     size="md"
                     color={formData.sessionMode === "all" ? "success" : "default"}
                     variant={formData.sessionMode === "all" ? "solid" : "bordered"}
                     className="w-full"
-                    onPress={() => setFormData({ ...formData, sessionMode: "all" })}
+                    onPress={() => setFormData({ ...formData, sessionMode: "all", specificStudentIds: [], selectedUsers: [] })}
                   >
                     For All Enrolled Users
                   </Button>
                   <Button
+                    type="button"
                     radius="sm"
                     size="md"
                     color={formData.sessionMode === "one-on-one" ? "success" : "default"}
@@ -826,6 +835,7 @@ const Scheduling = () => {
 
                 <div className="flex gap-2 mb-4">
                   <Button
+                    type="button"
                     radius="md"
                     size="md"
                     color={formData.scheduleType === "once" ? "success" : "default"}
@@ -835,6 +845,7 @@ const Scheduling = () => {
                     One Time
                   </Button>
                   <Button
+                    type="button"
                     radius="md"
                     size="md"
                     color={formData.scheduleType === "daily" ? "success" : "default"}
@@ -844,6 +855,7 @@ const Scheduling = () => {
                     Daily
                   </Button>
                   <Button
+                    type="button"
                     radius="md"
                     size="md"
                     color={formData.scheduleType === "weekly" ? "success" : "default"}

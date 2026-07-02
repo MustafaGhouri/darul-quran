@@ -201,8 +201,15 @@ const CreaterOrUpdateSchedule = () => {
                 ...formData,
                 weeklyDays: formData.weeklyDays?.map(String),
                 specificDates: formData.specificDates.length > 0 ? sdPayload : {},
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                sessionMode: formData.sessionMode,
+                specificStudentIds:
+                    formData.sessionMode === "one-on-one"
+                        ? (formData.specificStudentIds ?? []).map(Number)
+                        : [],
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             };
+            delete payload.selectedUsers;
+            delete payload.specificStudents;
 
             if (user?.role === "teacher") payload.teacherId = user.id;
 
@@ -246,10 +253,14 @@ const CreaterOrUpdateSchedule = () => {
                 <div className="flex gap-2">
                     {["all", "one-on-one"].map(mode => (
                         <Button
-                            key={mode} radius="sm" size="md" className="w-full"
+                            key={mode} type="button" radius="sm" size="md" className="w-full"
                             color={formData.sessionMode === mode ? "success" : "default"}
                             variant={formData.sessionMode === mode ? "solid" : "bordered"}
-                            onPress={() => setFormData(p => ({ ...p, sessionMode: mode }))}
+                            onPress={() => setFormData(p => ({
+                                ...p,
+                                sessionMode: mode,
+                                ...(mode === "all" ? { specificStudentIds: [] } : {}),
+                            }))}
                         >
                             {mode === "all" ? "For All Enrolled Users" : "One-on-One Live"}
                         </Button>
@@ -336,7 +347,7 @@ const CreaterOrUpdateSchedule = () => {
                 <div className="flex gap-2">
                     {["once", "daily", "weekly"].map(type => (
                         <Button
-                            key={type} radius="md" size="md"
+                            key={type} type="button" radius="md" size="md"
                             color={formData.scheduleType === type ? "success" : "default"}
                             variant={formData.scheduleType === type ? "solid" : "bordered"}
                             isDisabled={hasSpecificDates}
