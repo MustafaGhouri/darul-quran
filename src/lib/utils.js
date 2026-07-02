@@ -237,10 +237,16 @@ export const validateSchedule = (formData) => {
     repeatInterval,
     weeklyDays,
     specificDates,
+    sessionMode,
+    specificStudentIds,
   } = formData;
 
   if (!title || !title.trim()) {
     return { valid: false, message: "Session title is required" };
+  }
+
+  if (sessionMode === "one-on-one" && (!specificStudentIds || specificStudentIds.length === 0)) {
+    return { valid: false, message: "Please select at least one student for one-on-one session" };
   }
 
   if (!startTime || !endTime) {

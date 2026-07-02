@@ -70,6 +70,7 @@ const Scheduling = () => {
     onOpenChange: closeRescheduleModal,
   } = useDisclosure();
   const [selectedCourseForEnrolled, setSelectedCourseForEnrolled] = useState(null);
+  const [selectedSpecificStudentIds, setSelectedSpecificStudentIds] = useState(null);
 
   // Reschedule requests state
   const [selectedSchedule, setSelectedSchedule] = useState(null);
@@ -198,8 +199,15 @@ const Scheduling = () => {
       const payload = {
         ...formData,
         weeklyDays: formData.weeklyDays.map(String),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      }
+        sessionMode: formData.sessionMode,
+        specificStudentIds:
+          formData.sessionMode === "one-on-one"
+            ? (formData.specificStudentIds ?? []).map(Number)
+            : [],
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+      delete payload.selectedUsers;
+      delete payload.specificStudents;
 
       if (user?.role === "teacher") {
         payload.teacherId = user.id
@@ -604,11 +612,23 @@ const Scheduling = () => {
                         </div>
                       </PopoverContent>
                     </Popover>
+                  ) : item.specificStudents?.length > 0 ? (
+                    <span
+                      className="text-[#06574C] text-sm font-semibold cursor-pointer underline hover:text-[#06574C]/80"
+                      onClick={() => {
+                        setSelectedCourseForEnrolled(item.courseId);
+                        setSelectedSpecificStudentIds(item.specificStudents);
+                        onEnrolledUsersModalOpen();
+                      }}
+                    >
+                      {item.specificStudents.length} {item.specificStudents.length === 1 ? 'Student' : 'Students'}
+                    </span>
                   ) : (
                     <span
                       className="text-[#06574C] text-sm italic cursor-pointer underline hover:text-[#06574C]/80"
                       onClick={() => {
                         setSelectedCourseForEnrolled(item.courseId);
+                        setSelectedSpecificStudentIds(null);
                         onEnrolledUsersModalOpen();
                       }}
                     >
@@ -784,16 +804,18 @@ const Scheduling = () => {
                 <p className="text-xs text-warning mb-2">Note: 29th, 30th and 31st dates wil be block for every month.</p>
                 <div className="flex gap-2 mb-4">
                   <Button
+                    type="button"
                     radius="sm"
                     size="md"
                     color={formData.sessionMode === "all" ? "success" : "default"}
                     variant={formData.sessionMode === "all" ? "solid" : "bordered"}
                     className="w-full"
-                    onPress={() => setFormData({ ...formData, sessionMode: "all" })}
+                    onPress={() => setFormData({ ...formData, sessionMode: "all", specificStudentIds: [], selectedUsers: [] })}
                   >
                     For All Enrolled Users
                   </Button>
                   <Button
+                    type="button"
                     radius="sm"
                     size="md"
                     color={formData.sessionMode === "one-on-one" ? "success" : "default"}
@@ -826,6 +848,7 @@ const Scheduling = () => {
 
                 <div className="flex gap-2 mb-4">
                   <Button
+                    type="button"
                     radius="md"
                     size="md"
                     color={formData.scheduleType === "once" ? "success" : "default"}
@@ -835,6 +858,7 @@ const Scheduling = () => {
                     One Time
                   </Button>
                   <Button
+                    type="button"
                     radius="md"
                     size="md"
                     color={formData.scheduleType === "daily" ? "success" : "default"}
@@ -844,6 +868,7 @@ const Scheduling = () => {
                     Daily
                   </Button>
                   <Button
+                    type="button"
                     radius="md"
                     size="md"
                     color={formData.scheduleType === "weekly" ? "success" : "default"}
@@ -1091,10 +1116,13 @@ const Scheduling = () => {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1 text-[#06574C]">
-                Enrolled Students
+                {selectedSpecificStudentIds?.length > 0 ? "Assigned Students" : "Enrolled Students"}
               </ModalHeader>
               <ModalBody>
-                <EnrolledStudentsList courseId={selectedCourseForEnrolled} />
+                <EnrolledStudentsList
+                  courseId={selectedCourseForEnrolled}
+                  studentIds={selectedSpecificStudentIds}
+                />
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
@@ -1580,15 +1608,28 @@ const Scheduling = () => {
   );
 };
 
-const EnrolledStudentsList = ({ courseId }) => {
+const EnrolledStudentsList = ({ courseId, studentIds = null }) => {
+  const isSpecificList = studentIds?.length > 0;
   const { data, isFetching } = useGetAllUserForSelectQuery(
-    { courseId, enrolledStudents: true, limit: 100, page: 1 },
-    { skip: !courseId }
+    {
+      courseId: isSpecificList ? undefined : courseId,
+      enrolledStudents: !isSpecificList,
+      limit: 100,
+      page: 1,
+      initialValues: isSpecificList ? studentIds.join(",") : undefined,
+    },
+    { skip: !isSpecificList && !courseId }
   );
 
   if (isFetching) return <div className="flex justify-center p-4"><Spinner color="success" /></div>;
 
-  if (!data?.users?.length) return <div className="text-center p-4 text-gray-500 text-sm">No students enrolled in this course yet.</div>;
+  if (!data?.users?.length) {
+    return (
+      <div className="text-center p-4 text-gray-500 text-sm">
+        {isSpecificList ? "No assigned students found." : "No students enrolled in this course yet."}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3">
