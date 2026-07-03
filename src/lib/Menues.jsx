@@ -119,6 +119,12 @@ export const adminMenu = [
     value: "contact-forms",
   },
   {
+    name: "User Appointment",
+    icon: <CalendarPlus />,
+    link: "/admin/user-appointment",
+    value: "user-appointment",
+  },
+  {
     name: "Events & Retreats",
     icon: <CalendarDaysIcon />,
     link: "/admin/events-retreats",
