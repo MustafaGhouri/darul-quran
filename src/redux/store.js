@@ -17,6 +17,7 @@ import { faqAPI } from "./api/faq";
 import { testimonalAPI } from "./api/testimonals";
 import { eventsAPI } from "./api/events";
 import { contactFormsApi } from "./api/contactForms";
+import { appointmentsApi } from "./api/appointments";
 import chatReducer from "./reducers/chat";
 
 
@@ -37,7 +38,8 @@ export const apiRegistry = {
   faqAPI,
   testimonalAPI,
   eventsAPI,
-  contactFormsApi
+  contactFormsApi,
+  appointmentsApi
 };
 export const store = configureStore({
   reducer: {
@@ -58,6 +60,7 @@ export const store = configureStore({
     [testimonalAPI.reducerPath]: testimonalAPI.reducer,
     [eventsAPI.reducerPath]: eventsAPI.reducer,
     [contactFormsApi.reducerPath]: contactFormsApi.reducer,
+    [appointmentsApi.reducerPath]: appointmentsApi.reducer,
     user: userReducer,
     chat: chatReducer,
   },
@@ -80,6 +83,7 @@ export const store = configureStore({
     testimonalAPI.middleware,
     eventsAPI.middleware,
     contactFormsApi.middleware,
+    appointmentsApi.middleware,
   ],
 });
 

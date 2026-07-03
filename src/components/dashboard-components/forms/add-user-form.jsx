@@ -17,6 +17,7 @@ import { EyeIcon, EyeOffIcon, SearchCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 // import Countries from "../../../../public/countries.json";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
+import { ADMIN_PERMISSIONS } from "../../../lib/adminPermissions";
 import { useCreateOrUpdateUserMutation } from "../../../redux/api/user";
 
 
@@ -280,33 +281,7 @@ const AddUserForm = ({ id, title, desc, userData, isEdit }) => {
     }
   };
 
-  const ALL_PERMISSIONS = [
-    { label: "Dashboard", value: "/admin/dashboard" },
-    { label: "Courses Management", value: "/admin/courses-management" },
-    { label: "Course Builder", value: "/admin/courses-management/builder" },
-    { label: "Attendance & Progress", value: "/admin/courses-management/attendance" },
-    { label: "Waiting List", value: "/admin/courses-management/waiting-list" },
-    { label: "Student Attendence", value: "/admin/attendance-list" },
-    { label: "User Management", value: "/admin/user-management" },
-    { label: "Add User Management", value: "/admin/user-management/add-user" },
-    { label: "User Detailed View", value: "/admin/user-management/users-details" },
-    { label: "Edit User", value: "/admin/user-management/edit-user" },
-    { label: "Class Scheduling", value: "/admin/class-scheduling" },
-    { label: "Reschedule Requests", value: "/admin/reschedule-requests" },
-    { label: "Announcements", value: "/admin/announcements" },
-    { label: "Payments & Refunds", value: "/admin/payments" },
-    { label: "Support", value: "/admin/tickets" },
-    { label: "Analytics", value: "/admin/analytics" },
-    { label: "View Contact Forms", value: "/admin/contact-forms" },
-    { label: "All Events & Retreats", value: "/admin/events-retreats" },
-    { label: "Add/Edit Events & Retreats", value: "/admin/events-retreats/manage" },
-    { label: "Notifications", value: "/admin/notifications" },
-    // { label: "Help and Support", value: "/admin/help/messages" },
-    { label: "Message Center Or Chat", value: "/admin/help/messages" },
-    { label: "Teacher & Student Chat", value: "/admin/help/chat" },
-    { label: "Reviews", value: "/admin/help/reviews" },
-    { label: "FAQs", value: "/admin/faqs" },
-  ];
+  const ALL_PERMISSIONS = ADMIN_PERMISSIONS;
   const handleToggle = (permission = '', checked = false) => {
     setSelectedPermissions((prev) =>
       checked

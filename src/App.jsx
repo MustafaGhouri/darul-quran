@@ -147,6 +147,8 @@ const Testimonials = lazy(() => import("./pages/testimonials"));
 const EventsRetreats = lazy(() => import("./pages/admin/events-retreats"));
 const EventRetreatManage = lazy(() => import("./pages/admin/events-retreats/manage"));
 const ContactForms = lazy(() => import("./pages/admin/contact-forms"));
+const UserAppointment = lazy(() => import("./pages/admin/user-appointment"));
+const BookAppointment = lazy(() => import("./pages/BookAppointment"));
 import { io } from "socket.io-client";
 import AttendanceList from "./pages/student/attendance-list";
 import { BiChat, BiPaperclip } from "react-icons/bi";
@@ -383,6 +385,12 @@ function App() {
                 <ChangePassword />
               }
             />
+            <Route
+              path="/book-appointment"
+              element={
+                <BookAppointment />
+              }
+            />
           </Route>
           {/* --- ----- Admin Layout (WITH HEADER/SIDEBAR) -------- */}
           <Route
@@ -569,6 +577,14 @@ function App() {
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <ContactForms />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/user-appointment"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <UserAppointment />
                 </ProtectedRoute>
               }
             />
