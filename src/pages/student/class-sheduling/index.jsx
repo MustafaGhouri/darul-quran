@@ -226,6 +226,11 @@ const StudentClassSheduling = () => {
         }
         setIsMarking(schedule.id);
         const finalToken = localStorage.getItem("token");
+        const ua = navigator.userAgent;
+
+        const isSafari =
+            /Safari/i.test(ua) &&
+            !/Chrome|CriOS|Edg|OPR|Firefox|FxiOS/i.test(ua);
         try {
             const res = await fetch(`${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/attendance/mark`, {
                 method: "POST",
@@ -240,8 +245,11 @@ const StudentClassSheduling = () => {
             });
             const data = await res.json();
             if (res.ok) {
-                window.open(data?.link, '_blank');
-                // successMessage(data?.message||"Joined class! Attendance marked.");
+                if (isSafari) {
+                    window.location.assign(data.link);  
+                } else {
+                    window.open(data.link, "_blank");
+                }
             } else {
                 throw new Error(data.message);
             }
@@ -402,7 +410,7 @@ const StudentClassSheduling = () => {
         let status = '';
         let hoursUntil = null;
         let isExpired = false;
-        const  startTime = getScheduleStart(schedule);
+        const startTime = getScheduleStart(schedule);
         const endTime = getScheduleEnd(schedule);
         if (type === 'single') {
             status = getStatusTextForSingleDate(schedule.date, startTime, endTime);
