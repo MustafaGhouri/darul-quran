@@ -277,7 +277,7 @@ export default function HelpMessages() {
           </div>
         </div>
 
-        <div className="flex-1 no-scrollbar overflow-y-auto">
+        <div className="flex-1 no-scrollbar overflow-y-auto md:mb-18">
           {loading && chats.length === 0 ? (
             <div className="flex justify-center py-8 text-gray-500">Loading chats...</div>
           ) : filteredChats.length > 0 ? (
