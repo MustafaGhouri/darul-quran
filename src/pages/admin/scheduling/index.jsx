@@ -103,6 +103,7 @@ const Scheduling = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isEdit, setIsEdit] = useState(false);
   const [defultTeacher, setdefultTeacher] = useState("");
+  const [autoZoomLink, setAutoZoomLink] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -198,6 +199,7 @@ const Scheduling = () => {
       let response;
       const payload = {
         ...formData,
+        meetingLink: formData.meetingLink?.trim() || null,
         weeklyDays: formData.weeklyDays.map(String),
         sessionMode: formData.sessionMode,
         specificStudentIds:
@@ -282,6 +284,7 @@ const Scheduling = () => {
       },
     });
     setIsEdit(false);
+    setAutoZoomLink("");
   };
 
   const openCreateModal = () => {
@@ -301,7 +304,7 @@ const Scheduling = () => {
       description: item.description,
       teacherId: item.teacherId ? item.teacherId : null,
       courseId: item.courseId ? item.courseId : null,
-      meetingLink: item.meetingLink,
+      meetingLink: item.zoomMeetingId ? '' : (item.meetingLink || ''),
       scheduleType: item.scheduleType,
       sessionMode: item.specificStudents?.length > 0 ? 'one-on-one' : 'all',
       startDate: item?.startDate?.split("T")[0] || null,
@@ -317,6 +320,7 @@ const Scheduling = () => {
         waiting_room: item.settings?.waiting_room || false,
       },
     });
+    setAutoZoomLink(item.zoomMeetingId ? (item.meetingLink || '') : '');
     onOpen();
   };
 
@@ -798,9 +802,9 @@ const Scheduling = () => {
                 {isEdit ? "Reschedule Session" : "Schedule New Session"}
               </ModalHeader>
               <ModalBody>
-                {!isEdit && (
-                  <p className="text-xs text-gray-500 msb-2">Zoom link and password will be auto-generated upon creation.</p>
-                )}
+                <p className="text-xs text-gray-500 msb-2">
+                  Leave the custom link empty to auto-generate a Zoom link.
+                </p>
                 <p className="text-xs text-warning mb-2">Note: 29th, 30th and 31st dates wil be block for every month.</p>
                 <div className="flex gap-2 mb-4">
                   <Button
@@ -1011,6 +1015,27 @@ const Scheduling = () => {
                     setFormData({ ...formData, description: e.target.value })
                   }
                 />
+
+                <Input
+                  label="Custom Meeting Link (optional)"
+                  placeholder="https://..."
+                  variant="bordered"
+                  value={formData.meetingLink}
+                  onChange={(e) =>
+                    setFormData({ ...formData, meetingLink: e.target.value })
+                  }
+                  description="Use any meeting URL (Zoom, Google Meet, Teams, etc.)"
+                />
+                {isEdit && autoZoomLink && !formData.meetingLink?.trim() && (
+                  <p className="text-xs text-gray-500 break-all">
+                    Current auto-generated link:{" "}
+                    <a href={autoZoomLink} target="_blank" rel="noopener noreferrer" className="text-[#3F86F2]">
+                      {autoZoomLink}
+                    </a>
+                  </p>
+                )}
+
+                {!formData.meetingLink?.trim() && (
                 <div className="py-3 border-t pt-4">
                   <h3 className="text-sm font-semibold mb-2 text-[#06574C]">Zoom Meeting Settings</h3>
                   <CheckboxGroup
@@ -1075,13 +1100,18 @@ const Scheduling = () => {
                     </Tooltip>
                   </CheckboxGroup>
                 </div>
+                )}
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="flat" onPress={onClose}>
                   Cancel
                 </Button>
                 <Button className="bg-[#06574C] text-white" onPress={handleSubmit} isLoading={isSubmitting || isUpdating}>
-                  {isEdit ? "Update Schedule" : "Schedule & Generate Zoom"}
+                  {isEdit
+                    ? "Update Schedule"
+                    : formData.meetingLink?.trim()
+                      ? "Schedule Session"
+                      : "Schedule & Generate Zoom"}
                 </Button>
               </ModalFooter>
             </>

@@ -80,6 +80,7 @@ const CreaterOrUpdateSchedule = () => {
 
     // Per-date timing map: { "2026-05-06": { startTime: "13:00", endTime: "14:00" }, ... }
     const [specificDateTimings, setSpecificDateTimings] = useState({});
+    const [autoZoomLink, setAutoZoomLink] = useState("");
 
     const [createSchedule, { isLoading: isSubmitting }] = useCreateScheduleMutation();
     const [updateSchedule, { isLoading: isUpdating }] = useUpdateScheduleMutation();
@@ -110,7 +111,7 @@ const CreaterOrUpdateSchedule = () => {
             description: item.description,
             teacherId: item.teacherId || null,
             courseId: item.courseId || null,
-            meetingLink: item.meetingLink,
+            meetingLink: item.zoomMeetingId ? "" : (item.meetingLink || ""),
             scheduleType: item.scheduleType,
             sessionMode: item.specificStudents?.length > 0 ? "one-on-one" : "all",
             startDate: item?.startDate?.split("T")[0] || null,
@@ -126,6 +127,7 @@ const CreaterOrUpdateSchedule = () => {
                 auto_recording: item.settings?.auto_recording || false,
             },
         });
+        setAutoZoomLink(item.zoomMeetingId ? (item.meetingLink || "") : "");
         setSpecificDateTimings(sdTimings);
     }, [scheduleFromState]);
 
@@ -199,6 +201,7 @@ const CreaterOrUpdateSchedule = () => {
 
             const payload = {
                 ...formData,
+                meetingLink: formData.meetingLink?.trim() || null,
                 weeklyDays: formData.weeklyDays?.map(String),
                 specificDates: formData.specificDates.length > 0 ? sdPayload : {},
                 sessionMode: formData.sessionMode,
@@ -226,6 +229,7 @@ const CreaterOrUpdateSchedule = () => {
     };
 
     const hasSpecificDates = formData.specificDates.length > 0;
+    const usesCustomLink = !!formData.meetingLink?.trim();
     const set = (field) => (e) => setFormData(p => ({ ...p, [field]: e.target.value }));
     const setVal = (field) => (val) => setFormData(p => ({ ...p, [field]: val }));
 
@@ -239,9 +243,9 @@ const CreaterOrUpdateSchedule = () => {
             </div>
 
             <Form onSubmit={handleSubmit} className="bg-white w-full px-2 sm:px-4 py-6 rounded-md space-y-3">
-                {!isEdit && (
-                    <p className="text-xs text-gray-500">Zoom link and password will be auto-generated upon creation.</p>
-                )}
+                <p className="text-xs text-gray-500">
+                    Leave the custom link empty to auto-generate a Zoom link.
+                </p>
                 <p className="text-xs text-warning">Note: 29th, 30th and 31st dates will be blocked for every month.</p>
                 {isEdit && hasSpecificDates && (
                     <p className="text-sm text-danger">
@@ -452,6 +456,25 @@ const CreaterOrUpdateSchedule = () => {
                     onChange={set("description")}
                 />
 
+                <Input
+                    label="Custom Meeting Link (optional)"
+                    placeholder="https://..."
+                    variant="bordered"
+                    value={formData.meetingLink}
+                    isDisabled={hasSpecificDates}
+                    onChange={set("meetingLink")}
+                    description="Use any meeting URL (Zoom, Google Meet, Teams, etc.)"
+                />
+                {isEdit && autoZoomLink && !usesCustomLink && (
+                    <p className="text-xs text-gray-500 break-all">
+                        Current auto-generated link:{" "}
+                        <a href={autoZoomLink} target="_blank" rel="noopener noreferrer" className="text-[#3F86F2]">
+                            {autoZoomLink}
+                        </a>
+                    </p>
+                )}
+
+                {!usesCustomLink && (
                 <div className="py-3 border-t pt-4">
                     <h3 className="text-sm font-semibold mb-2 text-[#06574C]">Zoom Meeting Settings</h3>
                     <CheckboxGroup
@@ -474,13 +497,18 @@ const CreaterOrUpdateSchedule = () => {
                         <Checkbox value="waiting_room">Participants must be admitted by the host before joining.</Checkbox>
                     </CheckboxGroup>
                 </div>
+                )}
 
                 <div className="flex items-center max-sm:flex-wrap gap-3 w-full">
                     <Button color="danger" variant="flat" as={Link} to="/teacher/class-scheduling">
                         Cancel
                     </Button>
                     <Button color="success" type="submit" isLoading={isSubmitting || isUpdating}>
-                        {isEdit ? "Update Schedule" : "Schedule & Generate Zoom"}
+                        {isEdit
+                            ? "Update Schedule"
+                            : usesCustomLink
+                                ? "Schedule Session"
+                                : "Schedule & Generate Zoom"}
                     </Button>
                 </div>
             </Form>
