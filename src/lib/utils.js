@@ -239,10 +239,19 @@ export const validateSchedule = (formData) => {
     specificDates,
     sessionMode,
     specificStudentIds,
+    meetingLink,
   } = formData;
 
   if (!title || !title.trim()) {
     return { valid: false, message: "Session title is required" };
+  }
+
+  if (meetingLink?.trim()) {
+    try {
+      new URL(meetingLink.trim());
+    } catch {
+      return { valid: false, message: "Custom meeting link must be a valid URL" };
+    }
   }
 
   if (sessionMode === "one-on-one" && (!specificStudentIds || specificStudentIds.length === 0)) {
