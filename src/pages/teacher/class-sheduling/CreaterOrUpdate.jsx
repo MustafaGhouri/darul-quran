@@ -196,6 +196,7 @@ const CreaterOrUpdateSchedule = () => {
                 sdPayload[dateKey] = {
                     startTime: specificDateTimings[dateKey]?.startTime || formData.startTime,
                     endTime: specificDateTimings[dateKey]?.endTime || formData.endTime,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 };
             });
 
@@ -215,7 +216,7 @@ const CreaterOrUpdateSchedule = () => {
             delete payload.specificStudents;
 
             if (user?.role === "teacher") payload.teacherId = user.id;
-
+            if (isEdit) delete payload.timezone;
             const response = isEdit
                 ? await updateSchedule({ id: formData.id, data: payload })
                 : await createSchedule(payload);
@@ -475,28 +476,28 @@ const CreaterOrUpdateSchedule = () => {
                 )}
 
                 {!usesCustomLink && (
-                <div className="py-3 border-t pt-4">
-                    <h3 className="text-sm font-semibold mb-2 text-[#06574C]">Zoom Meeting Settings</h3>
-                    <CheckboxGroup
-                        orientation="vertical" color="success"
-                        value={[
-                            ...(formData.settings?.join_before_host ? ["join_before_host"] : []),
-                            ...(formData.settings?.auto_recording ? ["auto_recording"] : []),
-                            ...(formData.settings?.waiting_room ? ["waiting_room"] : []),
-                        ]}
-                        onChange={(values) => setFormData(p => ({
-                            ...p,
-                            settings: {
-                                join_before_host: values.includes("join_before_host"),
-                                auto_recording: values.includes("auto_recording"),
-                                waiting_room: values.includes("waiting_room"),
-                            },
-                        }))}
-                    >
-                        <Checkbox value="auto_recording">Record session automatically (cloud)</Checkbox>
-                        <Checkbox value="waiting_room">Participants must be admitted by the host before joining.</Checkbox>
-                    </CheckboxGroup>
-                </div>
+                    <div className="py-3 border-t pt-4">
+                        <h3 className="text-sm font-semibold mb-2 text-[#06574C]">Zoom Meeting Settings</h3>
+                        <CheckboxGroup
+                            orientation="vertical" color="success"
+                            value={[
+                                ...(formData.settings?.join_before_host ? ["join_before_host"] : []),
+                                ...(formData.settings?.auto_recording ? ["auto_recording"] : []),
+                                ...(formData.settings?.waiting_room ? ["waiting_room"] : []),
+                            ]}
+                            onChange={(values) => setFormData(p => ({
+                                ...p,
+                                settings: {
+                                    join_before_host: values.includes("join_before_host"),
+                                    auto_recording: values.includes("auto_recording"),
+                                    waiting_room: values.includes("waiting_room"),
+                                },
+                            }))}
+                        >
+                            <Checkbox value="auto_recording">Record session automatically (cloud)</Checkbox>
+                            <Checkbox value="waiting_room">Participants must be admitted by the host before joining.</Checkbox>
+                        </CheckboxGroup>
+                    </div>
                 )}
 
                 <div className="flex items-center max-sm:flex-wrap gap-3 w-full">
