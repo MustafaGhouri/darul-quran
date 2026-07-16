@@ -1,20 +1,41 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Button, Input, Form, Skeleton, Avatar } from "@heroui/react";
+import { Button, Input, Form, Skeleton, Avatar, Switch } from "@heroui/react";
 import { useUpdateProfileMutation } from "../../redux/api/user";
+import {
+  useGetNotificationPreferenceQuery,
+  useUpdateNotificationPreferenceMutation,
+} from "../../redux/api/notificationPreferences";
 import { setUser } from "../../redux/reducers/user";
 import { api } from "../../services/api";
 import { successMessage, errorMessage } from "../../lib/toast.config";
 import FileDropzone from "../../components/dashboard-components/dropzone";
 import { uploadFiles } from "../../lib/uploadthing";
-import { Camera, Edit3, Eye, EyeOff } from "lucide-react";
+import { Camera, Edit3, Eye, EyeOff, Mail } from "lucide-react";
 import NotificationPermission from "../../components/NotificationPermission";
+import QueryError from "../../components/QueryError";
 
 const ProfilePage = () => {
   const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
 
   const [updateProfile, { isLoading: isUpdatingProfile }] = useUpdateProfileMutation();
+
+  const role = user?.role?.toLowerCase();
+  const showEmailPreference = role === "teacher" || role === "student";
+
+  const {
+    data: preference,
+    isLoading: isPreferenceLoading,
+    isError: isPreferenceError,
+    error: preferenceError,
+    refetch: refetchPreference,
+  } = useGetNotificationPreferenceQuery(undefined, {
+    skip: !showEmailPreference,
+  });
+
+  const [updatePreference, { isLoading: isUpdatingPreference }] =
+    useUpdateNotificationPreferenceMutation();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -108,6 +129,20 @@ const ProfilePage = () => {
       // Global error handler in axios service handles message
     } finally {
       setIsChangingPassword(false);
+    }
+  };
+
+  const handleEmailPreferenceToggle = async (emailEnabled) => {
+    try {
+      const res = await updatePreference({ emailEnabled }).unwrap();
+      successMessage(
+        res?.message || "Notification preference updated successfully."
+      );
+    } catch (error) {
+      console.error(error);
+      errorMessage(
+        error?.data?.message || "Failed to update notification preference"
+      );
     }
   };
 
@@ -328,6 +363,55 @@ const ProfilePage = () => {
            </Button>
          </div>
       </Form>
+
+      {showEmailPreference && (
+        <>
+          <h2 className="text-lg font-semibold text-[#2A5C54] mb-2 mt-12">
+            Email Notifications
+          </h2>
+          <hr className="border-gray-200 mb-8" />
+
+          {isPreferenceLoading ? (
+            <Skeleton className="h-24 w-full rounded-lg" />
+          ) : isPreferenceError ? (
+            <QueryError
+              height="160px"
+              title="Failed to load preference"
+              error={preferenceError}
+              onRetry={refetchPreference}
+              showLogo={false}
+            />
+          ) : (
+            <div className="w-full bg-white border border-gray-100 rounded-lg shadow-sm p-5">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="shrink-0 w-11 h-11 rounded-md bg-[#F3F7F6] border border-gray-100 flex items-center justify-center text-[#2A5C54]">
+                    <Mail size={20} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#2A5C54]">
+                      Email Notifications
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+                      Receive course updates, schedule reminders, announcements
+                      and important notifications via email.
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  aria-label="Email Notifications"
+                  radius="sm"
+                  color="success"
+                  className="shrink-0"
+                  isSelected={!!preference?.emailEnabled}
+                  isDisabled={isUpdatingPreference}
+                  onValueChange={handleEmailPreferenceToggle}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
       
     </div>
   );
