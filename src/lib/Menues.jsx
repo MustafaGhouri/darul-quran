@@ -328,11 +328,19 @@ export const studentMenu = [
   },
   // { name: "Notifications", icon: <BellRing />, link: "/student/notifications" },
   {
-    name: "Chat & Support",
+    name: "Chat",
     icon: <MessageCircleMore size={20} />,
     link: "/student/help/messages",
     children: [
       { name: "Chat Center", link: "/student/help/messages" },
+      
+    ],
+  },
+  {
+    name: "Support",
+    icon: <MessageCircleMore size={20} />,
+    link: "/student/support-tickets",
+    children: [ 
       { name: "Support", link: "/student/support-tickets" },
       { name: "FAQs", link: "/student/faqs" },
     ],
