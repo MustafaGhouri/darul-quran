@@ -254,11 +254,18 @@ export const teacherMenu = [
     ],
   },
   {
-    name: "Chat and Support",
+    name: "Chat With Student",
+    icon: <MessageCircleMore size={20} />,
+    link: "/teacher/chat",
+    children: [
+      { name: "Chat Center", link: "/teacher/chat" },
+    ],
+  },
+  {
+    name: "Support",
     icon: <FileQuestionIcon />,
     link: "/teacher/support-tickets",
     children: [
-      { name: "Chat Center", link: "/teacher/chat" },
       { name: "Support", link: "/teacher/support-tickets" },
       { name: "FAQs", link: "/teacher/faqs" },
     ],
@@ -328,7 +335,7 @@ export const studentMenu = [
   },
   // { name: "Notifications", icon: <BellRing />, link: "/student/notifications" },
   {
-    name: "Chat",
+    name: "Chat With Teacher",
     icon: <MessageCircleMore size={20} />,
     link: "/student/help/messages",
     children: [
