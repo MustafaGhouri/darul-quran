@@ -79,21 +79,21 @@ const Login = () => {
   const completeAuth = (data, remember) => {
     dispatch(setUser(data.user));
 
-    const token = data.token;
-    if (token) {
-      localStorage.setItem("token", token);
+    // const token = data.token;
+    // if (token) {
+      // localStorage.setItem("token", token);
 
-      if (import.meta.env.PROD) {
-        document.cookie = [
-          `token=${token}`,
-          `domain=.darulquranleicester.co.uk`,
-          `path=/`,
-          `max-age=${remember ? 7 * 24 * 60 * 60 : 24 * 60 * 60}`,
-          `secure`,
-          `samesite=lax`,
-        ].join("; ");
-      }
-    }
+    //   if (import.meta.env.PROD) {
+    //     document.cookie = [
+    //       `token=${token}`,
+    //       `domain=.darulquranleicester.co.uk`,
+    //       `path=/`,
+    //       `max-age=${remember ? 7 * 24 * 60 * 60 : 24 * 60 * 60}`,
+    //       `secure`,
+    //       `samesite=lax`,
+    //     ].join("; ");
+    //   }
+    // }
 
     const role = data.user.role?.toLowerCase();
     analyticsEvents.login(role);
