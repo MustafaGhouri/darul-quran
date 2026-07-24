@@ -231,6 +231,7 @@ const CourseManagement = () => {
               <TableColumn className="w-1/12 text-center">Price</TableColumn>
               <TableColumn className="w-1/12 text-center">Enrolled</TableColumn>
               <TableColumn className="w-1/12 text-center">Status</TableColumn>
+              <TableColumn className="w-1/12 text-center">Trending</TableColumn>
               <TableColumn className="w-1/6">Rating</TableColumn>
               <TableColumn className="w-24">Actions</TableColumn>
             </TableHeader>
@@ -297,6 +298,18 @@ const CourseManagement = () => {
                   <TableCell className="text-center">
                     <p className="p-2 capitalize w-full text-xs text-center rounded-md text-[#06574C] bg-[#95C4BE]/20">
                       {classItem.status}
+                    </p>
+                  </TableCell>
+
+                  <TableCell className="text-center">
+                    <p
+                      className={`p-2 w-full text-xs text-center rounded-md ${
+                        classItem?.isTrending
+                          ? "text-[#D28E3D] bg-[#FBF4EC]"
+                          : "text-gray-500 bg-gray-100"
+                      }`}
+                    >
+                      {classItem?.isTrending ? "Yes" : "No"}
                     </p>
                   </TableCell>
 
