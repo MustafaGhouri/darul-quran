@@ -153,11 +153,10 @@ const TeacherClassSheduling = () => {
     refetch,
   } = useGetScheduleQuery({
     page: "1",
-    limit: "10",
+    limit: "30",
     status: filterStatus === "all" ? undefined : filterStatus,
   });
-  console.log("scheduleData", scheduleData);
-  const [deleteSchedule, { isLoading: isCancelling }] =
+   const [deleteSchedule, { isLoading: isCancelling }] =
     useDeleteScheduleMutation();
   const [addScheduleNote, { isLoading: isSavingNote }] =
     useAddScheduleNoteMutation();
