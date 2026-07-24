@@ -191,6 +191,7 @@ const CourseBuilder = () => {
           status: course.status || "draft",
           videoDuration: course.videoDuration || "",
           is_free: course.isFree || false,
+          is_trending: course.isTrending || false,
           student_ids: course.studentIds || [],
           video_count: course.videoCount || 0,
           type: course.type || "one_time",
@@ -303,6 +304,7 @@ const CourseBuilder = () => {
     duration: null,
     interval: null,
     is_free: false,
+    is_trending: false,
     video_count: 0,
     age_group: "",
     schedule_days: "",
@@ -520,6 +522,7 @@ const CourseBuilder = () => {
       discountPercentage: formData.discount_percentage,
       status: formData.status,
       isFree: formData.is_free,
+      isTrending: formData.is_trending,
       student_ids: formData.student_ids,
     };
     try {
@@ -812,6 +815,19 @@ const CourseBuilder = () => {
                             isSelected={!formData.is_free}
                             onValueChange={(val) => {
                               handleChange("is_free", !val);
+                            }}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-md text-[#06574C]">
+                            Trending
+                          </p>
+                          <Switch
+                            color="success"
+                            aria-label="Trending course"
+                            isSelected={!!formData.is_trending}
+                            onValueChange={(val) => {
+                              handleChange("is_trending", val);
                             }}
                           />
                         </div>
