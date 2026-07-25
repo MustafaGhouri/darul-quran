@@ -245,7 +245,7 @@ const Login = () => {
               </Form>
             </Tab>
 
-            <Tab key="register" title="Student Register">
+            <Tab key="register" title="New Student Registration">
               <Form
                 onSubmit={handleRegister}
                 className="w-full space-y-4 lg:space-y-5 items-center justify-center"
