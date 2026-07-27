@@ -22,19 +22,64 @@ const formatDayLabel = (dateStr) => {
   };
 };
 
+function ContactFields({ name, setName, email, setEmail, phone, setPhone, message, setMessage }) {
+  return (
+    <>
+      <Input
+        label="Your name"
+        labelPlacement="outside"
+        radius="sm"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        isRequired
+      />
+      <Input
+        type="email"
+        label="Email"
+        labelPlacement="outside"
+        radius="sm"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        isRequired
+      />
+      <Input
+        type="tel"
+        label="Phone"
+        labelPlacement="outside"
+        radius="sm"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        isRequired
+      />
+      <Textarea
+        label="Message (optional)"
+        labelPlacement="outside"
+        radius="sm"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Anything you'd like us to know..."
+      />
+    </>
+  );
+}
+
 const BookAppointment = () => {
   const { data, isLoading } = useGetPublicAppointmentSlotsQuery();
   const [submitRequest, { isLoading: submitting }] =
     useSubmitAppointmentRequestMutation();
 
   const slots = data?.slots || [];
+  const hasSlots = slots.length > 0;
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedSlotId, setSelectedSlotId] = useState(null);
+  const [preferredDate, setPreferredDate] = useState("");
+  const [preferredTime, setPreferredTime] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submittedAsEnquiry, setSubmittedAsEnquiry] = useState(false);
 
   const dates = useMemo(() => {
     const unique = [...new Set(slots.map((s) => s.date))];
@@ -58,24 +103,48 @@ const BookAppointment = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!name.trim() || !email.trim()) {
       errorMessage("Please enter your name and email");
       return;
     }
-    if (!selectedSlotId) {
-      errorMessage("Please select a date and time");
+
+    if (!phone.trim()) {
+      errorMessage("Please enter your phone number");
+      return;
+    }
+
+    if (hasSlots) {
+      if (!selectedSlotId) {
+        errorMessage("Please select a date and time");
+        return;
+      }
+    } else if (!preferredDate || !preferredTime) {
+      errorMessage("Please enter your preferred date and time");
       return;
     }
 
     try {
-      const res = await submitRequest({
-        slotId: selectedSlotId,
-        name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim() || undefined,
-        message: message.trim() || undefined,
-      }).unwrap();
+      const payload = hasSlots
+        ? {
+            slotId: selectedSlotId,
+            name: name.trim(),
+            email: email.trim(),
+            phone: phone.trim(),
+            message: message.trim() || undefined,
+          }
+        : {
+            preferredDate,
+            preferredTime,
+            name: name.trim(),
+            email: email.trim(),
+            phone: phone.trim(),
+            message: message.trim() || undefined,
+          };
+
+      const res = await submitRequest(payload).unwrap();
       successMessage(res.message || "Appointment request submitted");
+      setSubmittedAsEnquiry(!hasSlots);
       setSubmitted(true);
     } catch (err) {
       errorMessage(err?.data?.message || "Failed to submit request");
@@ -91,7 +160,9 @@ const BookAppointment = () => {
             Request submitted
           </h1>
           <p className="text-gray-600 text-sm mb-6">
-            Thank you! We received your appointment request and will be in touch soon.
+            {submittedAsEnquiry
+              ? "Your preferred appointment request has been submitted successfully. We will contact you soon."
+              : "Thank you! We received your appointment request and will be in touch soon."}
           </p>
           <Button as={Link} to="/" className="bg-[#06574C] text-white" radius="full">
             Back to login
@@ -121,11 +192,7 @@ const BookAppointment = () => {
             <div className="flex justify-center py-10">
               <Spinner color="success" />
             </div>
-          ) : slots.length === 0 ? (
-            <p className="text-center text-gray-500 py-8 text-sm">
-              No appointment slots are available right now. Please check back later.
-            </p>
-          ) : (
+          ) : hasSlots ? (
             <>
               <div>
                 <p className="text-sm font-medium text-[#06574C] mb-3">
@@ -177,41 +244,43 @@ const BookAppointment = () => {
                 </div>
               </div>
             </>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                No appointment slots are available right now. Share your preferred
+                date and time and we will contact you.
+              </p>
+              <Input
+                type="date"
+                label="Preferred date"
+                labelPlacement="outside"
+                radius="sm"
+                value={preferredDate}
+                onChange={(e) => setPreferredDate(e.target.value)}
+                isRequired
+              />
+              <Input
+                type="time"
+                label="Preferred time"
+                labelPlacement="outside"
+                radius="sm"
+                value={preferredTime}
+                onChange={(e) => setPreferredTime(e.target.value)}
+                isRequired
+              />
+            </div>
           )}
 
           <div className="space-y-3 pt-2 border-t border-gray-200">
-            <Input
-              label="Your name"
-              labelPlacement="outside"
-              radius="sm"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              isRequired
-            />
-            <Input
-              type="email"
-              label="Email"
-              labelPlacement="outside"
-              radius="sm"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              isRequired
-            />
-            <Input
-              type="tel"
-              label="Phone (optional)"
-              labelPlacement="outside"
-              radius="sm"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-            <Textarea
-              label="Message (optional)"
-              labelPlacement="outside"
-              radius="sm"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Anything you'd like us to know..."
+            <ContactFields
+              name={name}
+              setName={setName}
+              email={email}
+              setEmail={setEmail}
+              phone={phone}
+              setPhone={setPhone}
+              message={message}
+              setMessage={setMessage}
             />
           </div>
 
@@ -221,9 +290,9 @@ const BookAppointment = () => {
             className="w-full bg-linear-to-r from-[#C9A227] to-[#8B6914] text-white font-semibold"
             size="lg"
             isLoading={submitting}
-            isDisabled={slots.length === 0}
+            isDisabled={isLoading}
           >
-            Confirm appointment
+            {hasSlots ? "Confirm appointment" : "Submit preferred time"}
           </Button>
 
           <p className="text-center text-xs text-gray-400">
