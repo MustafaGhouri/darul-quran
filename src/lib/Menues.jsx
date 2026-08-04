@@ -6,6 +6,7 @@ import {
   DollarSignIcon,
   FileQuestionIcon,
   HomeIcon,
+  LayoutTemplate,
   MegaphoneIcon,
   TicketIcon,
   TicketsIcon,
@@ -136,6 +137,12 @@ export const adminMenu = [
         value: "add-events-retreats",
       },
     ],
+  },
+  {
+    name: "Site Content",
+    icon: <LayoutTemplate />,
+    link: "/admin/site-content",
+    value: "site-content",
   },
   // {
   //   name: "Notifications",

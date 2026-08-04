@@ -19,6 +19,7 @@ export const ADMIN_PERMISSIONS = [
   { label: "User Appointment", value: "/admin/user-appointment" },
   { label: "All Events & Retreats", value: "/admin/events-retreats" },
   { label: "Add/Edit Events & Retreats", value: "/admin/events-retreats/manage" },
+  { label: "Site Content", value: "/admin/site-content" },
   { label: "Notifications", value: "/admin/notifications" },
   { label: "Message Center Or Chat", value: "/admin/help/messages" },
   { label: "Teacher & Student Chat", value: "/admin/help/chat" },

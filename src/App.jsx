@@ -146,6 +146,7 @@ const Faqs = lazy(() => import("./pages/admin/help/faqs"));
 const Testimonials = lazy(() => import("./pages/testimonials"));
 const EventsRetreats = lazy(() => import("./pages/admin/events-retreats"));
 const EventRetreatManage = lazy(() => import("./pages/admin/events-retreats/manage"));
+const SiteContent = lazy(() => import("./pages/admin/site-content"));
 const ContactForms = lazy(() => import("./pages/admin/contact-forms"));
 const UserAppointment = lazy(() => import("./pages/admin/user-appointment"));
 const BookAppointment = lazy(() => import("./pages/BookAppointment"));
@@ -569,6 +570,14 @@ function App() {
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <EventRetreatManage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/site-content"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <SiteContent />
                 </ProtectedRoute>
               }
             />

@@ -69,6 +69,15 @@ const statusColor = {
   rejected: "danger",
 };
 
+function getRequestType(req) {
+  const hasSlotId =
+    req.slotId !== null && req.slotId !== undefined && req.slotId !== "";
+
+  return hasSlotId
+    ? { label: "Slot Booking", color: "primary" }
+    : { label: "Preferred Time Enquiry", color: "warning" };
+}
+
 const UserAppointment = () => {
   const addModal = useDisclosure();
   const [form, setForm] = useState({ date: "", time: "", note: "" });
@@ -224,6 +233,7 @@ const UserAppointment = () => {
         <Table removeWrapper aria-label="User appointment requests" classNames={tableClassNames}>
           <TableHeader>
             <TableColumn>User</TableColumn>
+            <TableColumn>Type</TableColumn>
             <TableColumn>Contact</TableColumn>
             <TableColumn>Preferred</TableColumn>
             <TableColumn>Message</TableColumn>
@@ -236,10 +246,22 @@ const UserAppointment = () => {
             loadingContent={<Spinner color="success" />}
             emptyContent="No appointment requests yet."
           >
-            {requests.map((req) => (
+            {requests.map((req) => {
+              const requestType = getRequestType(req);
+
+              return (
               <TableRow key={req.id}>
                 <TableCell className="font-medium text-[#333333] whitespace-nowrap">
                   {req.name}
+                </TableCell>
+                <TableCell className="whitespace-nowrap">
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    color={requestType.color}
+                  >
+                    {requestType.label}
+                  </Chip>
                 </TableCell>
                 <TableCell>
                   <div className="space-y-1 text-sm min-w-40">
@@ -302,7 +324,8 @@ const UserAppointment = () => {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </div>
