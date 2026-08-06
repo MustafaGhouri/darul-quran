@@ -139,10 +139,27 @@ export const adminMenu = [
     ],
   },
   {
-    name: "Site Content",
+    name: "Site Management",
     icon: <LayoutTemplate />,
     link: "/admin/site-content",
-    value: "site-content",
+    value: "site-management",
+    children: [
+      {
+        name: "Site Content",
+        link: "/admin/site-content",
+        value: "site-content",
+      },
+      {
+        name: "Site Settings",
+        link: "/admin/site-settings",
+        value: "site-settings",
+      },
+      {
+        name: "SEO Settings",
+        link: "/admin/seo-settings",
+        value: "seo-settings",
+      },
+    ],
   },
   // {
   //   name: "Notifications",

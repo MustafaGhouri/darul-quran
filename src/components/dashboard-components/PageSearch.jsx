@@ -20,6 +20,8 @@ const pageDescriptions = {
   "/admin/events-retreats": "View and manage events and retreats",
   "/admin/events-retreats/manage": "Add or edit events and retreats",
   "/admin/site-content": "Update website About Us content, images, and buttons",
+  "/admin/site-settings": "Manage global website settings and branding",
+  "/admin/seo-settings": "Configure website SEO metadata and social previews",
   "/admin/notifications": "Manage system notifications",
   "/admin/announcements": "Create and manage announcements",
   "/admin/profile": "View and edit your profile",
