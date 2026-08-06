@@ -20,6 +20,8 @@ import { contactFormsApi } from "./api/contactForms";
 import { appointmentsApi } from "./api/appointments";
 import { notificationPreferencesApi } from "./api/notificationPreferences";
 import { siteContentAPI } from "./api/siteContent";
+import { siteSettingsAPI } from "./api/siteSettings";
+import { seoSettingsAPI } from "./api/seoSettings";
 import chatReducer from "./reducers/chat";
 
 
@@ -44,6 +46,8 @@ export const apiRegistry = {
   appointmentsApi,
   notificationPreferencesApi,
   siteContentAPI,
+  siteSettingsAPI,
+  seoSettingsAPI,
 };
 export const store = configureStore({
   reducer: {
@@ -67,6 +71,8 @@ export const store = configureStore({
     [appointmentsApi.reducerPath]: appointmentsApi.reducer,
     [notificationPreferencesApi.reducerPath]: notificationPreferencesApi.reducer,
     [siteContentAPI.reducerPath]: siteContentAPI.reducer,
+    [siteSettingsAPI.reducerPath]: siteSettingsAPI.reducer,
+    [seoSettingsAPI.reducerPath]: seoSettingsAPI.reducer,
     user: userReducer,
     chat: chatReducer,
   },
@@ -92,6 +98,8 @@ export const store = configureStore({
     appointmentsApi.middleware,
     notificationPreferencesApi.middleware,
     siteContentAPI.middleware,
+    siteSettingsAPI.middleware,
+    seoSettingsAPI.middleware,
   ],
 });
 
