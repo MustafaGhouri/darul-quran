@@ -713,6 +713,8 @@ const UsersDetails = () => {
                     <TableColumn>Student Name</TableColumn>
                     <TableColumn>Email</TableColumn>
                     <TableColumn>Course Name</TableColumn>
+                    <TableColumn>Course type</TableColumn>
+                    <TableColumn>Payment Status</TableColumn>
                     <TableColumn>Progress</TableColumn>
                     <TableColumn>Enrolled Date</TableColumn>
                   </TableHeader>
@@ -730,7 +732,9 @@ const UsersDetails = () => {
 
                         <TableCell>{student.email}</TableCell>
 
-                        <TableCell>{student.courseName}</TableCell>
+                        <TableCell >{student.courseName}</TableCell>
+                        <TableCell >{student.type}</TableCell>
+                        <TableCell >{student.status}</TableCell> 
 
                         <TableCell>
                           <Button
