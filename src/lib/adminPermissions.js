@@ -27,4 +27,5 @@ export const ADMIN_PERMISSIONS = [
   { label: "Teacher & Student Chat", value: "/admin/help/chat" },
   { label: "Reviews", value: "/admin/help/reviews" },
   { label: "FAQs", value: "/admin/faqs" },
+  { label: "User Logs / Activity", value: "/admin/user-logs" },
 ];

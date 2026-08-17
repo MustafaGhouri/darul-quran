@@ -37,7 +37,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useNavigation } from "react-router-dom";
 import { showMessage } from "../../../lib/toast.config";
 import {
   useGetUserDetailsQuery,
@@ -58,7 +58,6 @@ const UsersDetails = () => {
   const [enrollmentLimit, setEnrollmentLimit] = useState(10);
   const [enrollmentSearch, setEnrollmentSearch] = useState("");
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState(null);
-
   const [invoicePage, setInvoicePage] = useState(1);
   const [invoiceLimit, setInvoiceLimit] = useState(10);
   const [invoiceStatus, setInvoiceStatus] = useState("all");
@@ -67,7 +66,8 @@ const UsersDetails = () => {
   const { data: userDetailsData, isLoading: isUserLoading, refetch } = useGetUserDetailsQuery(id, {
     skip: !id,
   });
-
+console.log("User Details Data:", userDetailsData?.user?.teacherData?.courses); // Debugging line
+  const courses = userDetailsData?.user?.teacherData?.courses || []; 
   // Fetch enrollments
   const { data: enrollmentsData, isLoading: isEnrollmentsLoading } = useGetUserEnrollmentsQuery(
     { id, page: enrollmentPage, limit: enrollmentLimit, search: enrollmentSearch },
@@ -93,7 +93,7 @@ const UsersDetails = () => {
   const enrollments = enrollmentsData?.enrollments || [];
   const invoices = invoicesData?.invoices || [];
   const enrollmentDetails = enrollmentDetailsData?.enrollment;
-
+  
   const filters = [
     { key: "all", label: "All" },
     { key: "paid", label: "Paid" },
@@ -345,6 +345,8 @@ const UsersDetails = () => {
       </div>
 
       {/* Enrolled Courses Section */}
+     
+    { user.role === "student" && (
       <div className="bg-white p-3 my-4 rounded-lg">
         <div className="flex md:flex-row flex-col gap-2 md:justify-between md:items-center">
           <h1 className="text-3xl md:text-xl font-bold">Enrolled Courses</h1>
@@ -474,7 +476,126 @@ const UsersDetails = () => {
             </>
           )}
         </div>
-      </div>
+      </div>) }
+    { user.role === "teacher" && (
+      <div className="bg-white p-3 my-4 rounded-lg">
+        <div className="flex md:flex-row flex-col gap-2 md:justify-between md:items-center">
+          <h1 className="text-3xl md:text-xl font-bold">Assigned Courses</h1>
+          {/* <div className="flex gap-2 items-center">
+            <Input
+              size="sm"
+              radius="sm"
+              placeholder="Search courses..."
+              startContent={<Search size={16} />}
+              value={enrollmentSearch}
+              onChange={(e) => {
+                debounce(() => {
+                  setEnrollmentSearch(e.target.value);
+                  setEnrollmentPage(1);
+                }, 500);
+              }}
+              className="w-64"
+            />
+          </div> */}
+        </div>
+        <div className="mt-3">
+          {isEnrollmentsLoading ? (
+            <div className="flex justify-center py-8">
+              <Spinner color="success" />
+            </div>
+          ) : (
+            <>
+              <Table
+                aria-label="Enrolled courses table"
+                removeWrapper
+                classNames={{
+                  base: "bg-white rounded-lg overflow-x-scroll no-scrollbar",
+                  th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+                  td: "py-3",
+                  tr: "border-b border-default-200 cursor-pointer last:border-b-0",
+                }}
+              >
+                <TableHeader>
+                  <TableColumn>Course Name</TableColumn>
+                  <TableColumn>Enrolled Count</TableColumn> 
+                  <TableColumn>Course Type</TableColumn> 
+                  <TableColumn>Status</TableColumn>
+                  <TableColumn>Created Date</TableColumn>
+                  <TableColumn>Action</TableColumn>
+                </TableHeader>
+
+                <TableBody emptyContent={<p className="text-center py-4">No courses found</p>}>
+                  {courses.map((course) => (
+                    <TableRow key={course.id}>
+                      <TableCell className="px-4">
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {course.courseName || "Course"}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5 line-clamp-1 w-40">
+                            {course.disc || ""}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-row items-center gap-3 text-center justify-center">
+                          {course.enrollCount || 0}
+                          </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button size="sm" className={`${getStatusColor(course.type)} w-30`}>
+                          {course.type?.replace("_", " ") || "N/A"}
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        <Button size="sm" className={`${getStatusColor(course.status)} w-30`}>
+                          {course.status?.replace("_", " ") || "N/A"}
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        {course.createdAt
+                          ? new Date(course.createdAt).toLocaleDateString()
+                          : "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          radius="sm"
+                          onPress={() => navigate(`/admin/courses-management`)}
+                          className="bg-[#06574C] text-white"
+                          startContent={<Eye size={18} color="white" />}
+                        >
+                          View Detail
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination for Enrollments */}
+              {enrollmentsData?.meta?.totalPages > 1 && (
+                <div className="flex justify-between items-center mt-4">
+                  <div className="text-sm text-gray-600">
+                    Showing {((enrollmentPage - 1) * enrollmentLimit) + 1} to{" "}
+                    {Math.min(enrollmentPage * enrollmentLimit, enrollmentsData.meta.total)} of{" "}
+                    {enrollmentsData.meta.total} enrollments
+                  </div>
+                  <Pagination
+                    loop
+                    showControls
+                    classNames={{
+                      cursor: "bg-[#06574C] text-white",
+                    }}
+                    page={enrollmentPage}
+                    onChange={setEnrollmentPage}
+                    total={enrollmentsData.meta.totalPages}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>) }
 
       {/* Payment History Section */}
       <div className="bg-white p-3 my-4 rounded-lg">

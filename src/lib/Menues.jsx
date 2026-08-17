@@ -23,6 +23,7 @@ import {
 import { RiProgress3Line } from "react-icons/ri";
 import { IoBook } from "react-icons/io5";
 import { MdOutlinePayments } from "react-icons/md";
+import { FaUserCog } from "react-icons/fa";
 
 export const adminMenu = [
   {
@@ -59,6 +60,12 @@ export const adminMenu = [
     icon: <UsersIcon />,
     link: "/admin/user-management",
     value: "user-management",
+  },
+  {
+    name: "User Logs / Activity",
+    icon: <FaUserCog  size={24}/>,
+    link: "/admin/user-logs",
+    value: "user-logs",
   },
   {
     name: "Class Scheduling",
