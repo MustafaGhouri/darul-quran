@@ -37,7 +37,7 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useNavigation } from "react-router-dom";
 import { showMessage } from "../../../lib/toast.config";
 import {
   useGetUserDetailsQuery,
@@ -51,41 +51,71 @@ import { debounce } from "../../../lib/utils";
 const UsersDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isOpen: isOpenEnrollment, onOpen: onOpenEnrollment, onOpenChange: onOpenChangeEnrollment } = useDisclosure();
+  const {
+    isOpen: isOpenEnrollment,
+    onOpen: onOpenEnrollment,
+    onOpenChange: onOpenChangeEnrollment,
+  } = useDisclosure();
 
   // Pagination states
   const [enrollmentPage, setEnrollmentPage] = useState(1);
   const [enrollmentLimit, setEnrollmentLimit] = useState(10);
   const [enrollmentSearch, setEnrollmentSearch] = useState("");
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState(null);
-
   const [invoicePage, setInvoicePage] = useState(1);
   const [invoiceLimit, setInvoiceLimit] = useState(10);
   const [invoiceStatus, setInvoiceStatus] = useState("all");
 
   // Fetch user details
-  const { data: userDetailsData, isLoading: isUserLoading, refetch } = useGetUserDetailsQuery(id, {
+  const {
+    data: userDetailsData,
+    isLoading: isUserLoading,
+    refetch,
+  } = useGetUserDetailsQuery(id, {
     skip: !id,
   });
-
+  console.log(
+    "User Details Data:",
+    userDetailsData?.user?.teacherData?.courses,
+  ); // Debugging line
+  const courses = userDetailsData?.user?.teacherData?.courses || [];
   // Fetch enrollments
-  const { data: enrollmentsData, isLoading: isEnrollmentsLoading } = useGetUserEnrollmentsQuery(
-    { id, page: enrollmentPage, limit: enrollmentLimit, search: enrollmentSearch },
-    { skip: !id }
-  );
+  const { data: enrollmentsData, isLoading: isEnrollmentsLoading } =
+    useGetUserEnrollmentsQuery(
+      {
+        id,
+        page: enrollmentPage,
+        limit: enrollmentLimit,
+        search: enrollmentSearch,
+      },
+      { skip: !id },
+    );
 
   // Fetch invoices
-  const { data: invoicesData, isLoading: isInvoicesLoading } = useGetUserInvoicesQuery(
-    { id, page: invoicePage, limit: invoiceLimit, status: invoiceStatus },
-    { skip: !id }
-  );
+  const { data: invoicesData, isLoading: isInvoicesLoading } =
+    useGetUserInvoicesQuery(
+      { id, page: invoicePage, limit: invoiceLimit, status: invoiceStatus },
+      { skip: !id },
+    );
 
   // Fetch enrollment details
-  const { data: enrollmentDetailsData, isLoading: isEnrollmentDetailsLoading } = useGetEnrollmentDetailsQuery(
-    { id, enrollmentId: selectedEnrollmentId },
-    { skip: !selectedEnrollmentId }
-  );
+  const { data: enrollmentDetailsData, isLoading: isEnrollmentDetailsLoading } =
+    useGetEnrollmentDetailsQuery(
+      { id, enrollmentId: selectedEnrollmentId },
+      { skip: !selectedEnrollmentId },
+    );
 
+  const enrolledcoursestudent =
+    userDetailsData?.user?.teacherData?.enrolledStudent || [];
+  // console.log(userDetailsData?.user?.teacherData?.enrolledStudent ,"enrolledcoursestudent")
+  const enrolledStudents = enrolledcoursestudent.flatMap((course) =>
+    (course.students || []).map((student) => ({
+      ...student,
+      courseName: course.courseName,
+      courseType: course.type,
+      courseStatus: course.status,
+    })),
+  );
   // Export invoices mutation
   const [exportInvoices] = useExportInvoicesToCsvMutation();
 
@@ -121,9 +151,9 @@ const UsersDetails = () => {
   const handleExportToCsv = async () => {
     try {
       const blob = await exportInvoices(id).unwrap();
-      const csvBlob = new Blob([blob], { type: 'text/csv' });
+      const csvBlob = new Blob([blob], { type: "text/csv" });
       const url = window.URL.createObjectURL(csvBlob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `payment_history_user_${id}.csv`;
       link.click();
@@ -162,9 +192,12 @@ const UsersDetails = () => {
     const diffInSeconds = Math.floor((now - date) / 1000);
 
     if (diffInSeconds < 60) return "Just now";
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    if (diffInSeconds < 3600)
+      return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800)
+      return `${Math.floor(diffInSeconds / 86400)} days ago`;
     return date.toLocaleDateString();
   };
 
@@ -218,7 +251,11 @@ const UsersDetails = () => {
               <div className="flex gap-1 text-[#666666] font-semibold">
                 <Calendar size={20} color="#666666" />
                 <span>Joined</span> :{" "}
-                <h1>{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}</h1>
+                <h1>
+                  {user?.createdAt
+                    ? new Date(user.createdAt).toLocaleDateString()
+                    : "N/A"}
+                </h1>
               </div>
               <div className="flex gap-1 text-[#666666] font-semibold">
                 <Clock size={20} color="#666666" />
@@ -255,25 +292,36 @@ const UsersDetails = () => {
         <div className="grid col-span-12 md:col-span-4 bg-white rounded-lg px-4 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-bold">Personal Details</h1>
-            <Link to={`/admin/user-management/edit-user/${user.id}`}>  <SquarePen size={22} color="#06574C" /></Link>
+            <Link to={`/admin/user-management/edit-user/${user.id}`}>
+              {" "}
+              <SquarePen size={22} color="#06574C" />
+            </Link>
           </div>
           <div className="my-2">
             <h1 className="text-md text-[#333333]">Email Address</h1>
-            <h1 className="text-lg text-[#333333] font-medium">{user?.email || "N/A"}</h1>
+            <h1 className="text-lg text-[#333333] font-medium">
+              {user?.email || "N/A"}
+            </h1>
           </div>
           <div className="my-2">
             <h1 className="text-md text-[#333333]">Phone Number</h1>
-            <h1 className="text-lg text-[#333333] font-medium">{user?.phoneNumber || "N/A"}</h1>
+            <h1 className="text-lg text-[#333333] font-medium">
+              {user?.phoneNumber || "N/A"}
+            </h1>
           </div>
           <div className="my-2">
             <h1 className="text-md text-[#333333]">Location</h1>
             <h1 className="text-lg text-[#333333] font-medium">
-              {user?.city && user?.country ? `${user.city}, ${user.country}` : user?.city || user?.country || "N/A"}
+              {user?.city && user?.country
+                ? `${user.city}, ${user.country}`
+                : user?.city || user?.country || "N/A"}
             </h1>
           </div>
           <div className="my-2">
             <h1 className="text-md text-[#333333]">Role</h1>
-            <h1 className="text-lg text-[#333333] font-medium capitalize">{user?.role || "N/A"}</h1>
+            <h1 className="text-lg text-[#333333] font-medium capitalize">
+              {user?.role || "N/A"}
+            </h1>
           </div>
         </div>
         <div className="grid col-span-12 md:col-span-4 bg-white rounded-lg px-4 py-4">
@@ -286,7 +334,9 @@ const UsersDetails = () => {
             </div>
             <div>
               <h1>Total Courses</h1>
-              <h1 className="font-semibold">{user?.stats?.totalCourses || 0}</h1>
+              <h1 className="font-semibold">
+                {user?.stats?.totalCourses || 0}
+              </h1>
             </div>
           </div>
           <div className="my-2 flex gap-2 bg-[#EBD4C982] items-center p-2 rounded-lg">
@@ -295,7 +345,9 @@ const UsersDetails = () => {
             </div>
             <div>
               <h1>Completed</h1>
-              <h1 className="font-semibold">{user?.stats?.completedCourses || 0}</h1>
+              <h1 className="font-semibold">
+                {user?.stats?.completedCourses || 0}
+              </h1>
             </div>
           </div>
           <div className="my-2 flex gap-2 bg-[#95C4BE] items-center p-2 rounded-lg">
@@ -304,7 +356,9 @@ const UsersDetails = () => {
             </div>
             <div>
               <h1>In Progress</h1>
-              <h1 className="font-semibold">{user?.stats?.inProgressCourses || 0}</h1>
+              <h1 className="font-semibold">
+                {user?.stats?.inProgressCourses || 0}
+              </h1>
             </div>
           </div>
           <div className="my-2 flex gap-2 bg-[#EBD4C982] items-center p-2 rounded-lg">
@@ -313,7 +367,9 @@ const UsersDetails = () => {
             </div>
             <div>
               <h1>Attendance Rate</h1>
-              <h1 className="font-semibold">{user?.stats?.attendanceRate || 0}%</h1>
+              <h1 className="font-semibold">
+                {user?.stats?.attendanceRate || 0}%
+              </h1>
             </div>
           </div>
         </div>
@@ -345,10 +401,160 @@ const UsersDetails = () => {
       </div>
 
       {/* Enrolled Courses Section */}
-      <div className="bg-white p-3 my-4 rounded-lg">
-        <div className="flex md:flex-row flex-col gap-2 md:justify-between md:items-center">
-          <h1 className="text-3xl md:text-xl font-bold">Enrolled Courses</h1>
-          <div className="flex gap-2 items-center">
+
+      {user.role === "student" && (
+        <div className="bg-white p-3 my-4 rounded-lg">
+          <div className="flex md:flex-row flex-col gap-2 md:justify-between md:items-center">
+            <h1 className="text-3xl md:text-xl font-bold">Enrolled Courses</h1>
+            <div className="flex gap-2 items-center">
+              <Input
+                size="sm"
+                radius="sm"
+                placeholder="Search courses..."
+                startContent={<Search size={16} />}
+                value={enrollmentSearch}
+                onChange={(e) => {
+                  debounce(() => {
+                    setEnrollmentSearch(e.target.value);
+                    setEnrollmentPage(1);
+                  }, 500);
+                }}
+                className="w-64"
+              />
+            </div>
+          </div>
+          <div className="mt-3">
+            {isEnrollmentsLoading ? (
+              <div className="flex justify-center py-8">
+                <Spinner color="success" />
+              </div>
+            ) : (
+              <>
+                <Table
+                  aria-label="Enrolled courses table"
+                  removeWrapper
+                  classNames={{
+                    base: "bg-white rounded-lg overflow-x-scroll no-scrollbar",
+                    th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+                    td: "py-3",
+                    tr: "border-b border-default-200 cursor-pointer ",
+                  }}
+                >
+                  <TableHeader>
+                    <TableColumn>Course Name</TableColumn>
+                    <TableColumn>Attendance Rate</TableColumn>
+                    <TableColumn>Teacher</TableColumn>
+                    <TableColumn>Status</TableColumn>
+                    <TableColumn>Enrolled Date</TableColumn>
+                    <TableColumn>Action</TableColumn>
+                  </TableHeader>
+
+                  <TableBody
+                    emptyContent={
+                      <p className="text-center py-4">No enrollments found</p>
+                    }
+                  >
+                    {enrollments.map((enrollment) => (
+                      <TableRow key={enrollment.id}>
+                        <TableCell className="px-4">
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {enrollment.courseName || "Course"}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                              {enrollment.courseDescription || ""}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-row items-center gap-3">
+                            <Progress
+                              classNames={{ indicator: "bg-[#95C4BE]" }}
+                              value={enrollment.attendanceRate || 0}
+                              size="sm"
+                            />
+                            <div className="flex flex-col flex-nowrap whitespace-nowrap">
+                              <h1 className="font-semibold text-sm">
+                                {enrollment.attendanceRate || 0}%
+                              </h1>
+                              <span className="text-xs text-gray-500">
+                                {enrollment.attendanceCount || 0}/
+                                {enrollment.scheduleCount || 0} classes
+                              </span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="">
+                          <h1 className="font-semibold text-sm">
+                            {enrollment.teacherName || "TBD"}
+                          </h1>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            className={`${getStatusColor(enrollment.progressStatus)} w-30`}
+                          >
+                            {enrollment.progressStatus?.replace("_", " ") ||
+                              "N/A"}
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          {enrollment.enrolledAt
+                            ? new Date(
+                                enrollment.enrolledAt,
+                              ).toLocaleDateString()
+                            : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            radius="sm"
+                            className="bg-[#06574C] text-white"
+                            startContent={<Eye size={18} color="white" />}
+                            onPress={() =>
+                              handleViewEnrollmentDetail(enrollment.id)
+                            }
+                          >
+                            View Detail
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {/* Pagination for Enrollments */}
+                {enrollmentsData?.meta?.totalPages > 1 && (
+                  <div className="flex justify-between items-center mt-4">
+                    <div className="text-sm text-gray-600">
+                      Showing {(enrollmentPage - 1) * enrollmentLimit + 1} to{" "}
+                      {Math.min(
+                        enrollmentPage * enrollmentLimit,
+                        enrollmentsData.meta.total,
+                      )}{" "}
+                      of {enrollmentsData.meta.total} enrollments
+                    </div>
+                    <Pagination
+                      loop
+                      showControls
+                      classNames={{
+                        cursor: "bg-[#06574C] text-white",
+                      }}
+                      page={enrollmentPage}
+                      onChange={setEnrollmentPage}
+                      total={enrollmentsData.meta.totalPages}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+      {user.role === "teacher" && (
+        <div className="bg-white p-3 my-4 rounded-lg">
+          <div className="flex md:flex-row flex-col gap-2 md:justify-between md:items-center">
+            <h1 className="text-3xl md:text-xl font-bold">Assigned Courses</h1>
+            {/* <div className="flex gap-2 items-center">
             <Input
               size="sm"
               radius="sm"
@@ -363,118 +569,192 @@ const UsersDetails = () => {
               }}
               className="w-64"
             />
+          </div> */}
+          </div>
+          <div className="mt-3">
+            {isUserLoading ? (
+              <div className="flex justify-center py-8">
+                <Spinner color="success" />
+              </div>
+            ) : (
+              <>
+                <Table
+                  aria-label="Enrolled courses table"
+                  removeWrapper
+                  classNames={{
+                    base: "bg-white rounded-lg overflow-x-scroll no-scrollbar",
+                    th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+                    td: "py-3",
+                    tr: "border-b border-default-200 cursor-pointer last:border-b-0",
+                  }}
+                >
+                  <TableHeader>
+                    <TableColumn>Course Name</TableColumn>
+                    <TableColumn>Enrolled Count</TableColumn>
+                    <TableColumn>Course Type</TableColumn>
+                    <TableColumn>Status</TableColumn>
+                    <TableColumn>Created Date</TableColumn>
+                    <TableColumn>Action</TableColumn>
+                  </TableHeader>
+
+                  <TableBody
+                    emptyContent={
+                      <p className="text-center py-4">No courses found</p>
+                    }
+                  >
+                    {courses.map((course) => (
+                      <TableRow key={course.id}>
+                        <TableCell className="px-4">
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {course.courseName || "Course"}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-0.5 line-clamp-1 w-40">
+                              {course.disc || ""}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-row items-center gap-3 text-center justify-center">
+                            {course.enrollCount || 0}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            className={`${getStatusColor(course.type)} w-30`}
+                          >
+                            {course.type?.replace("_", " ") || "N/A"}
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            className={`${getStatusColor(course.status)} w-30`}
+                          >
+                            {course.status?.replace("_", " ") || "N/A"}
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          {course.createdAt
+                            ? new Date(course.createdAt).toLocaleDateString()
+                            : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            radius="sm"
+                            onPress={() =>
+                              navigate(`/admin/courses-management`)
+                            }
+                            className="bg-[#06574C] text-white"
+                            startContent={<Eye size={18} color="white" />}
+                          >
+                            View Detail
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {/* Pagination for Enrollments */}
+                {enrollmentsData?.meta?.totalPages > 1 && (
+                  <div className="flex justify-between items-center mt-4">
+                    <div className="text-sm text-gray-600">
+                      Showing {(enrollmentPage - 1) * enrollmentLimit + 1} to{" "}
+                      {Math.min(
+                        enrollmentPage * enrollmentLimit,
+                        enrollmentsData.meta.total,
+                      )}{" "}
+                      of {enrollmentsData.meta.total} enrollments
+                    </div>
+                    <Pagination
+                      loop
+                      showControls
+                      classNames={{
+                        cursor: "bg-[#06574C] text-white",
+                      }}
+                      page={enrollmentPage}
+                      onChange={setEnrollmentPage}
+                      total={enrollmentsData.meta.totalPages}
+                    />
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
-        <div className="mt-3">
-          {isEnrollmentsLoading ? (
-            <div className="flex justify-center py-8">
-              <Spinner color="success" />
-            </div>
-          ) : (
-            <>
-              <Table
-                aria-label="Enrolled courses table"
-                removeWrapper
-                classNames={{
-                  base: "bg-white rounded-lg overflow-x-scroll no-scrollbar",
-                  th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
-                  td: "py-3",
-                  tr: "border-b border-default-200 cursor-pointer ",
-                }}
-              >
-                <TableHeader>
-                  <TableColumn>Course Name</TableColumn>
-                  <TableColumn>Attendance Rate</TableColumn>
-                  <TableColumn>Teacher</TableColumn>
-                  <TableColumn>Status</TableColumn>
-                  <TableColumn>Enrolled Date</TableColumn>
-                  <TableColumn>Action</TableColumn>
-                </TableHeader>
+      )}
+      {user.role === "teacher" && (
+        <div className="bg-white p-3 my-4 rounded-lg">
+          <div className="flex md:flex-row flex-col gap-2 md:justify-between md:items-center">
+            <h1 className="text-3xl md:text-xl font-bold">
+              Course Enrolled Student
+            </h1>
+          </div>
+          <div className="mt-3">
+            {isUserLoading ? (
+              <div className="flex justify-center py-8">
+                <Spinner color="success" />
+              </div>
+            ) : (
+              <>
+                <Table
+                  aria-label="Enrolled courses table"
+                  removeWrapper
+                  classNames={{
+                    base: "bg-white rounded-lg overflow-x-scroll no-scrollbar",
+                    th: "font-bold p-4 text-md text-[#333333] capitalize tracking-widest bg-[#EBD4C936]",
+                    td: "py-3",
+                    tr: "border-b border-default-200 cursor-pointer last:border-b-0",
+                  }}
+                >
+                  <TableHeader>
+                    <TableColumn>Student Name</TableColumn>
+                    <TableColumn>Email</TableColumn>
+                    <TableColumn>Course Name</TableColumn>
+                    <TableColumn>Progress</TableColumn>
+                    <TableColumn>Enrolled Date</TableColumn>
+                  </TableHeader>
 
-                <TableBody emptyContent={<p className="text-center py-4">No enrollments found</p>}>
-                  {enrollments.map((enrollment) => (
-                    <TableRow key={enrollment.id}>
-                      <TableCell className="px-4">
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {enrollment.courseName || "Course"}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">
-                            {enrollment.courseDescription || ""}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-row items-center gap-3">
-                          <Progress
-                            classNames={{ indicator: "bg-[#95C4BE]" }}
-                            value={enrollment.attendanceRate || 0}
+                  <TableBody
+                    emptyContent={
+                      <p className="text-center py-4">No students found</p>
+                    }
+                  >
+                    {enrolledStudents.map((student) => (
+                      <TableRow key={`${student.courseName}-${student.id}`}>
+                        <TableCell>
+                          {student.firstName} {student.lastName}
+                        </TableCell>
+
+                        <TableCell>{student.email}</TableCell>
+
+                        <TableCell>{student.courseName}</TableCell>
+
+                        <TableCell>
+                          <Button
                             size="sm"
-                          />
-                          <div className="flex flex-col flex-nowrap whitespace-nowrap">
-                            <h1 className="font-semibold text-sm">
-                              {enrollment.attendanceRate || 0}%
-                            </h1>
-                            <span className="text-xs text-gray-500">
-                              {enrollment.attendanceCount || 0}/{enrollment.scheduleCount || 0} classes
-                            </span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="">
-                        <h1 className="font-semibold text-sm">
-                          {enrollment.teacherName || "TBD"}
-                        </h1>
-                      </TableCell>
-                      <TableCell>
-                        <Button size="sm" className={`${getStatusColor(enrollment.progressStatus)} w-30`}>
-                          {enrollment.progressStatus?.replace("_", " ") || "N/A"}
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        {enrollment.enrolledAt
-                          ? new Date(enrollment.enrolledAt).toLocaleDateString()
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          radius="sm"
-                          className="bg-[#06574C] text-white"
-                          startContent={<Eye size={18} color="white" />}
-                          onPress={() => handleViewEnrollmentDetail(enrollment.id)}
-                        >
-                          View Detail
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                            className={getStatusColor(student.progressStatus)}
+                          >
+                            {student.progressStatus?.replace("_", " ")}
+                          </Button>
+                        </TableCell>
 
-              {/* Pagination for Enrollments */}
-              {enrollmentsData?.meta?.totalPages > 1 && (
-                <div className="flex justify-between items-center mt-4">
-                  <div className="text-sm text-gray-600">
-                    Showing {((enrollmentPage - 1) * enrollmentLimit) + 1} to{" "}
-                    {Math.min(enrollmentPage * enrollmentLimit, enrollmentsData.meta.total)} of{" "}
-                    {enrollmentsData.meta.total} enrollments
-                  </div>
-                  <Pagination
-                    loop
-                    showControls
-                    classNames={{
-                      cursor: "bg-[#06574C] text-white",
-                    }}
-                    page={enrollmentPage}
-                    onChange={setEnrollmentPage}
-                    total={enrollmentsData.meta.totalPages}
-                  />
-                </div>
-              )}
-            </>
-          )}
+                        <TableCell>
+                          {student.enrolledAt
+                            ? new Date(student.enrolledAt).toLocaleDateString()
+                            : "N/A"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Payment History Section */}
       <div className="bg-white p-3 my-4 rounded-lg">
@@ -537,7 +817,11 @@ const UsersDetails = () => {
                   <TableColumn>Action</TableColumn>
                 </TableHeader>
 
-                <TableBody emptyContent={<p className="text-center py-4">No payment history found</p>}>
+                <TableBody
+                  emptyContent={
+                    <p className="text-center py-4">No payment history found</p>
+                  }
+                >
                   {invoices.map((invoice) => (
                     <TableRow key={invoice.id}>
                       <TableCell className="px-4">
@@ -556,16 +840,25 @@ const UsersDetails = () => {
                         </h1>
                       </TableCell>
                       <TableCell className="">
-                        <h1 className="font-semibold text-sm">{invoice.amount}</h1>
+                        <h1 className="font-semibold text-sm">
+                          {invoice.amount}
+                        </h1>
                       </TableCell>
                       <TableCell>
-                        <Button size="sm" className={`${getStatusColor(invoice.status)} w-30`}>
+                        <Button
+                          size="sm"
+                          className={`${getStatusColor(invoice.status)} w-30`}
+                        >
                           {invoice.status || "N/A"}
                         </Button>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1 items-center">
-                          <img src="/icons/Visa.svg" alt="Visa" className="h-6" />
+                          <img
+                            src="/icons/Visa.svg"
+                            alt="Visa"
+                            className="h-6"
+                          />
                           {invoice.paymentMethodDisplay}
                         </div>
                       </TableCell>
@@ -589,9 +882,12 @@ const UsersDetails = () => {
               {invoicesData?.meta?.totalPages > 1 && (
                 <div className="flex justify-between items-center mt-4">
                   <div className="text-sm text-gray-600">
-                    Showing {((invoicePage - 1) * invoiceLimit) + 1} to{" "}
-                    {Math.min(invoicePage * invoiceLimit, invoicesData.meta.total)} of{" "}
-                    {invoicesData.meta.total} invoices
+                    Showing {(invoicePage - 1) * invoiceLimit + 1} to{" "}
+                    {Math.min(
+                      invoicePage * invoiceLimit,
+                      invoicesData.meta.total,
+                    )}{" "}
+                    of {invoicesData.meta.total} invoices
                   </div>
                   <Pagination
                     loop
@@ -638,7 +934,9 @@ const UsersDetails = () => {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                <h2 className="text-2xl font-bold text-[#06574C]">Enrollment Details</h2>
+                <h2 className="text-2xl font-bold text-[#06574C]">
+                  Enrollment Details
+                </h2>
               </ModalHeader>
               <ModalBody>
                 {isEnrollmentDetailsLoading ? (
@@ -649,28 +947,42 @@ const UsersDetails = () => {
                   <div className="space-y-4">
                     {/* Course Information */}
                     <div className="bg-[#EBD4C936] p-4 rounded-lg">
-                      <h3 className="text-lg font-bold text-[#06574C] mb-2">Course Information</h3>
+                      <h3 className="text-lg font-bold text-[#06574C] mb-2">
+                        Course Information
+                      </h3>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <p className="text-sm text-gray-600">Course Name</p>
-                          <p className="font-semibold">{enrollmentDetails.courseName || "N/A"}</p>
+                          <p className="font-semibold">
+                            {enrollmentDetails.courseName || "N/A"}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600">Course Description</p>
-                          <p className="font-semibold">{enrollmentDetails.courseDescription || "N/A"}</p>
+                          <p className="text-sm text-gray-600">
+                            Course Description
+                          </p>
+                          <p className="font-semibold">
+                            {enrollmentDetails.courseDescription || "N/A"}
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     {/* Enrollment Information */}
                     <div className="bg-[#95C4BE33] p-4 rounded-lg">
-                      <h3 className="text-lg font-bold text-[#06574C] mb-2">Enrollment Information</h3>
+                      <h3 className="text-lg font-bold text-[#06574C] mb-2">
+                        Enrollment Information
+                      </h3>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <p className="text-sm text-gray-600">Enrollment Date</p>
+                          <p className="text-sm text-gray-600">
+                            Enrollment Date
+                          </p>
                           <p className="font-semibold">
                             {enrollmentDetails.enrolledAt
-                              ? new Date(enrollmentDetails.enrolledAt).toLocaleDateString()
+                              ? new Date(
+                                  enrollmentDetails.enrolledAt,
+                                ).toLocaleDateString()
                               : "N/A"}
                           </p>
                         </div>
@@ -680,18 +992,27 @@ const UsersDetails = () => {
                             size="sm"
                             className={`${getStatusColor(enrollmentDetails.progressStatus)} w-fit`}
                           >
-                            {enrollmentDetails.progressStatus?.replace("_", " ") || "N/A"}
+                            {enrollmentDetails.progressStatus?.replace(
+                              "_",
+                              " ",
+                            ) || "N/A"}
                           </Button>
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Teacher</p>
-                          <p className="font-semibold">{enrollmentDetails.teacherName || "TBD"}</p>
+                          <p className="font-semibold">
+                            {enrollmentDetails.teacherName || "TBD"}
+                          </p>
                         </div>
                         {enrollmentDetails.completedAt && (
                           <div>
-                            <p className="text-sm text-gray-600">Completed At</p>
+                            <p className="text-sm text-gray-600">
+                              Completed At
+                            </p>
                             <p className="font-semibold">
-                              {new Date(enrollmentDetails.completedAt).toLocaleDateString()}
+                              {new Date(
+                                enrollmentDetails.completedAt,
+                              ).toLocaleDateString()}
                             </p>
                           </div>
                         )}
@@ -700,13 +1021,17 @@ const UsersDetails = () => {
 
                     {/* Attendance Information */}
                     <div className="bg-[#FBF4EC] p-4 rounded-lg">
-                      <h3 className="text-lg font-bold text-[#D28E3D] mb-2">Attendance Details</h3>
+                      <h3 className="text-lg font-bold text-[#D28E3D] mb-2">
+                        Attendance Details
+                      </h3>
                       <div className="grid grid-cols-3 gap-4 mb-3">
                         <div className="text-center">
                           <div className="text-3xl font-bold text-[#06574C]">
                             {enrollmentDetails.attendanceCount || 0}
                           </div>
-                          <p className="text-sm text-gray-600">Classes Attended</p>
+                          <p className="text-sm text-gray-600">
+                            Classes Attended
+                          </p>
                         </div>
                         <div className="text-center">
                           <div className="text-3xl font-bold text-[#06574C]">
@@ -718,7 +1043,9 @@ const UsersDetails = () => {
                           <div className="text-3xl font-bold text-[#06574C]">
                             {enrollmentDetails.attendanceRate || 0}%
                           </div>
-                          <p className="text-sm text-gray-600">Attendance Rate</p>
+                          <p className="text-sm text-gray-600">
+                            Attendance Rate
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -735,7 +1062,9 @@ const UsersDetails = () => {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-center text-gray-500 py-8">No enrollment details available</p>
+                  <p className="text-center text-gray-500 py-8">
+                    No enrollment details available
+                  </p>
                 )}
               </ModalBody>
               <ModalFooter>

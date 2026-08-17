@@ -159,6 +159,7 @@ import NotFoundPage from "./components/NotFound";
 import Enrollments from "./pages/student/enrollnments";
 import MultiApiDevTools from "./components/CachedManager";
 import { useNotifications } from "./hooks/useNotifications";
+import UserLogs from "./pages/admin/user-logs";
 
 const socket = io(import.meta.env.VITE_PUBLIC_SERVER_URL);
 
@@ -652,6 +653,14 @@ function App() {
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/user-logs"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <UserLogs />
                 </ProtectedRoute>
               }
             />
