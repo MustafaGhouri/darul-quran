@@ -11,7 +11,7 @@ export const RescheduleRequestModal = ({
 }) => {
     const [requestedDate, setRequestedDate] = useState("");
     const [requestedStartTime, setRequestedStartTime] = useState("");
-    const [requestedEndTime, setRequestedEndTime] = useState("");
+    const [requestedEndTime, setRequestedEndTime] = useState(""); 
     const [reason, setReason] = useState("");
     const [errors, setErrors] = useState({});
 
@@ -68,6 +68,7 @@ export const RescheduleRequestModal = ({
             scheduleId: schedule.id,
             courseId: schedule.courseId,
             requestedDate,
+            originaldate: schedule.date,
             requestedStartTime,
             requestedEndTime,
             reason
