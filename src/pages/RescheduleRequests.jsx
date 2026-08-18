@@ -203,10 +203,10 @@ const AdminRescheduleRequests = () => {
                                 <TableCell>
                                     <div className="text-sm">
                                         <p>
-                                            {new Date(request.scheduleDate).toLocaleDateString()}
+                                            {new Date(request?.originaldate || request.scheduleDate ).toLocaleDateString()}
                                         </p>
                                         <p className="text-gray-500">
-                                            {formatTime12Hour(request.scheduleStartTime)}
+                                            {formatTime12Hour(request?.scheduleStartTime)}
                                         </p>
                                     </div>
                                 </TableCell>
