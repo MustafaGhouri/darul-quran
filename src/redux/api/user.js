@@ -21,10 +21,10 @@ export const userAPI = createApi({
     tagTypes: ["userApi", "userDetails", "userEnrollments", "userInvoices"],
     endpoints: (builder) => ({
         getAllUsers: builder.query({
-            query: ({ page, limit, search, status, role }) => ({
+            query: ({ page, limit, search, status, role, initialValues }) => ({
                 url: "/getAllUsers",
                 method: "GET",
-                params: { page, limit, search, status, role }
+                params: { page, limit, search, status, role, initialValues }
             }),
             providesTags: ["user"],
         }),
