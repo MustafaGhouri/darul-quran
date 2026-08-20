@@ -15,6 +15,7 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Checkbox,
 } from "@heroui/react";
 import { motion } from "framer-motion";
 import FileDropzone from "../../../components/dashboard-components/dropzone";
@@ -36,7 +37,7 @@ import Videos, {
   Quizzes,
   Links,
 } from "../../../components/dashboard-components/forms/ContentUpload";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import {
   useAddCategoryMutation,
@@ -53,6 +54,7 @@ import { IntervalInput } from "../../../components/dashboard-components/forms/In
 import TeacherSelect from "../../../components/select/TeacherSelect";
 import UserSelect from "../../../components/select/UserSelect";
 import StudentSelect from "../../../components/select/StudentSelect";
+import { useGetEmailTemplatesQuery } from "../../../redux/api/emailTemplates";
 
 const WEEKDAYS = [
   "Monday",
@@ -91,6 +93,40 @@ const formatScheduleTimeRange = (start, end) => {
   if (start && end) return `${start} - ${end}`;
   return start || end || "";
 };
+
+const DEFAULT_EMAIL_TRIGGERS = {
+  form_submission_student: true,
+  form_submission_teacher: true,
+  manual_enrollment_student: true,
+  manual_enrollment_teacher: true,
+};
+
+const EmailRecipientCheckboxes = ({ student, teacher, onChange }) => {
+  const both = Boolean(student && teacher);
+  return (
+    <div className="flex flex-wrap items-center gap-4">
+      <Checkbox
+        isSelected={Boolean(student)}
+        onValueChange={(value) => onChange({ student: value, teacher })}
+      >
+        Student
+      </Checkbox>
+      <Checkbox
+        isSelected={Boolean(teacher)}
+        onValueChange={(value) => onChange({ student, teacher: value })}
+      >
+        Teacher
+      </Checkbox>
+      <Checkbox
+        isSelected={both}
+        onValueChange={(value) => onChange({ student: value, teacher: value })}
+      >
+        Both
+      </Checkbox>
+    </div>
+  );
+};
+
 const containerVariants = {
   hidden: { opacity: 0, y: 10, scale: 0.98 },
 
@@ -159,6 +195,7 @@ const CourseBuilder = () => {
   const [deleteCategory] = useDeleteCategoryMutation();
   const [addCategory, { isLoading: isAddingCategory }] =
     useAddCategoryMutation();
+  const { data: emailTemplatesData } = useGetEmailTemplatesQuery();
   // const [quizzes, setQuizzes] = useState([]);
   useEffect(() => {
     if (isError) {
@@ -211,10 +248,20 @@ const CourseBuilder = () => {
           max_capacity: course.maxCapacity || "",
           what_to_bring: course.whatToBring || "",
           start_date: course.startDate || "",
+          google_form_link: course.googleFormLink || "",
+          email_template_id: course.emailTemplateId || "",
+          form_submission_student:
+            course.emailTriggers?.onFormSubmission?.student ?? true,
+          form_submission_teacher:
+            course.emailTriggers?.onFormSubmission?.teacher ?? true,
+          manual_enrollment_student:
+            course.emailTriggers?.onManualEnrollment?.student ?? true,
+          manual_enrollment_teacher:
+            course.emailTriggers?.onManualEnrollment?.teacher ?? true,
         });
 
         setVideoUrl(course.video || "");
-        setThumbnailUrl(course.thumbnail || "");
+        setThumbnailUrl(course.thumbnail || course.classImage || "");
         setFiles(course.files || []);
       } catch (error) {
         console.error("Failed to fetch course", error);
@@ -315,11 +362,14 @@ const CourseBuilder = () => {
     max_capacity: "",
     what_to_bring: "",
     start_date: "",
+    google_form_link: "",
+    email_template_id: "",
+    ...DEFAULT_EMAIL_TRIGGERS,
   });
   const [teacherError, setTeacherError] = useState("");
 
   // console.log(formData);
-  const coursepreview = useMemo(() => {    
+  const coursepreview = useMemo(() => {
     return [
       { title: "Title:", desc: formData?.course_name || "Add Tittle" },
       {
@@ -331,22 +381,22 @@ const CourseBuilder = () => {
           formData?.category_name ||
           "Add Category",
       },
-      {
+      formData?.type !== "one_to_one" && {
         title: "Difficulty Level:",
         desc: formData?.difficulty_level || "Add Difficulty Level",
       },
-      {
+      formData?.type !== "one_to_one" && {
         title: "Price:",
         desc:
           formData?.base_price -
           (formData?.discount_percentage * formData?.base_price) / 100 +
           "£" || "Add Price",
       },
-      { title: "Type:", desc: formData?.type?.replace("_", " ") || "Add Type" },
+      { title: "Type:", desc: formData?.type === "one_to_one" ? "1:1 Class" : formData?.type?.replace("_", " ") || "Add Type" },
       {
         title: "Duration:",
         desc:
-          !formData?.duration 
+          !formData?.duration
             ? "Ongoing"
             : `${parseInterval(formData?.duration).number} ${parseInterval(formData?.duration).unit}` ||
             "Add Duration",
@@ -371,10 +421,6 @@ const CourseBuilder = () => {
         title: "Venue:",
         desc: formData?.venue || "Not set",
       },
-      formData?.type === "in_person" && {
-        title: "Enrollment Limit:",
-        desc: formData?.max_capacity || "Unlimited",
-      },
     ].filter(Boolean);
   }, [categoriesData, formData]);
 
@@ -386,16 +432,26 @@ const CourseBuilder = () => {
     if (name === "type" && value === "in_person") {
       setTeacherError("");
     }
+    if (name === "type" && value === "one_to_one" && selected !== "info") {
+      handleSelected("info");
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: value,
       ...(name === "type" && value === "in_person" ? { teacher_id: null } : {}),
+      ...(name === "type" && value === "one_to_one"
+        ? { teacher_id: null, student_ids: [], is_free: true }
+        : {}),
     }));
   };
   const handleSubmitTab1 = async (e) => {
     e.preventDefault();
 
-    if (formData.type !== "in_person" && !formData.teacher_id) {
+    if (
+      formData.type !== "in_person" &&
+      formData.type !== "one_to_one" &&
+      !formData.teacher_id
+    ) {
       setTeacherError("Please select a teacher ");
       // Scroll to the teacher select if possible or just stop
       return;
@@ -403,9 +459,13 @@ const CourseBuilder = () => {
     setLoadingAction(pendingAction);
 
     const urlMap = {};
-    if (video.length > 0 || thumbnail.length > 0) {
+    const isOneToOne = formData.type === "one_to_one";
+    if (
+      video.length > 0 ||
+      thumbnail.length > 0
+    ) {
       const filesToUpload = [];
-      if (video.length > 0)
+      if (!isOneToOne && video.length > 0)
         filesToUpload.push({ file: video[0], type: "video" });
       if (thumbnail.length > 0)
         filesToUpload.push({ file: thumbnail[0], type: "thumbnail" });
@@ -450,10 +510,14 @@ const CourseBuilder = () => {
         formData?.base_price -
         (formData?.discount_percentage * formData?.base_price) / 100
       ).toFixed(2),
-      videoUrl: urlMap.video ?? videoUrl ?? null,
+      videoUrl: isOneToOne ? null : urlMap.video ?? videoUrl ?? null,
       thumbnailurl: urlMap.thumbnail ?? thumbnailUrl ?? null,
-      teacher_id: formData.type === "in_person" ? null : Number(formData.teacher_id),
-      is_free: formData.is_free,
+      teacher_id:
+        formData.type === "in_person" || formData.type === "one_to_one"
+          ? null
+          : Number(formData.teacher_id),
+      student_ids: formData.type === "one_to_one" ? [] : formData.student_ids,
+      is_free: isOneToOne ? true : formData.is_free,
       age_group: formData.age_group || null,
       schedule_days: formData.schedule_days || null,
       schedule_time:
@@ -464,6 +528,27 @@ const CourseBuilder = () => {
       max_capacity: formData.max_capacity ? Number(formData.max_capacity) : null,
       what_to_bring: formData.what_to_bring || null,
       start_date: formData.start_date || null,
+      class_title: formData.course_name || null,
+      class_description: formData.description || null,
+      class_image: urlMap.thumbnail ?? thumbnailUrl ?? null,
+      google_form_link: formData.google_form_link || null,
+      email_template_id: formData.email_template_id
+        ? Number(formData.email_template_id)
+        : null,
+      form_submission_student: Boolean(formData.form_submission_student),
+      form_submission_teacher: Boolean(formData.form_submission_teacher),
+      manual_enrollment_student: Boolean(formData.manual_enrollment_student),
+      manual_enrollment_teacher: Boolean(formData.manual_enrollment_teacher),
+      emailTriggers: {
+        onFormSubmission: {
+          student: Boolean(formData.form_submission_student),
+          teacher: Boolean(formData.form_submission_teacher),
+        },
+        onManualEnrollment: {
+          student: Boolean(formData.manual_enrollment_student),
+          teacher: Boolean(formData.manual_enrollment_teacher),
+        },
+      },
     };
     try {
       const courseId = searchParams.get("id");
@@ -480,7 +565,14 @@ const CourseBuilder = () => {
       if (data?.success) {
         successMessage(courseId ? "Course Updated!" : "Course Created!");
 
-        if (!courseId && data.courseId) {
+        if (formData.type === "one_to_one") {
+          if (!courseId && data.courseId) {
+            setSearchParams({ tab: "info", id: data.courseId });
+          }
+          if (pendingAction === "next-1") {
+            navigate("/admin/courses-management");
+          }
+        } else if (!courseId && data.courseId) {
           setSearchParams({ tab: "content", id: data.courseId });
         } else {
           handleSelected("content");
@@ -511,7 +603,10 @@ const CourseBuilder = () => {
       difficultyLevel: formData.difficulty_level,
       description: formData.description,
       coursePrice: formData.course_price,
-      teacherId: formData.type === "in_person" ? null : formData.teacher_id,
+      teacherId:
+        formData.type === "in_person" || formData.type === "one_to_one"
+          ? null
+          : formData.teacher_id,
       accessDuration: formData.access_duration,
       previousLesson: formData.previous_lesson,
       enrollNumber: formData.enroll_number,
@@ -586,6 +681,14 @@ const CourseBuilder = () => {
       errorMessage("Server error");
     }
   };
+
+  const isOneToOne = formData.type === "one_to_one";
+
+  useEffect(() => {
+    if (isOneToOne && (selected === "content" || selected === "pricing")) {
+      handleSelected("info");
+    }
+  }, [isOneToOne, selected]);
 
   return (
     <div className="h-full relative bg-linear-to-t from-[#F1C2AC]/50 to-[#95C4BE]/50 px-2 sm:px-3 w-full no-scrollbar top-0 bottom-0 overflow-auto">
@@ -733,26 +836,28 @@ const CourseBuilder = () => {
                             Add Category
                           </SelectItem>
                         </Select>
-                        <Select
-                          size="lg"
-                          variant="bordered"
-                          label="Difficulty Level"
-                          labelPlacement="outside"
-                          placeholder="Select Difficulty Level"
-                          isRequired
-                          errorMessage="Difficulty Level is required"
-                          className="w-full"
-                          selectedKeys={[formData.difficulty_level]}
-                          onSelectionChange={(keys) =>
-                            handleChange("difficulty_level", [...keys][0])
-                          }
-                        >
-                          {Difficulty.map((item) => (
-                            <SelectItem key={item.key} value={item.id}>
-                              {item.label}
-                            </SelectItem>
-                          ))}
-                        </Select>
+                        {formData.type !== "one_to_one" && (
+                          <Select
+                            size="lg"
+                            variant="bordered"
+                            label="Difficulty Level"
+                            labelPlacement="outside"
+                            placeholder="Select Difficulty Level"
+                            isRequired
+                            errorMessage="Difficulty Level is required"
+                            className="w-full"
+                            selectedKeys={[formData.difficulty_level]}
+                            onSelectionChange={(keys) =>
+                              handleChange("difficulty_level", [...keys][0])
+                            }
+                          >
+                            {Difficulty.map((item) => (
+                              <SelectItem key={item.key} value={item.id}>
+                                {item.label}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        )}
                       </div>
                       <div className="py-4">
                         <Textarea
@@ -767,70 +872,76 @@ const CourseBuilder = () => {
                           placeholder="Enter course description"
                         />
                       </div>
-                      <div className="flex items-center max-sm:flex-wrap gap-3">
-                        <Input
-                          size="lg"
-                          variant="bordered"
-                          label="Base Course Price (GBP)"
-                          type="number"
-                          labelPlacement="outside"
-                          placeholder="0.00"
-                          isRequired
-                          isDisabled={formData.is_free}
-                          startContent={"£"}
-                          min={1}
-                          errorMessage="Base Course Price must be at least 1 £"
-                          className="w-full"
-                          value={formData.base_price}
-                          onChange={(e) =>
-                            handleChange("base_price", e.target.value)
-                          }
-                        />
-                        <Input
-                          size="lg"
-                          variant="bordered"
-                          label="Discount Percentage"
-                          type="number"
-                          labelPlacement="outside"
-                          placeholder="15%"
-                          endContent={"%"}
-                          max={100}
-                          isDisabled={formData.is_free}
-                          errorMessage="Discount Percentage is must be between 0 and 100"
-                          className="w-full"
-                          value={formData.discount_percentage}
-                          onChange={(e) =>
-                            handleChange("discount_percentage", e.target.value)
-                          }
-                        />
-                      </div>
+                      {formData.type !== "one_to_one" && (
+                        <div className="flex items-center max-sm:flex-wrap gap-3">
+                          <Input
+                            size="lg"
+                            variant="bordered"
+                            label="Base Course Price (GBP)"
+                            type="number"
+                            labelPlacement="outside"
+                            placeholder="0.00"
+                            isRequired
+                            isDisabled={formData.is_free}
+                            startContent={"£"}
+                            min={1}
+                            errorMessage="Base Course Price must be at least 1 £"
+                            className="w-full"
+                            value={formData.base_price}
+                            onChange={(e) =>
+                              handleChange("base_price", e.target.value)
+                            }
+                          />
+                          <Input
+                            size="lg"
+                            variant="bordered"
+                            label="Discount Percentage"
+                            type="number"
+                            labelPlacement="outside"
+                            placeholder="15%"
+                            endContent={"%"}
+                            max={100}
+                            isDisabled={formData.is_free}
+                            errorMessage="Discount Percentage is must be between 0 and 100"
+                            className="w-full"
+                            value={formData.discount_percentage}
+                            onChange={(e) =>
+                              handleChange("discount_percentage", e.target.value)
+                            }
+                          />
+                        </div>
+                      )}
                       <div className="flex items-center pt-2 gap-3 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <p className="text-md text-[#06574C]">
-                            Paid
-                          </p>
-                          <Switch
-                            color="success"
-                            aria-label="Free or Paid course"
-                            isSelected={!formData.is_free}
-                            onValueChange={(val) => {
-                              handleChange("is_free", !val);
-                            }}
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-md text-[#06574C]">
-                            Trending
-                          </p>
-                          <Switch
-                            color="success"
-                            aria-label="Trending course"
-                            isSelected={!!formData.is_trending}
-                            onValueChange={(val) => {
-                              handleChange("is_trending", val);
-                            }}
-                          />
-                        </div>
+                        {formData.type !== "one_to_one" && (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <p className="text-md text-[#06574C]">
+                                Paid
+                              </p>
+                              <Switch
+                                color="success"
+                                aria-label="Free or Paid course"
+                                isSelected={!formData.is_free}
+                                onValueChange={(val) => {
+                                  handleChange("is_free", !val);
+                                }}
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-md text-[#06574C]">
+                                Trending
+                              </p>
+                              <Switch
+                                color="success"
+                                aria-label="Trending course"
+                                isSelected={!!formData.is_trending}
+                                onValueChange={(val) => {
+                                  handleChange("is_trending", val);
+                                }}
+                              />
+                            </div>
+                          </>
+                        )}
                         <div className="flex items-center gap-2 ml-auto">
                           <p className="text-sm font-medium text-gray-700">
                             Course Status:
@@ -852,7 +963,7 @@ const CourseBuilder = () => {
                           </Select>
                         </div>
                       </div>
-                      {formData?.type !== "in_person" && (
+                      {formData?.type !== "in_person" && formData?.type !== "one_to_one" && (
                         <div className="pt-6">
                           <TeacherSelect
                             label="Teacher"
@@ -863,12 +974,14 @@ const CourseBuilder = () => {
                           />
                         </div>
                       )}
-                      <div className="my-4">
-                        <StudentSelect
-                          onChange={(ids) => handleChange("student_ids", ids)}
-                          initialValues={formData.student_ids || []}
-                        />
-                      </div>
+                      {formData?.type !== "one_to_one" && (
+                        <div className="my-4">
+                          <StudentSelect
+                            onChange={(ids) => handleChange("student_ids", ids)}
+                            initialValues={formData.student_ids || []}
+                          />
+                        </div>
+                      )}
 
                       <div className="pt-6">
                         <Select
@@ -945,6 +1058,18 @@ const CourseBuilder = () => {
                           >
                             In-Person Classes
                           </SelectItem>
+                          <SelectItem
+                            description={
+                              <span className="block text-xs text-gray-500">
+                                Private 1:1 class inquiry. Students submit a Google Form; emails are sent from a saved template.
+                              </span>
+                            }
+                            key="one_to_one"
+                            value="one_to_one"
+                            className="capitalize"
+                          >
+                            1:1 Class
+                          </SelectItem>
                         </Select>
                       </div>
                       <IntervalInput
@@ -1000,11 +1125,11 @@ const CourseBuilder = () => {
                             selectedKeys={
                               formData.schedule_days
                                 ? new Set(
-                                    formData.schedule_days
-                                      .split(",")
-                                      .map((day) => day.trim())
-                                      .filter(Boolean),
-                                  )
+                                  formData.schedule_days
+                                    .split(",")
+                                    .map((day) => day.trim())
+                                    .filter(Boolean),
+                                )
                                 : new Set()
                             }
                             onSelectionChange={(keys) => {
@@ -1082,34 +1207,127 @@ const CourseBuilder = () => {
                           />
                         </div>
                       )}
+                      {formData?.type === "one_to_one" && (
+                        <div className="mt-4 space-y-4 p-4 bg-[#95C4BE22] rounded-lg border border-[#95C4BE]">
+                          <h2 className="text-[#06574C] font-semibold text-base">
+                            1:1 Class Details
+                          </h2>
+                          <Input
+                            className="mb-3"
+                            size="lg"
+                            variant="bordered"
+                            label="Google Form Link"
+                            labelPlacement="outside"
+                            placeholder="https://docs.google.com/forms/..."
+                            type="url"
+                            value={formData.google_form_link}
+                            onChange={(e) =>
+                              handleChange("google_form_link", e.target.value)
+                            }
+                          />
+                          <Select
+
+                            size="lg"
+                            variant="bordered"
+                            label="Email Template"
+                            labelPlacement="outside"
+                            placeholder="Select a saved template"
+                            selectedKeys={
+                              formData.email_template_id
+                                ? new Set([String(formData.email_template_id)])
+                                : new Set()
+                            }
+                            onSelectionChange={(keys) => {
+                              const selected = [...keys][0];
+                              handleChange("email_template_id", selected || "");
+                            }}
+                          >
+                            {(emailTemplatesData?.templates || []).map((template) => (
+                              <SelectItem key={String(template.id)} value={String(template.id)}>
+                                {template.name}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                          {(!emailTemplatesData?.templates ||
+                            emailTemplatesData.templates.length === 0) && (
+                              <p className="text-xs text-gray-500">
+                                No email templates yet.{" "}
+                                <Link
+                                  to="/admin/email-templates"
+                                  className="text-[#06574C] font-medium underline"
+                                >
+                                  Create email templates
+                                </Link>{" "}
+                                and they will appear here.
+                              </p>
+                            )}
+                          <div>
+                            <p className="text-sm font-medium text-[#06574C] mb-2">
+                              Email Triggers
+                            </p>
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-sm text-gray-600 mb-1">
+                                  On Form Submission — Send to
+                                </p>
+                                <EmailRecipientCheckboxes
+                                  student={formData.form_submission_student}
+                                  teacher={formData.form_submission_teacher}
+                                  onChange={({ student, teacher }) => {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      form_submission_student: student,
+                                      form_submission_teacher: teacher,
+                                    }));
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-600 mb-1">
+                                  On Manual Enrollment — Send to
+                                </p>
+                                <EmailRecipientCheckboxes
+                                  student={formData.manual_enrollment_student}
+                                  teacher={formData.manual_enrollment_teacher}
+                                  onChange={({ student, teacher }) => {
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      manual_enrollment_student: student,
+                                      manual_enrollment_teacher: teacher,
+                                    }));
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="col-span-12 sm:col-span-4">
-                    <div className="bg-white rounded-lg p-3 shadow-xl">
-                      <h1 className="text-xl font-medium text-[#333333]">
-                        Introduction Video
-                      </h1>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Upload a preview video to showcase your course
-                      </p>
-                      <div className="py-6">
-                        <div className="flex flex-col gap-4">
-                          {videoUrl ? (
-                            <div className="relative w-full h-[300px] overflow-hidden rounded-lg bg-black">
-                              <video
-                                className="w-full h-full object-contain"
-                                src={videoUrl}
-                                controls
-                                preload="metadata"
-                              >
-                                Your browser does not support the video tag.
-                              </video>
+                    {isOneToOne && (
+                      <div className="bg-white rounded-lg p-3 shadow-xl mb-3">
+                        <h1 className="text-xl font-medium text-[#333333]">
+                          Course Image
+                        </h1>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Upload a cover image for this 1:1 class
+                        </p>
+                        <div className="py-4">
+                          {thumbnailUrl ? (
+                            <div className="relative w-full h-40 rounded-lg overflow-hidden group border border-gray-300">
+                              <Image
+                                removeWrapper
+                                src={thumbnailUrl}
+                                className="w-full h-full object-cover"
+                                alt="Course cover"
+                              />
                               <Button
                                 size="sm"
-                                className="absolute top-2 right-2 bg-red-500 text-white z-10"
+                                color="danger"
+                                className="absolute top-2 right-2 z-10"
                                 onPress={() => {
-                                  setRemovedUrls([...removedUrls, videoUrl]);
-                                  setVideoUrl("");
+                                  setRemovedUrls([...removedUrls, thumbnailUrl]);
                                   setThumbnailUrl("");
                                 }}
                               >
@@ -1118,35 +1336,43 @@ const CourseBuilder = () => {
                             </div>
                           ) : (
                             <FileDropzone
-                              files={video}
-                              setFiles={setVideo}
-                              fileType="video"
-                              label="Upload Introduction Video"
-                              text="Recommended: MP4, Webm format, 1280x720 pixels."
+                              files={thumbnail}
+                              setFiles={setThumbnail}
+                              label="Upload Course Image"
+                              text="JPG, PNG, or WebP recommended"
+                              height="180px"
+                              fileType="image"
                             />
                           )}
-                          {/* Video Cover Image Uploader */}
-                          <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <h4 className="font-medium text-sm mb-2 text-gray-700">
-                              Video Cover Image (thumbnail)
-                            </h4>
-                            {thumbnailUrl ? (
-                              <div className="relative w-full h-40 rounded-lg overflow-hidden group border border-gray-300">
-                                <Image
-                                  removeWrapper
-                                  src={thumbnailUrl}
-                                  className="w-full h-full object-cover"
-                                  alt="Video Poster"
-                                />
+                        </div>
+                      </div>
+                    )}
+                    {!isOneToOne && (
+                      <div className="bg-white rounded-lg p-3 shadow-xl">
+                        <h1 className="text-xl font-medium text-[#333333]">
+                          Introduction Video
+                        </h1>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Upload a preview video to showcase your course
+                        </p>
+                        <div className="py-6">
+                          <div className="flex flex-col gap-4">
+                            {videoUrl ? (
+                              <div className="relative w-full h-[300px] overflow-hidden rounded-lg bg-black">
+                                <video
+                                  className="w-full h-full object-contain"
+                                  src={videoUrl}
+                                  controls
+                                  preload="metadata"
+                                >
+                                  Your browser does not support the video tag.
+                                </video>
                                 <Button
                                   size="sm"
-                                  color="danger"
-                                  className="absolute top-2 right-2 z-10"
+                                  className="absolute top-2 right-2 bg-red-500 text-white z-10"
                                   onPress={() => {
-                                    setRemovedUrls([
-                                      ...removedUrls,
-                                      thumbnailUrl,
-                                    ]);
+                                    setRemovedUrls([...removedUrls, videoUrl]);
+                                    setVideoUrl("");
                                     setThumbnailUrl("");
                                   }}
                                 >
@@ -1155,18 +1381,56 @@ const CourseBuilder = () => {
                               </div>
                             ) : (
                               <FileDropzone
-                                files={thumbnail}
-                                setFiles={setThumbnail}
-                                label="Upload Cover Image"
-                                text="JPG/PNG, 1280x720 recommended"
-                                height="150px"
-                                fileType="image"
+                                files={video}
+                                setFiles={setVideo}
+                                fileType="video"
+                                label="Upload Introduction Video"
+                                text="Recommended: MP4, Webm format, 1280x720 pixels."
                               />
                             )}
+                            {/* Video Cover Image Uploader */}
+                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                              <h4 className="font-medium text-sm mb-2 text-gray-700">
+                                Video Cover Image (thumbnail)
+                              </h4>
+                              {thumbnailUrl ? (
+                                <div className="relative w-full h-40 rounded-lg overflow-hidden group border border-gray-300">
+                                  <Image
+                                    removeWrapper
+                                    src={thumbnailUrl}
+                                    className="w-full h-full object-cover"
+                                    alt="Video Poster"
+                                  />
+                                  <Button
+                                    size="sm"
+                                    color="danger"
+                                    className="absolute top-2 right-2 z-10"
+                                    onPress={() => {
+                                      setRemovedUrls([
+                                        ...removedUrls,
+                                        thumbnailUrl,
+                                      ]);
+                                      setThumbnailUrl("");
+                                    }}
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              ) : (
+                                <FileDropzone
+                                  files={thumbnail}
+                                  setFiles={setThumbnail}
+                                  label="Upload Cover Image"
+                                  text="JPG/PNG, 1280x720 recommended"
+                                  height="150px"
+                                  fileType="image"
+                                />
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                     <div className="bg-white rounded-lg p-2 shadow-xl mt-3">
                       <h1 className="text-xl font-medium text-[#333333]">
                         Course Preview
@@ -1209,7 +1473,7 @@ const CourseBuilder = () => {
                       onPress={() => setPendingAction("next-1")}
                       isLoading={loadingAction === "next-1"}
                     >
-                      Next Step
+                      {isOneToOne ? "Save & Finish" : "Next Step"}
                     </Button>
                   </div>
                 </div>
@@ -1254,140 +1518,143 @@ const CourseBuilder = () => {
               </Modal>
             </motion.div>
           </Tab>
-          <Tab
-            className="h-20 max-md:justify-start"
-            key="content"
-            title={
-              <div className="flex gap-3  justify-between items-center">
-                <div className="bg-white text-[#3F3F44] shadow-2xl  size-9 sm:size-15 rounded-full flex items-center justify-center">
-                  <h1 className="text-xl font-bold text-[#06574C]">2</h1>
-                </div>
-                <div className="text-start">
-                  <h1 className="text-[#06574C] text-lg font-bold">
-                    Content Upload
-                  </h1>
-                  <h1 className="text-xs wrap-break-word">
-                    Videos, PDFs, quizzes & assignments
-                  </h1>
-                </div>
-              </div>
-            }
-          >
-            <motion.div
-              layout
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
-              transition={{ when: "beforeChildren" }}
-            >
-              <div className="w-full grid grid-cols-2 md:grid-cols-5 py-4 gap-2">
-                {card.map((item, i) => (
-                  <div
-                    key={i}
-                    className="w-full sm:flex-1 max-sm:border border-gray-300 p-3 bg-white rounded-lg"
-                  >
-                    <h1 className="text-[#333333] text-md font-semibold">
-                      {item.title}
-                    </h1>
-                    <div className="mt-3 flex gap-2 items-center">
-                      <div className="h-12 w-12 rounded-full bg-[#95C4BE33] p-1 items-center flex justify-center">
-                        {item.icone}
-                      </div>
-                      <h1 className="text-2xl text-[#333333] font-bold">
-                        {item.count}
-                      </h1>
-                    </div>
+          {!isOneToOne && (
+            <Tab
+              className="h-20 max-md:justify-start"
+              key="content"
+              title={
+                <div className="flex gap-3  justify-between items-center">
+                  <div className="bg-white text-[#3F3F44] shadow-2xl  size-9 sm:size-15 rounded-full flex items-center justify-center">
+                    <h1 className="text-xl font-bold text-[#06574C]">2</h1>
                   </div>
-                ))}
-              </div>
-              <Videos courseId={courseId} files={files} setFiles={setFiles} />
-              <PdfAndNotes
-                courseId={courseId}
-                files={files}
-                setFiles={setFiles}
-              />
-              <Assignments
-                courseId={courseId}
-                files={files}
-                setFiles={setFiles}
-              />
-              <Quizzes courseId={courseId} files={files} setFiles={setFiles} />
-              <Links courseId={courseId} files={files} setFiles={setFiles} />
-              <div className="p-3 my-5 bg-[#95C4BE33] rounded-md flex justify-between items-center">
-                <div>
-                  <h1 className="text-[#06574C] font-medium text-lg">
-                    Content Drip Schedule
-                  </h1>
-                  <h1 className="text-[#06574C] font-medium text-sm">
-                    Control when students can access each lesson. Content will
-                    be released automatically based on their enrollment date.
-                    This helps create a structured learning experience and
-                    prevents overwhelming students with too much content at
-                    once.
-                  </h1>
+                  <div className="text-start">
+                    <h1 className="text-[#06574C] text-lg font-bold">
+                      Content Upload
+                    </h1>
+                    <h1 className="text-xs wrap-break-word">
+                      Videos, PDFs, quizzes & assignments
+                    </h1>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-3 flex-wrap justify-center sm:justify-between items-center w-full ">
-                <Button
-                  size="lg"
-                  startContent={<FolderDot color="#06574C" size={16} />}
-                  variant="bordered"
-                  className="border-[#06574C] w-78 sm:w-40 text-[#06574C]"
-                  onPress={() => handleSelected("info")}
-                >
-                  Previous Step
-                </Button>
-                <div className="flex flex-wrap my-5 gap-3">
+              }
+            >
+              <motion.div
+                layout
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                transition={{ when: "beforeChildren" }}
+              >
+                <div className="w-full grid grid-cols-2 md:grid-cols-5 py-4 gap-2">
+                  {card.map((item, i) => (
+                    <div
+                      key={i}
+                      className="w-full sm:flex-1 max-sm:border border-gray-300 p-3 bg-white rounded-lg"
+                    >
+                      <h1 className="text-[#333333] text-md font-semibold">
+                        {item.title}
+                      </h1>
+                      <div className="mt-3 flex gap-2 items-center">
+                        <div className="h-12 w-12 rounded-full bg-[#95C4BE33] p-1 items-center flex justify-center">
+                          {item.icone}
+                        </div>
+                        <h1 className="text-2xl text-[#333333] font-bold">
+                          {item.count}
+                        </h1>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Videos courseId={courseId} files={files} setFiles={setFiles} />
+                <PdfAndNotes
+                  courseId={courseId}
+                  files={files}
+                  setFiles={setFiles}
+                />
+                <Assignments
+                  courseId={courseId}
+                  files={files}
+                  setFiles={setFiles}
+                />
+                <Quizzes courseId={courseId} files={files} setFiles={setFiles} />
+                <Links courseId={courseId} files={files} setFiles={setFiles} />
+                <div className="p-3 my-5 bg-[#95C4BE33] rounded-md flex justify-between items-center">
+                  <div>
+                    <h1 className="text-[#06574C] font-medium text-lg">
+                      Content Drip Schedule
+                    </h1>
+                    <h1 className="text-[#06574C] font-medium text-sm">
+                      Control when students can access each lesson. Content will
+                      be released automatically based on their enrollment date.
+                      This helps create a structured learning experience and
+                      prevents overwhelming students with too much content at
+                      once.
+                    </h1>
+                  </div>
+                </div>
+                <div className="flex gap-3 flex-wrap justify-center sm:justify-between items-center w-full ">
                   <Button
                     size="lg"
-                    className="bg-[#06574C] w-full text-white sm:w-35"
-                    type="submit"
-                    onPress={() => {
-                      // if (files.length === 0) { errorMessage("Please upload at least one file"); return; };
-                      handleSelected("pricing");
-                    }}
+                    startContent={<FolderDot color="#06574C" size={16} />}
+                    variant="bordered"
+                    className="border-[#06574C] w-78 sm:w-40 text-[#06574C]"
+                    onPress={() => handleSelected("info")}
                   >
-                    Next Step
+                    Previous Step
                   </Button>
+                  <div className="flex flex-wrap my-5 gap-3">
+                    <Button
+                      size="lg"
+                      className="bg-[#06574C] w-full text-white sm:w-35"
+                      type="submit"
+                      onPress={() => {
+                        // if (files.length === 0) { errorMessage("Please upload at least one file"); return; };
+                        handleSelected("pricing");
+                      }}
+                    >
+                      Next Step
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          </Tab>
-          <Tab
-            className="h-20 max-md:justify-start"
-            key="pricing"
-            title={
-              <div className="flex gap-3 justify-between items-center">
-                <div className="bg-white text-[#3F3F44] shadow-2xl  size-9 sm:size-15 rounded-full flex items-center justify-center">
-                  <h1 className="text-xl font-bold text-[#06574C]">3</h1>
+              </motion.div>
+            </Tab>
+          )}
+          {!isOneToOne && (
+            <Tab
+              className="h-20 max-md:justify-start"
+              key="pricing"
+              title={
+                <div className="flex gap-3 justify-between items-center">
+                  <div className="bg-white text-[#3F3F44] shadow-2xl  size-9 sm:size-15 rounded-full flex items-center justify-center">
+                    <h1 className="text-xl font-bold text-[#06574C]">3</h1>
+                  </div>
+                  <div className="text-start">
+                    <h1 className="text-[#06574C] text-lg font-bold"> Access</h1>
+                    <h1 className="text-xs wrap-break-word">
+                      {" "}
+                      Configure access rules
+                    </h1>
+                  </div>
                 </div>
-                <div className="text-start">
-                  <h1 className="text-[#06574C] text-lg font-bold"> Access</h1>
-                  <h1 className="text-xs wrap-break-word">
-                    {" "}
-                    Configure access rules
-                  </h1>
-                </div>
-              </div>
-            }
-          >
-            <motion.div
-              layout
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
-              transition={{ when: "beforeChildren" }}
+              }
             >
-              <Form onSubmit={handleSubmit3tab} className="w-full py-4">
-                <div className="grid grid-cols-12 gap-2 w-full">
-                  <div className="bg-white rounded-lg p-4 col-span-12 shadow-xl">
-                    <div>
-                      <h1 className="text-xl font-medium text-[#333333]">
-                        Access Settings
-                      </h1>
-                    </div>
-                    <div className="py-4">
-                      {/* <div className="p-3 bg-[#95C4BE33] rounded-lg flex justify-between items-center">
+              <motion.div
+                layout
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                transition={{ when: "beforeChildren" }}
+              >
+                <Form onSubmit={handleSubmit3tab} className="w-full py-4">
+                  <div className="grid grid-cols-12 gap-2 w-full">
+                    <div className="bg-white rounded-lg p-4 col-span-12 shadow-xl">
+                      <div>
+                        <h1 className="text-xl font-medium text-[#333333]">
+                          Access Settings
+                        </h1>
+                      </div>
+                      <div className="py-4">
+                        {/* <div className="p-3 bg-[#95C4BE33] rounded-lg flex justify-between items-center">
                         <div>
                           <h1 className="text-[#06574C] font-medium text-lg">
                             Course Type
@@ -1398,149 +1665,150 @@ const CourseBuilder = () => {
                         </div>
                       </div> */}
 
-                      <div className="flex gap-3 items-center py-4">
-                        {formData.type === "one_time" && (
-                          <Select
+                        <div className="flex gap-3 items-center py-4">
+                          {formData.type === "one_time" && (
+                            <Select
+                              size="lg"
+                              variant="bordered"
+                              label="Access Duration"
+                              labelPlacement="outside"
+                              placeholder="Select Access Duration"
+                              className="w-full"
+                              selectedKeys={[formData.access_duration]}
+                              onSelectionChange={(keys) =>
+                                handleChange("access_duration", [...keys][0])
+                              }
+                            >
+                              {accessDuration.map((item) => (
+                                <SelectItem key={item.key} value={item.label}>
+                                  {item.label}
+                                </SelectItem>
+                              ))}
+                            </Select>
+                          )}
+                          <Input
                             size="lg"
                             variant="bordered"
-                            label="Access Duration"
+                            label="Preview Lessons "
                             labelPlacement="outside"
-                            placeholder="Select Access Duration"
+                            placeholder="Select Preview Lessons "
                             className="w-full"
-                            selectedKeys={[formData.access_duration]}
-                            onSelectionChange={(keys) =>
-                              handleChange("access_duration", [...keys][0])
+                            type="text"
+                            value={formData.previous_lesson}
+                            onChange={(e) =>
+                              handleChange("previous_lesson", e.target.value)
                             }
-                          >
-                            {accessDuration.map((item) => (
-                              <SelectItem key={item.key} value={item.label}>
-                                {item.label}
-                              </SelectItem>
-                            ))}
-                          </Select>
-                        )}
+                          />
+                        </div>
                         <Input
                           size="lg"
                           variant="bordered"
-                          label="Preview Lessons "
+                          label="Enrollment Limit"
                           labelPlacement="outside"
-                          placeholder="Select Preview Lessons "
+                          placeholder="0"
                           className="w-full"
-                          type="text"
-                          value={formData.previous_lesson}
+                          type="number"
+                          min={1}
+                          isRequired={true}
+                          errorMessage="Enrollment limit must be at least 1"
+                          value={formData.enroll_number}
                           onChange={(e) =>
-                            handleChange("previous_lesson", e.target.value)
+                            handleChange("enroll_number", e.target.value)
                           }
                         />
-                      </div>
-                      <Input
-                        size="lg"
-                        variant="bordered"
-                        label="Enrollment Limit"
-                        labelPlacement="outside"
-                        placeholder="0"
-                        className="w-full"
-                        type="number"
-                        min={1}
-                        isRequired={true}
-                        errorMessage="Enrollment limit must be at least 1"
-                        value={formData.enroll_number}
-                        onChange={(e) =>
-                          handleChange("enroll_number", e.target.value)
-                        }
-                      />
-                      {/* <span className="text-xs text-[#06574C]">
+                        {/* <span className="text-xs text-[#06574C]">
                         Leave empty for unlimited enrollments
                       </span> */}
-                      <div className="my-3 text-xl font-bold">
-                        Publish Status
-                      </div>
-                      <div className="p-3 bg-[#EBD4C982] rounded-lg flex justify-between items-center">
-                        <div>
-                          <h1 className="text-[#333333] font-bold text-lg">
-                            Current Status: {formData.status}
-                          </h1>
-
-                          <h1 className="text-[#666666] font-medium text-sm">
-                            {formData.status === "published"
-                              ? "Your course is visible to students"
-                              : formData.status === "private"
-                                ? "Your course is private (only admin , assigned students or assigned teachers can see it)"
-                                : "Your course is saved as draft"}
-                          </h1>
+                        <div className="my-3 text-xl font-bold">
+                          Publish Status
                         </div>
+                        <div className="p-3 bg-[#EBD4C982] rounded-lg flex justify-between items-center">
+                          <div>
+                            <h1 className="text-[#333333] font-bold text-lg">
+                              Current Status: {formData.status}
+                            </h1>
 
-                        <div className="flex items-center gap-3">
-                          <Select
-                            selectedKeys={[formData.status]}
-                            onSelectionChange={(keys) => {
-                              const value = Array.from(keys)[0];
-                              handleChange("status", value);
-                            }}
-                            className="w-40"
-                            variant="bordered"
-                            color="success"
-                          >
-                            <SelectItem key="published">Public</SelectItem>
-                            <SelectItem key="private">Private</SelectItem>
-                            <SelectItem key="draft">Draft</SelectItem>
-                          </Select>
+                            <h1 className="text-[#666666] font-medium text-sm">
+                              {formData.status === "published"
+                                ? "Your course is visible to students"
+                                : formData.status === "private"
+                                  ? "Your course is private (only admin , assigned students or assigned teachers can see it)"
+                                  : "Your course is saved as draft"}
+                            </h1>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <Select
+                              selectedKeys={[formData.status]}
+                              onSelectionChange={(keys) => {
+                                const value = Array.from(keys)[0];
+                                handleChange("status", value);
+                              }}
+                              className="w-40"
+                              variant="bordered"
+                              color="success"
+                            >
+                              <SelectItem key="published">Public</SelectItem>
+                              <SelectItem key="private">Private</SelectItem>
+                              <SelectItem key="draft">Draft</SelectItem>
+                            </Select>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex flex-wrap gap-3 justify-center sm:justify-between items-center w-full ">
-                  <div className="flex flex-wrap items-center justify-center  gap-2">
-                    <Button
-                      size="lg"
-                      startContent={<FolderDot color="#06574C" size={16} />}
-                      variant="bordered"
-                      className="border-[#06574C] w-80 sm:w-40 text-[#06574C]"
-                      onPress={() => handleSelected("content")}
-                    >
-                      Previous Step
-                    </Button>
-                    <Button
-                      size="lg"
-                      startContent={<FolderDot color="#06574C" size={16} />}
-                      variant="bordered"
-                      className="border-[#06574C] text-[#06574C] w-80 sm:w-40"
-                      type="submit"
-                      onPress={() => {
-                        setPendingAction("save-3");
-                      }}
-                      isLoading={loadingAction === "save-3"}
-                    >
-                      Save Changes
-                    </Button>
+                  <div className="flex flex-wrap gap-3 justify-center sm:justify-between items-center w-full ">
+                    <div className="flex flex-wrap items-center justify-center  gap-2">
+                      <Button
+                        size="lg"
+                        startContent={<FolderDot color="#06574C" size={16} />}
+                        variant="bordered"
+                        className="border-[#06574C] w-80 sm:w-40 text-[#06574C]"
+                        onPress={() => handleSelected("content")}
+                      >
+                        Previous Step
+                      </Button>
+                      <Button
+                        size="lg"
+                        startContent={<FolderDot color="#06574C" size={16} />}
+                        variant="bordered"
+                        className="border-[#06574C] text-[#06574C] w-80 sm:w-40"
+                        type="submit"
+                        onPress={() => {
+                          setPendingAction("save-3");
+                        }}
+                        isLoading={loadingAction === "save-3"}
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        size="lg"
+                        startContent={<Rocket color="white" size={16} />}
+                        className="bg-[#06574C] text-white w-80 sm:w-60"
+                        type="submit"
+                        onPress={() => {
+                          setPendingAction("publish-3");
+                          // Only auto-publish if it's a draft. If private/public already selected, just save.
+                          if (formData?.status === "draft") {
+                            handleChange("status", "published");
+                          }
+                        }}
+                        isLoading={loadingAction === "publish-3"}
+                      >
+                        {formData?.status === "published"
+                          ? "Save & Published"
+                          : formData?.status === "private"
+                            ? "Save as Private"
+                            : "Publish Course"}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-3">
-                    <Button
-                      size="lg"
-                      startContent={<Rocket color="white" size={16} />}
-                      className="bg-[#06574C] text-white w-80 sm:w-60"
-                      type="submit"
-                      onPress={() => {
-                        setPendingAction("publish-3");
-                        // Only auto-publish if it's a draft. If private/public already selected, just save.
-                        if (formData?.status === "draft") {
-                          handleChange("status", "published");
-                        }
-                      }}
-                      isLoading={loadingAction === "publish-3"}
-                    >
-                      {formData?.status === "published"
-                        ? "Save & Published"
-                        : formData?.status === "private"
-                          ? "Save as Private"
-                          : "Publish Course"}
-                    </Button>
-                  </div>
-                </div>
-              </Form>
-            </motion.div>
-          </Tab>
+                </Form>
+              </motion.div>
+            </Tab>
+          )}
         </Tabs>
       </div>
     </div>

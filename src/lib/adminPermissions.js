@@ -4,6 +4,7 @@ export const ADMIN_PERMISSIONS = [
   { label: "Course Builder", value: "/admin/courses-management/builder" },
   { label: "Attendance & Progress", value: "/admin/courses-management/attendance" },
   { label: "Waiting List", value: "/admin/courses-management/waiting-list" },
+  { label: "Email Templates", value: "/admin/email-templates" },
   { label: "Student Attendence", value: "/admin/attendance-list" },
   { label: "User Management", value: "/admin/user-management" },
   { label: "Add User Management", value: "/admin/user-management/add-user" },
