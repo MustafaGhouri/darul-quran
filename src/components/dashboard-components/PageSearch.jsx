@@ -11,6 +11,7 @@ const pageDescriptions = {
   "/admin/dashboard": "Main admin dashboard with overview and statistics",
   "/admin/courses-management": "Manage all courses, create and edit course details",
   "/admin/courses-management/builder": "Build and design course curriculum",
+  "/admin/email-templates": "Create and manage email templates for 1:1 class inquiries",
   "/admin/courses-management/attendance": "Track student attendance and progress",
   "/admin/user-management": "Manage users, roles and permissions",
   "/admin/class-scheduling": "View and manage class schedules",

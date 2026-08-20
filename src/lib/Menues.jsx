@@ -56,6 +56,12 @@ export const adminMenu = [
     ],
   },
   {
+    name: "Email Templates",
+    icon: <LayoutTemplate />,
+    link: "/admin/email-templates",
+    value: "email-templates",
+  },
+  {
     name: "User Management",
     icon: <UsersIcon />,
     link: "/admin/user-management",

@@ -22,6 +22,7 @@ import { notificationPreferencesApi } from "./api/notificationPreferences";
 import { siteContentAPI } from "./api/siteContent";
 import { siteSettingsAPI } from "./api/siteSettings";
 import { seoSettingsAPI } from "./api/seoSettings";
+import { emailTemplateApi } from "./api/emailTemplates";
 import chatReducer from "./reducers/chat";
 
 
@@ -48,6 +49,7 @@ export const apiRegistry = {
   siteContentAPI,
   siteSettingsAPI,
   seoSettingsAPI,
+  emailTemplateApi,
 };
 export const store = configureStore({
   reducer: {
@@ -73,6 +75,7 @@ export const store = configureStore({
     [siteContentAPI.reducerPath]: siteContentAPI.reducer,
     [siteSettingsAPI.reducerPath]: siteSettingsAPI.reducer,
     [seoSettingsAPI.reducerPath]: seoSettingsAPI.reducer,
+    [emailTemplateApi.reducerPath]: emailTemplateApi.reducer,
     user: userReducer,
     chat: chatReducer,
   },
@@ -100,6 +103,7 @@ export const store = configureStore({
     siteContentAPI.middleware,
     siteSettingsAPI.middleware,
     seoSettingsAPI.middleware,
+    emailTemplateApi.middleware,
   ],
 });
 

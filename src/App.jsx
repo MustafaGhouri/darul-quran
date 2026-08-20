@@ -143,6 +143,7 @@ const TeacherAndStudentChat = lazy(() =>
 );
 const Review = lazy(() => import("./pages/admin/help/review"));
 const Faqs = lazy(() => import("./pages/admin/help/faqs"));
+const EmailTemplates = lazy(() => import("./pages/admin/email-templates"));
 const Testimonials = lazy(() => import("./pages/testimonials"));
 const EventsRetreats = lazy(() => import("./pages/admin/events-retreats"));
 const EventRetreatManage = lazy(() => import("./pages/admin/events-retreats/manage"));
@@ -549,6 +550,14 @@ function App() {
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
                   <Faqs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/email-templates"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirect="/">
+                  <EmailTemplates />
                 </ProtectedRoute>
               }
             />
