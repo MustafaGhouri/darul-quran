@@ -15,7 +15,6 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  Checkbox,
 } from "@heroui/react";
 import { motion } from "framer-motion";
 import FileDropzone from "../../../components/dashboard-components/dropzone";
@@ -54,6 +53,7 @@ import { IntervalInput } from "../../../components/dashboard-components/forms/In
 import TeacherSelect from "../../../components/select/TeacherSelect";
 import UserSelect from "../../../components/select/UserSelect";
 import StudentSelect from "../../../components/select/StudentSelect";
+import MultiUserSelect from "../../../components/select/MultiUserSelect";
 import { useGetEmailTemplatesQuery } from "../../../redux/api/emailTemplates";
 
 const WEEKDAYS = [
@@ -94,37 +94,35 @@ const formatScheduleTimeRange = (start, end) => {
   return start || end || "";
 };
 
-const DEFAULT_EMAIL_TRIGGERS = {
-  form_submission_student: true,
-  form_submission_teacher: true,
-  manual_enrollment_student: true,
-  manual_enrollment_teacher: true,
-};
+const createEmptyEmailTrigger = () => ({
+  key: `trigger-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+  templateId: "",
+  userIds: [],
+});
 
-const EmailRecipientCheckboxes = ({ student, teacher, onChange }) => {
-  const both = Boolean(student && teacher);
-  return (
-    <div className="flex flex-wrap items-center gap-4">
-      <Checkbox
-        isSelected={Boolean(student)}
-        onValueChange={(value) => onChange({ student: value, teacher })}
-      >
-        Student
-      </Checkbox>
-      <Checkbox
-        isSelected={Boolean(teacher)}
-        onValueChange={(value) => onChange({ student, teacher: value })}
-      >
-        Teacher
-      </Checkbox>
-      <Checkbox
-        isSelected={both}
-        onValueChange={(value) => onChange({ student: value, teacher: value })}
-      >
-        Both
-      </Checkbox>
-    </div>
-  );
+const normalizeLoadedEmailTriggers = (course) => {
+  const triggers = course?.emailTriggers;
+  const formFillerTemplateId =
+    triggers?.formFillerTemplateId ??
+    course?.emailTemplateId ??
+    "";
+
+  const items = Array.isArray(triggers?.triggers)
+    ? triggers.triggers.map((item, index) => ({
+        key: `loaded-${item.templateId || index}-${index}`,
+        templateId: item.templateId ? String(item.templateId) : "",
+        userIds: Array.isArray(item.userIds)
+          ? item.userIds.map(Number).filter(Boolean)
+          : [],
+      }))
+    : [];
+
+  return {
+    form_filler_template_id: formFillerTemplateId
+      ? String(formFillerTemplateId)
+      : "",
+    email_trigger_items: items,
+  };
 };
 
 const containerVariants = {
@@ -249,15 +247,7 @@ const CourseBuilder = () => {
           what_to_bring: course.whatToBring || "",
           start_date: course.startDate || "",
           google_form_link: course.googleFormLink || "",
-          email_template_id: course.emailTemplateId || "",
-          form_submission_student:
-            course.emailTriggers?.onFormSubmission?.student ?? true,
-          form_submission_teacher:
-            course.emailTriggers?.onFormSubmission?.teacher ?? true,
-          manual_enrollment_student:
-            course.emailTriggers?.onManualEnrollment?.student ?? true,
-          manual_enrollment_teacher:
-            course.emailTriggers?.onManualEnrollment?.teacher ?? true,
+          ...normalizeLoadedEmailTriggers(course),
         });
 
         setVideoUrl(course.video || "");
@@ -363,8 +353,8 @@ const CourseBuilder = () => {
     what_to_bring: "",
     start_date: "",
     google_form_link: "",
-    email_template_id: "",
-    ...DEFAULT_EMAIL_TRIGGERS,
+    form_filler_template_id: "",
+    email_trigger_items: [],
   });
   const [teacherError, setTeacherError] = useState("");
 
@@ -532,22 +522,19 @@ const CourseBuilder = () => {
       class_description: formData.description || null,
       class_image: urlMap.thumbnail ?? thumbnailUrl ?? null,
       google_form_link: formData.google_form_link || null,
-      email_template_id: formData.email_template_id
-        ? Number(formData.email_template_id)
+      email_template_id: formData.form_filler_template_id
+        ? Number(formData.form_filler_template_id)
         : null,
-      form_submission_student: Boolean(formData.form_submission_student),
-      form_submission_teacher: Boolean(formData.form_submission_teacher),
-      manual_enrollment_student: Boolean(formData.manual_enrollment_student),
-      manual_enrollment_teacher: Boolean(formData.manual_enrollment_teacher),
       emailTriggers: {
-        onFormSubmission: {
-          student: Boolean(formData.form_submission_student),
-          teacher: Boolean(formData.form_submission_teacher),
-        },
-        onManualEnrollment: {
-          student: Boolean(formData.manual_enrollment_student),
-          teacher: Boolean(formData.manual_enrollment_teacher),
-        },
+        formFillerTemplateId: formData.form_filler_template_id
+          ? Number(formData.form_filler_template_id)
+          : null,
+        triggers: (formData.email_trigger_items || [])
+          .filter((item) => item.templateId && (item.userIds || []).length > 0)
+          .map((item) => ({
+            templateId: Number(item.templateId),
+            userIds: (item.userIds || []).map(Number).filter(Boolean),
+          })),
       },
     };
     try {
@@ -1225,29 +1212,6 @@ const CourseBuilder = () => {
                               handleChange("google_form_link", e.target.value)
                             }
                           />
-                          <Select
-
-                            size="lg"
-                            variant="bordered"
-                            label="Email Template"
-                            labelPlacement="outside"
-                            placeholder="Select a saved template"
-                            selectedKeys={
-                              formData.email_template_id
-                                ? new Set([String(formData.email_template_id)])
-                                : new Set()
-                            }
-                            onSelectionChange={(keys) => {
-                              const selected = [...keys][0];
-                              handleChange("email_template_id", selected || "");
-                            }}
-                          >
-                            {(emailTemplatesData?.templates || []).map((template) => (
-                              <SelectItem key={String(template.id)} value={String(template.id)}>
-                                {template.name}
-                              </SelectItem>
-                            ))}
-                          </Select>
                           {(!emailTemplatesData?.templates ||
                             emailTemplatesData.templates.length === 0) && (
                               <p className="text-xs text-gray-500">
@@ -1261,43 +1225,162 @@ const CourseBuilder = () => {
                                 and they will appear here.
                               </p>
                             )}
-                          <div>
-                            <p className="text-sm font-medium text-[#06574C] mb-2">
-                              Email Triggers
-                            </p>
+
+                          <div className="space-y-4">
+                            <div className="bg-white rounded-lg border border-[#95C4BE] p-3 space-y-3">
+                              <div>
+                                <p className="text-sm font-semibold text-[#06574C]">
+                                  Form Filler Email
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  Template sent to the person who submitted the Google Form.
+                                </p>
+                              </div>
+                              <Select
+                                size="lg"
+                                variant="bordered"
+                                label="Email Template"
+                                labelPlacement="outside"
+                                placeholder="Select template for form filler"
+                                selectedKeys={
+                                  formData.form_filler_template_id
+                                    ? new Set([String(formData.form_filler_template_id)])
+                                    : new Set()
+                                }
+                                onSelectionChange={(keys) => {
+                                  const selected = [...keys][0];
+                                  handleChange("form_filler_template_id", selected || "");
+                                }}
+                              >
+                                {(emailTemplatesData?.templates || []).map((template) => (
+                                  <SelectItem
+                                    key={String(template.id)}
+                                    value={String(template.id)}
+                                  >
+                                    {template.name}
+                                  </SelectItem>
+                                ))}
+                              </Select>
+                            </div>
+
                             <div className="space-y-3">
-                              <div>
-                                <p className="text-sm text-gray-600 mb-1">
-                                  On Form Submission — Send to
-                                </p>
-                                <EmailRecipientCheckboxes
-                                  student={formData.form_submission_student}
-                                  teacher={formData.form_submission_teacher}
-                                  onChange={({ student, teacher }) => {
+                              <div className="flex items-center justify-between gap-2">
+                                <div>
+                                  <p className="text-sm font-semibold text-[#06574C]">
+                                    Email Triggers
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    Notify selected users with a chosen template.
+                                  </p>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  color="success"
+                                  variant="flat"
+                                  startContent={<PlusIcon size={14} />}
+                                  onPress={() => {
                                     setFormData((prev) => ({
                                       ...prev,
-                                      form_submission_student: student,
-                                      form_submission_teacher: teacher,
+                                      email_trigger_items: [
+                                        ...(prev.email_trigger_items || []),
+                                        createEmptyEmailTrigger(),
+                                      ],
                                     }));
                                   }}
-                                />
+                                >
+                                  Add Email Trigger
+                                </Button>
                               </div>
-                              <div>
-                                <p className="text-sm text-gray-600 mb-1">
-                                  On Manual Enrollment — Send to
+
+                              {(formData.email_trigger_items || []).length === 0 ? (
+                                <p className="text-sm text-gray-500 text-center py-3 border border-dashed rounded-lg">
+                                  No staff triggers yet. Click &quot;Add Email Trigger&quot;.
                                 </p>
-                                <EmailRecipientCheckboxes
-                                  student={formData.manual_enrollment_student}
-                                  teacher={formData.manual_enrollment_teacher}
-                                  onChange={({ student, teacher }) => {
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      manual_enrollment_student: student,
-                                      manual_enrollment_teacher: teacher,
-                                    }));
-                                  }}
-                                />
-                              </div>
+                              ) : (
+                                (formData.email_trigger_items || []).map((trigger, index) => (
+                                  <div
+                                    key={trigger.key}
+                                    className="bg-white rounded-lg border border-gray-200 p-3 space-y-3"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-sm font-medium text-[#333]">
+                                        Trigger {index + 1}
+                                      </p>
+                                      <Button
+                                        size="sm"
+                                        color="danger"
+                                        variant="light"
+                                        isIconOnly
+                                        onPress={() => {
+                                          setFormData((prev) => ({
+                                            ...prev,
+                                            email_trigger_items: (
+                                              prev.email_trigger_items || []
+                                            ).filter((item) => item.key !== trigger.key),
+                                          }));
+                                        }}
+                                      >
+                                        <Trash2Icon size={14} />
+                                      </Button>
+                                    </div>
+
+                                    <Select
+                                      size="md"
+                                      variant="bordered"
+                                      label="Email Template"
+                                      labelPlacement="outside"
+                                      placeholder="Select email template"
+                                      selectedKeys={
+                                        trigger.templateId
+                                          ? new Set([String(trigger.templateId)])
+                                          : new Set()
+                                      }
+                                      onSelectionChange={(keys) => {
+                                        const selected = [...keys][0] || "";
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          email_trigger_items: (
+                                            prev.email_trigger_items || []
+                                          ).map((item) =>
+                                            item.key === trigger.key
+                                              ? { ...item, templateId: selected }
+                                              : item,
+                                          ),
+                                        }));
+                                      }}
+                                    >
+                                      {(emailTemplatesData?.templates || []).map(
+                                        (template) => (
+                                          <SelectItem
+                                            key={String(template.id)}
+                                            value={String(template.id)}
+                                          >
+                                            {template.name}
+                                          </SelectItem>
+                                        ),
+                                      )}
+                                    </Select>
+
+                                    <MultiUserSelect
+                                      label="Select Users"
+                                      placeholder="Search and select users..."
+                                      initialValues={trigger.userIds || []}
+                                      onChange={(userIds) => {
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          email_trigger_items: (
+                                            prev.email_trigger_items || []
+                                          ).map((item) =>
+                                            item.key === trigger.key
+                                              ? { ...item, userIds }
+                                              : item,
+                                          ),
+                                        }));
+                                      }}
+                                    />
+                                  </div>
+                                ))
+                              )}
                             </div>
                           </div>
                         </div>
