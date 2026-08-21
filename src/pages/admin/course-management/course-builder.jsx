@@ -98,7 +98,76 @@ const createEmptyEmailTrigger = () => ({
   key: `trigger-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
   templateId: "",
   userIds: [],
+  manualEmails: [],
 });
+
+const isValidEmail = (value) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(String(value || "").trim());
+
+const ManualEmailInput = ({ emails = [], onChange }) => {
+  const [draft, setDraft] = useState("");
+
+  const addEmail = () => {
+    const email = draft.trim().toLowerCase();
+    if (!isValidEmail(email)) {
+      errorMessage("Enter a valid email address");
+      return;
+    }
+    if (emails.map((e) => e.toLowerCase()).includes(email)) {
+      setDraft("");
+      return;
+    }
+    onChange([...emails, email]);
+    setDraft("");
+  };
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-gray-700">Manual Emails</p>
+      <p className="text-xs text-gray-500">
+        For people not in the portal. Press Enter or Add after each email.
+      </p>
+      <div className="flex gap-2">
+        <Input
+          size="sm"
+          variant="bordered"
+          type="email"
+          placeholder="name@example.com"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addEmail();
+            }
+          }}
+        />
+        <Button size="sm" color="success" variant="flat" onPress={addEmail}>
+          Add
+        </Button>
+      </div>
+      {emails.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {emails.map((email) => (
+            <span
+              key={email}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#F1C2AC55] text-[#333] text-sm rounded-lg"
+            >
+              {email}
+              <button
+                type="button"
+                className="text-red-500 hover:text-red-700"
+                onClick={() => onChange(emails.filter((e) => e !== email))}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const normalizeLoadedEmailTriggers = (course) => {
   const triggers = course?.emailTriggers;
@@ -113,6 +182,9 @@ const normalizeLoadedEmailTriggers = (course) => {
         templateId: item.templateId ? String(item.templateId) : "",
         userIds: Array.isArray(item.userIds)
           ? item.userIds.map(Number).filter(Boolean)
+          : [],
+        manualEmails: Array.isArray(item.manualEmails)
+          ? item.manualEmails.map((e) => String(e).toLowerCase())
           : [],
       }))
     : [];
@@ -530,10 +602,18 @@ const CourseBuilder = () => {
           ? Number(formData.form_filler_template_id)
           : null,
         triggers: (formData.email_trigger_items || [])
-          .filter((item) => item.templateId && (item.userIds || []).length > 0)
+          .filter(
+            (item) =>
+              item.templateId &&
+              ((item.userIds || []).length > 0 ||
+                (item.manualEmails || []).length > 0),
+          )
           .map((item) => ({
             templateId: Number(item.templateId),
             userIds: (item.userIds || []).map(Number).filter(Boolean),
+            manualEmails: (item.manualEmails || [])
+              .map((e) => String(e).trim().toLowerCase())
+              .filter(Boolean),
           })),
       },
     };
@@ -1362,8 +1442,8 @@ const CourseBuilder = () => {
                                     </Select>
 
                                     <MultiUserSelect
-                                      label="Select Users"
-                                      placeholder="Search and select users..."
+                                      label="Select Users (optional)"
+                                      placeholder="Search and select portal users..."
                                       initialValues={trigger.userIds || []}
                                       onChange={(userIds) => {
                                         setFormData((prev) => ({
@@ -1378,6 +1458,29 @@ const CourseBuilder = () => {
                                         }));
                                       }}
                                     />
+
+                                    <ManualEmailInput
+                                      emails={trigger.manualEmails || []}
+                                      onChange={(manualEmails) => {
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          email_trigger_items: (
+                                            prev.email_trigger_items || []
+                                          ).map((item) =>
+                                            item.key === trigger.key
+                                              ? { ...item, manualEmails }
+                                              : item,
+                                          ),
+                                        }));
+                                      }}
+                                    />
+
+                                    {(trigger.userIds || []).length === 0 &&
+                                      (trigger.manualEmails || []).length === 0 && (
+                                        <p className="text-xs text-amber-600">
+                                          Add at least one portal user or manual email.
+                                        </p>
+                                      )}
                                   </div>
                                 ))
                               )}
