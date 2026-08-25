@@ -597,26 +597,53 @@ const CourseBuilder = () => {
       email_template_id: formData.form_filler_template_id
         ? Number(formData.form_filler_template_id)
         : null,
+      email_trigger_items: formData.email_trigger_items || [],
       emailTriggers: {
         formFillerTemplateId: formData.form_filler_template_id
           ? Number(formData.form_filler_template_id)
           : null,
         triggers: (formData.email_trigger_items || [])
-          .filter(
-            (item) =>
-              item.templateId &&
-              ((item.userIds || []).length > 0 ||
-                (item.manualEmails || []).length > 0),
-          )
           .map((item) => ({
-            templateId: Number(item.templateId),
+            templateId: item.templateId ? Number(item.templateId) : null,
             userIds: (item.userIds || []).map(Number).filter(Boolean),
             manualEmails: (item.manualEmails || [])
               .map((e) => String(e).trim().toLowerCase())
               .filter(Boolean),
-          })),
+          }))
+          .filter(
+            (item) =>
+              item.templateId &&
+              (item.userIds.length > 0 || item.manualEmails.length > 0),
+          ),
       },
     };
+
+    const incompleteTriggers = (formData.email_trigger_items || []).filter(
+      (item) =>
+        item.templateId &&
+        !(item.userIds || []).length &&
+        !(item.manualEmails || []).length,
+    );
+    if (incompleteTriggers.length > 0) {
+      errorMessage(
+        "Each email trigger needs at least one portal user or manual email",
+      );
+      setLoadingAction(null);
+      setPendingAction(null);
+      return;
+    }
+
+    if (
+      (formData.email_trigger_items || []).length > 0 &&
+      payload.emailTriggers.triggers.length === 0
+    ) {
+      errorMessage(
+        "Email triggers are incomplete. Select a template and add recipients.",
+      );
+      setLoadingAction(null);
+      setPendingAction(null);
+      return;
+    }
     try {
       const courseId = searchParams.get("id");
       let response;
@@ -1322,14 +1349,21 @@ const CourseBuilder = () => {
                                 label="Email Template"
                                 labelPlacement="outside"
                                 placeholder="Select template for form filler"
+                                selectionMode="single"
                                 selectedKeys={
                                   formData.form_filler_template_id
-                                    ? new Set([String(formData.form_filler_template_id)])
+                                    ? new Set([
+                                        String(formData.form_filler_template_id),
+                                      ])
                                     : new Set()
                                 }
                                 onSelectionChange={(keys) => {
                                   const selected = [...keys][0];
-                                  handleChange("form_filler_template_id", selected || "");
+                                  if (!selected) return;
+                                  handleChange(
+                                    "form_filler_template_id",
+                                    String(selected),
+                                  );
                                 }}
                               >
                                 {(emailTemplatesData?.templates || []).map((template) => (
@@ -1410,20 +1444,26 @@ const CourseBuilder = () => {
                                       label="Email Template"
                                       labelPlacement="outside"
                                       placeholder="Select email template"
+                                      selectionMode="single"
+                                      disallowEmptySelection
                                       selectedKeys={
                                         trigger.templateId
                                           ? new Set([String(trigger.templateId)])
                                           : new Set()
                                       }
                                       onSelectionChange={(keys) => {
-                                        const selected = [...keys][0] || "";
+                                        const selected = [...keys][0];
+                                        if (!selected) return;
                                         setFormData((prev) => ({
                                           ...prev,
                                           email_trigger_items: (
                                             prev.email_trigger_items || []
                                           ).map((item) =>
                                             item.key === trigger.key
-                                              ? { ...item, templateId: selected }
+                                              ? {
+                                                  ...item,
+                                                  templateId: String(selected),
+                                                }
                                               : item,
                                           ),
                                         }));
