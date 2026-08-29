@@ -18,7 +18,7 @@ import CourseSelect from "../../../components/select/CourseSelect";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { validateSchedule } from "../../../lib/utils";
-import { getScheduleStart, getScheduleEnd, formatTime24 } from "../../../utils/scheduleHelpers";
+import { getScheduleStart, getScheduleEnd, formatTime24, formatTimeInViewerTimezone } from "../../../utils/scheduleHelpers";
 
 // ── SmartTimeInput ──────────────────────────────────────────────────────────
 // Keeps its own local value so the parent doesn't re-render on every keystroke.
@@ -97,7 +97,14 @@ const CreaterOrUpdateSchedule = () => {
         let sdTimings = {};
         if (item.specificDates && typeof item.specificDates === "object" && !Array.isArray(item.specificDates)) {
             sdKeys = Object.keys(item.specificDates);
-            sdTimings = item.specificDates;
+            sdKeys.forEach(key => {
+                const spec = item.specificDates[key];
+                sdTimings[key] = {
+                    ...spec,
+                    startTime: formatTime24(getScheduleStart(item, key)) || spec.startTime,
+                    endTime: formatTime24(getScheduleEnd(item, key)) || spec.endTime,
+                };
+            });
         } else if (Array.isArray(item.specificDates)) {
             sdKeys = item.specificDates;
         }
@@ -189,6 +196,7 @@ const CreaterOrUpdateSchedule = () => {
         if (!validation.valid) { errorMessage(validation.message); return; }
 
         try {
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             // Build JSONB payload: each selected date gets its own timing
             // Falls back to the global startTime/endTime if no custom timing set
             const sdPayload = {};
@@ -196,7 +204,7 @@ const CreaterOrUpdateSchedule = () => {
                 sdPayload[dateKey] = {
                     startTime: specificDateTimings[dateKey]?.startTime || formData.startTime,
                     endTime: specificDateTimings[dateKey]?.endTime || formData.endTime,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    timezone: userTimezone,
                 };
             });
 
@@ -210,13 +218,12 @@ const CreaterOrUpdateSchedule = () => {
                     formData.sessionMode === "one-on-one"
                         ? (formData.specificStudentIds ?? []).map(Number)
                         : [],
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                timezone: userTimezone,
             };
             delete payload.selectedUsers;
             delete payload.specificStudents;
 
             if (user?.role === "teacher") payload.teacherId = user.id;
-            if (isEdit) delete payload.timezone;
             const response = isEdit
                 ? await updateSchedule({ id: formData.id, data: payload })
                 : await createSchedule(payload);
@@ -434,6 +441,24 @@ const CreaterOrUpdateSchedule = () => {
                         onChange={set("endTime")}
                     />
                 </div>
+
+                {(() => {
+                    const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                     const refDate = formData.date || formData.startDate || new Date().toISOString().split("T")[0];
+                    const utcStart = formatTimeInViewerTimezone(refDate, formData.startTime, userTz, "UTC");
+                    const utcEnd = formatTimeInViewerTimezone(refDate, formData.endTime, userTz, "UTC");
+
+                    return (
+                        <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-xs space-y-0.5 w-full">
+                            <p className="text-emerald-800 font-medium">
+                                <strong>Your Timezone:</strong> {userTz} (All times you enter are in your local time. Students will see times converted to their local timezone.)
+                            </p>
+                            <p className="text-emerald-700">
+                                <strong>UTC Time:</strong> {utcStart} - {utcEnd}
+                            </p>
+                        </div>
+                    );
+                })()}
 
                 {user?.role !== "teacher" && (
                     <TeacherSelect
