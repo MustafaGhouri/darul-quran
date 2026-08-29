@@ -51,35 +51,51 @@ const CancelSpecificDatesModal = ({ schedule, isOpen, onClose, onSuccess }) => {
     const cancelSet = new Set(
       (schedule.cancelSpecific || schedule.cancel_specific || []).map(normalizeDateKey),
     );
-    const occurrences = schedule.scheduleOccurrences || [];
-    const seen = new Set();
+    
+    const rawDates = [
+      ...(Array.isArray(schedule.scheduleDates) ? schedule.scheduleDates : []),
+      ...(Array.isArray(schedule.schedule_dates) ? schedule.schedule_dates : []),
+      ...(Array.isArray(schedule.scheduleOccurrences) ? schedule.scheduleOccurrences.map(o => o.date || o.sourceDate) : []),
+      ...(schedule.specificDates && typeof schedule.specificDates === "object" ? Object.keys(schedule.specificDates) : []),
+      ...(schedule.date ? [schedule.date] : []),
+      ...(schedule.startDate ? [schedule.startDate] : []),
+    ];
 
-    return occurrences
-      .filter((occ) => {
-        const dateKey = normalizeDateKey(occ.date);
-        const sourceKey = normalizeDateKey(occ.sourceDate || occ.source_date);
-        return dateKey >= todayStr || sourceKey >= todayStr;
+    const seen = new Set();
+    const viewerTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const defaultSchedTz = schedule.timezone || "Europe/London";
+
+    return rawDates
+      .map(normalizeDateKey)
+      .filter((dateKey) => {
+        if (!dateKey || dateKey < todayStr || seen.has(dateKey)) return false;
+        seen.add(dateKey);
+        return true;
       })
-      .map((occ) => {
-        const dateKey = normalizeDateKey(occ.date);
-        const sourceKey = normalizeDateKey(occ.sourceDate || occ.source_date);
-        const alreadyCancelled =
-          cancelSet.has(dateKey) || (sourceKey && cancelSet.has(sourceKey));
-        const startTime =
-          occ.startTime || occ.start_time || formatTime12Hour(getScheduleStart(schedule, dateKey));
-        const endTime =
-          occ.endTime || occ.end_time || formatTime12Hour(getScheduleEnd(schedule, dateKey));
+      .sort()
+      .map((dateKey) => {
+        const alreadyCancelled = cancelSet.has(dateKey);
+        const startDate = getScheduleStart(schedule, dateKey);
+        const endDate = getScheduleEnd(schedule, dateKey);
+
+        const localStart = startDate ? formatTime12Hour(startDate) : formatTime12Hour(schedule.startTime);
+        const localEnd = endDate ? formatTime12Hour(endDate) : formatTime12Hour(schedule.endTime);
+
+        const specTz = schedule.specificDates?.[dateKey]?.timezone || defaultSchedTz;
+        const isDiffTz = specTz !== viewerTz;
+
+        const originStart = formatTime12Hour(schedule.specificDates?.[dateKey]?.startTime || schedule.startTime);
+        const originEnd = formatTime12Hour(schedule.specificDates?.[dateKey]?.endTime || schedule.endTime);
+
+        // const tzNote = isDiffTz
+        //   ? ` [Origin: ${originStart} - ${originEnd} (${specTz})]`
+        //   : "";
 
         return {
           dateKey,
           alreadyCancelled,
-          label: `${dateFormatter(dateKey)} (${formatTime12Hour(startTime)} - ${formatTime12Hour(endTime)})`,
+          label: `${dateFormatter(dateKey)}: ${localStart} - ${localEnd} `,
         };
-      })
-      .filter((option) => {
-        if (seen.has(option.dateKey)) return false;
-        seen.add(option.dateKey);
-        return true;
       });
   }, [schedule]);
 
