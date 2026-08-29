@@ -64,19 +64,71 @@ const getZonedDateTime = (schedule, field, dateKey = null) => {
         if (!isNaN(date.getTime())) return date;
     }
 
-    const timezone = schedule.timezone || "Europe/London";
+    const timezone = specificTiming?.timezone || occurrence?.timezone || schedule.timezone || "Europe/London";
     const scheduleDate = requestedDate;
     const time =
-        occurrence?.[`${field}Time`] ||
-        occurrence?.[`${field}_time`] ||
         specificTiming?.[`${field}Time`] ||
         specificTiming?.[`${field}_time`] ||
+        occurrence?.[`${field}Time`] ||
+        occurrence?.[`${field}_time`] ||
         schedule?.[`${field}Time`] ||
         schedule?.[`${field}_time`];
 
     if (!scheduleDate || !time) return null;
 
     return fromZonedTime(`${scheduleDate} ${String(time).slice(0, 5)}`, timezone);
+};
+
+/**
+ * Converts a time given in a source timezone (e.g. student's timezone) into the viewer's (teacher/admin) local time.
+ * @param {string} date - "YYYY-MM-DD"
+ * @param {string} time - "HH:mm"
+ * @param {string} sourceTimezone - IANA timezone (e.g. "Europe/London", "Africa/Cairo")
+ * @param {string|null} targetTimezone - Target IANA timezone (defaults to browser's resolved timezone)
+ * @returns {string} Formatted 12-hour time (e.g. "12:30 PM")
+ */
+export const formatTimeInViewerTimezone = (date, time, sourceTimezone, targetTimezone = null) => {
+    if (!time) return "";
+    const viewerTz = targetTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London";
+    const srcTz = sourceTimezone || "Europe/London";
+    const dateStr = date
+        ? (typeof date === "string" ? (date.includes("T") ? date.split("T")[0] : date) : new Date(date).toISOString().split("T")[0])
+        : new Date().toISOString().split("T")[0];
+    try {
+        const utcDate = fromZonedTime(`${dateStr} ${String(time).slice(0, 5)}`, srcTz);
+        if (!utcDate || isNaN(utcDate.getTime())) return formatTime12Hour(time);
+        return utcDate.toLocaleTimeString("en-US", {
+            timeZone: viewerTz,
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+        });
+    } catch (e) {
+        return formatTime12Hour(time);
+    }
+};
+
+/**
+ * Formats a date given in a source timezone into the viewer's local timezone.
+ */
+export const formatDateInViewerTimezone = (date, time, sourceTimezone, targetTimezone = null) => {
+    if (!date) return "";
+    const viewerTz = targetTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London";
+    const srcTz = sourceTimezone || "Europe/London";
+    const dateStr = typeof date === "string" ? (date.includes("T") ? date.split("T")[0] : date) : new Date(date).toISOString().split("T")[0];
+    const timeStr = time ? String(time).slice(0, 5) : "12:00";
+    try {
+        const utcDate = fromZonedTime(`${dateStr} ${timeStr}`, srcTz);
+        if (!utcDate || isNaN(utcDate.getTime())) return new Date(dateStr).toLocaleDateString();
+        return utcDate.toLocaleDateString("en-US", {
+            timeZone: viewerTz,
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        });
+    } catch (e) {
+        return new Date(dateStr).toLocaleDateString();
+    }
 };
 
 export const formatTime24 = (dateTime) => {

@@ -71,7 +71,8 @@ export const RescheduleRequestModal = ({
             originaldate: schedule.date,
             requestedStartTime,
             requestedEndTime,
-            reason
+            reason,
+            studentTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         });
     };
 
