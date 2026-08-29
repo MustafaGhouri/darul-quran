@@ -62,7 +62,10 @@ import {
   getScheduleEnd,
   formatTime24,
   isScheduleDateCancelled,
+  formatTimeInViewerTimezone,
+  formatDateInViewerTimezone,
 } from "../../../utils/scheduleHelpers";
+import { Globe } from "lucide-react";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { canReschedule, dateFormatter } from "../../../lib/utils";
@@ -412,6 +415,7 @@ const TeacherClassSheduling = () => {
         startTime: quickRescheduleData.startTime,
         endTime: quickRescheduleData.endTime,
         replaceWith: quickRescheduleData.replaceWith || null,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       }).unwrap();
 
       successMessage("Schedule updated successfully");
@@ -1351,23 +1355,43 @@ const TeacherClassSheduling = () => {
                   }
                   items={rescheduleData?.requests?.filter(req => req.scheduleId === selectedSchedule?.id) || []}
                 >
-                  {(request) => (
+                  {(request) => {
+                    const viewerTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    const studentTz = request.studentTimezone || "Europe/London";
+                    const isDifferentTz = studentTz !== viewerTz;
+                    const convertedDate = formatDateInViewerTimezone(request.requestedDate, request.requestedStartTime, studentTz, viewerTz);
+                    const convertedStart = formatTimeInViewerTimezone(request.requestedDate, request.requestedStartTime, studentTz, viewerTz);
+                    const convertedEnd = formatTimeInViewerTimezone(request.requestedDate, request.requestedEndTime, studentTz, viewerTz);
+
+                    return (
                     <TableRow key={request.id}>
                       <TableCell>
                         <div>
                           <p className="font-medium text-sm">{request.studentName}</p>
                           <p className="text-xs text-gray-500">{request.studentEmail}</p>
+                          <Chip size="sm" variant="flat" color="secondary" className="mt-1 text-xs">
+                            <Globe size={11} className="inline mr-1" />
+                            {studentTz}
+                          </Chip>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm">
-                          <p className="font-medium text-[#06574C]">
-                            {new Date(request.requestedDate).toLocaleDateString()}
-                          </p>
-                          <p className="text-gray-500">
-                            {formatTime12Hour(request.requestedStartTime)} -{" "}
-                            {formatTime12Hour(request.requestedEndTime)}
-                          </p>
+                        <div className="text-sm space-y-1">
+                          <div>
+                            <p className="font-medium text-[#06574C]">
+                              {new Date(request.requestedDate).toLocaleDateString()}
+                            </p>
+                            <p className="text-gray-700 font-semibold">
+                              {formatTime12Hour(request.requestedStartTime)} - {formatTime12Hour(request.requestedEndTime)}
+                              <span className="text-xs font-normal text-gray-500 ml-1">({studentTz})</span>
+                            </p>
+                          </div>
+                          {isDifferentTz && (
+                            <div className="bg-[#E8F1FF] text-[#1570E8] p-1.5 rounded text-xs">
+                              <p className="font-semibold">Your Local Time ({viewerTz}):</p>
+                              <p>{convertedDate} | {convertedStart} - {convertedEnd}</p>
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -1415,7 +1439,8 @@ const TeacherClassSheduling = () => {
                         </div>
                       </TableCell>
                     </TableRow>
-                  )}
+                    );
+                  }}
                 </TableBody>
               </Table>
 
@@ -1453,23 +1478,41 @@ const TeacherClassSheduling = () => {
             </h2>
           </ModalHeader>
           <ModalBody>
-            {selectedRescheduleRequest && (
+            {selectedRescheduleRequest && (() => {
+              const viewerTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+              const studentTz = selectedRescheduleRequest.studentTimezone || "Europe/London";
+              const isDifferentTz = studentTz !== viewerTz;
+              const convertedDate = formatDateInViewerTimezone(selectedRescheduleRequest.requestedDate, selectedRescheduleRequest.requestedStartTime, studentTz, viewerTz);
+              const convertedStart = formatTimeInViewerTimezone(selectedRescheduleRequest.requestedDate, selectedRescheduleRequest.requestedStartTime, studentTz, viewerTz);
+              const convertedEnd = formatTimeInViewerTimezone(selectedRescheduleRequest.requestedDate, selectedRescheduleRequest.requestedEndTime, studentTz, viewerTz);
+
+              return (
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">
-                  <strong>Student:</strong> {selectedRescheduleRequest.studentName}
+                <p className="text-sm text-gray-600 mb-1">
+                  <strong>Student:</strong> {selectedRescheduleRequest.studentName} ({selectedRescheduleRequest.studentEmail})
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
-                  <strong>Requested Schedule:</strong> {new Date(selectedRescheduleRequest.requestedDate).toLocaleDateString()}
+                  <strong>Class:</strong> {selectedRescheduleRequest.scheduleTitle}
                 </p>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-xs text-gray-500 mb-1">Requested Time:</p>
-                  <p className="text-sm font-medium">
-                    {formatTime12Hour(selectedRescheduleRequest.requestedStartTime)} -{" "}
-                    {formatTime12Hour(selectedRescheduleRequest.requestedEndTime)}
-                  </p>
+                <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 mb-0.5">
+                      Student Requested Time ({studentTz}):
+                    </p>
+                    <p className="text-sm font-medium text-gray-800">
+                      {new Date(selectedRescheduleRequest.requestedDate).toLocaleDateString()} &bull; {formatTime12Hour(selectedRescheduleRequest.requestedStartTime)} - {formatTime12Hour(selectedRescheduleRequest.requestedEndTime)}
+                    </p>
+                  </div>
+                  {isDifferentTz && (
+                    <div className="bg-[#E8F1FF] text-[#1570E8] p-2 rounded text-xs font-medium">
+                      <p className="font-semibold mb-0.5">Your Local Time ({viewerTz}):</p>
+                      <p className="text-sm font-bold">{convertedDate} &bull; {convertedStart} - {convertedEnd}</p>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             <Textarea
               label={actionType === "approve" ? "Approval Message" : "Rejection Reason"}
@@ -1791,6 +1834,26 @@ const TeacherClassSheduling = () => {
                   isRequired
                 />
               </div>
+
+              {(() => {
+                const viewerTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const isUK = viewerTz === "Europe/London";
+                const ukStart = formatTimeInViewerTimezone(quickRescheduleData.date, quickRescheduleData.startTime, viewerTz, "Europe/London");
+                const ukEnd = formatTimeInViewerTimezone(quickRescheduleData.date, quickRescheduleData.endTime, viewerTz, "Europe/London");
+
+                return (
+                  <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-xs space-y-0.5">
+                    <p className="text-emerald-800 font-medium">
+                      <strong>Your Local Timezone:</strong> {viewerTz}
+                    </p>
+                    {!isUK && quickRescheduleData.startTime && (
+                      <p className="text-emerald-700">
+                        <strong>Equivalent UK Time:</strong> {ukStart} - {ukEnd} (Europe/London)
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
 
               <Input
                 type="date"
