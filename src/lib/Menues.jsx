@@ -237,7 +237,7 @@ export const teacherMenu = [
   {
     name: "My Courses",
     icon: <BookIcon />,
-    link: "/teacher/courses",
+    link: "/teacher/class-scheduling",
     children: [
       // { name: 'Course Details View', link: '/teacher/courses/course-details' },
       { name: "Upload Materials", link: "/teacher/courses/upload-material" },
