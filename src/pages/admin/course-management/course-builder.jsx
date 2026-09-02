@@ -53,8 +53,8 @@ import { IntervalInput } from "../../../components/dashboard-components/forms/In
 import TeacherSelect from "../../../components/select/TeacherSelect";
 import UserSelect from "../../../components/select/UserSelect";
 import StudentSelect from "../../../components/select/StudentSelect";
-import MultiUserSelect from "../../../components/select/MultiUserSelect";
 import { useGetEmailTemplatesQuery } from "../../../redux/api/emailTemplates";
+import { FiCopy, FiCode } from "react-icons/fi";
 
 const WEEKDAYS = [
   "Monday",
@@ -94,106 +94,24 @@ const formatScheduleTimeRange = (start, end) => {
   return start || end || "";
 };
 
-const createEmptyEmailTrigger = () => ({
-  key: `trigger-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-  templateId: "",
-  userIds: [],
-  manualEmails: [],
-});
-
-const isValidEmail = (value) =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(String(value || "").trim());
-
-const ManualEmailInput = ({ emails = [], onChange }) => {
-  const [draft, setDraft] = useState("");
-
-  const addEmail = () => {
-    const email = draft.trim().toLowerCase();
-    if (!isValidEmail(email)) {
-      errorMessage("Enter a valid email address");
-      return;
-    }
-    if (emails.map((e) => e.toLowerCase()).includes(email)) {
-      setDraft("");
-      return;
-    }
-    onChange([...emails, email]);
-    setDraft("");
-  };
-
-  return (
-    <div className="space-y-2">
-      <p className="text-sm font-medium text-gray-700">Manual Emails</p>
-      <p className="text-xs text-gray-500">
-        For people not in the portal. Press Enter or Add after each email.
-      </p>
-      <div className="flex gap-2">
-        <Input
-          size="sm"
-          variant="bordered"
-          type="email"
-          placeholder="name@example.com"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              addEmail();
-            }
-          }}
-        />
-        <Button size="sm" color="success" variant="flat" onPress={addEmail}>
-          Add
-        </Button>
-      </div>
-      {emails.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {emails.map((email) => (
-            <span
-              key={email}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#F1C2AC55] text-[#333] text-sm rounded-lg"
-            >
-              {email}
-              <button
-                type="button"
-                className="text-red-500 hover:text-red-700"
-                onClick={() => onChange(emails.filter((e) => e !== email))}
-              >
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
 const normalizeLoadedEmailTriggers = (course) => {
-  const triggers = course?.emailTriggers;
+  const triggers = course?.emailTriggers || {};
   const formFillerTemplateId =
-    triggers?.formFillerTemplateId ??
-    course?.emailTemplateId ??
-    "";
+    triggers.formFillerTemplateId ?? course?.emailTemplateId ?? "";
 
-  const items = Array.isArray(triggers?.triggers)
-    ? triggers.triggers.map((item, index) => ({
-        key: `loaded-${item.templateId || index}-${index}`,
-        templateId: item.templateId ? String(item.templateId) : "",
-        userIds: Array.isArray(item.userIds)
-          ? item.userIds.map(Number).filter(Boolean)
-          : [],
-        manualEmails: Array.isArray(item.manualEmails)
-          ? item.manualEmails.map((e) => String(e).toLowerCase())
-          : [],
-      }))
-    : [];
+  // Prefer new field; fall back to first legacy multi-trigger template
+  const adminNotificationTemplateId =
+    triggers.adminNotificationTemplateId ??
+    triggers.triggers?.[0]?.templateId ??
+    "";
 
   return {
     form_filler_template_id: formFillerTemplateId
       ? String(formFillerTemplateId)
       : "",
-    email_trigger_items: items,
+    admin_notification_template_id: adminNotificationTemplateId
+      ? String(adminNotificationTemplateId)
+      : "",
   };
 };
 
@@ -426,9 +344,12 @@ const CourseBuilder = () => {
     start_date: "",
     google_form_link: "",
     form_filler_template_id: "",
-    email_trigger_items: [],
+    admin_notification_template_id: "",
   });
   const [teacherError, setTeacherError] = useState("");
+  const [appsScriptOpen, setAppsScriptOpen] = useState(false);
+  const [appsScriptLoading, setAppsScriptLoading] = useState(false);
+  const [appsScriptData, setAppsScriptData] = useState(null);
 
   // console.log(formData);
   const coursepreview = useMemo(() => {
@@ -455,7 +376,7 @@ const CourseBuilder = () => {
           "£" || "Add Price",
       },
       { title: "Type:", desc: formData?.type === "one_to_one" ? "1:1 Class" : formData?.type?.replace("_", " ") || "Add Type" },
-      {
+      formData?.type !== "one_to_one" && {
         title: "Duration:",
         desc:
           !formData?.duration
@@ -597,53 +518,15 @@ const CourseBuilder = () => {
       email_template_id: formData.form_filler_template_id
         ? Number(formData.form_filler_template_id)
         : null,
-      email_trigger_items: formData.email_trigger_items || [],
       emailTriggers: {
         formFillerTemplateId: formData.form_filler_template_id
           ? Number(formData.form_filler_template_id)
           : null,
-        triggers: (formData.email_trigger_items || [])
-          .map((item) => ({
-            templateId: item.templateId ? Number(item.templateId) : null,
-            userIds: (item.userIds || []).map(Number).filter(Boolean),
-            manualEmails: (item.manualEmails || [])
-              .map((e) => String(e).trim().toLowerCase())
-              .filter(Boolean),
-          }))
-          .filter(
-            (item) =>
-              item.templateId &&
-              (item.userIds.length > 0 || item.manualEmails.length > 0),
-          ),
+        adminNotificationTemplateId: formData.admin_notification_template_id
+          ? Number(formData.admin_notification_template_id)
+          : null,
       },
     };
-
-    const incompleteTriggers = (formData.email_trigger_items || []).filter(
-      (item) =>
-        item.templateId &&
-        !(item.userIds || []).length &&
-        !(item.manualEmails || []).length,
-    );
-    if (incompleteTriggers.length > 0) {
-      errorMessage(
-        "Each email trigger needs at least one portal user or manual email",
-      );
-      setLoadingAction(null);
-      setPendingAction(null);
-      return;
-    }
-
-    if (
-      (formData.email_trigger_items || []).length > 0 &&
-      payload.emailTriggers.triggers.length === 0
-    ) {
-      errorMessage(
-        "Email triggers are incomplete. Select a template and add recipients.",
-      );
-      setLoadingAction(null);
-      setPendingAction(null);
-      return;
-    }
     try {
       const courseId = searchParams.get("id");
       let response;
@@ -777,6 +660,37 @@ const CourseBuilder = () => {
   };
 
   const isOneToOne = formData.type === "one_to_one";
+
+  const openAppsScriptModal = async () => {
+    setAppsScriptLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (formData.course_name) params.set("formTitle", formData.course_name);
+      const res = await fetch(
+        `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/webhooks/google-form/apps-script?${params}`,
+        { credentials: "include" },
+      );
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to load Apps Script");
+      }
+      setAppsScriptData(data);
+      setAppsScriptOpen(true);
+    } catch (err) {
+      errorMessage(err.message || "Failed to load Apps Script");
+    } finally {
+      setAppsScriptLoading(false);
+    }
+  };
+
+  const copyAppsScript = async () => {
+    try {
+      await navigator.clipboard.writeText(appsScriptData?.script || "");
+      successMessage("Apps Script copied to clipboard");
+    } catch {
+      errorMessage("Could not copy to clipboard");
+    }
+  };
 
   useEffect(() => {
     if (isOneToOne && (selected === "content" || selected === "pricing")) {
@@ -1155,7 +1069,7 @@ const CourseBuilder = () => {
                           <SelectItem
                             description={
                               <span className="block text-xs text-gray-500">
-                                Private 1:1 class inquiry. Students submit a Google Form; emails are sent from a saved template.
+                                Advertise a 1:1 inquiry on the website. Students submit a Google Form (no payment). Teacher and student are assigned later when the class is created.
                               </span>
                             }
                             key="one_to_one"
@@ -1166,17 +1080,19 @@ const CourseBuilder = () => {
                           </SelectItem>
                         </Select>
                       </div>
-                      <IntervalInput
-                        label="Course duration"
-                        inputWidth={140}
-                        className="mt-3"
-                        nullableValue="on_going"
-                        nullableValueLabel="Ongoing"
-                        initialValue={formData?.duration}
-                        onUpdate={(interval) =>
-                          handleChange("duration", interval)
-                        }
-                      />
+                      {formData.type !== "one_to_one" && (
+                        <IntervalInput
+                          label="Course duration"
+                          inputWidth={140}
+                          className="mt-3"
+                          nullableValue="on_going"
+                          nullableValueLabel="Ongoing"
+                          initialValue={formData?.duration}
+                          onUpdate={(interval) =>
+                            handleChange("duration", interval)
+                          }
+                        />
+                      )}
                       {(formData?.type === "live" || formData?.type === "in_person") && (
                         <IntervalInput
                           label="Subscription Interval"
@@ -1306,19 +1222,29 @@ const CourseBuilder = () => {
                           <h2 className="text-[#06574C] font-semibold text-base">
                             1:1 Class Details
                           </h2>
+                          <p className="text-xs text-gray-600">
+                            Advertise this class on the website. Paste a Google Form (inquiry) or Stripe payment link.
+                            Teacher and student are assigned later when the real class is created on the portal.
+                            For Google Form flow, the form title must match the Course Title exactly.
+                          </p>
                           <Input
-                            className="mb-3"
                             size="lg"
                             variant="bordered"
-                            label="Google Form Link"
+                            label="Enrollment Link"
                             labelPlacement="outside"
-                            placeholder="https://docs.google.com/forms/..."
+                            placeholder="https://docs.google.com/forms/... or https://buy.stripe.com/..."
                             type="url"
                             value={formData.google_form_link}
                             onChange={(e) =>
                               handleChange("google_form_link", e.target.value)
                             }
+                            description="Website button shows “Enquire Now” for Google Form links and “Enroll Now” for Stripe links."
                           />
+                          {(!formData.google_form_link ||
+                            /docs\.google\.com\/forms|forms\.gle/i.test(
+                              formData.google_form_link,
+                            )) && (
+                            <>
                           {(!emailTemplatesData?.templates ||
                             emailTemplatesData.templates.length === 0) && (
                               <p className="text-xs text-gray-500">
@@ -1333,199 +1259,101 @@ const CourseBuilder = () => {
                               </p>
                             )}
 
-                          <div className="space-y-4">
-                            <div className="bg-white rounded-lg border border-[#95C4BE] p-3 space-y-3">
-                              <div>
-                                <p className="text-sm font-semibold text-[#06574C]">
-                                  Form Filler Email
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  Template sent to the person who submitted the Google Form.
-                                </p>
-                              </div>
-                              <Select
-                                size="lg"
-                                variant="bordered"
-                                label="Email Template"
-                                labelPlacement="outside"
-                                placeholder="Select template for form filler"
-                                selectionMode="single"
-                                selectedKeys={
-                                  formData.form_filler_template_id
-                                    ? new Set([
-                                        String(formData.form_filler_template_id),
-                                      ])
-                                    : new Set()
-                                }
-                                onSelectionChange={(keys) => {
-                                  const selected = [...keys][0];
-                                  if (!selected) return;
-                                  handleChange(
-                                    "form_filler_template_id",
-                                    String(selected),
-                                  );
-                                }}
-                              >
-                                {(emailTemplatesData?.templates || []).map((template) => (
-                                  <SelectItem
-                                    key={String(template.id)}
-                                    value={String(template.id)}
-                                  >
-                                    {template.name}
-                                  </SelectItem>
-                                ))}
-                              </Select>
+                          <div className="bg-white rounded-lg border border-[#95C4BE] p-3 space-y-3">
+                            <div>
+                              <p className="text-sm font-semibold text-[#06574C]">
+                                Form Filler Email Template
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Sent to the student who submits the Google Form.
+                              </p>
                             </div>
-
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between gap-2">
-                                <div>
-                                  <p className="text-sm font-semibold text-[#06574C]">
-                                    Email Triggers
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    Notify selected users with a chosen template.
-                                  </p>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  color="success"
-                                  variant="flat"
-                                  startContent={<PlusIcon size={14} />}
-                                  onPress={() => {
-                                    setFormData((prev) => ({
-                                      ...prev,
-                                      email_trigger_items: [
-                                        ...(prev.email_trigger_items || []),
-                                        createEmptyEmailTrigger(),
-                                      ],
-                                    }));
-                                  }}
-                                >
-                                  Add Email Trigger
-                                </Button>
-                              </div>
-
-                              {(formData.email_trigger_items || []).length === 0 ? (
-                                <p className="text-sm text-gray-500 text-center py-3 border border-dashed rounded-lg">
-                                  No staff triggers yet. Click &quot;Add Email Trigger&quot;.
-                                </p>
-                              ) : (
-                                (formData.email_trigger_items || []).map((trigger, index) => (
-                                  <div
-                                    key={trigger.key}
-                                    className="bg-white rounded-lg border border-gray-200 p-3 space-y-3"
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <p className="text-sm font-medium text-[#333]">
-                                        Trigger {index + 1}
-                                      </p>
-                                      <Button
-                                        size="sm"
-                                        color="danger"
-                                        variant="light"
-                                        isIconOnly
-                                        onPress={() => {
-                                          setFormData((prev) => ({
-                                            ...prev,
-                                            email_trigger_items: (
-                                              prev.email_trigger_items || []
-                                            ).filter((item) => item.key !== trigger.key),
-                                          }));
-                                        }}
-                                      >
-                                        <Trash2Icon size={14} />
-                                      </Button>
-                                    </div>
-
-                                    <Select
-                                      size="md"
-                                      variant="bordered"
-                                      label="Email Template"
-                                      labelPlacement="outside"
-                                      placeholder="Select email template"
-                                      selectionMode="single"
-                                      disallowEmptySelection
-                                      selectedKeys={
-                                        trigger.templateId
-                                          ? new Set([String(trigger.templateId)])
-                                          : new Set()
-                                      }
-                                      onSelectionChange={(keys) => {
-                                        const selected = [...keys][0];
-                                        if (!selected) return;
-                                        setFormData((prev) => ({
-                                          ...prev,
-                                          email_trigger_items: (
-                                            prev.email_trigger_items || []
-                                          ).map((item) =>
-                                            item.key === trigger.key
-                                              ? {
-                                                  ...item,
-                                                  templateId: String(selected),
-                                                }
-                                              : item,
-                                          ),
-                                        }));
-                                      }}
-                                    >
-                                      {(emailTemplatesData?.templates || []).map(
-                                        (template) => (
-                                          <SelectItem
-                                            key={String(template.id)}
-                                            value={String(template.id)}
-                                          >
-                                            {template.name}
-                                          </SelectItem>
-                                        ),
-                                      )}
-                                    </Select>
-
-                                    <MultiUserSelect
-                                      label="Select Users (optional)"
-                                      placeholder="Search and select portal users..."
-                                      initialValues={trigger.userIds || []}
-                                      onChange={(userIds) => {
-                                        setFormData((prev) => ({
-                                          ...prev,
-                                          email_trigger_items: (
-                                            prev.email_trigger_items || []
-                                          ).map((item) =>
-                                            item.key === trigger.key
-                                              ? { ...item, userIds }
-                                              : item,
-                                          ),
-                                        }));
-                                      }}
-                                    />
-
-                                    <ManualEmailInput
-                                      emails={trigger.manualEmails || []}
-                                      onChange={(manualEmails) => {
-                                        setFormData((prev) => ({
-                                          ...prev,
-                                          email_trigger_items: (
-                                            prev.email_trigger_items || []
-                                          ).map((item) =>
-                                            item.key === trigger.key
-                                              ? { ...item, manualEmails }
-                                              : item,
-                                          ),
-                                        }));
-                                      }}
-                                    />
-
-                                    {(trigger.userIds || []).length === 0 &&
-                                      (trigger.manualEmails || []).length === 0 && (
-                                        <p className="text-xs text-amber-600">
-                                          Add at least one portal user or manual email.
-                                        </p>
-                                      )}
-                                  </div>
-                                ))
-                              )}
-                            </div>
+                            <Select
+                              size="lg"
+                              variant="bordered"
+                              label="Email Template"
+                              labelPlacement="outside"
+                              placeholder="Select student confirmation template"
+                              selectionMode="single"
+                              selectedKeys={
+                                formData.form_filler_template_id
+                                  ? new Set([String(formData.form_filler_template_id)])
+                                  : new Set()
+                              }
+                              onSelectionChange={(keys) => {
+                                const selected = [...keys][0];
+                                if (!selected) return;
+                                handleChange("form_filler_template_id", String(selected));
+                              }}
+                            >
+                              {(emailTemplatesData?.templates || []).map((template) => (
+                                <SelectItem key={String(template.id)} value={String(template.id)}>
+                                  {template.name}
+                                </SelectItem>
+                              ))}
+                            </Select>
                           </div>
+
+                          <div className="bg-white rounded-lg border border-[#95C4BE] p-3 space-y-3">
+                            <div>
+                              <p className="text-sm font-semibold text-[#06574C]">
+                                Admin Notification Email Template
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Sent to admin (Imaan / ADMIN_EMAIL) with the student inquiry details.
+                              </p>
+                            </div>
+                            <Select
+                              size="lg"
+                              variant="bordered"
+                              label="Email Template"
+                              labelPlacement="outside"
+                              placeholder="Select admin notification template"
+                              selectionMode="single"
+                              selectedKeys={
+                                formData.admin_notification_template_id
+                                  ? new Set([
+                                      String(formData.admin_notification_template_id),
+                                    ])
+                                  : new Set()
+                              }
+                              onSelectionChange={(keys) => {
+                                const selected = [...keys][0];
+                                if (!selected) return;
+                                handleChange(
+                                  "admin_notification_template_id",
+                                  String(selected),
+                                );
+                              }}
+                            >
+                              {(emailTemplatesData?.templates || []).map((template) => (
+                                <SelectItem key={String(template.id)} value={String(template.id)}>
+                                  {template.name}
+                                </SelectItem>
+                              ))}
+                            </Select>
+                          </div>
+
+                          <div className="bg-white rounded-lg border border-dashed border-[#06574C55] p-3 space-y-2">
+                            <p className="text-sm font-semibold text-[#06574C]">
+                              Apps Script Integration
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Copy the webhook script and paste it into your Google Form Apps Script editor, then add an On form submit trigger.
+                            </p>
+                            <Button
+                              size="sm"
+                              color="success"
+                              variant="flat"
+                              startContent={<FiCode size={14} />}
+                              isLoading={appsScriptLoading}
+                              onPress={openAppsScriptModal}
+                            >
+                              Get Apps Script
+                            </Button>
+                          </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1738,6 +1566,46 @@ const CourseBuilder = () => {
                       onPress={handleSubmitAddCategory}
                     >
                       Add
+                    </Button>
+                  </ModalFooter>
+                </ModalContent>
+              </Modal>
+              <Modal
+                isOpen={appsScriptOpen}
+                onOpenChange={setAppsScriptOpen}
+                size="3xl"
+                scrollBehavior="inside"
+              >
+                <ModalContent>
+                  <ModalHeader>Apps Script Integration</ModalHeader>
+                  <ModalBody className="space-y-4">
+                    <ol className="list-decimal pl-5 text-sm text-gray-600 space-y-1">
+                      {(appsScriptData?.steps || []).map((step) => (
+                        <li key={step}>{step}</li>
+                      ))}
+                    </ol>
+                    {!appsScriptData?.hasSecret && (
+                      <p className="text-xs text-amber-600">
+                        GOOGLE_FORM_WEBHOOK_SECRET is not set on the server. Add it to backend .env before using this script.
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500">
+                      Webhook URL: {appsScriptData?.webhookUrl}
+                    </p>
+                    <pre className="text-xs bg-gray-50 border rounded-lg p-3 overflow-x-auto whitespace-pre-wrap">
+                      {appsScriptData?.script}
+                    </pre>
+                  </ModalBody>
+                  <ModalFooter>
+                    <Button variant="light" onPress={() => setAppsScriptOpen(false)}>
+                      Close
+                    </Button>
+                    <Button
+                      color="success"
+                      startContent={<FiCopy size={14} />}
+                      onPress={copyAppsScript}
+                    >
+                      Copy Script
                     </Button>
                   </ModalFooter>
                 </ModalContent>
