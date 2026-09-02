@@ -320,84 +320,89 @@ const AdminDashboard = () => {
                 </TableHeader>
 
                 <TableBody emptyContent={"No upcoming classes found"}>
-                  {upcomingClasses.map((classItem) => (
-                    <TableRow key={classItem.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {classItem.title}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
-                            Course: {classItem.courseName}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-medium">
-                          {formatTime12Hour(getScheduleStart(classItem))} -{" "}
-                          {formatTime12Hour(getScheduleEnd(classItem))}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-medium">
-                          {classItem.totalEnrolled}/{classItem.enrollmentLimit}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {(() => {
-                          const live = isClassLive(classItem);
-                          const expired = isClassExpired(classItem);
+                  {upcomingClasses.map((classItem) => {
+                    const classStart = getScheduleStart(classItem);
+                    const classEnd = getScheduleEnd(classItem);
+                    const itemWithDates = { ...classItem, start: classStart, end: classEnd };
+                    const live = isClassLive(itemWithDates);
+                    const expired = isClassExpired(itemWithDates);
 
-                          if (expired) {
-                            return (
-                              <Button
-                                startContent={<Check size={20} />}
-                                size="sm"
-                                className="bg-gray-400 w-32 text-white rounded-md"
-                                isDisabled
-                              >
-                                Completed
-                              </Button>
-                            );
-                          } else if (live && classItem.meeting_link) {
-                            return (
-                              <Button
-                                startContent={<Video size={20} />}
-                                size="sm"
-                                color="success"
-                                as={Link}
-                                to={classItem.meeting_link}
-                                target="_blank"
-                              >
-                                Start Class
-                              </Button>
-                            );
-                          } else if (classItem.meeting_link) {
-                            return (
-                              <Button
-                                startContent={<Clock size={20} />}
-                                size="sm"
-                                className="bg-[#06574C] w-32 text-white rounded-md"
-                                isDisabled
-                              >
-                                Locked
-                              </Button>
-                            );
-                          } else {
-                            return (
-                              <Button
-                                startContent={<AiOutlineEye size={22} />}
-                                size="sm"
-                                className="bg-[#06574C] w-32 text-white rounded-md"
-                              >
-                                Details
-                              </Button>
-                            );
-                          }
-                        })()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                    return (
+                      <TableRow key={classItem.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {classItem.title}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
+                              Course: {classItem.courseName}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium">
+                            {formatTime12Hour(classStart)} -{" "}
+                            {formatTime12Hour(classEnd)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium">
+                            {classItem.totalEnrolled}/{classItem.enrollmentLimit}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {(() => {
+                            if (expired) {
+                              return (
+                                <Button
+                                  startContent={<Check size={20} />}
+                                  size="sm"
+                                  className="bg-gray-400 w-32 text-white rounded-md"
+                                  isDisabled
+                                >
+                                  Completed
+                                </Button>
+                              );
+                            } else if (live && classItem.meeting_link) {
+                              return (
+                                <Button
+                                  startContent={<Video size={20} />}
+                                  size="sm"
+                                  color="success"
+                                  as={Link}
+                                  to={classItem.meeting_link}
+                                  target="_blank"
+                                >
+                                  Start Class
+                                </Button>
+                              );
+                            } else if (classItem.meeting_link) {
+                              return (
+                                <Button
+                                  startContent={<Clock size={20} />}
+                                  size="sm"
+                                  className="bg-[#06574C] w-32 text-white rounded-md"
+                                  isDisabled
+                                >
+                                  Locked
+                                </Button>
+                              );
+                            } else {
+                              return (
+                                <Button
+                                  startContent={<AiOutlineEye size={22} />}
+                                  size="sm"
+                                  className="bg-[#06574C] w-32 text-white rounded-md"
+                                >
+                                  Details
+                                </Button>
+                              );
+                            }
+                          })()}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
