@@ -38,9 +38,17 @@ const CourseManagement = () => {
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState(null);
+  const [courseTypeFilter, setCourseTypeFilter] = useState('all');
 
   // Query/Fetch
-  const { data, isFetching: isLoading, isError, error, refetch } = useGetAllCoursesQuery({ page, categoryId, limit, status, search });
+  const { data, isFetching: isLoading, isError, error, refetch } = useGetAllCoursesQuery({
+    page,
+    categoryId,
+    limit,
+    status,
+    search,
+    type: courseTypeFilter,
+  });
   const { data: categoriesData, isError: categoriesError, error: categoriesErrorData } = useGetAllCategoriesQuery();
   // Mutation/Action
   const [deleteProduct] = useDeleteCourseMutation();
@@ -67,6 +75,16 @@ const CourseManagement = () => {
     { key: "40", label: "40" },
     { key: "50", label: "50" },
   ];
+
+  const courseTypes = [
+    { key: "all", label: "All Types" },
+    { key: "one_time", label: "One Time Paid" },
+    { key: "live", label: "Live Class" },
+    { key: "in_person", label: "In-Person Classes" },
+    { key: "one_to_one", label: "1:1 Class" },
+  ];
+
+  
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const navigate = useNavigate();
@@ -169,11 +187,27 @@ const CourseManagement = () => {
             onSelectionChange={(k) => {
               const keys = [...k];
               setStatus(keys[0]);
+              setPage(1);
             }}
             placeholder="Select an status"
           >
             {statuses.map((status) => (
               <SelectItem key={status.key}>{status.label}</SelectItem>
+            ))}
+          </Select>
+          <Select
+            className="min-w-[140px]"
+            radius="sm"
+            defaultSelectedKeys={["all"]}
+            onSelectionChange={(k) => {
+              const keys = [...k];
+              setCourseTypeFilter(keys[0]);
+              setPage(1);
+            }}
+            placeholder="Select course type"
+          >
+            {courseTypes.map((item) => (
+              <SelectItem key={item.key}>{item.label}</SelectItem>
             ))}
           </Select>
           <Select
@@ -183,6 +217,7 @@ const CourseManagement = () => {
             onSelectionChange={(k) => {
               const keys = [...k];
               setCategoryId(keys[0]); // can be string can be number it is going through searchParams anyway
+              setPage(1);
             }}
             placeholder="Select a category"
           >
