@@ -275,108 +275,33 @@ const getNextScheduleDate = (scheduleDates) => {
  * @param {Object} schedule - Schedule object with scheduleDates, startTime, endTime
  * @returns {boolean}
  */
-export const isClassLive = (schedule, type = 'multiple') => {
+export const isClassLive = (schedule) => {
     if (!schedule) return false;
-    const occurrenceRanges = getScheduleOccurrenceRanges(schedule);
-    if (occurrenceRanges.length) {
-        const now = new Date();
-        return occurrenceRanges.some(({ start, end }) => {
-            const unlockTime = new Date(start);
-            unlockTime.setMinutes(unlockTime.getMinutes() - CLASS_JOIN_UNLOCK_MINUTES);
-            return now >= unlockTime && now <= end;
-        });
+    const now = new Date();
+    const todayStr = getTodayStr();
+
+    const start = schedule.start instanceof Date ? schedule.start : getScheduleStart(schedule, todayStr);
+    const end = schedule.end instanceof Date ? schedule.end : getScheduleEnd(schedule, todayStr);
+
+    if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) return false;
+
+    const classDateStr = schedule.date
+        ? (typeof schedule.date === 'string' && schedule.date.includes('T') ? schedule.date.split('T')[0] : String(schedule.date))
+        : null;
+
+    if (classDateStr && classDateStr !== todayStr) {
+        return false;
     }
 
-    const today = getTodayStr();
-    const range = getScheduleRange(schedule, type === "single" ? schedule.date : today);
-    if (range) {
-        const unlockTime = new Date(range.start);
-        unlockTime.setMinutes(unlockTime.getMinutes() - CLASS_JOIN_UNLOCK_MINUTES);
-        const now = new Date();
-        return now >= unlockTime && now <= range.end;
+    const scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
+    if (Array.isArray(scheduleDates) && scheduleDates.length > 0 && !scheduleDates.includes(todayStr)) {
+        return false;
     }
 
-    if (type === 'multiple') {
-        let scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
+    const unlockTime = new Date(start);
+    unlockTime.setMinutes(unlockTime.getMinutes() - CLASS_JOIN_UNLOCK_MINUTES);
 
-        // If no scheduleDates array, check if there's a single date field
-        if (!scheduleDates || scheduleDates.length === 0) {
-            const singleDate = schedule.date;
-            if (singleDate) {
-                // Convert ISO date or YYYY-MM-DD to date string
-                const dateStr = singleDate.includes('T') ? singleDate.split('T')[0] : singleDate;
-                scheduleDates = [dateStr];
-            } else {
-                return false;
-            }
-        }
-
-        if (!isTodayInSchedule(scheduleDates)) return false;
-
-        let startTimeStr = formatTime24(getScheduleStart(schedule));
-        let endTimeStr = formatTime24(getScheduleEnd(schedule));
-
-        if (!startTimeStr || !endTimeStr) return false;
-
-        const [startHour, startMin] = startTimeStr.split(":");
-        const [endHour, endMin] = endTimeStr.split(":");
-
-        const startTime = new Date(`${today}T${startHour}:${startMin}:00`);
-        const unlockTime = new Date(startTime);
-        unlockTime.setMinutes(unlockTime.getMinutes() - CLASS_JOIN_UNLOCK_MINUTES);
-        const endTime = new Date(`${today}T${endHour}:${endMin}:00`);
-
-        const now = new Date();
-        return now >= unlockTime && now <= endTime;
-    } else {
-        if (!schedule) return false;
-
-        // If schedule has a specific date property (for grouped schedules), use that
-        if (schedule.date) {
-            const todayStr = getTodayStr();
-            // Normalize the schedule date to YYYY-MM-DD format
-            const scheduleDateStr = schedule.date.includes('T') ? schedule.date.split('T')[0] : schedule.date;
-
-            // If the schedule date is not today, it can't be live
-            if (scheduleDateStr !== todayStr) return false;
-        }
-
-        let scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
-
-        // If no scheduleDates array, check if there's a single date field
-        if (!scheduleDates || scheduleDates.length === 0) {
-            const singleDate = schedule.date;
-            if (singleDate) {
-                // Convert ISO date or YYYY-MM-DD to date string
-                const dateStr = singleDate.includes('T') ? singleDate.split('T')[0] : singleDate;
-                scheduleDates = [dateStr];
-            } else {
-                return false;
-            }
-        }
-
-        if (!isTodayInSchedule(scheduleDates)) return false;
-
-        const startTimeStr = formatTime24(getScheduleStart(schedule, todayStr));
-        const endTimeStr = formatTime24(getScheduleEnd(schedule, todayStr));
-
-        if (!startTimeStr || !endTimeStr) return false;
-
-        const today = getTodayStr();
-
-        const [startHour, startMin] = startTimeStr.split(":");
-        const [endHour, endMin] = endTimeStr.split(":");
-
-        // Create date objects using the actual schedule date (today) and the time
-        const [year, month, day] = today.split("-").map(Number);
-        const startTime = new Date(year, month - 1, day, parseInt(startHour), parseInt(startMin));
-        const unlockTime = new Date(startTime);
-        unlockTime.setMinutes(unlockTime.getMinutes() - CLASS_JOIN_UNLOCK_MINUTES);
-        const endTime = new Date(year, month - 1, day, parseInt(endHour), parseInt(endMin));
-
-        const now = new Date();
-        return now >= unlockTime && now <= endTime;
-    }
+    return now >= unlockTime && now <= end;
 };
 
 /**
@@ -386,51 +311,31 @@ export const isClassLive = (schedule, type = 'multiple') => {
  */
 export const isClassExpired = (schedule) => {
     if (!schedule) return false;
-    const occurrenceRanges = getScheduleOccurrenceRanges(schedule);
-    if (occurrenceRanges.length) {
-        const now = new Date();
-        return occurrenceRanges.every(({ end }) => now > end);
-    }
-
-    let scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
-
-    // If no scheduleDates array, check if there's a single date field
-    if (!scheduleDates || scheduleDates.length === 0) {
-        const singleDate = schedule.date;
-        if (singleDate) {
-            // Convert ISO date or YYYY-MM-DD to date string
-            const dateStr = singleDate.includes('T') ? singleDate.split('T')[0] : singleDate;
-            scheduleDates = [dateStr];
-        } else {
-            return true;
-        }
-    }
-
-    if (!scheduleDates || scheduleDates.length === 0) return true;
-
-    const todayStr = getTodayStr();
     const now = new Date();
+    const todayStr = getTodayStr();
 
-    // Check if there are any future dates
-    const futureDates = scheduleDates.filter(d => d > todayStr);
-    if (futureDates.length > 0) return false; // Has future dates, not expired
+    const end = schedule.end instanceof Date ? schedule.end : getScheduleEnd(schedule, todayStr);
 
-    // Only today or past dates remain - check if today's class has ended
-    if (scheduleDates.includes(todayStr)) {
-        const range = getScheduleRange(schedule, todayStr);
-        if (range) return new Date() > range.end;
+    if (!end || isNaN(end.getTime())) return false;
 
-        let endTimeStr = formatTime24(getScheduleEnd(schedule));
-        if (!endTimeStr) return true;
+    const classDateStr = schedule.date
+        ? (typeof schedule.date === 'string' && schedule.date.includes('T') ? schedule.date.split('T')[0] : String(schedule.date))
+        : null;
 
-        const [endHour, endMin] = endTimeStr.split(":");
-        const endTime = new Date(`${todayStr}T${endHour}:${endMin}:00`);
-
-        return now > endTime;
+    if (classDateStr) {
+        if (classDateStr < todayStr) return true;
+        if (classDateStr > todayStr) return false;
+        return now > end;
     }
 
-    // All dates are in the past
-    return true;
+    const scheduleDates = schedule.scheduleDates || schedule.schedule_dates;
+    if (Array.isArray(scheduleDates) && scheduleDates.length > 0) {
+        const futureDates = scheduleDates.filter((d) => d > todayStr);
+        if (futureDates.length > 0) return false;
+        if (!scheduleDates.includes(todayStr)) return true;
+    }
+
+    return now > end;
 };
 
 /**
