@@ -112,6 +112,9 @@ const normalizeLoadedEmailTriggers = (course) => {
     admin_notification_template_id: adminNotificationTemplateId
       ? String(adminNotificationTemplateId)
       : "",
+    admin_notification_emails: Array.isArray(triggers.adminNotificationEmails)
+      ? triggers.adminNotificationEmails.join(", ")
+      : "",
   };
 };
 
@@ -345,6 +348,7 @@ const CourseBuilder = () => {
     google_form_link: "",
     form_filler_template_id: "",
     admin_notification_template_id: "",
+    admin_notification_emails: "",
   });
   const [teacherError, setTeacherError] = useState("");
   const [appsScriptOpen, setAppsScriptOpen] = useState(false);
@@ -525,6 +529,12 @@ const CourseBuilder = () => {
         adminNotificationTemplateId: formData.admin_notification_template_id
           ? Number(formData.admin_notification_template_id)
           : null,
+        adminNotificationEmails: formData.admin_notification_emails
+          ? formData.admin_notification_emails
+            .split(/[,;\n]+/)
+            .map((email) => email.trim())
+            .filter(Boolean)
+          : [],
       },
     };
     try {
@@ -1244,116 +1254,133 @@ const CourseBuilder = () => {
                             /docs\.google\.com\/forms|forms\.gle/i.test(
                               formData.google_form_link,
                             )) && (
-                            <>
-                          {(!emailTemplatesData?.templates ||
-                            emailTemplatesData.templates.length === 0) && (
-                              <p className="text-xs text-gray-500">
-                                No email templates yet.{" "}
-                                <Link
-                                  to="/admin/email-templates"
-                                  className="text-[#06574C] font-medium underline"
-                                >
-                                  Create email templates
-                                </Link>{" "}
-                                and they will appear here.
-                              </p>
+                              <>
+                                {(!emailTemplatesData?.templates ||
+                                  emailTemplatesData.templates.length === 0) && (
+                                    <p className="text-xs text-gray-500">
+                                      No email templates yet.{" "}
+                                      <Link
+                                        to="/admin/email-templates"
+                                        className="text-[#06574C] font-medium underline"
+                                      >
+                                        Create email templates
+                                      </Link>{" "}
+                                      and they will appear here.
+                                    </p>
+                                  )}
+
+                                <div className="bg-white rounded-lg border border-[#95C4BE] p-3 space-y-3">
+                                  <div>
+                                    <p className="text-sm font-semibold text-[#06574C]">
+                                      Form Filler Email Template
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      Sent to the student who submits the Google Form.
+                                    </p>
+                                  </div>
+                                  <Select
+                                    size="lg"
+                                    variant="bordered"
+                                    label="Email Template"
+                                    labelPlacement="outside"
+                                    placeholder="Select student confirmation template"
+                                    selectionMode="single"
+                                    selectedKeys={
+                                      formData.form_filler_template_id
+                                        ? new Set([String(formData.form_filler_template_id)])
+                                        : new Set()
+                                    }
+                                    onSelectionChange={(keys) => {
+                                      const selected = [...keys][0];
+                                      if (!selected) return;
+                                      handleChange("form_filler_template_id", String(selected));
+                                    }}
+                                  >
+                                    {(emailTemplatesData?.templates || []).map((template) => (
+                                      <SelectItem key={String(template.id)} value={String(template.id)}>
+                                        {template.name}
+                                      </SelectItem>
+                                    ))}
+                                  </Select>
+                                </div>
+
+                                <div className="bg-white rounded-lg border border-[#95C4BE] p-3 space-y-3">
+                                  <div className="mb-2">
+                                    <p className="text-sm font-semibold text-[#06574C]">
+                                      Admin Notification Email Template
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      Sent to admin with the student inquiry details. Leave custom emails empty to use the default admin email.
+                                    </p>
+                                  </div>
+                                  <div className="mb-4 h-20 mt-3 relative top-2">
+                                    <Select
+                                      className="!h-fit relative mb-4 " 
+                                      size="lg"
+                                      variant="bordered"
+                                      label="Email Template"
+                                      labelPlacement="outside"
+                                      placeholder="Select admin notification template"
+                                      selectionMode="single"
+                                      selectedKeys={
+                                        formData.admin_notification_template_id
+                                          ? new Set([
+                                            String(formData.admin_notification_template_id),
+                                          ])
+                                          : new Set()
+                                      }
+                                      onSelectionChange={(keys) => {
+                                        const selected = [...keys][0];
+                                        if (!selected) return;
+                                        handleChange(
+                                          "admin_notification_template_id",
+                                          String(selected),
+                                        );
+                                      }}
+                                    >
+                                      {(emailTemplatesData?.templates || []).map((template) => (
+                                        <SelectItem key={String(template.id)} value={String(template.id)}>
+                                          {template.name}
+                                        </SelectItem>
+                                      ))}
+                                    </Select>
+                                  </div>
+                                  <Input
+                                    className="mt-4"
+                                    size="lg"
+                                    variant="bordered"
+                                    type="text"
+                                    label="Notification Email(s)"
+                                    labelPlacement="outside"
+                                    placeholder="e.g. admin@example.com, teacher@example.com"
+                                    value={formData.admin_notification_emails}
+                                    onChange={(e) =>
+                                      handleChange("admin_notification_emails", e.target.value)
+                                    }
+                                    description="Optional. Comma-separated emails. If set, notifications go to these addresses instead of the default admin email."
+                                  />
+                                </div>
+
+                                <div className="bg-white rounded-lg border border-dashed border-[#06574C55] p-3 space-y-2">
+                                  <p className="text-sm font-semibold text-[#06574C]">
+                                    Apps Script Integration
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    Copy the webhook script and paste it into your Google Form Apps Script editor, then add an On form submit trigger.
+                                  </p>
+                                  <Button
+                                    size="sm"
+                                    color="success"
+                                    variant="flat"
+                                    startContent={<FiCode size={14} />}
+                                    isLoading={appsScriptLoading}
+                                    onPress={openAppsScriptModal}
+                                  >
+                                    Get Apps Script
+                                  </Button>
+                                </div>
+                              </>
                             )}
-
-                          <div className="bg-white rounded-lg border border-[#95C4BE] p-3 space-y-3">
-                            <div>
-                              <p className="text-sm font-semibold text-[#06574C]">
-                                Form Filler Email Template
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                Sent to the student who submits the Google Form.
-                              </p>
-                            </div>
-                            <Select
-                              size="lg"
-                              variant="bordered"
-                              label="Email Template"
-                              labelPlacement="outside"
-                              placeholder="Select student confirmation template"
-                              selectionMode="single"
-                              selectedKeys={
-                                formData.form_filler_template_id
-                                  ? new Set([String(formData.form_filler_template_id)])
-                                  : new Set()
-                              }
-                              onSelectionChange={(keys) => {
-                                const selected = [...keys][0];
-                                if (!selected) return;
-                                handleChange("form_filler_template_id", String(selected));
-                              }}
-                            >
-                              {(emailTemplatesData?.templates || []).map((template) => (
-                                <SelectItem key={String(template.id)} value={String(template.id)}>
-                                  {template.name}
-                                </SelectItem>
-                              ))}
-                            </Select>
-                          </div>
-
-                          <div className="bg-white rounded-lg border border-[#95C4BE] p-3 space-y-3">
-                            <div>
-                              <p className="text-sm font-semibold text-[#06574C]">
-                                Admin Notification Email Template
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                Sent to admin (Imaan / ADMIN_EMAIL) with the student inquiry details.
-                              </p>
-                            </div>
-                            <Select
-                              size="lg"
-                              variant="bordered"
-                              label="Email Template"
-                              labelPlacement="outside"
-                              placeholder="Select admin notification template"
-                              selectionMode="single"
-                              selectedKeys={
-                                formData.admin_notification_template_id
-                                  ? new Set([
-                                      String(formData.admin_notification_template_id),
-                                    ])
-                                  : new Set()
-                              }
-                              onSelectionChange={(keys) => {
-                                const selected = [...keys][0];
-                                if (!selected) return;
-                                handleChange(
-                                  "admin_notification_template_id",
-                                  String(selected),
-                                );
-                              }}
-                            >
-                              {(emailTemplatesData?.templates || []).map((template) => (
-                                <SelectItem key={String(template.id)} value={String(template.id)}>
-                                  {template.name}
-                                </SelectItem>
-                              ))}
-                            </Select>
-                          </div>
-
-                          <div className="bg-white rounded-lg border border-dashed border-[#06574C55] p-3 space-y-2">
-                            <p className="text-sm font-semibold text-[#06574C]">
-                              Apps Script Integration
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Copy the webhook script and paste it into your Google Form Apps Script editor, then add an On form submit trigger.
-                            </p>
-                            <Button
-                              size="sm"
-                              color="success"
-                              variant="flat"
-                              startContent={<FiCode size={14} />}
-                              isLoading={appsScriptLoading}
-                              onPress={openAppsScriptModal}
-                            >
-                              Get Apps Script
-                            </Button>
-                          </div>
-                            </>
-                          )}
                         </div>
                       )}
                     </div>
