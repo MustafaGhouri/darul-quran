@@ -527,12 +527,12 @@ const StudentClassSheduling = () => {
 
 
                 <div className="flex flex-wrap gap-4 mb-4">
-                    <div className="flex text-[#666666] text-sm items-center gap-2">
+                    {/* <div className="flex text-[#666666] text-sm items-center gap-2">
                         {type === 'normal' ? "CreatedAt: " : <CiCalendar color="#666666" size={20} />}
                         <p className="text-[#666666] text-sm">
                             {dateFormatter(getScheduleStart(schedule) || schedule.date)}
                         </p>
-                    </div>
+                    </div> */}
 
                     <div className="flex items-center gap-2">
                         <Clock color="#666666" size={18} />
