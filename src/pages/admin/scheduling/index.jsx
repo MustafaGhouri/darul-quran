@@ -641,7 +641,46 @@ const Scheduling = () => {
                   )}
                 </TableCell>
                 <TableCell>
-                  <div className="text-gray-500 text-sm">{formatTime12Hour(getScheduleStart(item))} - {formatTime12Hour(getScheduleEnd(item))}</div>
+                  {(() => {
+                    const specificDates = item?.specificDates || item?.specific_dates;
+                    const hasSpecificDates = specificDates && typeof specificDates === "object" && Object.keys(specificDates).length > 0;
+
+                    if (hasSpecificDates) {
+                      const occurrences = item?.scheduleOccurrences || item?.schedule_occurrences || [];
+                      const todayStr = new Date().toLocaleDateString("en-CA");
+                      const todayOccurrence = occurrences.find((occ) => {
+                        const occDate = (occ?.date || "").split("T")[0];
+                        const srcDate = (occ?.sourceDate || occ?.source_date || "").split("T")[0];
+                        return occDate === todayStr || srcDate === todayStr;
+                      });
+
+                      const targetKey = todayOccurrence
+                        ? (todayOccurrence.date || todayOccurrence.sourceDate || todayStr)
+                        : todayStr;
+
+                      const start = getScheduleStart(item, targetKey) || getScheduleStart(item);
+                      const end = getScheduleEnd(item, targetKey) || getScheduleEnd(item);
+
+                      return (
+                        <div className="text-gray-500 text-sm flex items-center gap-1.5">
+                          <span>{formatTime12Hour(start)} - {formatTime12Hour(end)}</span>
+                          {todayOccurrence && (
+                            <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-medium">
+                              Today
+                            </span>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    const mainStart = getScheduleStart(item);
+                    const mainEnd = getScheduleEnd(item);
+                    return (
+                      <div className="text-gray-500 text-sm">
+                        {formatTime12Hour(mainStart)} - {formatTime12Hour(mainEnd)}
+                      </div>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell className="text-center">
                   {item.specificStudents?.length > 0 ? 'One-on-one' : 'All'}
@@ -650,14 +689,40 @@ const Scheduling = () => {
                   {item.scheduleType}
                 </TableCell>
                 <TableCell>
-                  <Chip
-                    size="sm"
-                    variant="flat"
-                    className="capitalize"
-                    color={getStatusColor(item)}
-                  >
-                    {getStatusText(item)}
-                  </Chip>
+                  {(() => {
+                    const specificDates = item?.specificDates || item?.specific_dates;
+                    const hasSpecificDates = specificDates && typeof specificDates === "object" && Object.keys(specificDates).length > 0;
+
+                    let itemForStatus = item;
+                    if (hasSpecificDates) {
+                      const occurrences = item?.scheduleOccurrences || item?.schedule_occurrences || [];
+                      const todayStr = new Date().toLocaleDateString("en-CA");
+                      const todayOccurrence = occurrences.find((occ) => {
+                        const occDate = (occ?.date || "").split("T")[0];
+                        const srcDate = (occ?.sourceDate || occ?.source_date || "").split("T")[0];
+                        return occDate === todayStr || srcDate === todayStr;
+                      });
+
+                      const targetKey = todayOccurrence
+                        ? (todayOccurrence.date || todayOccurrence.sourceDate || todayStr)
+                        : todayStr;
+
+                      const start = getScheduleStart(item, targetKey) || getScheduleStart(item);
+                      const end = getScheduleEnd(item, targetKey) || getScheduleEnd(item);
+                      itemForStatus = { ...item, start, end, date: targetKey };
+                    }
+
+                    return (
+                      <Chip
+                        size="sm"
+                        variant="flat"
+                        className="capitalize"
+                        color={getStatusColor(itemForStatus)}
+                      >
+                        {getStatusText(itemForStatus)}
+                      </Chip>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell className=" ">
                   {item.meetingLink ? (
