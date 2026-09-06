@@ -34,6 +34,27 @@ export const scheduleApi = createApi({
             }),
             providesTags: ["schedule"],
         }),
+        getScheduleOccurrences: builder.query({
+            query: ({ from, to, teacherId, courseId, status } = {}) => ({
+                url: `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule-occurrences`,
+                params: { from, to, teacherId, courseId, status },
+            }),
+            providesTags: ["schedule"],
+        }),
+        cancelScheduleOccurrence: builder.mutation({
+            query: ({ id, reason }) => ({
+                url: `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule-occurrences/${id}/cancel`,
+                method: "POST", body: { reason },
+            }),
+            invalidatesTags: ["schedule"],
+        }),
+        rescheduleScheduleOccurrence: builder.mutation({
+            query: ({ id, localDate, startTime, endTime }) => ({
+                url: `${import.meta.env.VITE_PUBLIC_SERVER_URL}/api/schedule-occurrences/${id}/reschedule`,
+                method: "POST", body: { localDate, startTime, endTime },
+            }),
+            invalidatesTags: ["schedule"],
+        }),
         createSchedule: builder.mutation({
             query: (data) => ({
                 url: "/create",
@@ -104,6 +125,9 @@ export const scheduleApi = createApi({
 export const {
     useGetScheduleQuery,
     useGetSchedulesByMonthQuery,
+    useGetScheduleOccurrencesQuery,
+    useCancelScheduleOccurrenceMutation,
+    useRescheduleScheduleOccurrenceMutation,
     useCreateScheduleMutation,
     useUpdateScheduleMutation,
     useDeleteScheduleMutation,
