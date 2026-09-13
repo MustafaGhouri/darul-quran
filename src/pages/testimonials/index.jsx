@@ -39,6 +39,7 @@ const Testimonials = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedTestimonal, setSelectedTestimonal] = useState(null);
   const [formData, setFormData] = useState({
+    name: "",
     title: "",
     description: "",
   });
@@ -49,12 +50,14 @@ const Testimonials = () => {
     if (testimonal) {
       setSelectedTestimonal(testimonal);
       setFormData({
+        name: testimonal.name || "",
         title: testimonal.title || "",
         description: testimonal.description || "",
       });
     } else {
       setSelectedTestimonal(null);
       setFormData({
+        name: "",
         title: "",
         description: "",
       });
@@ -64,6 +67,7 @@ const Testimonials = () => {
 
   const handleSubmit = async () => {
     const payload = {
+      name: formData.name.trim(),
       title: formData.title.trim(),
       description: formData.description.trim(),
     };
@@ -197,11 +201,14 @@ const Testimonials = () => {
               </ModalHeader>
               <ModalBody className="gap-4">
                 <Input
-                  isReadOnly
+                  isRequired
                   label="Name"
                   variant="bordered"
                   labelPlacement="outside"
-                  value={currentUserName}
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                 />
                 <Input
                   isRequired
