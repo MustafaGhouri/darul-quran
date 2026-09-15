@@ -241,6 +241,8 @@ const CourseBuilder = () => {
           start_date: course.startDate || "",
           google_form_link: course.googleFormLink || "",
           display_tab: course.displayTab || "auto",
+          stripe_product_id:
+            course.stripe_product_id || course.stripeProductId || "",
           ...normalizeLoadedEmailTriggers(course),
         });
 
@@ -348,6 +350,7 @@ const CourseBuilder = () => {
     start_date: "",
     google_form_link: "",
     display_tab: "auto",
+    stripe_product_id: "",
     form_filler_template_id: "",
     admin_notification_template_id: "",
     admin_notification_emails: "",
@@ -525,6 +528,7 @@ const CourseBuilder = () => {
         !formData.display_tab || formData.display_tab === "auto"
           ? null
           : formData.display_tab,
+      stripe_product_id: formData.stripe_product_id?.trim() || null,
       email_template_id: formData.form_filler_template_id
         ? Number(formData.form_filler_template_id)
         : null,
@@ -1127,6 +1131,21 @@ const CourseBuilder = () => {
                             One-to-One / 1:1
                           </SelectItem>
                         </Select>
+                      </div>
+                      <div className="pt-4">
+                        <Input
+                          label="Stripe Product ID"
+                          labelPlacement="outside"
+                          placeholder="prod_XXXXXXXX"
+                          radius="md"
+                          size="lg"
+                          variant="bordered"
+                          description="Optional. Used by the Stripe webhook to enroll students when checkout metadata has no courseId (e.g. Payment Links created in Stripe)."
+                          value={formData.stripe_product_id || ""}
+                          onValueChange={(value) =>
+                            handleChange("stripe_product_id", value)
+                          }
+                        />
                       </div>
                       {formData.type !== "one_to_one" && (
                         <IntervalInput
