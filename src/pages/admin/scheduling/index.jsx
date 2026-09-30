@@ -1743,21 +1743,38 @@ const Scheduling = () => {
 };
 
 const EnrolledStudentsList = ({ courseId, studentIds = null }) => {
-  const isSpecificList = studentIds?.length > 0;
-  const { data, isFetching } = useGetAllUserForSelectQuery(
+  const ids = (studentIds ?? [])
+    .map(Number)
+    .filter((id) => Number.isFinite(id) && id > 0);
+  const isSpecificList = ids.length > 0;
+
+  const { data, isFetching, isError, error } = useGetAllUserForSelectQuery(
     {
-      courseId: isSpecificList ? undefined : courseId,
+      // courseId is required by the API schema — never omit it
+      courseId,
       enrolledStudents: !isSpecificList,
-      limit: 100,
+      limit: isSpecificList ? Math.max(ids.length, 100) : 100,
       page: 1,
-      initialValues: isSpecificList ? studentIds.join(",") : undefined,
+      initialValues: isSpecificList ? ids.join(",") : undefined,
     },
-    { skip: !isSpecificList && !courseId }
+    { skip: !courseId },
   );
 
   if (isFetching) return <div className="flex justify-center p-4"><Spinner color="success" /></div>;
 
-  if (!data?.users?.length) {
+  if (isError) {
+    return (
+      <div className="text-center p-4 text-red-500 text-sm">
+        {error?.data?.message || "Failed to load students. Please try again."}
+      </div>
+    );
+  }
+
+  const users = isSpecificList
+    ? (data?.users ?? []).filter((u) => ids.includes(Number(u.id)))
+    : (data?.users ?? []);
+
+  if (!users.length) {
     return (
       <div className="text-center p-4 text-gray-500 text-sm">
         {isSpecificList ? "No assigned students found." : "No students enrolled in this course yet."}
@@ -1767,7 +1784,7 @@ const EnrolledStudentsList = ({ courseId, studentIds = null }) => {
 
   return (
     <div className="flex flex-col gap-3">
-      {data.users.map((student) => (
+      {users.map((student) => (
         <div key={student.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all">
           <Avatar
             name={`${student.firstName || ""} ${student.lastName || ""}`.trim() || undefined}
