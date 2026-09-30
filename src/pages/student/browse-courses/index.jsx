@@ -32,6 +32,12 @@ import { useGetAllCategoriesQuery, useGetAllCoursesQuery } from "../../../redux/
 import { errorMessage } from "../../../lib/toast.config";
 import Loader from "../../../components/Loader";
 import { debounce } from "../../../lib/utils";
+import {
+  getCourseBadgeLabel,
+  getCoursePriceLabel,
+  getCourseTypeLabel,
+  isEnquiryCourse,
+} from "../../../lib/courseDisplay";
 
 // Helper function to format duration in seconds to readable format
 const formatDuration = (seconds) => {
@@ -298,15 +304,16 @@ const BrowseCourses = () => {
                         <Button
                           size="sm"
                           radius="sm"
-                          className={`bg-white px-3 font-bold text-xs ${item.isFree ? "text-[#D28E3D]" : "text-[#34A853]"}`}
+                          className={`bg-white px-3 font-bold text-xs ${
+                            isEnquiryCourse(item)
+                              ? "text-[#06574C]"
+                              : item.isFree
+                                ? "text-[#D28E3D]"
+                                : "text-[#34A853]"
+                          }`}
                         >
-                          {item.isFree ? "Free" : "Paid"}
+                          {getCourseBadgeLabel(item)}
                         </Button>
-                        {item.isFree && (
-                          <span className="bg-[#34A853] text-white px-2 py-1 rounded text-xs font-semibold">
-                            Free
-                          </span>
-                        )}
                       </div>
                       {item.rating > 0 && <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/60 px-2 py-1 rounded">
                         <IoStarSharp size={16} color="#FDD835" />
@@ -323,9 +330,15 @@ const BrowseCourses = () => {
                         <Button
                           size="sm"
                           radius="sm"
-                          className={`bg-white px-4 font-bold text-xs ${item.coursePrice === "0" || item.coursePrice === "00" ? "text-[#D28E3D]" : "text-[#34A853]"}`}
+                          className={`bg-white px-4 font-bold text-xs ${
+                            isEnquiryCourse(item)
+                              ? "text-[#06574C]"
+                              : item.coursePrice === "0" || item.coursePrice === "00"
+                                ? "text-[#D28E3D]"
+                                : "text-[#34A853]"
+                          }`}
                         >
-                          {item.coursePrice === "0" || item.coursePrice === "00" ? "Free" : "Paid"}
+                          {getCourseBadgeLabel(item)}
                         </Button>
                         {item.rating > 0 && <div className="flex items-center gap-1">
                           <IoStarSharp size={18} color="#FDD835" />
@@ -363,8 +376,16 @@ const BrowseCourses = () => {
                           </div>
                         </div>
                         <div className="text-end">
-                          <p className={`font-bold text-lg ${item.coursePrice === "0" || item.coursePrice === "00" ? "text-[#34A853]" : "text-[#D28E3D]"}`}>
-                            {item.coursePrice === "0" || item.coursePrice === "00" ? "Free" : `£${item.coursePrice}`}
+                          <p
+                            className={`font-bold text-lg ${
+                              isEnquiryCourse(item) ||
+                              item.coursePrice === "0" ||
+                              item.coursePrice === "00"
+                                ? "text-[#34A853]"
+                                : "text-[#D28E3D]"
+                            }`}
+                          >
+                            {getCoursePriceLabel(item)}
                           </p>
                         </div>
                       </div>
@@ -407,7 +428,9 @@ const BrowseCourses = () => {
                             ? 'Contains Live Class, requires subscription'
                             : item.type === 'in_person'
                               ? 'In-person classroom course, requires monthly subscription'
-                              : 'Contains Recorded Lessons, requires onetime payment'
+                              : item.type === 'one_to_one'
+                                ? 'Enquiry listing — student fills the form to register interest'
+                                : 'Contains Recorded Lessons, requires onetime payment'
                         }>
                           <span
                             title={
@@ -415,10 +438,12 @@ const BrowseCourses = () => {
                                 ? 'Contains Live Class, requires subscription'
                                 : item.type === 'in_person'
                                   ? 'In-person classroom course, requires monthly subscription'
-                                  : 'Contains Recorded Lessons, requires onetime payment'
+                                  : item.type === 'one_to_one'
+                                    ? 'Enquiry listing — student fills the form to register interest'
+                                    : 'Contains Recorded Lessons, requires onetime payment'
                             }
                             className="cursor-pointer text-xs px-2 py-1 rounded-md bg-gray-100 text-gray-600 capitalize">
-                            {item.type.replace('_', ' ')}
+                            {getCourseTypeLabel(item.type)}
                           </span>
                         </Tooltip>
                       </div>

@@ -34,6 +34,10 @@ import { analyticsEvents } from "../../../lib/analytics";
 import { useGetCourseByIdViewQuery, useGetCourseFilesQuery, useGetReviewsQuery, useCheckInPersonCapacityQuery, useJoinWaitingListMutation } from "../../../redux/api/courses";
 import RatingStars from "../../../components/RatingStar";
 import QueryError from "../../../components/QueryError";
+import {
+  getCoursePriceLabel,
+  isEnquiryCourse,
+} from "../../../lib/courseDisplay";
 
 const CourseDetails = () => {
   const { id } = useParams();
@@ -76,6 +80,12 @@ const CourseDetails = () => {
   }, [courseFromState, data]);
 
   const isInPerson = course?.type === "in_person";
+  const isEnquiry = isEnquiryCourse(course);
+  const enquiryLink =
+    course?.googleFormLink ||
+    course?.google_form_link ||
+    course?.enrollmentLink ||
+    null;
   const { data: capacityData } = useCheckInPersonCapacityQuery(course?.id, {
     skip: !course?.id || !isInPerson,
   });
@@ -388,8 +398,11 @@ const CourseDetails = () => {
                     {course?.whatToBring && (
                       <p><span className="font-medium text-[#06574C]">What to Bring:</span> {course.whatToBring}</p>
                     )}
-                    {!course?.isFree && (
+                    {!isEnquiry && !course?.isFree && (
                       <p><span className="font-medium text-[#06574C]">Monthly Fee:</span> £{course?.coursePrice}/month</p>
+                    )}
+                    {isEnquiry && (
+                      <p><span className="font-medium text-[#06574C]">Registration:</span> Enquiry form required</p>
                     )}
                   </div>
                 )}
@@ -426,11 +439,17 @@ const CourseDetails = () => {
                   </div> */}
                 </div>
               )}
-              {course?.isFree ?
+              {isEnquiry ? (
+                <div className="flex justify-between items-center p-3">
+                  <h1 className="text-2xl font-bold text-[#06574C]">
+                    {getCoursePriceLabel(course)}
+                  </h1>
+                </div>
+              ) : course?.isFree ? (
                 <div className="flex justify-between items-center p-3">
                   <h1 className="text-2xl font-bold text-[#06574C]">Free</h1>
                 </div>
-                :
+              ) : (
                 <div className="flex justify-between items-center p-3">
                   <div className="flex gap-1 items-center ">
                     <h1 className="text-2xl font-bold text-[#06574C]">£{course?.coursePrice}</h1>
@@ -446,9 +465,24 @@ const CourseDetails = () => {
                   >
                     {course?.discountPercentage}% OFF
                   </Button>}
-                </div>}
+                </div>
+              )}
               <div className="p-3">
-                {enrollment?.isExpired ? (
+                {isEnquiry ? (
+                  <Button
+                    radius="sm"
+                    size="sm"
+                    className="w-full bg-[#06574C] text-white"
+                    isDisabled={!enquiryLink}
+                    onPress={() => {
+                      if (enquiryLink) {
+                        window.open(enquiryLink, "_blank", "noopener,noreferrer");
+                      }
+                    }}
+                  >
+                    Enquire Now
+                  </Button>
+                ) : enrollment?.isExpired ? (
                   <Button
                     radius="sm"
                     size="sm"
