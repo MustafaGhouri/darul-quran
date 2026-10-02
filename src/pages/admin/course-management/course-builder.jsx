@@ -668,6 +668,10 @@ const CourseBuilder = () => {
   const handleDeleteCategory = async (id) => {
     try {
       const res = await deleteCategory(id);
+      if (res.error) {
+        errorMessage(res.error?.data?.message || "Failed to delete category");
+        return;
+      }
       if (res.data.success) {
         successMessage(res.data.message || "Category deleted successfully");
         return;
