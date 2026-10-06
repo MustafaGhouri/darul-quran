@@ -1131,9 +1131,9 @@ const CourseBuilder = () => {
                           <SelectItem key="in_person" value="in_person">
                             In-Person Classes
                           </SelectItem>
-                          <SelectItem key="one_to_one" value="one_to_one">
+                          {/* <SelectItem key="one_to_one" value="one_to_one">
                             One-to-One / 1:1
-                          </SelectItem>
+                          </SelectItem> */}
                         </Select>
                       </div>
                       <div className="pt-4">
