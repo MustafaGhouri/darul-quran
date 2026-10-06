@@ -38,6 +38,7 @@ const Testimonials = () => {
   const [deleteTestimonal, { isLoading: isDeleting }] = useDeleteTestimonalMutation();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedTestimonal, setSelectedTestimonal] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     title: "",
@@ -95,12 +96,15 @@ const Testimonials = () => {
     if (!window.confirm("Are you sure you want to delete this testimonial?")) return;
 
     try {
+      setDeletingId(id)
       const res = await deleteTestimonal(id).unwrap();
       if (res.success) {
         successMessage(res.message);
       }
     } catch (err) {
       errorMessage(err?.data?.message || "Failed to delete testimonial");
+    } finally {
+      setDeletingId(null)
     }
   };
 
@@ -170,7 +174,7 @@ const Testimonials = () => {
                       size="sm"
                       variant="light"
                       className="text-red-500"
-                      isLoading={isDeleting}
+                      isLoading={isDeleting && (deletingId === item.id)}
                       onPress={() => handleDelete(item.id)}
                     >
                       <FiTrash2 size={16} />
