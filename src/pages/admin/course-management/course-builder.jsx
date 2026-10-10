@@ -28,9 +28,11 @@ import {
   Trash2Icon,
   Video,
   Link2,
+  Headphones,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Videos, {
+  Audios,
   Assignments,
   PdfAndNotes,
   Quizzes,
@@ -269,6 +271,11 @@ const CourseBuilder = () => {
       title: "Videos",
       count: (files?.filter((f) => f.fileType === "lesson_video")).length || 0,
       icone: <Video size={20} color="#06574C" />,
+    },
+    {
+      title: "Audios",
+      count: (files?.filter((f) => f.fileType === "lesson_audio")).length || 0,
+      icone: <Headphones size={20} color="#06574C" />,
     },
     {
       title: "PDFs:",
@@ -993,17 +1000,15 @@ const CourseBuilder = () => {
                           </Select>
                         </div>
                       </div>
-                      {formData?.type !== "in_person" && formData?.type !== "one_to_one" && (
-                        <div className="pt-6">
-                          <TeacherSelect
-                            label="Teacher"
-                            isRequired
-                            onChange={(id) => handleChange("teacher_id", id)}
-                            initialValue={formData.teacher_id}
-                            errorMessage={teacherError}
-                          />
-                        </div>
-                      )}
+                      <div className="pt-6">
+                        <TeacherSelect
+                          label="Teacher"
+                          isRequired
+                          onChange={(id) => handleChange("teacher_id", id)}
+                          initialValue={formData.teacher_id}
+                          errorMessage={teacherError}
+                        />
+                      </div>
                       {formData?.type !== "one_to_one" && (
                         <div className="my-4">
                           <StudentSelect
@@ -1376,7 +1381,7 @@ const CourseBuilder = () => {
                                   </div>
                                   <div className="mb-4 h-20 mt-3 relative top-2">
                                     <Select
-                                      className="!h-fit relative mb-4 " 
+                                      className="!h-fit relative mb-4 "
                                       size="lg"
                                       variant="bordered"
                                       label="Email Template"
@@ -1727,7 +1732,7 @@ const CourseBuilder = () => {
                 animate="show"
                 transition={{ when: "beforeChildren" }}
               >
-                <div className="w-full grid grid-cols-2 md:grid-cols-5 py-4 gap-2">
+                <div className="w-full grid grid-cols-2 md:grid-cols-6 py-4 gap-2">
                   {card.map((item, i) => (
                     <div
                       key={i}
@@ -1748,6 +1753,7 @@ const CourseBuilder = () => {
                   ))}
                 </div>
                 <Videos courseId={courseId} files={files} setFiles={setFiles} />
+                <Audios courseId={courseId} files={files} setFiles={setFiles} />
                 <PdfAndNotes
                   courseId={courseId}
                   files={files}
