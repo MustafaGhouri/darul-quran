@@ -317,7 +317,7 @@ const CoursePlayer = () => {
                                                 </span>
                                                 {lesson?.file?.pages > 0 && <span>pages: {lesson.file.pages}</span>}
                                                 {lesson?.file?.duration > 0 && (
-                                                    <span>duration: {lesson.file.duration} mins</span>
+                                                    <span>duration: {lesson.file.duration?.toFixed(2)} mins</span>
                                                 )}
                                             </div>
                                             {isLocked && releaseText && (

@@ -27,7 +27,7 @@ import { MdKeyboardArrowDown, MdOutlineFilterList } from "react-icons/md";
 import { useState } from "react";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useGetAllCategoriesQuery, useGetAllCoursesQuery } from "../../../redux/api/courses";
 import { errorMessage } from "../../../lib/toast.config";
 import Loader from "../../../components/Loader";
@@ -80,12 +80,6 @@ const BrowseCourses = () => {
 
 
 
-  const viewCourseDetails = (courseData) => {
-    window.scroll(0, 0);
-    navigate(`/student/browse-courses/course-details/${courseData.id}?teacher=${courseData?.teacherId || courseData?.teacher_id}`, {
-      state: courseData
-    });
-  };
 
   const handleClearFilters = () => {
     setSearch("");
@@ -304,13 +298,12 @@ const BrowseCourses = () => {
                         <Button
                           size="sm"
                           radius="sm"
-                          className={`bg-white px-3 font-bold text-xs ${
-                            isEnquiryCourse(item)
-                              ? "text-[#06574C]"
-                              : item.isFree
-                                ? "text-[#D28E3D]"
-                                : "text-[#34A853]"
-                          }`}
+                          className={`bg-white px-3 font-bold text-xs ${isEnquiryCourse(item)
+                            ? "text-[#06574C]"
+                            : item.isFree
+                              ? "text-[#D28E3D]"
+                              : "text-[#34A853]"
+                            }`}
                         >
                           {getCourseBadgeLabel(item)}
                         </Button>
@@ -330,13 +323,12 @@ const BrowseCourses = () => {
                         <Button
                           size="sm"
                           radius="sm"
-                          className={`bg-white px-4 font-bold text-xs ${
-                            isEnquiryCourse(item)
-                              ? "text-[#06574C]"
-                              : item.coursePrice === "0" || item.coursePrice === "00"
-                                ? "text-[#D28E3D]"
-                                : "text-[#34A853]"
-                          }`}
+                          className={`bg-white px-4 font-bold text-xs ${isEnquiryCourse(item)
+                            ? "text-[#06574C]"
+                            : item.coursePrice === "0" || item.coursePrice === "00"
+                              ? "text-[#D28E3D]"
+                              : "text-[#34A853]"
+                            }`}
                         >
                           {getCourseBadgeLabel(item)}
                         </Button>
@@ -377,13 +369,12 @@ const BrowseCourses = () => {
                         </div>
                         <div className="text-end">
                           <p
-                            className={`font-bold text-lg ${
-                              isEnquiryCourse(item) ||
+                            className={`font-bold text-lg ${isEnquiryCourse(item) ||
                               item.coursePrice === "0" ||
                               item.coursePrice === "00"
-                                ? "text-[#34A853]"
-                                : "text-[#D28E3D]"
-                            }`}
+                              ? "text-[#34A853]"
+                              : "text-[#D28E3D]"
+                              }`}
                           >
                             {getCoursePriceLabel(item)}
                           </p>
@@ -448,13 +439,15 @@ const BrowseCourses = () => {
                         </Tooltip>
                       </div>
                     </div>
-
                     <Button
                       radius="sm"
                       size="sm"
                       className="bg-[#06574C] text-white rounded-md w-full mt-3"
                       startContent={<AiOutlineEye size={18} />}
-                      onPress={() => viewCourseDetails(item)}
+                      as={Link}
+                      to={`/student/browse-courses/course-details/${item.id}?teacher=${item?.teacherId || item?.teacher_id || ''}`}
+                      state={item}
+                      onPress={() => window.scroll(0, 0)}
                     >
                       View Course
                     </Button>

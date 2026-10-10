@@ -225,11 +225,19 @@ const CourseDetails = () => {
       icon: <BsClipboard2Check size={22} color="#06574C" />,
       bg: "#95C4BE",
     },
-    {
-      title: course?.accessDuration?.replace("_", " ") + (course?.accessDuration?.toLowerCase()?.includes("access") ? "" : " access"),
-      desc: "Learn at your own pace",
-      icon: <GiCheckMark size={22} color="#06574C" />,
-    },
+    ...(course?.accessDuration
+      ? [
+        {
+          title:
+            course.accessDuration.replace("_", " ") +
+            (course.accessDuration.toLowerCase().includes("access")
+              ? ""
+              : " access"),
+          desc: "Learn at your own pace",
+          icon: <GiCheckMark size={22} color="#06574C" />,
+        },
+      ]
+      : []),
     {
       title: "Mobile Access",
       desc: "Learn on any device",
@@ -286,7 +294,7 @@ const CourseDetails = () => {
                 {/* Instructor Row */}
                 {!isInPerson ? (
                   <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
+                    {(course?.first_name || data?.teacher?.firstName) && <div className="flex items-center gap-3">
                       <div className="h-14 w-14 flex items-center justify-center bg-[#95C4BE33] rounded-full">
                         <FaRegAddressCard size={26} color="#06574C" />
                       </div>
@@ -297,7 +305,7 @@ const CourseDetails = () => {
                         </h2>
                         <p className="text-sm text-[#6B7280]">Teacher</p>
                       </div>
-                    </div>
+                    </div>}
 
                     <div className="flex items-center gap-2">
                       <Button
@@ -674,7 +682,7 @@ const CourseDetails = () => {
           </div>
 
           {/* RIGHT SIDE */}
-          {!isInPerson && (
+          {(!isInPerson && (course?.first_name || data?.teacher?.firstName)) && (
             <div className="col-span-12 md:col-span-6">
               <div className="bg-white p-5 rounded-xl h-full">
                 <h3 className="text-xl font-semibold mb-5">About The Teacher</h3>
