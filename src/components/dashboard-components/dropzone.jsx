@@ -33,9 +33,6 @@ const fileTypeMap = {
     "application/rtf": [".rtf"],
     "image/*": [".png", ".jpg", ".jpeg", ".webp", ".gif"],
   },
-  audio: {
-    "audio/*": [".mp3", ".wav", ".aac", ".m4a", ".ogg", ".flac"],
-  },
   assignment: {
     "application/pdf": [".pdf"],
     "application/msword": [".doc"],
@@ -55,7 +52,7 @@ const FileDropzone = ({
   label = "Upload your Course Thumbnail",
   text = ' Recommended: 1280x720 pixels',
   files,
-  fileType = "", // "image" | "video" | "audio" | "pdf" | "notes" | "assignment"
+  fileType = "", // "image" | "video" | "pdf" | "notes" | "assignment"
   maxSize = 100,
   setFiles,
   height = "280px",
@@ -139,32 +136,23 @@ const FileDropzone = ({
 
       {showFilesThere && files.length > 0 ? (
         <div
-          className="border-2 relative border-[#06574C] border-dashed rounded-lg text-center cursor-pointer overflow-hidden flex items-center justify-center p-4"
+          className="border-2 relative border-[#06574C] border-dashed rounded-lg text-center cursor-pointer overflow-hidden"
           style={{ height, width }}
         >
           <PlusCircle
             onClick={() => removeFile()}
             color="white"
-            className="rotate-45 top-0 right-0 absolute cursor-pointer z-40"
+            className="rotate-45 top-0 right-0   absolute cursor-pointer z-40"
             fill="red"
           />
 
           {files.length === 1 && (fileType) ? (
-            files[0].type?.startsWith("video") || files[0].name?.match(/\.(mp4|webm|mov)$/i) ? (
+            files[0].type?.startsWith("video") || files[0].name?.match(/\.(mp4|webm|ogg)$/i) ? (
               <video
                 src={getUploadedImageSrc(files[0])}
                 className="w-full h-full object-contain"
                 controls
               />
-            ) : files[0].type?.startsWith("audio") || files[0].name?.match(/\.(mp3|wav|aac|m4a|ogg|flac)$/i) ? (
-              <div className="flex flex-col items-center justify-center w-full p-4">
-                <p className="text-sm font-semibold text-[#06574C] mb-2">{files[0].name}</p>
-                <audio
-                  src={getUploadedImageSrc(files[0])}
-                  className="w-full max-w-md"
-                  controls
-                />
-              </div>
             ) : (
               <img
                 src={getUploadedImageSrc(files[0])}
@@ -177,17 +165,12 @@ const FileDropzone = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2 w-full h-full overflow-auto">
               {files.map((file, i) => (
                 <div key={i} className="relative group">
-                  {file.type?.startsWith("video") || file.name?.match(/\.(mp4|webm|mov)$/i) ? (
+                  {file.type?.startsWith("video") || file.name?.match(/\.(mp4|webm|ogg)$/i) ? (
                     <video
                       src={getUploadedImageSrc(file)}
                       className="w-full h-32 object-cover rounded-md"
                       controls={false} // No controls for thumbnails in grid
                     />
-                  ) : file.type?.startsWith("audio") || file.name?.match(/\.(mp3|wav|aac|m4a|ogg|flac)$/i) ? (
-                    <div className="w-full h-32 bg-gray-100 flex flex-col items-center justify-center p-2 rounded-md">
-                      <span className="text-xs font-medium text-gray-700 truncate w-full text-center">{file.name}</span>
-                      <audio src={getUploadedImageSrc(file)} controls className="w-full mt-1 h-8" />
-                    </div>
                   ) : (
                     <img
                       src={getUploadedImageSrc(file)}

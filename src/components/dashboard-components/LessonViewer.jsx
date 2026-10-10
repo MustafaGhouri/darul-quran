@@ -1,4 +1,4 @@
-import { Fullscreen, Headphones } from "lucide-react";
+import { Fullscreen } from "lucide-react";
 import { useRef, useState } from "react";
 
 
@@ -27,38 +27,6 @@ export default function LessonFileViewer({
   const fileUrl = `${file.url}?raw=1`;
 
   const renderContent = () => {
-    if (file.fileType === "lesson_audio" || mimeType.startsWith("audio/")) {
-      return (
-        <div className="flex flex-col items-center justify-center h-full gap-6 text-white p-6 bg-gradient-to-b from-[#06574C]/30 to-black">
-          {file.thumbnailUrl ? (
-            <img
-              src={file.thumbnailUrl}
-              alt={file.title || "Audio Lesson"}
-              className="w-44 h-44 rounded-2xl object-cover shadow-2xl border-2 border-white/20"
-            />
-          ) : (
-            <div className="w-44 h-44 rounded-2xl bg-[#06574C] flex items-center justify-center shadow-2xl border-2 border-white/20">
-              <Headphones className="w-20 h-20 text-white" />
-            </div>
-          )}
-          <div className="text-center space-y-1 max-w-md">
-            <h2 className="text-2xl font-bold text-white tracking-wide">{file.title || "Audio Lesson"}</h2>
-            {file.description && (
-              <p className="text-sm text-gray-300 line-clamp-2">{file.description}</p>
-            )}
-          </div>
-          <audio
-            src={fileUrl}
-            controls
-            autoPlay={autoPlay}
-            className="w-full max-w-md shadow-lg rounded-lg"
-            controlsList="nodownload"
-            onEnded={onEnded}
-          />
-        </div>
-      );
-    }
-
     if (mimeType.startsWith("video/")) {
       return (
         <video

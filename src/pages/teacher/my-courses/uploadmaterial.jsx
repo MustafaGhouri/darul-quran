@@ -1,11 +1,10 @@
 import { Button, Form, Input, Select, SelectItem } from "@heroui/react";
-import { Video, Link2, Headphones } from "lucide-react";
+import { Video, Link2 } from "lucide-react";
 import { LuClipboardList } from "react-icons/lu";
 import { IoEyeOutline } from "react-icons/io5";
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import { PiFilePdf } from "react-icons/pi";
 import Videos, {
-  Audios,
   Assignments,
   PdfAndNotes,
   Quizzes,
@@ -77,12 +76,6 @@ const UploadMaterial = () => {
       changeColor: "text-[#38A100]",
     },
     {
-      title: "Audios",
-      value: (files?.filter((f) => f.fileType === "lesson_audio")).length || 0,
-      icon: <Headphones color="#06574C" size={22} />,
-      changeColor: "text-[#38A100]",
-    },
-    {
       title: "PDFs",
       value: (files?.filter((f) => f.fileType === "pdf_notes")).length || 0,
       icon: <PiFilePdf color="#06574C" size={22} />,
@@ -126,7 +119,7 @@ const UploadMaterial = () => {
         title={"Upload Materials"}
         desc={"Manage all your teaching materials easily from here"}
       />
-      <div className="pb-4 gap-5  overflow-x-auto grid grid-cols-1 sm:grid-cols-6">
+      <div className="pb-4 gap-5  overflow-x-auto grid grid-cols-1 sm:grid-cols-5">
         {cardsData.map((item, index) => (
           <div
             key={index}
@@ -161,11 +154,6 @@ const UploadMaterial = () => {
 
       <>
         <Videos
-          courseId={courseId}
-          files={files}
-          setFiles={setFiles}
-        />
-        <Audios
           courseId={courseId}
           files={files}
           setFiles={setFiles}

@@ -28,11 +28,9 @@ import {
   Trash2Icon,
   Video,
   Link2,
-  Headphones,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Videos, {
-  Audios,
   Assignments,
   PdfAndNotes,
   Quizzes,
@@ -273,11 +271,6 @@ const CourseBuilder = () => {
       icone: <Video size={20} color="#06574C" />,
     },
     {
-      title: "Audios",
-      count: (files?.filter((f) => f.fileType === "lesson_audio")).length || 0,
-      icone: <Headphones size={20} color="#06574C" />,
-    },
-    {
       title: "PDFs:",
       count: (files?.filter((f) => f.fileType === "pdf_notes")).length || 0,
       icone: <File size={20} color="#06574C" />,
@@ -428,23 +421,31 @@ const CourseBuilder = () => {
     if (name === "teacher_id" && value) {
       setTeacherError("");
     }
+    if (name === "type" && value === "in_person") {
+      setTeacherError("");
+    }
     if (name === "type" && value === "one_to_one" && selected !== "info") {
       handleSelected("info");
     }
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+      ...(name === "type" && value === "in_person" ? { teacher_id: null } : {}),
       ...(name === "type" && value === "one_to_one"
-        ? { student_ids: [], is_free: true }
+        ? { teacher_id: null, student_ids: [], is_free: true }
         : {}),
     }));
   };
   const handleSubmitTab1 = async (e) => {
     e.preventDefault();
 
-    if (!formData.teacher_id) {
-      setTeacherError("Please select a teacher");
-      errorMessage("Teacher selection is required");
+    if (
+      formData.type !== "in_person" &&
+      formData.type !== "one_to_one" &&
+      !formData.teacher_id
+    ) {
+      setTeacherError("Please select a teacher ");
+      // Scroll to the teacher select if possible or just stop
       return;
     }
     setLoadingAction(pendingAction);
@@ -503,7 +504,10 @@ const CourseBuilder = () => {
       ).toFixed(2),
       videoUrl: isOneToOne ? null : urlMap.video ?? videoUrl ?? null,
       thumbnailurl: urlMap.thumbnail ?? thumbnailUrl ?? null,
-      teacher_id: Number(formData.teacher_id),
+      teacher_id:
+        formData.type === "in_person" || formData.type === "one_to_one"
+          ? null
+          : Number(formData.teacher_id),
       student_ids: formData.type === "one_to_one" ? [] : formData.student_ids,
       is_free: isOneToOne ? true : formData.is_free,
       age_group: formData.age_group || null,
@@ -989,15 +993,17 @@ const CourseBuilder = () => {
                           </Select>
                         </div>
                       </div>
-                      <div className="pt-6">
-                        <TeacherSelect
-                          label="Teacher"
-                          isRequired
-                          onChange={(id) => handleChange("teacher_id", id)}
-                          initialValue={formData.teacher_id}
-                          errorMessage={teacherError}
-                        />
-                      </div>
+                      {formData?.type !== "in_person" && formData?.type !== "one_to_one" && (
+                        <div className="pt-6">
+                          <TeacherSelect
+                            label="Teacher"
+                            isRequired
+                            onChange={(id) => handleChange("teacher_id", id)}
+                            initialValue={formData.teacher_id}
+                            errorMessage={teacherError}
+                          />
+                        </div>
+                      )}
                       {formData?.type !== "one_to_one" && (
                         <div className="my-4">
                           <StudentSelect
@@ -1721,7 +1727,7 @@ const CourseBuilder = () => {
                 animate="show"
                 transition={{ when: "beforeChildren" }}
               >
-                <div className="w-full grid grid-cols-2 md:grid-cols-6 py-4 gap-2">
+                <div className="w-full grid grid-cols-2 md:grid-cols-5 py-4 gap-2">
                   {card.map((item, i) => (
                     <div
                       key={i}
@@ -1742,7 +1748,6 @@ const CourseBuilder = () => {
                   ))}
                 </div>
                 <Videos courseId={courseId} files={files} setFiles={setFiles} />
-                <Audios courseId={courseId} files={files} setFiles={setFiles} />
                 <PdfAndNotes
                   courseId={courseId}
                   files={files}

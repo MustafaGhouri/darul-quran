@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Textarea, Chip, Avatar } from "@heroui/react";
-import { ArrowLeft, PlayCircle, CheckCircle, Star, Headphones } from "lucide-react";
+import { ArrowLeft, PlayCircle, CheckCircle, Star } from "lucide-react";
 import { useSelector } from "react-redux";
 
 import { errorMessage, successMessage } from "../../../lib/toast.config";
@@ -296,8 +296,6 @@ const CoursePlayer = () => {
                                         <div className="mt-1 shrink-0">
                                             {isCompleted ? (
                                                 <CheckCircle size={18} className="text-green-500 fill-green-100" />
-                                            ) : lesson.fileType === "lesson_audio" ? (
-                                                <Headphones size={18} className={isCurrentById ? "text-[#06574C]" : "text-gray-400"} />
                                             ) : isCurrentById ? (
                                                 <PlayCircle size={18} className="text-[#06574C]" />
                                             ) : (
