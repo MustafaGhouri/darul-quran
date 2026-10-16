@@ -923,8 +923,9 @@ const CourseBuilder = () => {
                             isRequired
                             isDisabled={formData.is_free}
                             startContent={"£"}
-                            min={1}
-                            errorMessage="Base Course Price must be at least 1 £"
+                            min={0.5}
+                            step={0.01}
+                            errorMessage="Base Course Price must be at least £0.50"
                             className="w-full"
                             value={formData.base_price}
                             onChange={(e) =>
