@@ -120,6 +120,8 @@ const CreateCourse = ({ initialData = {} }) => {
                                                 </div>
                                             }
                                             type="number"
+                                            min={0.5}
+                                            step={0.01}
                                         />
                                         <div className='w-full'>
                                         <Input
