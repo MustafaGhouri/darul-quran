@@ -42,6 +42,9 @@ import SchedulesByDateList from "../../../components/schedule/SchedulesByDateLis
 
 import { useLocation, useNavigate } from "react-router-dom";
 
+/** Set to true to show Cancel on student schedule cards again */
+const SHOW_STUDENT_CANCEL_BUTTON = false;
+
 const StudentClassSheduling = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -648,7 +651,7 @@ const StudentClassSheduling = () => {
                             </Button>
                         </Tooltip>
 
-                        {canCanc && !isExpired && (
+                        {SHOW_STUDENT_CANCEL_BUTTON && canCanc && !isExpired && (
                             <Button
                                 radius="sm"
                                 size="sm"
