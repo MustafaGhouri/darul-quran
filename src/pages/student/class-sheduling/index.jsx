@@ -201,9 +201,7 @@ const StudentClassSheduling = () => {
             excludeCancelled: true,
         });
     }, [scheduleData, filterType]);
-
-    // lookup for calendar and other utilities
-    const schedulesByDateAll = schedulesByDate.all;
+ 
 
     const handleDateClick = (date) => {
         // date is a JavaScript Date object from CustomCalendar
