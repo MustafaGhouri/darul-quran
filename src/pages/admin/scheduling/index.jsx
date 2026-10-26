@@ -953,9 +953,9 @@ const Scheduling = () => {
                     type="date"
                     label="Session Date"
                     variant="bordered"
-                    value={formData.date}
+                    value={formData.startDate}
                     onChange={(e) =>
-                      setFormData({ ...formData, date: e.target.value })
+                      setFormData({ ...formData, startDate: e.target.value, date: e.target.value })
                     }
                   />
                 )}
@@ -1101,70 +1101,70 @@ const Scheduling = () => {
                 )}
 
                 {!formData.meetingLink?.trim() && (
-                <div className="py-3 border-t pt-4">
-                  <h3 className="text-sm font-semibold mb-2 text-[#06574C]">Zoom Meeting Settings</h3>
-                  <CheckboxGroup
-                    orientation="vertical"
-                    color="success"
-                    value={[
-                      ...(formData.settings?.join_before_host ? ['join_before_host'] : []),
-                      ...(formData.settings?.auto_recording ? ['auto_recording'] : []),
-                      ...(formData.settings?.waiting_room ? ['waiting_room'] : []),
-                    ]}
-                    onChange={(values) => {
-                      setFormData({
-                        ...formData,
-                        settings: {
-                          join_before_host: values?.includes('join_before_host'),
-                          auto_recording: values?.includes('auto_recording'),
-                          waiting_room: values?.includes('waiting_room'),
-                        },
-                      });
-                    }}
-                  >
-                    <Tooltip
+                  <div className="py-3 border-t pt-4">
+                    <h3 className="text-sm font-semibold mb-2 text-[#06574C]">Zoom Meeting Settings</h3>
+                    <CheckboxGroup
+                      orientation="vertical"
                       color="success"
-                      content={
-                        formData.settings?.join_before_host
-                          ? 'Unselect "Participants must be admitted by the host before joining." to allow this option'
-                          : "Allow students to join before host"
-                      }
-                      isDisabled={formData.settings?.join_before_host}
+                      value={[
+                        ...(formData.settings?.join_before_host ? ['join_before_host'] : []),
+                        ...(formData.settings?.auto_recording ? ['auto_recording'] : []),
+                        ...(formData.settings?.waiting_room ? ['waiting_room'] : []),
+                      ]}
+                      onChange={(values) => {
+                        setFormData({
+                          ...formData,
+                          settings: {
+                            join_before_host: values?.includes('join_before_host'),
+                            auto_recording: values?.includes('auto_recording'),
+                            waiting_room: values?.includes('waiting_room'),
+                          },
+                        });
+                      }}
                     >
-                      <span>
-                        <Checkbox
-                          isDisabled={formData.settings?.waiting_room}
-                          value="join_before_host"
-                        >
-                          Allow students to join before host
-                        </Checkbox>
-                      </span>
-                    </Tooltip>
+                      <Tooltip
+                        color="success"
+                        content={
+                          formData.settings?.join_before_host
+                            ? 'Unselect "Participants must be admitted by the host before joining." to allow this option'
+                            : "Allow students to join before host"
+                        }
+                        isDisabled={formData.settings?.join_before_host}
+                      >
+                        <span>
+                          <Checkbox
+                            isDisabled={formData.settings?.waiting_room}
+                            value="join_before_host"
+                          >
+                            Allow students to join before host
+                          </Checkbox>
+                        </span>
+                      </Tooltip>
 
-                    <Checkbox value="auto_recording">
-                      Record session automatically (cloud)
-                    </Checkbox>
+                      <Checkbox value="auto_recording">
+                        Record session automatically (cloud)
+                      </Checkbox>
 
-                    <Tooltip
-                      color="success"
-                      content={
-                        formData.settings?.join_before_host
-                          ? 'Unselect "Allow students to join before host" to allow this option'
-                          : "Participants must be admitted by the host before joining."
-                      }
-                      isDisabled={formData.settings?.waiting_room}
-                    >
-                      <span>
-                        <Checkbox
-                          isDisabled={formData.settings?.join_before_host}
-                          value="waiting_room"
-                        >
-                          Participants must be admitted by the host before joining.
-                        </Checkbox>
-                      </span>
-                    </Tooltip>
-                  </CheckboxGroup>
-                </div>
+                      <Tooltip
+                        color="success"
+                        content={
+                          formData.settings?.join_before_host
+                            ? 'Unselect "Allow students to join before host" to allow this option'
+                            : "Participants must be admitted by the host before joining."
+                        }
+                        isDisabled={formData.settings?.waiting_room}
+                      >
+                        <span>
+                          <Checkbox
+                            isDisabled={formData.settings?.join_before_host}
+                            value="waiting_room"
+                          >
+                            Participants must be admitted by the host before joining.
+                          </Checkbox>
+                        </span>
+                      </Tooltip>
+                    </CheckboxGroup>
+                  </div>
                 )}
               </ModalBody>
               <ModalFooter>
@@ -1316,81 +1316,81 @@ const Scheduling = () => {
                     const convertedEnd = formatTimeInViewerTimezone(request.requestedDate, request.requestedEndTime, studentTz, viewerTz);
 
                     return (
-                    <TableRow key={request.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-sm">{request.studentName}</p>
-                          <p className="text-xs text-gray-500">{request.studentEmail}</p>
-                          <Chip size="sm" variant="flat" color="secondary" className="mt-1 text-xs">
-                            <Globe size={11} className="inline mr-1" />
-                            {studentTz}
-                          </Chip>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm space-y-1">
+                      <TableRow key={request.id}>
+                        <TableCell>
                           <div>
-                            <p className="font-medium text-[#06574C]">
-                              {new Date(request.requestedDate).toLocaleDateString()}
-                            </p>
-                            <p className="text-gray-700 font-semibold">
-                              {formatTime12Hour(request.requestedStartTime)} - {formatTime12Hour(request.requestedEndTime)}
-                              <span className="text-xs font-normal text-gray-500 ml-1">({studentTz})</span>
-                            </p>
-                          </div>
-                          {isDifferentTz && (
-                            <div className="bg-[#E8F1FF] text-[#1570E8] p-1.5 rounded text-xs">
-                              <p className="font-semibold">Your Local Time ({viewerTz}):</p>
-                              <p>{convertedDate} | {convertedStart} - {convertedEnd}</p>
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-sm max-w-xs truncate" title={request.reason}>
-                          {request.reason || "-"}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <Chip size="sm" variant="flat" color={getStatusColor(request.status)}>
-                          {request.status}
-                        </Chip>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-sm">
-                          {new Date(request.requestedAt).toLocaleDateString()}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2 justify-center">
-                          {request.status === "pending" && (
-                            <>
-                              <Button
-                                size="sm"
-                                color="success"
-                                variant="flat"
-                                onPress={() => handleApproveClick(request)}
-                              >
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                color="danger"
-                                variant="flat"
-                                onPress={() => handleRejectClick(request)}
-                              >
-                                Reject
-                              </Button>
-                            </>
-                          )}
-                          {request.status !== "pending" && (
-                            <Chip size="sm" variant="flat">
-                              {request.status}
+                            <p className="font-medium text-sm">{request.studentName}</p>
+                            <p className="text-xs text-gray-500">{request.studentEmail}</p>
+                            <Chip size="sm" variant="flat" color="secondary" className="mt-1 text-xs">
+                              <Globe size={11} className="inline mr-1" />
+                              {studentTz}
                             </Chip>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm space-y-1">
+                            <div>
+                              <p className="font-medium text-[#06574C]">
+                                {new Date(request.requestedDate).toLocaleDateString()}
+                              </p>
+                              <p className="text-gray-700 font-semibold">
+                                {formatTime12Hour(request.requestedStartTime)} - {formatTime12Hour(request.requestedEndTime)}
+                                <span className="text-xs font-normal text-gray-500 ml-1">({studentTz})</span>
+                              </p>
+                            </div>
+                            {isDifferentTz && (
+                              <div className="bg-[#E8F1FF] text-[#1570E8] p-1.5 rounded text-xs">
+                                <p className="font-semibold">Your Local Time ({viewerTz}):</p>
+                                <p>{convertedDate} | {convertedStart} - {convertedEnd}</p>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <p className="text-sm max-w-xs truncate" title={request.reason}>
+                            {request.reason || "-"}
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <Chip size="sm" variant="flat" color={getStatusColor(request.status)}>
+                            {request.status}
+                          </Chip>
+                        </TableCell>
+                        <TableCell>
+                          <p className="text-sm">
+                            {new Date(request.requestedAt).toLocaleDateString()}
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2 justify-center">
+                            {request.status === "pending" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  color="success"
+                                  variant="flat"
+                                  onPress={() => handleApproveClick(request)}
+                                >
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  color="danger"
+                                  variant="flat"
+                                  onPress={() => handleRejectClick(request)}
+                                >
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                            {request.status !== "pending" && (
+                              <Chip size="sm" variant="flat">
+                                {request.status}
+                              </Chip>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     );
                   }}
                 </TableBody>
@@ -1439,30 +1439,30 @@ const Scheduling = () => {
               const convertedEnd = formatTimeInViewerTimezone(selectedRescheduleRequest.requestedDate, selectedRescheduleRequest.requestedEndTime, studentTz, viewerTz);
 
               return (
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-1">
-                  <strong>Student:</strong> {selectedRescheduleRequest.studentName} ({selectedRescheduleRequest.studentEmail})
-                </p>
-                <p className="text-sm text-gray-600 mb-2">
-                  <strong>Class:</strong> {selectedRescheduleRequest.scheduleTitle}
-                </p>
-                <div className="bg-gray-50 p-3 rounded-lg space-y-2">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-0.5">
-                      Student Requested Time ({studentTz}):
-                    </p>
-                    <p className="text-sm font-medium text-gray-800">
-                      {new Date(selectedRescheduleRequest.requestedDate).toLocaleDateString()} &bull; {formatTime12Hour(selectedRescheduleRequest.requestedStartTime)} - {formatTime12Hour(selectedRescheduleRequest.requestedEndTime)}
-                    </p>
-                  </div>
-                  {isDifferentTz && (
-                    <div className="bg-[#E8F1FF] text-[#1570E8] p-2 rounded text-xs font-medium">
-                      <p className="font-semibold mb-0.5">Your Local Time ({viewerTz}):</p>
-                      <p className="text-sm font-bold">{convertedDate} &bull; {convertedStart} - {convertedEnd}</p>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-1">
+                    <strong>Student:</strong> {selectedRescheduleRequest.studentName} ({selectedRescheduleRequest.studentEmail})
+                  </p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    <strong>Class:</strong> {selectedRescheduleRequest.scheduleTitle}
+                  </p>
+                  <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 mb-0.5">
+                        Student Requested Time ({studentTz}):
+                      </p>
+                      <p className="text-sm font-medium text-gray-800">
+                        {new Date(selectedRescheduleRequest.requestedDate).toLocaleDateString()} &bull; {formatTime12Hour(selectedRescheduleRequest.requestedStartTime)} - {formatTime12Hour(selectedRescheduleRequest.requestedEndTime)}
+                      </p>
                     </div>
-                  )}
+                    {isDifferentTz && (
+                      <div className="bg-[#E8F1FF] text-[#1570E8] p-2 rounded text-xs font-medium">
+                        <p className="font-semibold mb-0.5">Your Local Time ({viewerTz}):</p>
+                        <p className="text-sm font-bold">{convertedDate} &bull; {convertedStart} - {convertedEnd}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
               );
             })()}
 
