@@ -373,9 +373,9 @@ const CreaterOrUpdateSchedule = () => {
                 {formData.scheduleType === "once" && (
                     <Input
                         type="date" label="Session Date" variant="bordered"
-                        value={formData.date}
+                        value={formData.startDate}
                         isRequired
-                        onChange={set("date")}
+                        onChange={set("startDate")}
                     />
                 )}
 
