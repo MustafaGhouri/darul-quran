@@ -279,12 +279,12 @@ export const validateSchedule = (formData) => {
 
     const selectedDate = new Date(date);
 
-    if (isBlockedDay(selectedDate)) {
-      return {
-        valid: false,
-        message: "Classes cannot be scheduled on 29th, 30th, or 31st",
-      };
-    }
+    // if (isBlockedDay(selectedDate)) {
+    //   return {
+    //     valid: false,
+    //     message: "Classes cannot be scheduled on 29th, 30th, or 31st",
+    //   };
+    // }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
