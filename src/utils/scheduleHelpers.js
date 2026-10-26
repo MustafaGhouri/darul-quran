@@ -618,7 +618,6 @@ export const groupAndSortSchedulesByDate = (schedules, filterType = "all", optio
             const displayDateKey = validStart
                 ? `${validStart.getFullYear()}-${String(validStart.getMonth() + 1).padStart(2, "0")}-${String(validStart.getDate()).padStart(2, "0")}`
                 : dateKey;
-console.log('displayDateKey',displayDateKey,start);
 
             if (!grouped[displayDateKey]) {
                 grouped[displayDateKey] = [];
