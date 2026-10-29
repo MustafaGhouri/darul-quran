@@ -375,7 +375,10 @@ const CreaterOrUpdateSchedule = () => {
                         type="date" label="Session Date" variant="bordered"
                         value={formData.startDate}
                         isRequired
-                        onChange={set("startDate")}
+                        onChange={(e) => {
+                            set('startDate')(e);   
+                            set('date')(e);   
+                        }}
                     />
                 )}
 
@@ -444,7 +447,7 @@ const CreaterOrUpdateSchedule = () => {
 
                 {(() => {
                     const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                     const refDate = formData.date || formData.startDate || new Date().toISOString().split("T")[0];
+                    const refDate = formData.date || formData.startDate || new Date().toISOString().split("T")[0];
                     const utcStart = formatTimeInViewerTimezone(refDate, formData.startTime, userTz, "UTC");
                     const utcEnd = formatTimeInViewerTimezone(refDate, formData.endTime, userTz, "UTC");
 
