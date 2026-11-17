@@ -245,6 +245,7 @@ const CourseBuilder = () => {
           display_tab: course.displayTab || "auto",
           stripe_product_id:
             course.stripe_product_id || course.stripeProductId || "",
+          notify_students: "new",
           ...normalizeLoadedEmailTriggers(course),
         });
 
@@ -358,6 +359,7 @@ const CourseBuilder = () => {
     google_form_link: "",
     display_tab: "auto",
     stripe_product_id: "",
+    notify_students: "new",
     form_filler_template_id: "",
     admin_notification_template_id: "",
     admin_notification_emails: "",
@@ -553,6 +555,7 @@ const CourseBuilder = () => {
             .filter(Boolean)
           : [],
       },
+      notify_students: formData.notify_students || (searchParams.get("id") ? "new" : "all"),
     };
     try {
       const courseId = searchParams.get("id");
@@ -623,6 +626,7 @@ const CourseBuilder = () => {
       isFree: formData.is_free,
       isTrending: formData.is_trending,
       student_ids: formData.student_ids,
+      notify_students: formData.notify_students || (courseId ? "new" : "all"),
     };
     try {
       const data = await updateCourse({
@@ -1011,11 +1015,118 @@ const CourseBuilder = () => {
                         />
                       </div>
                       {formData?.type !== "one_to_one" && (
-                        <div className="my-4">
+                        <div className="my-4 space-y-3">
                           <StudentSelect
                             onChange={(ids) => handleChange("student_ids", ids)}
                             initialValues={formData.student_ids || []}
                           />
+
+                          {courseId ? (
+                            <div className="bg-[#95C4BE]/15 border border-[#95C4BE]/40 rounded-xl p-3">
+                              <Select
+                                label="Student Email Notification"
+                                labelPlacement="outside"
+                                placeholder="Select email option"
+                                selectedKeys={
+                                  formData.notify_students
+                                    ? new Set([formData.notify_students])
+                                    : new Set(["new"])
+                                }
+                                onSelectionChange={(keys) => {
+                                  const selected = Array.from(keys)[0];
+                                  if (selected) {
+                                    handleChange("notify_students", selected);
+                                  }
+                                }}
+                                size="sm"
+                                variant="bordered"
+                                className="w-full bg-white rounded-lg"
+                                description="Choose who receives the enrollment email and payment link upon saving."
+                              >
+                                <SelectItem
+                                  key="new"
+                                  value="new"
+                                  textValue="Only newly added students (Recommended)"
+                                >
+                                  <div>
+                                    <p className="font-medium text-xs text-gray-800">
+                                      Only newly added students (Recommended)
+                                    </p>
+                                    <p className="text-[11px] text-gray-500">
+                                      Existing students will not be emailed again.
+                                    </p>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem
+                                  key="none"
+                                  value="none"
+                                  textValue="Do not send emails"
+                                >
+                                  <div>
+                                    <p className="font-medium text-xs text-gray-800">
+                                      Do not send emails
+                                    </p>
+                                    <p className="text-[11px] text-gray-500">
+                                      Update course/students without sending any enrollment emails.
+                                    </p>
+                                  </div>
+                                </SelectItem>
+                                
+                              </Select>
+                            </div>
+                          ) : (
+                            <div className="bg-[#95C4BE]/15 border border-[#95C4BE]/40 rounded-xl p-3">
+                              <Select
+                                label="Student Email Notification"
+                                labelPlacement="outside"
+                                placeholder="Select email option"
+                                selectedKeys={
+                                  formData.notify_students
+                                    ? new Set([formData.notify_students])
+                                    : new Set(["all"])
+                                }
+                                onSelectionChange={(keys) => {
+                                  const selected = Array.from(keys)[0];
+                                  if (selected) {
+                                    handleChange("notify_students", selected);
+                                  }
+                                }}
+                                size="sm"
+                                variant="bordered"
+                                className="w-full bg-white rounded-lg"
+                                description="Choose whether assigned students receive an enrollment email with a checkout link."
+                              >
+                                <SelectItem
+                                  key="all"
+                                  value="all"
+                                  textValue="Send email to assigned students (Recommended)"
+                                >
+                                  <div>
+                                    <p className="font-medium text-xs text-gray-800">
+                                      Send email to assigned students (Recommended)
+                                    </p>
+                                    <p className="text-[11px] text-gray-500">
+                                      Each assigned student receives an enrollment confirmation with payment link.
+                                    </p>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem
+                                  key="none"
+                                  value="none"
+                                  textValue="Do not send emails"
+                                >
+                                  <div>
+                                    <p className="font-medium text-xs text-gray-800">
+                                      Do not send emails
+                                    </p>
+                                    <p className="text-[11px] text-gray-500">
+                                      Assign students without sending any email notifications.
+                                    </p>
+                                  </div>
+                                </SelectItem>
+                              </Select>
+                            </div>
+                          )}
                         </div>
                       )}
 
