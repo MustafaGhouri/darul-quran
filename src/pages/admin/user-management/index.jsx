@@ -21,15 +21,23 @@ import {
   Input,
   Tooltip,
   User,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  Avatar,
+  Chip,
 } from "@heroui/react";
-import { Chip } from "@heroui/react";
 
 import { DashHeading } from "../../../components/dashboard-components/DashHeading";
 import {
+  BookOpen,
+  CheckCircle2,
+  Clock,
   MessageCircle,
   Plus,
   SquarePen,
   Trash2,
+  Video,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -38,7 +46,6 @@ import * as motion from "motion/react-client";
 import { dateFormatter, debounce } from "../../../lib/utils";
 import { errorMessage, successMessage } from "../../../lib/toast.config";
 import { useBulkDeleteUserMutation, useDeleteUserMutation, useGetAllUsersQuery, useSyncUserWithZoomMutation } from "../../../redux/api/user";
-import { Video } from "lucide-react";
 import { useSelector } from "react-redux";
 
 const UserManagement = () => {
@@ -50,7 +57,18 @@ const UserManagement = () => {
     { key: "false", label: "Inactive" },
   ];
 
-  const header = [
+  const studentHeader = [
+    { key: "User", label: "User" },
+    { key: "Class", label: "Schedule" },
+    { key: "Teacher", label: "Teacher" },
+    { key: "Fees", label: "Fees / Last Paid" },
+    { key: "Status", label: "Status" },
+    { key: "Date", label: "Join Date" },
+    { key: "lastActive", label: "Last Active" },
+    { key: "Action", label: "Action", style: "text-center" },
+  ];
+
+  const defaultHeader = [
     { key: "User", label: "User" },
     { key: "Role", label: "Role" },
     { key: "Date", label: "Join Date" },
@@ -181,6 +199,8 @@ const UserManagement = () => {
       return;
     }
 
+    const isStudent = role === 'student';
+
     const headers = [
       "ID",
       "First Name",
@@ -193,15 +213,15 @@ const UserManagement = () => {
       "Status",
       "Join Date",
       "Last Active",
-      "Experience (Years)",
-      "Tagline",
-      "Bio"
+      ...(isStudent
+        ? ["Classes", "Teachers", "Fees / Last Paid", "Last Paid Date"]
+        : ["Experience (Years)", "Tagline", "Bio"])
     ];
 
     const csvRows = [headers.join(",")];
 
     data.users.forEach(user => {
-      const row = [
+      const baseRow = [
         user.id,
         `"${(user.firstName || "").replace(/"/g, '""')}"`,
         `"${(user.lastName || "").replace(/"/g, '""')}"`,
@@ -213,11 +233,33 @@ const UserManagement = () => {
         user.isActive ? "Active" : "Inactive",
         `"${user.createdAt || ""}"`,
         user.lastActive ? `"${user.lastActive}"` : "N/A",
-        user.experience_years ?? "N/A",
-        `"${(user.tagline || "").replace(/"/g, '""')}"`,
-        `"${(user.bio || "").replace(/"/g, '""')}"`
       ];
-      csvRows.push(row.join(","));
+
+      if (isStudent) {
+        const classesStr = (user.classes || []).map(c => c.title || c.name).join("; ");
+        const teachersStr = (user.teachers || []).map(t => t.name).join("; ");
+        const feeStatus = user.lastPayment
+          ? (user.lastPayment.status === 'free'
+              ? 'Free'
+              : `${user.lastPayment.amount ? `£${Number(user.lastPayment.amount).toFixed(2)} ` : ''}${user.lastPayment.status || ''}`.trim())
+          : 'N/A';
+        const feeDate = user.lastPayment?.date ? dateFormatter(user.lastPayment.date) : 'N/A';
+
+        baseRow.push(
+          `"${classesStr.replace(/"/g, '""')}"`,
+          `"${teachersStr.replace(/"/g, '""')}"`,
+          `"${feeStatus.replace(/"/g, '""')}"`,
+          `"${feeDate.replace(/"/g, '""')}"`
+        );
+      } else {
+        baseRow.push(
+          user.experience_years ?? "N/A",
+          `"${(user.tagline || "").replace(/"/g, '""')}"`,
+          `"${(user.bio || "").replace(/"/g, '""')}"`
+        );
+      }
+
+      csvRows.push(baseRow.join(","));
     });
 
     const csvContent = csvRows.join("\n");
@@ -389,8 +431,8 @@ const UserManagement = () => {
                   tr: "border-b border-default-200 ",
                 }}
               >
-                <TableHeader >
-                  {header.map((item) => (
+                <TableHeader>
+                  {(role === 'student' ? studentHeader : defaultHeader).map((item) => (
                     <TableColumn className={item.style} key={item.key}>{item.label}</TableColumn>
                   ))}
                 </TableHeader>
@@ -402,121 +444,358 @@ const UserManagement = () => {
                   items={data?.users || []}
                   loadingState={isFetching ? 'loading' : 'idle'}
                   loadingContent={<Spinner color="success" />}>
-                  {(classItem) => (
-                    <TableRow key={classItem.id}>
-                      <TableCell className="px-4">
-                        <User
-                          avatarProps={{
-                            src: classItem.avatar,
-                            size: "md",
-                            className: "shrink-0"
-                          }}
-                          name={`${classItem.firstName || ""} ${classItem.lastName || ""}`.trim() || "User"}
-                          description={classItem.email}
-                          classNames={{
-                            name: "font-medium text-gray-900",
-                            description: "text-xs text-gray-500 mt-0.5 truncate",
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Button className="text-sm p-2 rounded-md bg-[#FBF4EC] text-[#D28E3D]">
-                          {classItem.role}
-                        </Button>
-                      </TableCell>
-                      <TableCell>{dateFormatter(classItem.createdAt)}</TableCell>
-                      <TableCell>{classItem.lastActive ? dateFormatter(classItem.lastActive, true) : "No Activity"}</TableCell>
-                      <TableCell>
-                        <Button className={`text-sm p-2 rounded-md ${classItem.isActive === true ? "bg-[#95C4BE33] text-[#06574C]" : "bg-[#FBF4EC] text-[#D28E3D]"} `}>
-                          {classItem.isActive == true ? "Active" : "Inactive"}
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center gap-2">
-                          {(role === 'teacher') ? (
-                            <>
-                              {classItem.zoomUserId ? (
-                                <Chip
+                  {(classItem) =>
+                    role === 'student' ? (
+                      <TableRow key={classItem.id}>
+                        {/* 1. User */}
+                        <TableCell className="px-4">
+                          <User
+                            avatarProps={{
+                              src: classItem.avatar,
+                              size: "md",
+                              className: "shrink-0"
+                            }}
+                            name={`${classItem.firstName || ""} ${classItem.lastName || ""}`.trim() || "User"}
+                            description={classItem.email}
+                            classNames={{
+                              name: "font-medium text-gray-900",
+                              description: "text-xs text-gray-500 mt-0.5 truncate",
+                            }}
+                          />
+                        </TableCell>
+
+                        {/* 2. Schedule */}
+                        <TableCell className="max-w-[220px]">
+                          {(!classItem.classes || classItem.classes.length === 0) ? (
+                            <span className="text-xs text-gray-400 italic">No schedule</span>
+                          ) : classItem.classes.length === 1 ? (
+                            <div className="flex items-center gap-1.5" title={classItem.classes[0].title || classItem.classes[0].name}>
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#06574C]/10 text-[#06574C] max-w-[200px] truncate">
+                                <BookOpen size={13} className="shrink-0 text-[#06574C]" />
+                                <span className="truncate">{classItem.classes[0].title || classItem.classes[0].name}</span>
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#06574C]/10 text-[#06574C] max-w-[140px] truncate" title={classItem.classes[0].title || classItem.classes[0].name}>
+                                <BookOpen size={13} className="shrink-0 text-[#06574C]" />
+                                <span className="truncate">{classItem.classes[0].title || classItem.classes[0].name}</span>
+                              </span>
+                              <Popover placement="bottom-start" showArrow offset={8}>
+                                <PopoverTrigger>
+                                  <button type="button" className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 cursor-pointer transition">
+                                    +{classItem.classes.length - 1}
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-3 max-w-[300px]">
+                                  <div className="text-xs font-semibold text-gray-700 mb-2 border-b pb-1.5">
+                                    Assigned Schedules ({classItem.classes.length})
+                                  </div>
+                                  <div className="flex flex-col gap-2 max-h-[190px] overflow-y-auto pr-1">
+                                    {classItem.classes.map((cls, idx) => (
+                                      <div key={cls.id || idx} className="flex flex-col gap-0.5 text-xs text-gray-700 bg-gray-50 p-2 rounded">
+                                        <div className="flex items-center gap-1.5 font-medium">
+                                          <BookOpen size={13} className="shrink-0 text-[#06574C]" />
+                                          <span className="truncate flex-1">{cls.title || cls.name}</span>
+                                        </div>
+                                        {cls.teacherName && (
+                                          <div className="text-[11px] text-gray-500 pl-4">
+                                            Teacher: <span className="font-medium text-gray-700">{cls.teacherName}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          )}
+                        </TableCell>
+
+                        {/* 3. Teacher */}
+                        <TableCell className="max-w-[200px]">
+                          {(!classItem.teachers || classItem.teachers.length === 0) ? (
+                            <span className="text-xs text-gray-400 italic">Unassigned</span>
+                          ) : classItem.teachers.length === 1 ? (
+                            <div className="flex items-center gap-2 max-w-[180px]" title={classItem.teachers[0].name}>
+                              <Avatar
+                                src={classItem.teachers[0].avatar}
+                                name={classItem.teachers[0].name}
+                                size="sm"
+                                className="w-6 h-6 text-[10px] shrink-0 bg-[#06574C]/20 text-[#06574C]"
+                              />
+                              <span className="text-xs font-medium text-gray-800 truncate">
+                                {classItem.teachers[0].name}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5 max-w-[130px]" title={classItem.teachers[0].name}>
+                                <Avatar
+                                  src={classItem.teachers[0].avatar}
+                                  name={classItem.teachers[0].name}
                                   size="sm"
-                                  variant="flat"
-                                  className="bg-[#95C4BE33] text-[#06574C]"
-                                  startContent={<Video size={14} />}
-                                >
-                                  Connected
-                                </Chip>
+                                  className="w-6 h-6 text-[10px] shrink-0 bg-[#06574C]/20 text-[#06574C]"
+                                />
+                                <span className="text-xs font-medium text-gray-800 truncate">
+                                  {classItem.teachers[0].name}
+                                </span>
+                              </div>
+                              <Popover placement="bottom-start" showArrow offset={8}>
+                                <PopoverTrigger>
+                                  <button type="button" className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 cursor-pointer transition">
+                                    +{classItem.teachers.length - 1}
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-3 max-w-[280px]">
+                                  <div className="text-xs font-semibold text-gray-700 mb-2 border-b pb-1.5">
+                                    Assigned Teachers ({classItem.teachers.length})
+                                  </div>
+                                  <div className="flex flex-col gap-2 max-h-[180px] overflow-y-auto pr-1">
+                                    {classItem.teachers.map((tch, idx) => (
+                                      <div key={tch.id || idx} className="flex items-center gap-2 text-xs text-gray-700 bg-gray-50 p-1.5 rounded">
+                                        <Avatar
+                                          src={tch.avatar}
+                                          name={tch.name}
+                                          size="sm"
+                                          className="w-6 h-6 text-[10px] shrink-0 bg-[#06574C]/20 text-[#06574C]"
+                                        />
+                                        <div className="flex flex-col min-w-0 flex-1">
+                                          <span className="font-medium truncate">{tch.name}</span>
+                                          {tch.classes && tch.classes.length > 0 && (
+                                            <span className="text-[10px] text-gray-400 truncate">
+                                              {tch.classes.join(", ")}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          )}
+                        </TableCell>
+
+                        {/* 4. Fees / Last Paid */}
+                        <TableCell>
+                          {classItem.lastPayment ? (
+                            <div className="flex flex-col gap-0.5 items-start">
+                              {classItem.lastPayment.status === 'free' ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                                  Free
+                                </span>
+                              ) : classItem.lastPayment.status === 'paid' ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                  <CheckCircle2 size={12} className="text-emerald-600 shrink-0" />
+                                  {classItem.lastPayment.amount ? `£${Number(classItem.lastPayment.amount).toFixed(2)} Paid` : "Paid"}
+                                </span>
+                              ) : classItem.lastPayment.status === 'pending' ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                  <Clock size={12} className="text-amber-600 shrink-0" />
+                                  {classItem.lastPayment.amount ? `£${Number(classItem.lastPayment.amount).toFixed(2)} Pending` : "Pending"}
+                                </span>
                               ) : (
-                                <Chip
-                                  size="sm"
-                                  variant="flat"
-                                  className="bg-gray-200 text-gray-600"
-                                >
-                                  Not Synced
-                                </Chip>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-700 capitalize">
+                                  {classItem.lastPayment.amount ? `£${Number(classItem.lastPayment.amount).toFixed(2)}` : classItem.lastPayment.status}
+                                </span>
                               )}
-                              {!classItem.zoomUserId && <Tooltip content="Sync teacher with Zoom">
-                                <Button
-                                  size="sm"
-                                  variant="light"
-                                  className="text-[#06574C] p-0 min-w-auto w-8 h-8"
-                                  onPress={() => handleSyncZoom(classItem.id, classItem.zoomUserId, classItem.email)}
-                                  isLoading={isSyncing === classItem.id}
-                                  isDisabled={classItem.zoomUserId}
-                                  title="Sync with Zoom"
-                                >
-                                  <Video size={16} />
-                                </Button>
-                              </Tooltip>}
-                            </>
-                          ) : '---'}
-                        </div>
-                      </TableCell>
-                      <TableCell className="flex gap-2">
-                        <Button
-                          radius="sm"
-                          className="bg-[#06574C] text-white"
-                          onPress={() => { router(`/admin/user-management/users-details/${classItem.id}`) }}
-                        >
-                          View Details
-                        </Button>
-                        {classItem.id !== user?.id && <Button
-                          // size="sm"
-                          radius="sm"
-                          className="bg-[#06574C] text-white font-medium px-4"
-                          startContent={<MessageCircle size={16} />}
-                          onPress={() =>
-                            router("/admin/help/messages", {
-                              state: {
-                                startChatWith: classItem.id,
-                                receiverName: [classItem?.firstName, classItem?.lastName].filter(Boolean).join(" ").trim() || "Teacher",
-                                receiverRole: "teacher",
-                              },
-                            })
-                          }
-                        >
-                          Chat
-                        </Button>}
-                        <Button
-                          variant="bordered"
-                          radius="sm"
-                          className="border-[#06574C]"
-                          startContent={
-                            <SquarePen size={18} color="#06574C" />
-                          }
-                          onPress={() => { router(`/admin/user-management/edit-user/${classItem.id}`, { state: classItem }) }}
-                        >
-                          Edit
-                        </Button>
-                        {classItem?.email !== import.meta.env.VITE_PUBLIC_ADMIN_EMAIL && <Button
-                          radius="sm"
-                          className="bg-[#06574C] text-white"
-                          startContent={<Trash2 size={18} color="white" />}
-                          onPress={() => openDeleteModal(classItem.id)}
-                        >
-                          Delete
-                        </Button>}
-                      </TableCell>
-                    </TableRow>
-                  )}
+                              {classItem.lastPayment.date && (
+                                <span className="text-[11px] text-gray-400">
+                                  {dateFormatter(classItem.lastPayment.date)}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">---</span>
+                          )}
+                        </TableCell>
+
+                        {/* 5. Status */}
+                        <TableCell>
+                          <Button className={`text-sm p-2 rounded-md ${classItem.isActive === true ? "bg-[#95C4BE33] text-[#06574C]" : "bg-[#FBF4EC] text-[#D28E3D]"} `}>
+                            {classItem.isActive == true ? "Active" : "Inactive"}
+                          </Button>
+                        </TableCell>
+
+                        {/* 6. Join Date */}
+                        <TableCell>{dateFormatter(classItem.createdAt)}</TableCell>
+
+                        {/* 7. Last Active */}
+                        <TableCell>{classItem.lastActive ? dateFormatter(classItem.lastActive, true) : "No Activity"}</TableCell>
+
+                        {/* 8. Action */}
+                        <TableCell className="flex gap-2">
+                          <Button
+                            radius="sm"
+                            className="bg-[#06574C] text-white"
+                            as={Link}
+                            to={`/admin/user-management/users-details/${classItem.id}`}
+                          >
+                            View Details
+                          </Button>
+                          {classItem.id !== user?.id && <Button
+                            radius="sm"
+                            className="bg-[#06574C] text-white font-medium px-4"
+                            startContent={<MessageCircle size={16} />}
+                            as={Link}
+                            to={`/admin/help/messages`}
+                            state={{
+                              startChatWith: classItem.id,
+                              receiverName: [classItem?.firstName, classItem?.lastName].filter(Boolean).join(" ").trim() || "Teacher",
+                              receiverRole: "teacher",
+                            }} 
+                          >
+                            Chat
+                          </Button>}
+                          <Button
+                            variant="bordered"
+                            radius="sm"
+                            className="border-[#06574C]"
+                            startContent={
+                              <SquarePen size={18} color="#06574C" />
+                            }
+                            onPress={() => { router(`/admin/user-management/edit-user/${classItem.id}`, { state: classItem }) }}
+                          >
+                            Edit
+                          </Button>
+                          {classItem?.email !== import.meta.env.VITE_PUBLIC_ADMIN_EMAIL && <Button
+                            radius="sm"
+                            className="bg-[#06574C] text-white"
+                            startContent={<Trash2 size={18} color="white" />}
+                            onPress={() => openDeleteModal(classItem.id)}
+                          >
+                            Delete
+                          </Button>}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      <TableRow key={classItem.id}>
+                        {/* 1. User */}
+                        <TableCell className="px-4">
+                          <User
+                            avatarProps={{
+                              src: classItem.avatar,
+                              size: "md",
+                              className: "shrink-0"
+                            }}
+                            name={`${classItem.firstName || ""} ${classItem.lastName || ""}`.trim() || "User"}
+                            description={classItem.email}
+                            classNames={{
+                              name: "font-medium text-gray-900",
+                              description: "text-xs text-gray-500 mt-0.5 truncate",
+                            }}
+                          />
+                        </TableCell>
+
+                        {/* 2. Role */}
+                        <TableCell>
+                          <Button className="text-sm p-2 rounded-md bg-[#FBF4EC] text-[#D28E3D]">
+                            {classItem.role}
+                          </Button>
+                        </TableCell>
+
+                        {/* 3. Join Date */}
+                        <TableCell>{dateFormatter(classItem.createdAt)}</TableCell>
+
+                        {/* 4. Last Active */}
+                        <TableCell>{classItem.lastActive ? dateFormatter(classItem.lastActive, true) : "No Activity"}</TableCell>
+
+                        {/* 5. Status */}
+                        <TableCell>
+                          <Button className={`text-sm p-2 rounded-md ${classItem.isActive === true ? "bg-[#95C4BE33] text-[#06574C]" : "bg-[#FBF4EC] text-[#D28E3D]"} `}>
+                            {classItem.isActive == true ? "Active" : "Inactive"}
+                          </Button>
+                        </TableCell>
+
+                        {/* 6. Zoom */}
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-2">
+                            {(role === 'teacher') ? (
+                              <>
+                                {classItem.zoomUserId ? (
+                                  <Chip
+                                    size="sm"
+                                    variant="flat"
+                                    className="bg-[#95C4BE33] text-[#06574C]"
+                                    startContent={<Video size={14} />}
+                                  >
+                                    Connected
+                                  </Chip>
+                                ) : (
+                                  <Chip
+                                    size="sm"
+                                    variant="flat"
+                                    className="bg-gray-200 text-gray-600"
+                                  >
+                                    Not Synced
+                                  </Chip>
+                                )}
+                                {!classItem.zoomUserId && <Tooltip content="Sync teacher with Zoom">
+                                  <Button
+                                    size="sm"
+                                    variant="light"
+                                    className="text-[#06574C] p-0 min-w-auto w-8 h-8"
+                                    onPress={() => handleSyncZoom(classItem.id, classItem.zoomUserId, classItem.email)}
+                                    isLoading={isSyncing === classItem.id}
+                                    isDisabled={classItem.zoomUserId}
+                                    title="Sync with Zoom"
+                                  >
+                                    <Video size={16} />
+                                  </Button>
+                                </Tooltip>}
+                              </>
+                            ) : '---'}
+                          </div>
+                        </TableCell>
+
+                        {/* 7. Action */}
+                        <TableCell className="flex gap-2">
+                          <Button
+                            radius="sm"
+                            className="bg-[#06574C] text-white"
+                            as={Link}
+                            to={`/admin/user-management/users-details/${classItem.id}`}
+                          >
+                            View Details
+                          </Button>
+                          {classItem.id !== user?.id && <Button
+                            radius="sm"
+                            className="bg-[#06574C] text-white font-medium px-4"
+                            startContent={<MessageCircle size={16} />}
+                            as={Link}
+                            to={`/admin/help/messages`}
+                            state={{
+                              startChatWith: classItem.id,
+                              receiverName: [classItem?.firstName, classItem?.lastName].filter(Boolean).join(" ").trim() || "Teacher",
+                              receiverRole: "teacher",
+                            }} 
+                          >
+                            Chat
+                          </Button>}
+                          <Button
+                            variant="bordered"
+                            radius="sm"
+                            className="border-[#06574C]"
+                            startContent={
+                              <SquarePen size={18} color="#06574C" />
+                            }
+                            onPress={() => { router(`/admin/user-management/edit-user/${classItem.id}`, { state: classItem }) }}
+                          >
+                            Edit
+                          </Button>
+                          {classItem?.email !== import.meta.env.VITE_PUBLIC_ADMIN_EMAIL && <Button
+                            radius="sm"
+                            className="bg-[#06574C] text-white"
+                            startContent={<Trash2 size={18} color="white" />}
+                            onPress={() => openDeleteModal(classItem.id)}
+                          >
+                            Delete
+                          </Button>}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  }
                 </TableBody>
               </Table>
             </motion.div>
